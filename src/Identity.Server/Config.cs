@@ -95,21 +95,7 @@ public static class Config
                 "discount.read",
             },
         },
-        // Order servisinin Payment'a service-to-service (client_credentials) cagrisi icin.
-        new Client
-        {
-            ClientId = "order.api",
-            ClientName = "Order API (service-to-service)",
-            AllowedGrantTypes = GrantTypes.ClientCredentials,
-            ClientSecrets = { new Secret("duCg9KPVQNFxhPpBsxkV791Z9RpTLDAM".Sha256()) },
-            // Order yalnizca odeme olusturur ve durum sorgular (Refit IPaymentService).
-            AllowedScopes =
-            {
-                "payment.read",
-                "payment.write",
-            },
-        },
-        // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
+// WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
         // anonim okuma icin de Client Credentials.
         new Client
         {
@@ -131,6 +117,7 @@ public static class Config
                 "catalog.read", "catalog.write",
                 "basket.read", "basket.write",
                 "order.read", "order.write",
+                "payment.read", "payment.write",
                 "discount.read", "discount.write",
             },
         },
