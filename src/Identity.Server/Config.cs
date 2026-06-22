@@ -95,7 +95,7 @@ public static class Config
                 "discount.read",
             },
         },
-// WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
+        // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
         // anonim okuma icin de Client Credentials.
         new Client
         {

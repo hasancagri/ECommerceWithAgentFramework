@@ -1,4 +1,6 @@
 
+using Common.Auths;
+
 namespace Order.Api.Domains.Orders.Features.Commands;
 
 public static class CreateOrder
@@ -20,7 +22,7 @@ public static class CreateOrder
     {
         public async Task<FeatureResultModel> Handle(CreateOrderCommand cmd, CancellationToken ct)
         {
-            var userId = Guid.Parse(httpContextAccessor.HttpContext!.User.FindFirst("sub")!.Value);
+            var userId = CurrentUser.Load(httpContextAccessor.HttpContext!.User).Id;
 
             // Idempotency: ayni paymentId ikinci kez siparise baglanamaz.
             var alreadyUsed = await session.Query<Order>()
