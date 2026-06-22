@@ -7,27 +7,35 @@ using WebApp.Extensions;
 
 namespace WebApp.Services;
 
-public class OrderService(IOrderRefitService orderService, ILogger<OrderService> logger)
+public class OrderService(
+    IOrderRefitService orderService,
+    PaymentService paymentService,
+    ILogger<OrderService> logger)
 {
     public async Task<ServiceResult> CreateOrder(CreateOrderViewModel viewModel)
     {
-        //createAddressDto
+        // 1) Once odeme: client dogrudan Payment'a (kullanici token'i).
+        var paymentRequest = new CreatePaymentRequest(
+            viewModel.Payment.CardNumber,
+            viewModel.Payment.CardHolderName,
+            viewModel.Payment.ExpiryDate,
+            viewModel.Payment.Cvv,
+            viewModel.TotalPrice);
+
+        var paymentResult = await paymentService.CreatePayment(paymentRequest);
+        if (paymentResult.IsFail)
+            return ServiceResult.Error(paymentResult.Fail!);
+
+        // 2) Sonra siparis: donen paymentId ile.
         var address = new AddressDto(viewModel.Address.Province, viewModel.Address.District,
             viewModel.Address.Street, viewModel.Address.ZipCode, viewModel.Address.Line);
 
-
-        //paymentDto
-        var payment = new PaymentDto(viewModel.Payment.CardNumber, viewModel.Payment.CardHolderName,
-            viewModel.Payment.ExpiryDate, viewModel.Payment.Cvv, viewModel.TotalPrice);
-
-
-        // orderItems
-        var orderItems = viewModel.OrderItems.Select(x => new OrderItemDto(x.ProductId, x.ProductName, x.UnitPrice))
+        var orderItems = viewModel.OrderItems
+            .Select(x => new OrderItemDto(x.ProductId, x.ProductName, x.UnitPrice))
             .ToList();
 
-
-        var createOrderRequest = new CreateOrderRequest(viewModel.DiscountRate, address, payment, orderItems);
-
+        var createOrderRequest = new CreateOrderRequest(
+            viewModel.DiscountRate, address, paymentResult.Data, orderItems);
 
         var response = await orderService.CreateOrder(createOrderRequest);
 

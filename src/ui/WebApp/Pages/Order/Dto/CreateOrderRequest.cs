@@ -3,5 +3,5 @@
 public record CreateOrderRequest(
     float? DiscountRate,
     AddressDto Address,
-    PaymentDto Payment,
+    Guid PaymentId,
     List<OrderItemDto> Items);
