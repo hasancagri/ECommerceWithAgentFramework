@@ -47,7 +47,6 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddAuthenticationAndAuthorizationExtension(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
-builder.Services.AddRefitConfigurationExtension(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();

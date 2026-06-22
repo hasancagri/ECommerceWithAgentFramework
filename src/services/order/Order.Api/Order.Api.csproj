@@ -9,7 +9,6 @@
     <ItemGroup>
         <PackageReference Include="Marten" />
         <PackageReference Include="Marten.Newtonsoft" />
-        <PackageReference Include="Refit.HttpClientFactory" />
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="Scrutor" />
         <PackageReference Include="WolverineFx" />
@@ -19,7 +18,6 @@
         <PackageReference Include="WolverineFx.Postgresql" />
         <PackageReference Include="WolverineFx.RabbitMQ" />
         <PackageReference Include="Asp.Versioning.Http" />
-        <PackageReference Include="Duende.IdentityModel" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     </ItemGroup>
 

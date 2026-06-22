@@ -6,23 +6,29 @@ public static class CreateOrder
     public record CreateOrderCommand(
         float? DiscountRate,
         AddressDto Address,
-        PaymentDto Payment,
+        Guid PaymentId,
         List<OrderItemDto> Items);
 
     public record AddressDto(string Province, string District, string Street, string ZipCode, string Line);
-    public record PaymentDto(string CardNumber, string CardHolderName, string Expiration, string Cvc, decimal Amount);
     public record OrderItemDto(Guid ProductId, string ProductName, decimal UnitPrice);
 
     [Transactional]
     public class CreateOrderCommandHandler(
         IDocumentSession session,
         IHttpContextAccessor httpContextAccessor,
-        IPaymentService paymentService,
         IMessageBus bus)
     {
         public async Task<FeatureResultModel> Handle(CreateOrderCommand cmd, CancellationToken ct)
         {
             var userId = Guid.Parse(httpContextAccessor.HttpContext!.User.FindFirst("sub")!.Value);
+
+            // Idempotency: ayni paymentId ikinci kez siparise baglanamaz.
+            var alreadyUsed = await session.Query<Order>()
+                .AnyAsync(o => o.PaymentId == cmd.PaymentId, ct);
+            if (alreadyUsed)
+                return FeatureResultModel.Error(new MessageItem
+                    { Code = "This payment has already been used for an order." });
+
             var address = new Address(cmd.Address.Province, cmd.Address.District, cmd.Address.Street,
                 cmd.Address.ZipCode, cmd.Address.Line);
             var order = Order.Create(userId, cmd.DiscountRate, address);
@@ -33,15 +39,7 @@ public static class CreateOrder
                 if (!addResult.IsSuccess) return addResult;
             }
 
-            var paymentRequest = new CreatePaymentRequest(userId, order.Code, cmd.Payment.CardNumber,
-                cmd.Payment.CardHolderName, cmd.Payment.Expiration, cmd.Payment.Cvc, order.TotalPrice);
-            var paymentResponse = await paymentService.CreateAsync(paymentRequest);
-
-            if (!paymentResponse.IsSuccess)
-                return FeatureResultModel.Error(new MessageItem
-                    { Code = paymentResponse.Messages?.FirstOrDefault()?.Code ?? "Payment failed" });
-
-            order.SetPaidStatus(paymentResponse.Data!.Id);
+            order.SetPaidStatus(cmd.PaymentId);
             session.Store(order);
 
             await bus.PublishAsync(new IntegrationEvents.OrderCreatedEvent(order.Id, userId, order.TotalPrice));
