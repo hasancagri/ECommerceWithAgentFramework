@@ -27,7 +27,7 @@ public static class GetPaymentStatus
             CancellationToken ct)
         {
             var payment = await session.Query<Payment>()
-                .FirstOrDefaultAsync(x => x.OrderCode == query.OrderCode, ct);
+                .FirstOrDefaultAsync(x => x.Id.ToString() == query.OrderCode, ct);
 
             if (payment is null)
             {

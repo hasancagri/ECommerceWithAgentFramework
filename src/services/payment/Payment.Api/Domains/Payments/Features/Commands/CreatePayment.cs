@@ -1,3 +1,4 @@
+using Common.Auths;
 
 namespace Payment.Api.Domains.Payments.Features.Commands;
 
@@ -5,7 +6,6 @@ public static class CreatePayment
 {
     public record CreatePaymentCommand(
         Guid UserId,
-        string OrderCode,
         string CardNumber,
         string CardHolderName,
         string CardExpirationDate,
@@ -25,20 +25,7 @@ public static class CreatePayment
             IDocumentSession session,
             CancellationToken ct)
         {
-            var exists = await session.Query<Payment>()
-                .AnyAsync(x => x.UserId == cmd.UserId && x.OrderCode == cmd.OrderCode, ct);
-
-            if (exists)
-            {
-                return FeatureObjectResultModel<CreatePaymentResponse>.Error(
-                    new MessageItem
-                    {
-                        Property = nameof(cmd.OrderCode),
-                        Code = "Payment for this order already exists."
-                    });
-            }
-
-            var result = Payment.Create(cmd.UserId, cmd.OrderCode, cmd.Amount);
+            var result = Payment.Create(cmd.UserId, cmd.Amount);
             if (!result.IsSuccess)
             {
                 return FeatureObjectResultModel<CreatePaymentResponse>.Error(result.Messages);
@@ -60,11 +47,13 @@ public static class CreatePaymentCommandEndpoint
     public static RouteGroupBuilder CreatePaymentGroupItemEndpoint(this RouteGroupBuilder group)
     {
         group.MapPost("/",
-                async ([FromBody] CreatePayment.CreatePaymentCommand cmd, IMessageBus bus) =>
+                async ([FromBody] CreatePayment.CreatePaymentCommand cmd, HttpContext httpContext, IMessageBus bus) =>
                 {
+                    var userId = CurrentUser.Load(httpContext.User).Id;
                     var result =
-                        await bus.InvokeAsync<FeatureObjectResultModel<CreatePayment.CreatePaymentResponse>>(cmd);
-                    return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+                        await bus.InvokeAsync<FeatureObjectResultModel<CreatePayment.CreatePaymentResponse>>(
+                            cmd with { UserId = userId });
+                    return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
                 })
             .WithName("CreatePayment")
             .MapToApiVersion(1, 0)

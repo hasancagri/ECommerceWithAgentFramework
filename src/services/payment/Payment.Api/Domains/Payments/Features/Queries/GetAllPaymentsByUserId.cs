@@ -8,7 +8,6 @@ public static class GetAllPaymentsByUserId
     public class GetAllPaymentsByUserIdResponse
     {
         public Guid Id { get; set; }
-        public string OrderCode { get; set; } 
         public decimal Amount { get; set; }
         public DateTime CreatedTime { get; set; }
         public PaymentStatus Status { get; set; }
@@ -16,7 +15,6 @@ public static class GetAllPaymentsByUserId
         public static GetAllPaymentsByUserIdResponse From(Payment payment) => new()
         {
             Id = payment.Id,
-            OrderCode = payment.OrderCode,
             Amount = payment.Amount,
             CreatedTime = payment.CreatedTime,
             Status = payment.Status

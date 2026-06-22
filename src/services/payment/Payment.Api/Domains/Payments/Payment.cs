@@ -6,11 +6,10 @@ public class Payment : AggregateRoot
     private Payment() { }
 
     public Guid UserId { get; private set; }
-    public string OrderCode { get; private set; } = null!;
     public decimal Amount { get; private set; }
     public PaymentStatus Status { get; private set; }
 
-    public static ResultDomain<Payment> Create(Guid userId, string orderCode, decimal amount)
+    public static ResultDomain<Payment> Create(Guid userId, decimal amount)
     {
         if (userId == Guid.Empty)
         {
@@ -18,15 +17,6 @@ public class Payment : AggregateRoot
             {
                 Property = nameof(UserId),
                 Code = "UserId cannot be empty."
-            });
-        }
-
-        if (string.IsNullOrWhiteSpace(orderCode))
-        {
-            return ResultDomain<Payment>.Error(new MessageItem
-            {
-                Property = nameof(OrderCode),
-                Code = "Order code cannot be empty."
             });
         }
 
@@ -42,7 +32,6 @@ public class Payment : AggregateRoot
         return ResultDomain<Payment>.Ok(new Payment
         {
             UserId = userId,
-            OrderCode = orderCode,
             Amount = amount,
             Status = PaymentStatus.Pending
         });
