@@ -43,6 +43,7 @@ builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<BasketService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<PaymentService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<ClientAuthenticatedHttpClientHandler>();
@@ -76,6 +77,13 @@ builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(config
     {
         builder.Configuration.GetSection(nameof(MicroserviceOption)).Get<MicroserviceOption>();
         configure.BaseAddress = new Uri("http://order-api");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
+    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+
+
+builder.Services.AddRefitClient<IPaymentRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://payment-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
 
@@ -122,6 +130,9 @@ builder.Services.AddAuthentication(configureOption =>
         // discount
         options.Scope.Add("discount.read");
         options.Scope.Add("discount.write");
+        // payment
+        options.Scope.Add("payment.read");
+        options.Scope.Add("payment.write");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // role/email id_token'da geliyor (Config.cs: AlwaysIncludeUserClaimsInIdToken),
