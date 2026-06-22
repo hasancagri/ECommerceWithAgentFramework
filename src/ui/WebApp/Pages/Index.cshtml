@@ -1,0 +1,52 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="container mt-5">
+    <h1 class="mb-4">Courses</h1>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+
+        @if (!Model.Courses.Any())
+        {
+            <div class="col">
+                <div class="alert alert-warning" role="alert">
+                    No Courses Found!
+                </div>
+            </div>
+            return;
+        }
+
+        @foreach (var course in Model.Courses!)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-lg border-0">
+                    <a asp-page="/Courses/Detail" asp-route-id="@course.Id">
+                        <course-thumbnail-picture src="@course.ImageUrl" class="card-img-top" alt="Kurs Resmi"></course-thumbnail-picture>
+                    </a>
+
+                    <div class="card-body">
+                        <h5 class="card-title">@course.Name</h5>
+                        <p class="card-text">@course.TruncateDescription(100)</p>
+                        <p class="card-text">
+                            <small class="text-muted">Category: <strong>@course.Name</strong></small>
+                        </p>
+                        <p class="card-text">
+                            <strong>@course.Price.ToString("C")</strong>
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <small class="text-muted">Instructor: <strong>@course.EducatorFullName</strong></small><br>
+                        <small class="text-muted">Created Date: <strong>@course.Created</strong></small><br>
+                        <small class="text-muted">Point : <strong>@course.Rating</strong> | Süre: <strong>@course.Duration</strong> saat</small>
+
+                        <br>
+                        <a asp-page="/Courses/Detail" asp-route-id="@course.Id" class="btn btn-primary mt-2">Show Detail</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

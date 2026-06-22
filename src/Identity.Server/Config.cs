@@ -1,0 +1,138 @@
+using Duende.IdentityServer.Models;
+
+namespace Identity.Server;
+
+public static class Config
+{
+    // Servislerin token'da bekledigi ekstra claim'ler (role/email policy'leri icin).
+    private static readonly string[] ApiUserClaims = ["role", "email", "name"];
+
+    public static IEnumerable<IdentityResource> IdentityResources =>
+    [
+        new IdentityResources.OpenId(),
+        new IdentityResources.Profile(),
+        new IdentityResources.Email(),
+        // id_token/userinfo'ya role claim'i tasimak icin.
+        new IdentityResource("roles", "Roller", ["role"]),
+    ];
+
+    // ApiScope = servis basina read/write yetki birimi.
+    // read = liste/detay/sorgu, write = olustur/guncelle/sil.
+    public static IEnumerable<ApiScope> ApiScopes =>
+    [
+        // catalog.api
+        new ApiScope("catalog.read", "Catalog API - okuma (liste/detay)"),
+        new ApiScope("catalog.write", "Catalog API - yazma (olustur/guncelle/sil)"),
+
+        // basket.api
+        new ApiScope("basket.read", "Basket API - okuma"),
+        new ApiScope("basket.write", "Basket API - yazma"),
+
+        // order.api
+        new ApiScope("order.read", "Order API - okuma"),
+        new ApiScope("order.write", "Order API - yazma"),
+
+        // payment.api
+        new ApiScope("payment.read", "Payment API - okuma"),
+        new ApiScope("payment.write", "Payment API - yazma"),
+
+        // discount.api
+        new ApiScope("discount.read", "Discount API - okuma"),
+        new ApiScope("discount.write", "Discount API - yazma"),
+
+        // file.api: HTTP endpoint yok (sadece RabbitMQ/Wolverine event consumer) → scope yok.
+    ];
+
+    // ApiResource adi = servisin dogruladigi Audience (appsettings IdentityOption.Audience).
+    // Token'in 'aud' claim'i bu ada esitlenir; uyusmazsa servis token'i reddeder.
+    public static IEnumerable<ApiResource> ApiResources =>
+    [
+        new ApiResource("catalog.api", "Catalog API")
+        {
+            Scopes = { "catalog.read", "catalog.write" },
+            UserClaims = ApiUserClaims,
+        },
+        new ApiResource("basket.api", "Basket API")
+        {
+            Scopes = { "basket.read", "basket.write" },
+            UserClaims = ApiUserClaims,
+        },
+        new ApiResource("order.api", "Order API")
+        {
+            Scopes = { "order.read", "order.write" },
+            UserClaims = ApiUserClaims,
+        },
+        new ApiResource("payment.api", "Payment API")
+        {
+            Scopes = { "payment.read", "payment.write" },
+            UserClaims = ApiUserClaims,
+        },
+        new ApiResource("discount.api", "Discount API")
+        {
+            Scopes = { "discount.read", "discount.write" },
+            UserClaims = ApiUserClaims,
+        },
+        // file.api: HTTP yuzeyi olmadigi icin scope tasimaz; audience tutarliligi
+        // icin tanimli birakildi (servis yine de auth extension'i cagiriyor).
+        new ApiResource("file.api", "File API")
+        {
+            UserClaims = ApiUserClaims,
+        },
+    ];
+
+    public static IEnumerable<Client> Clients =>
+    [
+        // Anonim/giris yapmamis kullanici icin uygulamanin kendi kimligi (public okuma).
+        new Client
+        {
+            ClientId = "m2m.client",
+            ClientName = "Machine-to-machine test client",
+            AllowedGrantTypes = GrantTypes.ClientCredentials,
+            ClientSecrets = { new Secret("dev-secret".Sha256()) },
+            AllowedScopes =
+            {
+                "catalog.read",
+                "discount.read",
+            },
+        },
+        // Order servisinin Payment'a service-to-service (client_credentials) cagrisi icin.
+        new Client
+        {
+            ClientId = "order.api",
+            ClientName = "Order API (service-to-service)",
+            AllowedGrantTypes = GrantTypes.ClientCredentials,
+            ClientSecrets = { new Secret("duCg9KPVQNFxhPpBsxkV791Z9RpTLDAM".Sha256()) },
+            // Order yalnizca odeme olusturur ve durum sorgular (Refit IPaymentService).
+            AllowedScopes =
+            {
+                "payment.read",
+                "payment.write",
+            },
+        },
+        // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
+        // anonim okuma icin de Client Credentials.
+        new Client
+        {
+            ClientId = "ecommerce.bff",
+            ClientName = "ECommerce (Razor Pages BFF)",
+            AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
+            ClientSecrets = { new Secret("webshop-secret".Sha256()) },
+            // WebApp'in calistigi URL (launchSettings https profili). Aspire farkli port
+            // atarsa buraya o URL'i de eklemek gerekir; OIDC redirect birebir eslesmeli.
+            RedirectUris = { "https://localhost:7042/signin-oidc" },
+            PostLogoutRedirectUris = { "https://localhost:7042/signout-callback-oidc" },
+            RequireConsent = false,
+            AllowOfflineAccess = true,
+            // role/email/name claim'lerini id_token'a koy ki WebApp principal'inda olsun.
+            AlwaysIncludeUserClaimsInIdToken = true,
+            AllowedScopes =
+            {
+                "openid", "profile", "email", "roles",
+                "catalog.read", "catalog.write",
+                "basket.read", "basket.write",
+                "order.read", "order.write",
+                "discount.read", "discount.write",
+            },
+        },
+    ];
+}

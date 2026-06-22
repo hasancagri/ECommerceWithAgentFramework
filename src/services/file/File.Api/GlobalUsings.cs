@@ -1,0 +1,17 @@
+global using Asp.Versioning;
+global using Common.Dependencies.Models;
+global using Common.Exceptions;
+global using Common.Extensions;
+global using File.Api.Dependencies;
+global using File.Api.Utils.Constants;
+global using Marten;
+global using Marten.Newtonsoft;
+global using Marten.Schema;
+global using Weasel.Core;
+global using Microsoft.Extensions.FileProviders;
+global using Shared;
+global using System.Reflection;
+global using System;
+global using Wolverine.Marten;
+global using Wolverine.RabbitMQ;
+global using Wolverine;
