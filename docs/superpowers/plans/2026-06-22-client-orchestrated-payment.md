@@ -66,9 +66,12 @@ git commit -m "feat(identity): allow payment scopes for bff, remove order.api cl
 **Files:**
 - Modify: `src/services/payment/Payment.Api/Domains/Payments/Payment.cs` (entity)
 - Modify: `src/services/payment/Payment.Api/Domains/Payments/Features/Commands/CreatePayment.cs`
+- Modify: `src/services/payment/Payment.Api/Domains/Payments/Features/Queries/GetAllPaymentsByUserId.cs` (entity'den OrderCode kalkınca derlenmesi için)
 
 **Interfaces:**
 - Produces: `POST /api/v1/payments` artık gövdede `{ cardNumber, cardHolderName, cardExpirationDate, cardSecurityNumber, amount }` alır (UserId token'dan), başarılı yanıt gövdesi `{ id: Guid }`. Auth scope: `payment.write`.
+
+> **Cross-file etki:** `Payment` entity'sinden `OrderCode` kaldırılıyor. `GetAllPaymentsByUserId.cs` bu alanı kullanıyor (response DTO'da `OrderCode` property'si + `OrderCode = payment.OrderCode` mapping'i). Bu task derlenebilmesi için o dosyadaki **`OrderCode` property'sini ve mapping satırını da kaldırmalı.** (`GetPaymentStatus` Task 3'te tamamen siliniyor, onu burada düşünme.)
 
 - [ ] **Step 1: Payment entity'den OrderCode'u kaldır**
 
