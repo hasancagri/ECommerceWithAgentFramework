@@ -29,25 +29,25 @@ public class IndexModel(CatalogService catalogService, BasketService basketServi
     }
 
 
-    public async Task<IActionResult> OnGetAddBasketAsync(Guid courseId)
+    public async Task<IActionResult> OnGetAddBasketAsync(Guid productId)
     {
-        var course = await catalogService.GetCourse(courseId);
+        var product = await catalogService.GetProduct(productId);
 
 
-        var createOrUpdateBasket = new AddBasketRequest(course.Data!.Id, course.Data.Name,
-            course.Data.Price, course.Data.ImageUrl);
+        var createOrUpdateBasket = new AddBasketRequest(product.Data!.Id, product.Data.Name,
+            product.Data.Price, product.Data.ImageUrl);
 
 
         var result = await basketService.CreateOrUpdateBasketAsync(createOrUpdateBasket);
 
-        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("course added to basket", "Index");
+        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("product added to basket", "Index");
     }
 
-    public async Task<IActionResult> OnGetDeleteAsync(Guid courseId)
+    public async Task<IActionResult> OnGetDeleteAsync(Guid productId)
     {
-        var result = await basketService.DeleteBasketAsync(courseId);
+        var result = await basketService.DeleteBasketAsync(productId);
 
-        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("course deleted from basket", "Index");
+        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("product deleted from basket", "Index");
     }
 
     public async Task<IActionResult> OnPostApplyDiscountAsync(string couponCode)

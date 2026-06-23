@@ -8,9 +8,9 @@
     <thead class="table-dark">
     <tr>
         <th scope="col">#</th>
-        <th scope="col">Course Picture</th>
-        <th scope="col">Course Name</th>
-        <th scope="col">Course Price</th>
+        <th scope="col">Product Picture</th>
+        <th scope="col">Product Name</th>
+        <th scope="col">Product Price</th>
         <th>Action</th>
     </tr>
     </thead>
@@ -29,7 +29,8 @@
         <tr>
             <td>@index</td>
             <td>
-                <course-thumbnail-picture class="img-fluid img-thumbnail" src="@basketItem.PictureUrl" width="100px"></course-thumbnail-picture>
+                <img class="img-fluid img-thumbnail" width="100px" alt="@basketItem.Name"
+                     src="@(string.IsNullOrEmpty(basketItem.PictureUrl) ? "/images/blank_course_thumbnail.jpg" : basketItem.PictureUrl)">
 
 
             </td>
@@ -56,7 +57,7 @@
 
             <td>
 
-                <a asp-page-handler="Delete" asp-route-courseId="@basketItem.Id" class="btn btn-danger">Remove</a>
+                <a asp-page-handler="Delete" asp-route-productId="@basketItem.Id" class="btn btn-danger">Remove</a>
             </td>
         </tr>
         index++;

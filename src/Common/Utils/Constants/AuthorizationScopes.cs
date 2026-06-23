@@ -25,4 +25,8 @@ public static class AuthorizationScopes
     // discount.api
     public const string DiscountRead = "discount.read";
     public const string DiscountWrite = "discount.write";
+
+    // stock.api
+    public const string StockRead = "stock.read";
+    public const string StockWrite = "stock.write";
 }

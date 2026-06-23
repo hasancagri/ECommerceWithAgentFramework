@@ -1,4 +1,6 @@
 
+using Shared.Utils.Constants;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var basketDb = builder.Configuration.GetConnectionString("basketDb")!;
@@ -40,7 +42,10 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-builder.Services.AddAuthenticationAndAuthorizationExtension(builder.Configuration);
+builder.Services.AddAuthenticationAndAuthorizationExtension(
+    builder.Configuration,
+    AuthorizationScopes.BasketRead,
+    AuthorizationScopes.BasketWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 

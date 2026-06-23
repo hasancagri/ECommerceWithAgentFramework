@@ -1,4 +1,6 @@
 
+using Shared.Utils.Constants;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var fileDb = builder.Configuration.GetConnectionString("fileDb")!;
@@ -33,9 +35,6 @@ builder.Host.UseWolverine(opts =>
     });
 
     opts.ListenToRabbitQueue(RabbitMqConstants.UploadCoursePicture.Queues.File);
-
-    opts.PublishMessage<Shared.IntegrationEvents.CoursePictureUploadedEvent>()
-        .ToRabbitExchange(RabbitMqConstants.CoursePictureUploaded.Exchange);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());

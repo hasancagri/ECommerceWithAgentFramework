@@ -8,13 +8,13 @@ namespace WebApp.Pages;
 
 public class IndexModel(CatalogService catalogService, ILogger<IndexModel> logger) : BasePageModel
 {
-    public List<CourseViewModel>? Courses { get; set; } = [];
+    public List<ProductViewModel>? Products { get; set; } = [];
     public async Task<IActionResult> OnGet()
     {
-        var coursesAsResult = await catalogService.GetAllCoursesAsync();
+        var productsAsResult = await catalogService.GetAllProductsAsync();
 
-        if (coursesAsResult.IsFail) return ErrorPage(coursesAsResult);
-        Courses = coursesAsResult.Data!;
+        if (productsAsResult.IsFail) return ErrorPage(productsAsResult);
+        Products = productsAsResult.Data!;
         return Page();
     }
 }

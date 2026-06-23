@@ -1,0 +1,48 @@
+@page "{id:guid}"
+@model WebApp.Pages.Products.DetailModel
+@{
+}
+<div class="container mt-5">
+
+    <div class="row">
+
+
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+
+                <img class="card-img-top img-fluid" alt="@Model.Product!.Name"
+                     src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/blank_course_thumbnail.jpg" : Model.Product.ImageUrl)">
+                <div class="card-body">
+                    <h2 class="mb-4">@Model.Product.Name</h2>
+                    <h5 class="card-title">Description</h5>
+                    <p>@Model.Product.Description</p>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body">
+
+                    <h5 class="card-title">Brand</h5>
+                    <p class="card-text">@Model.Product.Brand</p>
+                    <hr>
+
+                    <h5 class="card-title">SKU</h5>
+                    <p class="card-text">@Model.Product.Sku</p>
+                    <hr>
+
+                    <h5 class="card-title">Price</h5>
+                    <p class="card-text">
+                        <strong>@Model.Product.Price.ToString("C")</strong>
+                    </p>
+                    <hr>
+
+                    <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.Id"
+                       class="btn btn-primary">Add To Basket</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

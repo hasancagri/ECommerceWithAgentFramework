@@ -1,3 +1,6 @@
+using Catalog.Api.Domains.Products;
+using Common.Utils.Constants;
+using Shared.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,16 +15,11 @@ builder.Services.AddMarten(opts =>
             {
                 s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
-
-        opts.Schema.For<Course>()
-            .Index(x => x.UserId)
-            .Index(x => x.CategoryId);
-
-        opts.Schema.For<Category>();
+        
+        opts.Schema.For<Product>();
     })
     .IntegrateWithWolverine()
-    .ApplyAllDatabaseChangesOnStartup()
-    .InitializeWith<SeedData>();
+    .ApplyAllDatabaseChangesOnStartup();
 
 
 builder.Host.UseWolverine(opts =>
@@ -29,10 +27,8 @@ builder.Host.UseWolverine(opts =>
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    rabbit.DeclareExchange(RabbitMqConstants.UploadCoursePicture.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-    });
+    rabbit.DeclareExchange(RabbitMqConstants.UploadCoursePicture.Exchange,
+        e => { e.ExchangeType = ExchangeType.Fanout; });
 
     rabbit.DeclareExchange(RabbitMqConstants.CoursePictureUploaded.Exchange, e =>
     {
@@ -40,14 +36,27 @@ builder.Host.UseWolverine(opts =>
         e.BindQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
     });
 
-    opts.PublishMessage<Shared.IntegrationEvents.UploadCoursePictureCommand>()
-        .ToRabbitExchange(RabbitMqConstants.UploadCoursePicture.Exchange);
+    // Binding'i publisher da tanimlasin: fanout exchange'e bagli kuyruk publish aninda yoksa
+    // mesaj sessizce dusurulur. Kuyrugu Catalog da bildirince, Stock henuz ayaga kalkmamis olsa
+    // bile mesajlar kalici kuyrukta birikir, kaybolmaz (startup sirasindan bagimsiz).
+    rabbit.DeclareExchange(RabbitMqConstants.ProductCreated.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.ProductCreated.Queues.Stock);
+    });
+
+    opts.PublishMessage<Shared.IntegrationEvents.ProductCreatedEvent>()
+        .ToRabbitExchange(RabbitMqConstants.ProductCreated.Exchange);
 
     opts.ListenToRabbitQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
+
+// Seed'i Wolverine'den SONRA kaydet: hosted service'ler kayit sirasiyla baslar, boylece
+// SeedData.StartAsync calistiginda Wolverine runtime hazir olur ve PublishAsync calisir.
+builder.Services.AddHostedService<SeedData>();
 
 
 builder.Services.AddApiVersioning(options =>
@@ -58,7 +67,10 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-builder.Services.AddAuthenticationAndAuthorizationExtension(builder.Configuration);
+builder.Services.AddAuthenticationAndAuthorizationExtension(
+    builder.Configuration,
+    AuthorizationScopes.CatalogRead,
+    AuthorizationScopes.CatalogWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
@@ -73,7 +85,6 @@ var apiVersionSet = app.NewApiVersionSet()
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.AddCourseGroupEndpointExtension(apiVersionSet);
-app.AddCategoryGroupEndpointExtension(apiVersionSet);
+app.AddProductGroupEndpointExtension(apiVersionSet);
 
 await app.RunAsync();

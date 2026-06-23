@@ -19,7 +19,8 @@ var orderDb = postgres.AddDatabase("orderDb");
 var discountDb = postgres.AddDatabase("discountDb");
 var fileDb = postgres.AddDatabase("fileDb");
 var paymentDb = postgres.AddDatabase("paymentDb");
-var identityDb = postgres.AddDatabase("identitydb");
+var stockDb = postgres.AddDatabase("stockDb");
+var identityDb = postgres.AddDatabase("identityDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -30,6 +31,14 @@ var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WithReference(redis)
     .WithReference(rabbit)
     .WaitFor(catalogDb)
+    .WaitFor(redis)
+    .WaitFor(rabbit);
+
+var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
+    .WithReference(stockDb)
+    .WithReference(redis)
+    .WithReference(rabbit)
+    .WaitFor(stockDb)
     .WaitFor(redis)
     .WaitFor(rabbit);
 
@@ -66,6 +75,7 @@ var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
 var web = builder.AddProject<Projects.WebApp>("ecommerce-web");
 web.WithReference(basketApi)
     .WithReference(catalogApi)
+    .WithReference(stockApi)
     .WithReference(discountApi)
     .WithReference(orderApi)
     .WithReference(fileApi)

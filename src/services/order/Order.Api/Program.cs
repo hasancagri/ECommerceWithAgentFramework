@@ -1,4 +1,6 @@
 
+using Shared.Utils.Constants;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var orderDb = builder.Configuration.GetConnectionString("orderDb")!;
@@ -44,7 +46,10 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-builder.Services.AddAuthenticationAndAuthorizationExtension(builder.Configuration);
+builder.Services.AddAuthenticationAndAuthorizationExtension(
+    builder.Configuration,
+    AuthorizationScopes.OrderRead,
+    AuthorizationScopes.OrderWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();

@@ -1,5 +1,4 @@
 using Common.Options;
-using Common.Utils.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,29 +8,11 @@ namespace Common.Extensions;
 
 public static class AuthenticationExtension
 {
-    // Identity.Server'in tanimladigi tum API scope'lari. Policy adi = scope adi.
-    // Her servis icin read/write scope ikilisi; her servis kendi audience'ina ait token'i
-    // dogrular ve sadece ilgili scope policy'leri kullanilir.
-    private static readonly string[] ApiScopes =
-    [
-        AuthorizationScopes.CatalogRead,
-        AuthorizationScopes.CatalogWrite,
-
-        AuthorizationScopes.BasketRead,
-        AuthorizationScopes.BasketWrite,
-
-        AuthorizationScopes.OrderRead,
-        AuthorizationScopes.OrderWrite,
-
-        AuthorizationScopes.PaymentRead,
-        AuthorizationScopes.PaymentWrite,
-
-        AuthorizationScopes.DiscountRead,
-        AuthorizationScopes.DiscountWrite,
-    ];
-
+    // Her servis SADECE kendi scope'larini (AuthorizationScopes sabitleri) gecer; policy adi = scope adi.
+    // Sabitlerle gecildigi icin yazim hatasi derleme zamaninda yakalanir ve scope tanimi ile kullanim
+    // (endpoint'lerdeki RequireAuthorization) tek kaynaktan beslenir.
     public static IServiceCollection AddAuthenticationAndAuthorizationExtension(this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration, params string[] scopes)
     {
         var identityOptions = configuration.GetSection(nameof(IdentityOption)).Get<IdentityOption>()!;
 
@@ -60,7 +41,7 @@ public static class AuthenticationExtension
         services.AddAuthorization(options =>
         {
             // Her scope icin policy: gecerli (authenticated) token + ilgili "scope" claim'i.
-            foreach (var scope in ApiScopes)
+            foreach (var scope in scopes)
                 options.AddPolicy(scope, policy =>
                 {
                     policy.RequireAuthenticatedUser();

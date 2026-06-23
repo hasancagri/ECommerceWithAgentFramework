@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using Refit;
+using System.Text.Json;
+using WebApp.Dto;
 using WebApp.Services.Refit;
 using WebApp.ViewModel;
 using WebApp.Extensions;
@@ -10,130 +10,70 @@ namespace WebApp.Services;
 
 public class CatalogService(
     ICatalogRefitService catalogRefitService,
-    UserService userService,
     ILogger<CatalogService> logger)
 {
-    public async Task<ServiceResult<List<CourseViewModel>>> GetAllCoursesAsync()
+    public async Task<ServiceResult<List<ProductViewModel>>> GetAllProductsAsync()
     {
-        var coursesAsResult = await catalogRefitService.GetAllCourses();
+        var productsAsResult = await catalogRefitService.GetAllProducts();
 
-        if (!coursesAsResult.IsSuccessStatusCode)
+        if (!productsAsResult.IsSuccessStatusCode)
         {
-            logger.LogProblemDetails(coursesAsResult.Error);
-            return ServiceResult<List<CourseViewModel>>.Error(
-                "Failed to retrieve course data. Please try again later.");
+            logger.LogProblemDetails(productsAsResult.Error);
+            return ServiceResult<List<ProductViewModel>>.Error(
+                "Failed to retrieve product data. Please try again later.");
         }
 
-
-        var courses = coursesAsResult.Content!;
-
-        var categoriesViewModel = courses.Select(c =>
-            new CourseViewModel(c.Id, c.Name, c.Description, c.Price, c.ImageUrl, c.Created.ToLongDateString(),
-                c.Feature.EducatorFullName, c.Category.Name, c.Feature.Duration,
-                c.Feature.Rating)).ToList();
-
-        return ServiceResult<List<CourseViewModel>>.Success(categoriesViewModel);
-    }
-
-
-    public async Task<ServiceResult<CourseViewModel>> GetCourse(Guid courseId)
-    {
-        var response = await catalogRefitService.GetCourse(courseId);
-
-        if (!response.IsSuccessStatusCode)
-            return ServiceResult<CourseViewModel>.FailFromProblemDetails(response.Error);
-
-
-        var course = response.Content!;
-        var courseViewModel = new CourseViewModel(course.Id, course.Name, course.Description, course.Price,
-            course.ImageUrl, course.Created.ToLongDateString(), course.Feature.EducatorFullName, course.Category.Name,
-            course.Feature.Duration,
-            course.Feature.Rating);
-
-        return ServiceResult<CourseViewModel>.Success(courseViewModel);
-    }
-
-
-    public async Task<ServiceResult<List<CategoryViewModel>>> GetCategoriesAsync()
-    {
-        var response = await catalogRefitService.GetCategoriesAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(response.Error.Content!);
-            logger.LogError("Error occurred while fetching categories");
-            return ServiceResult<List<CategoryViewModel>>.Error("Fail to retrieve categories. Please try again later");
-        }
-
-        var categories = response!.Content!
-            .Select(c => new CategoryViewModel(c.Id, c.Name))
+        var products = productsAsResult.Content!
+            .Select(p => new ProductViewModel(p.Id, p.Name, p.Description, p.Price, p.Sku, p.Brand, p.ImageUrl,
+                p.IsActive))
             .ToList();
-        return ServiceResult<List<CategoryViewModel>>.Success(categories);
+
+        return ServiceResult<List<ProductViewModel>>.Success(products);
     }
 
-    public async Task<ServiceResult> CreateCourseAsync(CreateCourseViewModel model)
+    public async Task<ServiceResult<ProductViewModel>> GetProduct(Guid productId)
     {
-        StreamPart? pictureStreamPart = null;
-        await using var stream = model.PictureFormFile?.OpenReadStream();
+        var response = await catalogRefitService.GetProduct(productId);
 
-        if (model.PictureFormFile is not null && model.PictureFormFile.Length > 0)
-            pictureStreamPart =
-                new StreamPart(stream!, model.PictureFormFile.FileName, model.PictureFormFile.ContentType);
+        if (!response.IsSuccessStatusCode)
+            return ServiceResult<ProductViewModel>.FailFromProblemDetails(response.Error);
 
+        var p = response.Content!;
+        var productViewModel = new ProductViewModel(p.Id, p.Name, p.Description, p.Price, p.Sku, p.Brand, p.ImageUrl,
+            p.IsActive);
 
-        var response = await catalogRefitService.CreateCourseAsync(
+        return ServiceResult<ProductViewModel>.Success(productViewModel);
+    }
+
+    public async Task<ServiceResult> CreateProductAsync(CreateProductViewModel model)
+    {
+        var request = new CreateProductRequest(
             model.Name,
             model.Description,
             model.Price,
-            pictureStreamPart,
-            model.CategoryId.ToString()!
-        );
+            model.Sku,
+            model.Brand,
+            model.ImageUrl,
+            model.InitialStock);
+
+        var response = await catalogRefitService.CreateProductAsync(request);
 
         if (response.IsSuccessStatusCode)
             return ServiceResult.Success();
-        
+
         var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(response.Error.Content!);
-        logger.LogError("Error occurred while creating course");
-        return ServiceResult.Error("Fail to create course. Please try again later");
+        logger.LogError("Error occurred while creating product");
+        return ServiceResult.Error("Fail to create product. Please try again later");
     }
 
-
-    public async Task<ServiceResult<List<CourseViewModel>>> GetCoursesByUserId()
+    public async Task<ServiceResult> DeleteAsync(Guid productId)
     {
-        var course = await catalogRefitService.GetCoursesByUserId(userService.UserId);
-
-        if (!course.IsSuccessStatusCode)
-        {
-            var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(course.Error.Content!);
-            logger.LogError("Error occurred while fetching courses by user id");
-            return ServiceResult<List<CourseViewModel>>.Error("Fail to retrieve courses. Please try again later");
-        }
-
-        var courses = course!.Content!
-            .Select(c => new CourseViewModel(
-                c.Id,
-                c.Name,
-                c.Description,
-                c.Price,
-                c.ImageUrl,
-                c.Created.ToLongDateString(),
-                c.Feature.EducatorFullName,
-                c.Category.Name,
-                c.Feature.Duration,
-                c.Feature.Rating
-            ))
-            .ToList();
-
-        return ServiceResult<List<CourseViewModel>>.Success(courses);
-    }
-
-    public async Task<ServiceResult> DeleteAsync(Guid CourseId)
-    {
-        var response = await catalogRefitService.DeleteCourseAsync(CourseId);
+        var response = await catalogRefitService.DeleteProductAsync(productId);
         if (!response.IsSuccessStatusCode)
         {
             var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(response.Error.Content!);
-            logger.LogError("Error occurred while deleting course");
-            return ServiceResult.Error("Fail to delete course. Please try again later");
+            logger.LogError("Error occurred while deleting product");
+            return ServiceResult.Error("Fail to delete product. Please try again later");
         }
 
         return ServiceResult.Success();

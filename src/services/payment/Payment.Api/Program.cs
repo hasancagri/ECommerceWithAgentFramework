@@ -1,4 +1,6 @@
 
+using Shared.Utils.Constants;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var paymentDb = builder.Configuration.GetConnectionString("paymentDb")!;
@@ -32,7 +34,10 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-builder.Services.AddAuthenticationAndAuthorizationExtension(builder.Configuration);
+builder.Services.AddAuthenticationAndAuthorizationExtension(
+    builder.Configuration,
+    AuthorizationScopes.PaymentRead,
+    AuthorizationScopes.PaymentWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 

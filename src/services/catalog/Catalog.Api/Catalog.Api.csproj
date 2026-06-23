@@ -29,4 +29,9 @@
       <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Domains\Products\Features\" />
+      <Folder Include="Domains\Products\ValueObjects\" />
+    </ItemGroup>
+
 </Project>

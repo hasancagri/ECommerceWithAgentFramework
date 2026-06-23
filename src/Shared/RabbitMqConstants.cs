@@ -13,6 +13,16 @@ public static class RabbitMqConstants
         }
     }
 
+    public static class ProductCreated
+    {
+        public const string Exchange = "product.created";
+
+        public static class Queues
+        {
+            public const string Stock = "stock.product-created";
+        }
+    }
+
     public static class UploadCoursePicture
     {
         public const string Exchange = "upload.course-picture";

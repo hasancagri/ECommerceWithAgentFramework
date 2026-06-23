@@ -8,8 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 // Aspire çalışma anında enjekte eder; design-time (migration üretimi) için fallback.
-var connectionString = builder.Configuration.GetConnectionString("identitydb")
-    ?? "Host=localhost;Port=5432;Database=identitydb;Username=postgres;Password=postgres";
+var connectionString = builder.Configuration.GetConnectionString("identityDb")
+    ?? "Host=localhost;Port=5432;Database=identityDb;Username=postgres;Password=postgres";
 
 var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
 

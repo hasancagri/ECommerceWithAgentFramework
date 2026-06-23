@@ -39,6 +39,7 @@ builder.Services.AddHttpClient("identity");
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<BasketService>();
 builder.Services.AddScoped<UserService>();

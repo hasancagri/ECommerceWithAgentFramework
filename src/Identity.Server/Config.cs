@@ -40,6 +40,10 @@ public static class Config
         new ApiScope("discount.read", "Discount API - okuma"),
         new ApiScope("discount.write", "Discount API - yazma"),
 
+        // stock.api
+        new ApiScope("stock.read", "Stock API - okuma"),
+        new ApiScope("stock.write", "Stock API - yazma (artir/azalt)"),
+
         // file.api: HTTP endpoint yok (sadece RabbitMQ/Wolverine event consumer) → scope yok.
     ];
 
@@ -72,6 +76,11 @@ public static class Config
             Scopes = { "discount.read", "discount.write" },
             UserClaims = ApiUserClaims,
         },
+        new ApiResource("stock.api", "Stock API")
+        {
+            Scopes = { "stock.read", "stock.write" },
+            UserClaims = ApiUserClaims,
+        },
         // file.api: HTTP yuzeyi olmadigi icin scope tasimaz; audience tutarliligi
         // icin tanimli birakildi (servis yine de auth extension'i cagiriyor).
         new ApiResource("file.api", "File API")
@@ -93,6 +102,7 @@ public static class Config
             {
                 "catalog.read",
                 "discount.read",
+                "stock.read",
             },
         },
         // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
@@ -119,6 +129,7 @@ public static class Config
                 "order.read", "order.write",
                 "payment.read", "payment.write",
                 "discount.read", "discount.write",
+                "stock.read", "stock.write",
             },
         },
     ];
