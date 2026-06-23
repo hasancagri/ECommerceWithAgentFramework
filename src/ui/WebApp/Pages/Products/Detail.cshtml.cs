@@ -11,9 +11,11 @@ using WebApp.ViewModel;
 namespace WebApp.Pages.Products;
 
 [AllowAnonymous]
-public class DetailModel(CatalogService catalogService) : BasePageModel
+public class DetailModel(CatalogService catalogService, StockService stockService) : BasePageModel
 {
     public ProductViewModel? Product { get; set; }
+
+    public int StockQuantity { get; set; }
 
     public async Task<IActionResult> OnGet(Guid id)
     {
@@ -22,6 +24,7 @@ public class DetailModel(CatalogService catalogService) : BasePageModel
         if (productAsResult.IsFail) return ErrorPage(productAsResult);
 
         Product = productAsResult.Data!;
+        StockQuantity = await stockService.GetStockQuantityAsync(id);
         return Page();
     }
 }

@@ -39,8 +39,28 @@
                     </p>
                     <hr>
 
-                    <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.Id"
-                       class="btn btn-primary">Add To Basket</a>
+                    <h5 class="card-title">Stock</h5>
+                    <p class="card-text">
+                        @if (Model.StockQuantity > 0)
+                        {
+                            <span class="badge bg-success">In stock: @Model.StockQuantity</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Out of stock</span>
+                        }
+                    </p>
+                    <hr>
+
+                    @if (Model.StockQuantity > 0)
+                    {
+                        <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.Id"
+                           class="btn btn-primary">Add To Basket</a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" disabled>Add To Basket</button>
+                    }
                 </div>
             </div>
         </div>

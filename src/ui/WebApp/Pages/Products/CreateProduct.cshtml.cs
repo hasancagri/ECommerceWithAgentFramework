@@ -5,9 +5,9 @@ using WebApp.Services;
 using WebApp.ViewModel;
 
 
-namespace WebApp.Pages.Instructor;
+namespace WebApp.Pages.Products;
 
-[Authorize(Roles = "instructor")]
+[Authorize]
 public class CreateProductModel(CatalogService catalogService) : PageModel
 {
     [BindProperty] public CreateProductViewModel ViewModel { get; set; } = CreateProductViewModel.Empty;
@@ -27,6 +27,6 @@ public class CreateProductModel(CatalogService catalogService) : PageModel
             return Page();
         }
 
-        return RedirectToPage("Products");
+        return RedirectToPage("/Index");
     }
 }

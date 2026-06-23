@@ -1,7 +1,6 @@
 using Duende.IdentityModel.Client;
-using WebApp.Services;
 
-namespace WebApp.DelegateHandlers;
+namespace WebApp.Authentication;
 
 // Kullanici LOGIN DEGILSE: uygulamanin kendi M2M (client_credentials) token'ini ekler.
 // Login ise: dokunmadan gecer; user token'i ic handler (Authenticated) ekleyecek.

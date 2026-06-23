@@ -1,4 +1,4 @@
-namespace WebApp.Settings;
+namespace WebApp.Authentication;
 
 // Identity.Server baglantisi icin tek config kaynagi (appsettings.json -> "IdentityServer").
 // Hem OIDC login (Program.cs) hem M2M/refresh (TokenService) buradan okur.

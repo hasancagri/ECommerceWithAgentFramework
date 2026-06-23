@@ -7,10 +7,9 @@ using System.Globalization;
 using WebApp.ExceptionHandlers;
 using WebApp.Services;
 using WebApp.Services.Refit;
-using WebApp.DelegateHandlers;
+using WebApp.Authentication;
 using WebApp.Extensions;
 using WebApp.Options;
-using WebApp.Settings;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,6 +44,7 @@ builder.Services.AddScoped<BasketService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<StockService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<ClientAuthenticatedHttpClientHandler>();
@@ -85,6 +85,13 @@ builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(config
 builder.Services.AddRefitClient<IPaymentRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://payment-api");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
+    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+
+
+builder.Services.AddRefitClient<IStockRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://stock-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
 
@@ -134,6 +141,8 @@ builder.Services.AddAuthentication(configureOption =>
         // payment
         options.Scope.Add("payment.read");
         options.Scope.Add("payment.write");
+        // stock
+        options.Scope.Add("stock.read");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // role/email id_token'da geliyor (Config.cs: AlwaysIncludeUserClaimsInIdToken),

@@ -1,8 +1,7 @@
 using Duende.IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
-using WebApp.Settings;
 
-namespace WebApp.Services;
+namespace WebApp.Authentication;
 
 // Token EDINME sorumlulugu burada toplanir: M2M (client_credentials) ve refresh exchange.
 // Token'i isteklere EKLEME isi DelegatingHandler'larda; bu servis sadece token URETIR.

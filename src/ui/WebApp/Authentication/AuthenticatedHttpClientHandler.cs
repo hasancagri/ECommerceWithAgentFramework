@@ -4,9 +4,8 @@ using Duende.IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using WebApp.Services;
 
-namespace WebApp.DelegateHandlers;
+namespace WebApp.Authentication;
 
 // Kullanici LOGIN ISE: user access_token'i istege ekler.
 // Yanit 401 ise: refresh_token ile yeniler, cookie'yi gunceller, istegi tekrar dener.

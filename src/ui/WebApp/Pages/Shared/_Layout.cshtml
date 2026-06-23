@@ -37,12 +37,9 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
 
 
-                                @if (User.Claims.Any(x => x is { Type: ClaimTypes.Role, Value: "instructor" }))
-                                {
-                                    <li>
-                                        <a class="dropdown-item" asp-page="/Instructor/Index">Instructor</a>
-                                    </li>
-                                }
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Products/CreateProduct">Create Product</a>
+                                </li>
                                 <li>
                                     <a class="dropdown-item" asp-page="/Basket/Index">Basket</a>
                                 </li>
