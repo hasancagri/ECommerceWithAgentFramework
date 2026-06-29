@@ -16,10 +16,13 @@ string apiKey = builder.Configuration["OpenAI:ApiKey"]
 string model = builder.Configuration["OpenAI:Model"] ?? "gpt-4o-mini";
 
 
-// IChatClient'ı DI'a kaydet (doğrudan OpenAI).
-IChatClient chatClient = new OpenAIClient(apiKey)
-    .GetChatClient(model)
-    .AsIChatClient();
+// IChatClient'ı DI'a kaydet (doğrudan OpenAI). FixedModelChatClient: istekteki "model"
+// alanini (proxy agent adini gonderiyor) yok sayip configdeki modeli zorlar.
+IChatClient chatClient = new FixedModelChatClient(
+    new OpenAIClient(apiKey)
+        .GetChatClient(model)
+        .AsIChatClient(),
+    model);
 
 builder.Services.AddSingleton(chatClient);
 
