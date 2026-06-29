@@ -98,9 +98,11 @@ web.WithReference(basketApi)
 // AgentOrchestrator: MCP tool'lari uzerinden calisan AI agent API'si (OpenAI uyumlu endpoint'ler).
 // MCP server'lara Gateway uzerinden baglanir; gateway'i WithReference ile alir =>
 // services:gateway:http:0 cozulur (fallback'e gerek kalmaz). OpenAI:ApiKey kendi user-secrets'inden.
-builder.AddProject<Projects.AgentOrchestrator>("agent-orchestrator")
+var agentOrchestrator = builder.AddProject<Projects.AgentOrchestrator>("agent-orchestrator")
     .WithReference(gateway)
     .WaitFor(gateway);
 
+// WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
+web.WithReference(agentOrchestrator);
 
 await builder.Build().RunAsync();
