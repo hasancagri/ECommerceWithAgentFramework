@@ -12,6 +12,7 @@
         <PackageReference Include="Microsoft.Extensions.AI" />
         <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
         <PackageReference Include="ModelContextProtocol.Core" />
+        <PackageReference Include="Duende.IdentityModel" />
     </ItemGroup>
 
     <ItemGroup>
