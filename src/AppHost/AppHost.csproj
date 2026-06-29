@@ -17,8 +17,10 @@
       <ProjectReference Include="..\services\order\Order.Api\Order.Api.csproj" />
       <ProjectReference Include="..\services\discount\Discount.Api\Discount.Api.csproj" />
       <ProjectReference Include="..\services\payment\Payment.Api\Payment.Api.csproj" />
+      <ProjectReference Include="..\services\gateway\Gateway\Gateway.csproj" />
       <ProjectReference Include="..\ui\WebApp\WebApp.csproj" />
       <ProjectReference Include="..\Identity.Server\Identity.Server.csproj" />
+      <ProjectReference Include="..\AgentOrchestrator\AgentOrchestrator.csproj" />
     </ItemGroup>
 
     <ItemGroup>

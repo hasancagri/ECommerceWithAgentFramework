@@ -72,6 +72,18 @@ var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WithReference(paymentDb)
     .WaitFor(paymentDb);
 
+// Gateway (YARP): downstream'lere service discovery ile baglanir (cluster adresleri
+// http://catalog-api gibi). Proxy'ledigi servisleri ve auth icin identity'yi referans alir.
+var gateway = builder.AddProject<Projects.Gateway>("gateway")
+    .WithReference(catalogApi)
+    .WithReference(basketApi)
+    .WithReference(discountApi)
+    .WithReference(orderApi)
+    .WithReference(paymentApi)
+    .WithReference(fileApi)
+    .WithReference(identityServer)
+    .WaitFor(identityServer);
+
 var web = builder.AddProject<Projects.WebApp>("ecommerce-web");
 web.WithReference(basketApi)
     .WithReference(catalogApi)
@@ -82,6 +94,13 @@ web.WithReference(basketApi)
     .WithReference(paymentApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
+
+// AgentOrchestrator: MCP tool'lari uzerinden calisan AI agent API'si (OpenAI uyumlu endpoint'ler).
+// MCP server'lara Gateway uzerinden baglanir; gateway'i WithReference ile alir =>
+// services:gateway:http:0 cozulur (fallback'e gerek kalmaz). OpenAI:ApiKey kendi user-secrets'inden.
+builder.AddProject<Projects.AgentOrchestrator>("agent-orchestrator")
+    .WithReference(gateway)
+    .WaitFor(gateway);
 
 
 await builder.Build().RunAsync();

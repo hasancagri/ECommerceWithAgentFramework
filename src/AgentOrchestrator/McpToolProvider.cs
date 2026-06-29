@@ -1,3 +1,4 @@
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
 
@@ -20,10 +21,6 @@ public sealed class RequestScopedMcpToolProvider(
     {
         try
         {
-            // HttpClient constructor'dan (IHttpClientFactory) gelir: handler havuzlanir, istek
-            // basina taze instance. O anki kullanicinin bearer'ini default header'a basariz =>
-            // bu client'in tum cagrilari (tool invoke dahil) token'i tasir. Remove-once: ayni
-            // instance ile birden cok server kesfedilirse header tekrarlanmasin.
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             if (accessor.HttpContext?.Request.Headers.Authorization.ToString() is
                 {
@@ -43,10 +40,21 @@ public sealed class RequestScopedMcpToolProvider(
         }
         catch (Exception ex)
         {
-            // Yetkisiz / erisilemez: bu istek icin o servisin araclarini bos gec.
-            // Uygulama dusmez; bir sonraki (yetkili) istek tekrar dener.
             logger.LogWarning(ex, "MCP '{Server}' tool kesfi basarisiz; bu istek icin atlandi.", serverName);
             return [];
         }
+    }
+}
+
+public static class McpToolProviderExtensions
+{
+    // Verilen MCP server'larin tool'larini tek listede toplar (agent factory icinde, request scope).
+    public static IList<AITool> CollectTools(
+        this IMcpToolProvider provider, params (string Name, string Url)[] servers)
+    {
+        List<AITool> tools = [];
+        foreach (var (name, url) in servers)
+            tools.AddRange(provider.GetToolsAsync(name, url).GetAwaiter().GetResult());
+        return tools;
     }
 }

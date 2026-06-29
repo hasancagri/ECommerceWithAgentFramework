@@ -49,6 +49,14 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// MCP server: [McpServerToolType] isaretli tool'lari (BasketMcpTools) tarar ve HTTP transport ile sunar.
+// Tool'lar kullaniciyi (CurrentUser) HttpContext'ten aldigi icin accessor gerekiyor.
+builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
 var app = builder.Build();
 
 var apiVersionSet = app.NewApiVersionSet()
@@ -60,5 +68,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.AddBasketGroupEndpointExtension(apiVersionSet);
+
+// MCP endpoint'i. RequireAuthorization() => gecerli (authenticated) token sart; transport kapisi.
+// Tool icinde userId forward edilen token'dan (CurrentUser) okunur.
+app.MapMcp("/mcp").RequireAuthorization();
 
 await app.RunAsync();
