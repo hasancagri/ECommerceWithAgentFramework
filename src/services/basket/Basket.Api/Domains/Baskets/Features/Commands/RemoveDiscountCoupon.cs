@@ -1,10 +1,13 @@
 
 using Common.Auths;
+using Common.Utils.Authorization;
+using Common.Utils.Constants;
 
 namespace Basket.Api.Domains.Baskets.Features.Commands;
 
 public static class RemoveDiscountCoupon
 {
+    [RequiredScope(AuthorizationScopes.BasketWrite)]
     public record RemoveDiscountCouponCommand(Guid UserId);
 
     public class RemoveDiscountCouponResponse

@@ -1,10 +1,13 @@
 
 using Common.Auths;
+using Common.Utils.Authorization;
+using Common.Utils.Constants;
 
 namespace Basket.Api.Domains.Baskets.Features.Commands;
 
 public static class ApplyDiscountCoupon
 {
+    [RequiredScope(AuthorizationScopes.BasketWrite)]
     public record ApplyDiscountCouponCommand(Guid UserId, string Coupon, float DiscountRate);
 
     public class ApplyDiscountCouponResponse

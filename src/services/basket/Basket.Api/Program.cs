@@ -30,6 +30,9 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.OrderCreated.Queues.Basket);
 
     opts.Policies.UseDurableLocalQueues();
+    // Handler-level yetki: [RequiredScope] tasiyan komut/sorgular icin token scope kontrolu
+    // (REST + MCP ortak nokta).
+    opts.Policies.AddMiddleware(typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware));
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
