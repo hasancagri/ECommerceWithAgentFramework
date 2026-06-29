@@ -36,8 +36,14 @@ var basketUrl = $"{gatewayUrl}/mcp/{McpServers.Basket}";
 var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
 
 builder.Services.AddTransient<TokenInjectingHandler>();
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers experimental; MCP icin gerekli
 builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>()
+    // MCP, sunucu->istemci icin uzun-omurlu bir SSE GET acar; ServiceDefaults'in standart
+    // resilience handler'inin TotalRequestTimeout'u bu baglantiyi iptal edip kesfi cokertiyor.
+    // Bu yuzden MCP client'ini resilience'tan muaf tutuyoruz (MCP kendi baglanti yasam dongusunu yonetir).
+    .RemoveAllResilienceHandlers()
     .AddHttpMessageHandler<TokenInjectingHandler>();
+#pragma warning restore EXTEXP0001
 
 // NOT: Agent'lar Singleton. MapOpenAI* helper'lari agent'i ACILISTA root provider'dan tek
 // sefer cozup closure'a yakaliyor (Scoped calismaz). Sonuc: tool'lar acilista BIR KEZ, kullanici
