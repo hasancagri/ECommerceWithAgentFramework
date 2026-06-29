@@ -5,7 +5,6 @@
 }
 
 <div class="container mt-5">
-    <h1 class="mb-4">Products</h1>
     <div class="row row-cols-1 row-cols-md-3 g-4">
 
 
@@ -24,8 +23,9 @@
             <div class="col">
                 <div class="card h-100 shadow-lg border-0">
                     <a asp-page="/Products/Detail" asp-route-id="@product.Id">
-                        <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/blank_course_thumbnail.jpg" : product.ImageUrl)"
-                             class="card-img-top" alt="@product.Name">
+                        <img
+                            src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/blank_course_thumbnail.jpg" : product.ImageUrl)"
+                            class="card-img-top" alt="@product.Name">
                     </a>
 
                     <div class="card-body">
@@ -39,8 +39,8 @@
                         </p>
                     </div>
                     <div class="card-footer">
-                        <small class="text-muted">SKU: <strong>@product.Sku</strong></small><br>
-                        <a asp-page="/Products/Detail" asp-route-id="@product.Id" class="btn btn-primary mt-2">Show Detail</a>
+                        <a asp-page="/Products/Detail" asp-route-id="@product.Id" class="btn btn-primary mt-2">Show
+                            Detail</a>
                     </div>
                 </div>
             </div>

@@ -74,6 +74,14 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// MCP server: [McpServerToolType] isaretli tool'lari (ProductMcpTools) tarar ve HTTP transport ile sunar.
+// Tool icindeki scope kontrolu icin HttpContext'e erisim gerekiyor.
+builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
 
 var app = builder.Build();
 
@@ -86,5 +94,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.AddProductGroupEndpointExtension(apiVersionSet);
+
+// MCP endpoint'i. RequireAuthorization() => gecerli (authenticated) token sart; transport kapisi.
+// Read/write ayrimi tool'larin ICINDE (RequireScope) yapilir, cunku tum tool'lar bu tek
+// endpoint'ten gecer ve endpoint tek bir policy uygulayabilir.
+app.MapMcp("/mcp").RequireAuthorization();
 
 await app.RunAsync();

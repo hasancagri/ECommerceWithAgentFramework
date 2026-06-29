@@ -13,6 +13,7 @@ public static class ProductEndpointExtension
             .DeleteProductGroupItemEndpoint()
             .GetAllProductsGroupItemEndpoint()
             .GetProductByIdGroupItemEndpoint()
+            .GetProductByNameGroupItemEndpoint()
             .RequireAuthorization();
     }
 }

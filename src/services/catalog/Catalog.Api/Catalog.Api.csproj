@@ -21,6 +21,7 @@
         <PackageReference Include="Asp.Versioning.Http" />
         <PackageReference Include="Duende.IdentityModel" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
     </ItemGroup>
 
     <ItemGroup>
@@ -31,7 +32,6 @@
 
     <ItemGroup>
       <Folder Include="Domains\Products\Features\" />
-      <Folder Include="Domains\Products\ValueObjects\" />
     </ItemGroup>
 
 </Project>
