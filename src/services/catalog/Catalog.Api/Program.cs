@@ -1,4 +1,5 @@
 using Catalog.Api.Domains.Products;
+using Common.Utils.Authorization;
 using Common.Utils.Constants;
 using Shared.Utils.Constants;
 
@@ -53,14 +54,13 @@ builder.Host.UseWolverine(opts =>
     opts.Policies.UseDurableLocalQueues();
     // Handler-level yetki: [RequiredScope] tasiyan komut/sorgular icin token scope kontrolu
     // (REST + MCP ortak nokta).
-    opts.Policies.AddMiddleware(typeof(Common.ScopeAuthorizationMiddleware));
+    opts.Policies.AddMiddleware(typeof(ScopeAuthorizationMiddleware));
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
 // Seed'i Wolverine'den SONRA kaydet: hosted service'ler kayit sirasiyla baslar, boylece
 // SeedData.StartAsync calistiginda Wolverine runtime hazir olur ve PublishAsync calisir.
 builder.Services.AddHostedService<SeedData>();
-
 
 builder.Services.AddApiVersioning(options =>
 {

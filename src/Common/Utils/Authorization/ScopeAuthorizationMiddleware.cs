@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Wolverine;
 
-namespace Common;
+namespace Common.Utils.Authorization;
 
 // Wolverine middleware: her handler'dan ONCE calisir. Mesaj tipinde [RequiredScope] varsa,
 // forward edilen token'daki "scope" claim'ini kontrol eder; yoksa UnauthorizedAccessException
