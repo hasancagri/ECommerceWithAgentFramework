@@ -8,6 +8,7 @@ using WebApp.ExceptionHandlers;
 using WebApp.Services;
 using WebApp.Services.Refit;
 using WebApp.Authentication;
+using WebApp.Chat;
 using WebApp.Extensions;
 using WebApp.Options;
 
@@ -35,6 +36,14 @@ builder.Services.AddSingleton(identitySettings);
 
 // TokenService'in M2M/refresh icin kullandigi adsiz-degil "identity" client'i.
 builder.Services.AddHttpClient("identity");
+
+// AI chat orchestrator (service discovery: services:agent-orchestrator:http:0).
+// Streaming oldugu icin uzun timeout.
+builder.Services.AddHttpClient("orchestrator", client =>
+{
+    client.BaseAddress = new Uri("http://agent-orchestrator");
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
@@ -192,5 +201,7 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorPages()
     .WithStaticAssets();
+
+app.MapChatProxy();
 
 app.Run();
