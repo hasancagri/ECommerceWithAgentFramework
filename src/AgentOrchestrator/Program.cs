@@ -10,10 +10,6 @@ builder.AddServiceDefaults();
 
 builder.Services.AddHttpContextAccessor();
 
-// m2m token edinmek icin IdentityServer'a giden adsiz client.
-builder.Services.AddHttpClient("identity");
-builder.Services.AddSingleton<IClientCredentialsTokenProvider, ClientCredentialsTokenProvider>();
-
 string apiKey = builder.Configuration["OpenAI:ApiKey"]
                 ?? throw new InvalidOperationException(
                     "OpenAI:ApiKey is not set");
