@@ -56,11 +56,11 @@ app.MapDefaultEndpoints();
 
 // Anonim kullanıcı agent'ı: POST /public/v1/chat/completions, /public/v1/responses
 app.MapOpenAIChatCompletions(publicAgent);
-app.MapOpenAIResponses(publicAgent);
+app.MapOpenAIResponses(publicAgent, "/public/v1/responses");
 
 // Giriş yapmış kullanıcı agent'ı: POST /assistant/v1/chat/completions, /assistant/v1/responses
 app.MapOpenAIChatCompletions(assistant);
-app.MapOpenAIResponses(assistant);
+app.MapOpenAIResponses(assistant, "/assistant/v1/responses");
 
 app.MapOpenAIConversations(); // POST /v1/conversations
 
