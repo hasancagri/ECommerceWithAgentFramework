@@ -39,7 +39,9 @@ var gatewayUrl = builder.Configuration["services:gateway:http:0"] ?? "http://loc
 var basketUrl = $"{gatewayUrl}/mcp/{McpServers.Basket}";
 var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
 
-builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>();
+builder.Services.AddTransient<TokenInjectingHandler>();
+builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>()
+    .AddHttpMessageHandler<TokenInjectingHandler>();
 
 // NOT: Agent'lar Singleton. MapOpenAI* helper'lari agent'i ACILISTA root provider'dan tek
 // sefer cozup closure'a yakaliyor (Scoped calismaz). Sonuc: tool'lar acilista BIR KEZ, kullanici

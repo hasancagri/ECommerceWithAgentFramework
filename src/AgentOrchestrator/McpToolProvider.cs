@@ -4,16 +4,14 @@ using ModelContextProtocol.Client;
 
 namespace AgentOrchestrator;
 
-// Istek basina MCP araclarini saglar. Scoped olarak kaydedilir; cagrildiginda
-// o anki HttpContext token'iyla MCP client kurar ve tool listesini doner.
-// Paylasimli/startup oturumu YOK: her istek kendi kimligiyle kendi oturumunu acar.
+// MCP tool'larini keşfeder (ListTools). Token okumaz; Authorization, MCP HttpClient'ina
+// takili TokenInjectingHandler tarafindan her cagriya iliştirilir (user token, yoksa m2m).
 public interface IMcpToolProvider
 {
     Task<IList<McpClientTool>> GetToolsAsync(string serverName, string url, CancellationToken ct = default);
 }
 
 public sealed class RequestScopedMcpToolProvider(
-    IHttpContextAccessor accessor,
     HttpClient httpClient,
     ILogger<RequestScopedMcpToolProvider> logger) : IMcpToolProvider
 {
@@ -21,13 +19,6 @@ public sealed class RequestScopedMcpToolProvider(
     {
         try
         {
-            httpClient.DefaultRequestHeaders.Remove("Authorization");
-            if (accessor.HttpContext?.Request.Headers.Authorization.ToString() is
-                {
-                    Length: > 0
-                } bearer)
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", bearer);
-
             var client = await McpClient.CreateAsync(
                 new HttpClientTransport(
                     new HttpClientTransportOptions { Name = serverName, Endpoint = new Uri(url) },
