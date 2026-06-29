@@ -98,9 +98,9 @@ app.UseAuthorization();
 
 app.AddProductGroupEndpointExtension(apiVersionSet);
 
-// MCP endpoint'i. RequireAuthorization() => gecerli (authenticated) token sart; transport kapisi.
-// Read/write ayrimi tool'larin ICINDE (RequireScope) yapilir, cunku tum tool'lar bu tek
-// endpoint'ten gecer ve endpoint tek bir policy uygulayabilir.
-app.MapMcp("/mcp").RequireAuthorization();
+// Transport kapisi YOK: tool kesfi (ListTools) acilista token'siz calissin. Yetki, komut/sorgu
+// handler'larinda ScopeAuthorizationMiddleware ([RequiredScope]) ile kontrol edilir. UseAuthentication
+// global oldugu icin token GELDIGINDE HttpContext.User yine dolar.
+app.MapMcp("/mcp");
 
 await app.RunAsync();

@@ -72,8 +72,9 @@ app.UseAuthorization();
 
 app.AddBasketGroupEndpointExtension(apiVersionSet);
 
-// MCP endpoint'i. RequireAuthorization() => gecerli (authenticated) token sart; transport kapisi.
-// Tool icinde userId forward edilen token'dan (CurrentUser) okunur.
-app.MapMcp("/mcp").RequireAuthorization();
+// Transport kapisi YOK: tool kesfi (ListTools) acilista token'siz calissin. Yetki, komut/sorgu
+// handler'larinda ScopeAuthorizationMiddleware ([RequiredScope]) ile. Tool icinde userId forward
+// edilen token'dan (CurrentUser) okunur; UseAuthentication global oldugu icin User dolar.
+app.MapMcp("/mcp");
 
 await app.RunAsync();
