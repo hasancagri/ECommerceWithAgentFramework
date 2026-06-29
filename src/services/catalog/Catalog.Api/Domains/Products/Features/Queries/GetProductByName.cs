@@ -6,6 +6,7 @@ namespace Catalog.Api.Domains.Products.Features.Queries;
 
 public static class GetProductByName
 {
+    [RequiredScope(AuthorizationScopes.CatalogRead)]
     public record GetProductByNameQuery(string Name, int Limit = 5);
 
     public class GetProductByNameQueryHandler

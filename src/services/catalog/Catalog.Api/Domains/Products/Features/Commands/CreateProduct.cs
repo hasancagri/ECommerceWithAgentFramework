@@ -9,6 +9,7 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 
 public static class CreateProduct
 {
+    [RequiredScope(AuthorizationScopes.CatalogWrite)]
     public record CreateProductCommand(
         string Name,
         string Description,

@@ -6,6 +6,7 @@ namespace Catalog.Api.Domains.Products.Features.Queries;
 
 public static class GetProductById
 {
+    [RequiredScope(AuthorizationScopes.CatalogRead)]
     public record GetProductByIdQuery(Guid Id);
 
     public class ProductResponse
