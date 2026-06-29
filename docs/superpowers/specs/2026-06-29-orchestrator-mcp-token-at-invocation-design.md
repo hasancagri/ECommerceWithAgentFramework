@@ -1,123 +1,104 @@
 # Orchestrator MCP Auth — Handler-Level Authorization Design
 
-**Tarih:** 2026-06-29 (rev2)
+**Tarih:** 2026-06-30 (rev3)
 **Durum:** Tasarım onaylandı
-**Bağlam:** Chat widget doğrulamasında agent'lar boş tool ile çalışıyor (singleton, açılışta token'sız toplanan tool'lar 401). Bu spec, daha önce yazılan "request-aware agent" ve "per-tool MCP guard" yaklaşımlarının yerini alır.
+**Bağlam:** Chat widget doğrulamasında agent'lar boş tool ile çalışıyor. Bu spec, "request-aware agent" ve "per-tool MCP guard" yaklaşımlarının yerini alır. rev3: orchestrator'ın kendi m2m provider'ı kaldırıldı (WebApp zaten token gönderiyor); MCP auth tek noktada (handler middleware).
 
 ## 1. Amaç
 
-Agent'lar MCP tool'larını gerçekten kullanabilsin; yetki **hem REST hem MCP'nin geçtiği tek noktada (Wolverine handler'ı) ve doğru token'la** kontrol edilsin:
-- **Token edinimi:** orchestrator her MCP çağrısına token iliştirir — isteğin kullanıcı token'ı varsa o, yoksa **m2m** (client_credentials, read scope'ları).
-- **Yetki:** komut/sorgu üzerindeki `[RequiredScope]` attribute'una göre, bir **Wolverine middleware** `HttpContext.User`'daki scope claim'ini kontrol eder. Bu middleware her handler invocation'ında çalışır → REST ve MCP yolları **tek noktada** korunur.
-- **Anonim (public):** m2m token → yalnız read scope'ları → okuma çalışır, yazma reddedilir.
-- **Login (assistant):** kullanıcı token'ı → kullanıcının scope'ları → read + write + basket.
+Agent'lar MCP tool'larını gerçekten kullanabilsin; yetki **hem REST hem MCP'nin geçtiği tek noktada (Wolverine handler middleware)** ve **WebApp'in gönderdiği token'la** kontrol edilsin.
 
-## 2. Neden handler-level (per-tool guard / request-aware agent yerine)
+## 2. Temel içgörü — token'ı WebApp sağlıyor
 
-**Kritik bulgu:** MCP tool'ları `bus.InvokeAsync(command)` ile **doğrudan handler'ı** çağırıyor; bu, REST endpoint'ini ve oradaki `.RequireAuthorization(scope)`'u **baypas ediyor** (RequireAuthorization bir ASP.NET endpoint metadata'sı; in-process bus çağrısında AuthorizationMiddleware çalışmaz). Yani REST ve MCP'nin **tek ortak noktası handler'dır.** Yetkiyi oraya koymak:
-- **Tek doğruluk kaynağı:** her giriş noktası (REST, MCP, ileride başka) aynı kontrolden geçer.
-- **Tekrarsız:** her tool'a/endpoint'e elle guard yazmak yok; attribute + tek middleware.
-- **Singleton agent doğru kalır:** tool'lar açılışta bir kez keşfedilir; token HTTP katmanında akar.
+Orchestrator MCP'leri yalnız WebApp BFF proxy'sinden gelen isteklerle kullanır. `ChatEndpoints.cs` her zaman bir token gönderir:
+- **Anonim:** `tokenService.GetClientAccessTokenAsync()` → ecommerce.bff client_credentials (`catalog.read discount.read`, audience `catalog.api`/`discount.api`).
+- **Login:** kullanıcının access token'ı (kullanıcı scope'ları + audience'ları).
 
-## 3. Mevcut durum / bulgular
+Bu token `Authorization` header'ında orchestrator'a gelir. Dolayısıyla orchestrator **kendi m2m token'ını üretmez**; gelen token'ı MCP çağrılarına **forward eder**.
 
-- Orchestrator agent'ları `Singleton` (kütüphane açılışta yakalıyor, [[orchestrator-agent-singleton]]); tool'lar açılışta token'sız toplandığı için boş.
-- MCP server (`Catalog.Api/Program.cs`): `app.MapMcp("/mcp").RequireAuthorization()` = transport kapısı (herhangi geçerli token). Per-tool scope kontrolü yorumda var ama **kodda yok** (`ProductMcpTools`/`BasketMcpTools` hiç scope kontrol etmiyor) → MCP yolu scope'u baypas ediyor.
-- REST endpoint'leri scope'u `.RequireAuthorization(AuthorizationScopes.X)` ile kontrol ediyor (örn. `DeleteProduct.cs:47`).
+## 3. Neden handler-level (per-tool guard / request-aware agent yerine)
+
+MCP tool'ları `bus.InvokeAsync(command)` ile **doğrudan handler'ı** çağırıp REST endpoint'inin `.RequireAuthorization(scope)`'unu **baypas ediyor** (in-process bus çağrısında AuthorizationMiddleware çalışmaz). REST ve MCP'nin tek ortak noktası **handler**'dır → yetki oraya konur: tek doğruluk kaynağı, tekrarsız, singleton agent doğru kalır.
 
 ## 4. Tasarım
 
 ### 4a. `RequiredScopeAttribute` (Common)
-Komut/sorgu sınıfına konan, gereken scope'u taşıyan basit attribute:
-```csharp
-[AttributeUsage(AttributeTargets.Class)]
-public sealed class RequiredScopeAttribute(string scope) : Attribute { public string Scope { get; } = scope; }
-```
-Örnek: `[RequiredScope(AuthorizationScopes.CatalogWrite)] public record DeleteProductCommand(Guid Id);`
+Komut/sorguya gereken scope'u işaretler: `[RequiredScope(AuthorizationScopes.CatalogWrite)]`.
 
 ### 4b. `ScopeAuthorizationMiddleware` (Wolverine, Common)
-Her handler'dan ÖNCE çalışır; mesajın `[RequiredScope]`'unu okur, `IHttpContextAccessor.User.HasScope` ile kontrol eder; yoksa `UnauthorizedAccessException` fırlatır (handler çalışmaz).
-- Mesaj tipine `[RequiredScope]` yoksa → geç (scope istemeyen handler'lar etkilenmez).
-- `HasScope` = Task'taki helper (token'daki `"scope"` claim'i; `MapInboundClaims=false` ile aynı semantik).
-- Wolverine'e `opts.Policies.AddMiddleware(typeof(ScopeAuthorizationMiddleware))` ile kaydedilir — yalnız **catalog ve basket** servislerinde (MCP'ye açık olanlar).
+Her handler'dan önce çalışır; mesaj tipindeki `[RequiredScope]`'u okur, `IHttpContextAccessor.User.HasScope` ile kontrol eder; yoksa `UnauthorizedAccessException`. `opts.Policies.AddMiddleware(...)` ile catalog ve basket'e kayıtlı.
 
 ### 4c. Komut/sorgu anotasyonları (catalog, basket)
-MCP'den erişilebilen komut/sorgulara `[RequiredScope]`:
-- Catalog: `get_product`/`search_products` → `catalog.read`; `create/update/delete_product` → `catalog.write`.
-- Basket: `get_basket` → `basket.read`; `add_to_cart`/`remove_basket_item`/`apply/remove_discount_coupon` → `basket.write`.
+- Catalog: get/search → `catalog.read`; create/update/delete → `catalog.write`.
+- Basket: get → `basket.read`; add/remove/coupon → `basket.write`.
 
-### 4d. Orchestrator: per-invocation token (DelegatingHandler)
-- MCP `HttpClient`'ına **`TokenInjectingHandler`**: her giden MCP isteğine token ekler — `IHttpContextAccessor`'da kullanıcı token'ı varsa o, yoksa `IClientCredentialsTokenProvider`'dan **m2m** token (cache'li). Açılış keşfi de m2m token'la geçer.
-- `McpToolProvider` sadeleşir: token okuma kalkar (handler'a taşınır); sadece `ListToolsAsync`.
-- Agent'lar **Singleton kalır**; tool'lar açılışta bir kez keşfedilir.
-- `ClientCredentialsTokenProvider` + orchestrator IdentityServer config (`m2m.client`/`dev-secret`, `catalog.read`).
+### 4d. Orchestrator: gelen token'ı forward et (DelegatingHandler)
+- `TokenInjectingHandler`: MCP'ye giden her isteğe **o anki isteğin `Authorization` header'ını** ekler. m2m üretimi YOK (WebApp sağlıyor).
+- Açılışta (boot, istek yok) header yoktur → keşif **token'sız (anonim)** yapılır.
+- `McpToolProvider` yalnız `ListToolsAsync`. Agent'lar Singleton; tool'lar açılışta bir kez keşfedilir.
+- Orchestrator'da IdentityServer config / Duende paketi / m2m provider **YOK**.
 
-### 4e. Defense-in-depth — değişMEYENler
-- **MCP transport kapısı KALIR:** `MapMcp("/mcp").RequireAuthorization()` (katman 1: authenticated). Orchestrator her çağrıya token iliştirdiği için keşif/çağrı token'lı geçer; transport açmaya gerek YOK.
-- **Gateway `/mcp/*` policy'leri KALIR** (authenticated token şart). Orchestrator token gönderdiği için geçer.
-- **REST endpoint `.RequireAuthorization(scope)`'ları KALIR** (defense-in-depth; handler middleware ile çift katman).
+### 4e. MCP transport açık (auth tek noktada)
+- **Gateway `/mcp/*` route'ları:** `AuthorizationPolicy` YOK (yalnız yönlendirir). [Not: gateway `Audience=gateway.api` olduğu ve böyle bir ApiResource olmadığı için gateway forward edilen hiçbir token'ı doğrulayamaz; bu yüzden /mcp route'larında auth olamaz.]
+- **Catalog/Basket `MapMcp("/mcp")`:** `.RequireAuthorization()` YOK → açılış keşfi (ListTools) token'sız çalışır. `UseAuthentication` global çalıştığı için, token GELDİĞİNDE `HttpContext.User` yine dolar → handler middleware scope'u kontrol eder.
+- **Tek MCP auth noktası = handler middleware (`[RequiredScope]`).**
+- REST endpoint `.RequireAuthorization(scope)`'ları KALIR (REST için ayrı katman; MCP'yi etkilemez).
 
 ## 5. Veri akışı
 
 **Anonim arama (read):**
 ```
-POST /public/v1/responses (token yok)
-  → singleton public agent search_products tool → MCP HttpClient
-     → TokenInjectingHandler: HttpContext yok → m2m token (catalog.read)
-     → gateway /mcp/catalog (authenticated ✓) → Catalog MCP (transport authenticated ✓)
-        → bus.InvokeAsync(GetProductByNameQuery) → ScopeAuthorizationMiddleware:
-           [RequiredScope(catalog.read)] var, m2m'de catalog.read var ✓ → handler → ürünler
+WebApp /chat/stream (anonim) → tokenService m2m (catalog.read) → orchestrator /public/v1/responses (Authorization: m2m)
+  → search_products tool → TokenInjectingHandler: gelen m2m token'i forward
+  → gateway /mcp/catalog (anonim route) → Catalog MCP (transport acik; UseAuthentication User'i doldurur)
+     → bus.InvokeAsync(GetProductByNameQuery) → ScopeAuthorizationMiddleware: catalog.read ✓ → urunler
 ```
 
-**Anonim yazma (deny):**
+**Açılış keşfi:**
 ```
-... create_product → m2m token (catalog.read, write YOK)
-  → ScopeAuthorizationMiddleware: [RequiredScope(catalog.write)] ✗ → UnauthorizedAccessException → reddedilir
+boot → singleton agent factory → CollectTools → ListTools (token YOK)
+  → gateway /mcp/catalog (anonim) → Catalog MCP (transport acik, ListTools anonim) → tool listesi
 ```
 
 **Login sepete ekleme:**
 ```
-POST /assistant/v1/responses (Authorization: user token)
-  → add_to_cart → TokenInjectingHandler: user token forward
-  → ScopeAuthorizationMiddleware: [RequiredScope(basket.write)] kullanicida var ✓ → sepete eklenir
+WebApp /chat/stream (login) → user token → orchestrator /assistant/v1/responses (Authorization: user)
+  → add_to_cart → TokenInjectingHandler: user token forward → Basket MCP
+     → ScopeAuthorizationMiddleware: basket.write (kullanicida) ✓ → sepete eklenir
 ```
 
 ## 6. Güvenlik
 
-- **Katman 1 (transport + gateway):** authenticated token şart → anonim MCP erişimi yok.
-- **Katman 2 (handler middleware):** `[RequiredScope]` → ince scope kontrolü, REST + MCP ortak.
-- m2m yalnız read scope'ları → anonim **read-only**; login **per-user**.
-- Hata: `UnauthorizedAccessException` fırlatılır → MCP'de hata sonucu, REST'te exception handler ile uygun yanıt (servislerde mevcut handler kontrol edilir; yoksa not düşülür).
+- MCP yetkisi tamamen **handler middleware**'de (scope). Gateway/transport yalnız yönlendirir.
+- ListTools anonim (yalnız metadata, hassas değil).
+- Anonim CallTool (token'sız) → `HttpContext.User` anonim → `HasScope` false → reddedilir. Gerçek anonim çağrılar WebApp m2m token'ıyla gelir (catalog.read var → okuma çalışır, write yok).
+- Login → kullanıcı scopeّ'ları.
 
 ## 7. Komponentler (dosyalar)
 
 | Dosya | Sorumluluk | İşlem |
 |------|-----------|------|
-| `src/Common/Utils/Authorization/ScopeAuthorizationExtensions.cs` | `ClaimsPrincipal.HasScope` (mevcut) | (var) |
-| `src/Common/Utils/Authorization/RequiredScopeAttribute.cs` | Komuta gereken scope'u işaretler | Create |
-| `src/Common/Utils/Authorization/ScopeAuthorizationMiddleware.cs` | Wolverine `Before`: attribute → HasScope kontrolü | Create |
-| `src/services/catalog/Catalog.Api/Domains/Products/Features/**` | Komut/sorgulara `[RequiredScope]` | Modify |
-| `src/services/catalog/Catalog.Api/Program.cs` | Middleware'i Policies'e kaydet | Modify |
-| `src/services/basket/Basket.Api/Domains/Baskets/Features/**` | Komut/sorgulara `[RequiredScope]` | Modify |
-| `src/services/basket/Basket.Api/Program.cs` | Middleware'i Policies'e kaydet | Modify |
-| `src/AgentOrchestrator/ClientCredentialsTokenProvider.cs` | m2m token + cache | Create |
-| `src/AgentOrchestrator/TokenInjectingHandler.cs` | Per-invocation token enjeksiyonu | Create |
-| `src/AgentOrchestrator/McpToolProvider.cs` | Token okuma çıkar | Modify |
-| `src/AgentOrchestrator/AgentOrchestrator.csproj` + `appsettings.json` + `Program.cs` | Duende paketi + identity config + DI kaydı | Modify |
-
-**Geri alınacak:** `ProductMcpTools.cs`'teki per-tool guard'lar (yanlış yaklaşım commit'i) eski haline döner; `MapMcp` `RequireAuthorization` korunur.
+| `src/Common/Utils/Authorization/RequiredScopeAttribute.cs` | scope işareti | (yapıldı) |
+| `src/Common/Utils/Authorization/ScopeAuthorizationMiddleware.cs` | Wolverine scope kontrolü | (yapıldı) |
+| `src/services/catalog/.../Features/**` + `Program.cs` | `[RequiredScope]` + middleware kaydı | (yapıldı) |
+| `src/services/basket/.../Features/**` + `Program.cs` | `[RequiredScope]` + middleware kaydı | (yapıldı) |
+| `src/services/catalog/Catalog.Api/Program.cs` | `MapMcp` `RequireAuthorization` KALDIR | Modify |
+| `src/services/basket/Basket.Api/Program.cs` | `MapMcp` `RequireAuthorization` KALDIR | Modify |
+| `src/services/gateway/Gateway/appsettings.Development.json` | `/mcp/*` AuthorizationPolicy KALDIR | (yapıldı, kullanıcı) |
+| `src/AgentOrchestrator/TokenInjectingHandler.cs` | yalnız gelen token'ı forward | Modify |
+| `src/AgentOrchestrator/ClientCredentialsTokenProvider.cs` | — | **Delete** |
+| `src/AgentOrchestrator/appsettings.json` + `.csproj` + `Program.cs` | IdentityServer config + Duende + provider kaydı KALDIR | Modify |
 
 ## 8. Doğrulama (runtime; TDD kapsam dışı)
 
-- **D1:** Anonim "Nike ürünleri ara" → gerçek ürün verisi (m2m + search_products); SSE'de tool çağrısı; "lütfen bekleyin"de takılmaz.
-- **D2:** Anonim `create_product` → reddedilir (m2m'de catalog.write yok; middleware `UnauthorizedAccessException`).
-- **D3:** Login → "sepetimi göster"/"sepete ekle" → kullanıcı token'ıyla çalışır.
-- **D4:** Streaming + çok turlu hafıza bozulmaz.
-- **D5:** Keşif token'la geçer (orchestrator m2m fallback); açılışta MCP tool kesfi başarılı.
-- Her görevin kapısı `dotnet build` (0 error).
+- **D1:** Anonim "Nike ürünleri ara" → gerçek ürün; `search_products` çağrısı; `response.failed` yok; startup catch yok.
+- **D2:** Anonim `create_product` → reddedilir (WebApp m2m token'ında `catalog.write` yok → middleware).
+- **D3:** Login → "sepete ekle" → kullanıcı token'ıyla çalışır.
+- **D4:** Açılış keşfi token'sız geçer (dashboard'da MCP 401 warning'i yok; agent tool'lara sahip).
+- **D5:** Streaming + çok turlu hafıza bozulmaz.
 
 ## 9. Kapsam dışı / açık konular
 
-- Wolverine `Before` middleware imzası / `Envelope` erişimi — planın ilk task'ında kodla kesinleştirilir.
-- `UnauthorizedAccessException`'ın catalog/basket'te 403'e map'lenmesi — mevcut exception handler kontrol edilir; yoksa minimal ekleme not düşülür (ama MCP yolu için fırlatma yeterli).
-- Diğer servisler (order/payment/...) MCP'ye açık değil → kapsam dışı.
+- Gateway'in `Audience=gateway.api` yanlış yapılandırması (REST proxy route'larını da etkiler) — ayrı, MCP dışı.
+- Basket tool'larının açılışta keşfi: ListTools anonim çalışır (transport açık); çağrı login token'ı ister. Per-user davranış login isteğinde token forward ile sağlanır.
+- `UnauthorizedAccessException`'ın 403'e map'i — MCP yolu için fırlatma yeterli (agent hata olarak aktarır).

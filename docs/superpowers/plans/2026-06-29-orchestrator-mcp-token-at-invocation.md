@@ -475,3 +475,44 @@ Expected: `search_products` çağrısı + gerçek ürün içeren delta'lar; `res
 - **Spec kapsamı:** 4a (attribute) → Task 2; 4b (middleware) → Task 2; 4c (anotasyon + kayıt) → Task 3-4; 4d (orchestrator token) → Task 5-6; 4e (defense-in-depth korunur) → Task 1 (revert) + hiçbir auth kaldırılmadı; doğrulama → Task 7.
 - **Tip tutarlılığı:** `RequiredScopeAttribute.Scope` ↔ middleware okuması; `HasScope` (mevcut) ↔ middleware; `IClientCredentialsTokenProvider.GetTokenAsync` ↔ handler; `RequestScopedMcpToolProvider` adı korunur.
 - **İşaretli runtime belirsizlikleri:** (a) Wolverine `Before(Envelope,...)` + `AddMiddleware(Type)` → Task 2/3 build gate'i doğrular (alternatif: `AddMiddleware<T>()`); (b) typed-client handler rotasyonu → D6; (c) `UnauthorizedAccessException`'ın REST'te 403'e map'i → REST'te zaten `RequireAuthorization` defense-in-depth var, middleware throw'u pratikte yalnız MCP yolunda devreye girer.
+---
+
+# rev3 — Token'ı WebApp sağlıyor (orchestrator m2m kaldırılır)
+
+**Değişiklik:** WebApp BFF her zaman token gönderdiği için (anonim: ecommerce.bff client_credentials; login: user) orchestrator'ın kendi m2m provider'ına gerek yok. MCP auth tek noktada (handler middleware). Transport/gateway yalnız yönlendirir. Bu bölüm **Task 5-6'yı supersede eder** ve transport'u açar.
+
+## Task R1: Gateway `/mcp/*` anonim — commit
+- [ ] Kullanıcının `catalog-mcp-route`/`basket-mcp-route`'tan `AuthorizationPolicy` kaldıran düzenlemesini commit'le.
+  `git add src/services/gateway/Gateway/appsettings.Development.json && git commit -m "feat(gateway): make /mcp routes anonymous (gateway cannot validate forwarded token audience)"`
+
+## Task R2: Catalog + Basket MCP transport'unu aç
+- [ ] `Catalog.Api/Program.cs`: `app.MapMcp("/mcp").RequireAuthorization();` → `app.MapMcp("/mcp");` (yetki handler middleware'de; açılış keşfi token'sız çalışsın).
+- [ ] `Basket.Api/Program.cs`: aynı.
+- [ ] Build (catalog, basket) 0 error. Commit.
+
+## Task R3: Orchestrator m2m provider'ı geri al
+- [ ] `ClientCredentialsTokenProvider.cs` **sil**.
+- [ ] `Program.cs`: `AddHttpClient("identity")` + `AddSingleton<IClientCredentialsTokenProvider,...>()` satırlarını kaldır.
+- [ ] `appsettings.json`: `IdentityServer` bölümünü kaldır.
+- [ ] `AgentOrchestrator.csproj`: `Duende.IdentityModel` paketini kaldır.
+
+## Task R4: TokenInjectingHandler'ı sadeleştir
+- [ ] `TokenInjectingHandler`: `IClientCredentialsTokenProvider` bağımlılığını ve m2m dalını kaldır; yalnız gelen `Authorization`'ı forward et:
+```csharp
+public sealed class TokenInjectingHandler(IHttpContextAccessor accessor) : DelegatingHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        request.Headers.Remove("Authorization");
+        var incoming = accessor.HttpContext?.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrWhiteSpace(incoming))
+            request.Headers.TryAddWithoutValidation("Authorization", incoming);
+        return await base.SendAsync(request, cancellationToken);
+    }
+}
+```
+- [ ] Build (orchestrator) 0 error. Commit (R3+R4 birlikte).
+
+## Task R5: Runtime doğrulama
+- [ ] Önceki Task 7 (D1-D5) — artık anonim arama WebApp m2m token'ıyla, açılış keşfi token'sız çalışır.
