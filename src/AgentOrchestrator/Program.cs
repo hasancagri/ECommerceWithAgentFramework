@@ -34,13 +34,18 @@ var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
 
 builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>();
 
+// NOT: Agent'lar Singleton. MapOpenAI* helper'lari agent'i ACILISTA root provider'dan tek
+// sefer cozup closure'a yakaliyor (Scoped calismaz). Sonuc: tool'lar acilista BIR KEZ, kullanici
+// token'i olmadan toplanir => per-user MCP tool akisi simdilik calismaz (ertelenmis auth borcu).
+// Dogru cozum: IHttpContextAccessor ile her istekte tool kuran request-aware agent.
+
 // PUBLIC agent (anonim): yalnizca catalog.
 var publicAgent = builder.AddAIAgent("public", (sp, name) =>
 {
     var tools = sp.GetRequiredService<IMcpToolProvider>()
         .CollectTools((McpServers.Catalog, catalogUrl));
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.PublicInstructions, name, null, tools);
-}, ServiceLifetime.Scoped);
+}, ServiceLifetime.Singleton);
 
 // ASSISTANT agent (login): catalog + basket.
 var assistant = builder.AddAIAgent("assistant", (sp, name) =>
@@ -48,7 +53,7 @@ var assistant = builder.AddAIAgent("assistant", (sp, name) =>
     var tools = sp.GetRequiredService<IMcpToolProvider>()
         .CollectTools((McpServers.Catalog, catalogUrl), (McpServers.Basket, basketUrl));
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.AssistantInstructions, name, null, tools);
-}, ServiceLifetime.Scoped);
+}, ServiceLifetime.Singleton);
 
 var app = builder.Build();
 
