@@ -24,7 +24,14 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = Identity.Server.Pages.Login.LoginOptions.RememberMeLoginDuration);
 
-builder.Services.AddIdentityServer()
+builder.Services.AddIdentityServer(options =>
+    {
+        // WebApp "Sign Up" akisi authorize istegine prompt=create gonderir.
+        // CreateAccountUrl set edilince Duende "create" prompt mode'unu destekler
+        // (PromptValuesSupported'a eklenir) ve istegi dogrudan bu sayfaya yonlendirir;
+        // aksi halde authorize/PAR dogrulamasi "Unsupported prompt mode" (400) ile reddeder.
+        options.UserInteraction.CreateAccountUrl = "/Account/Create";
+    })
     .AddInMemoryIdentityResources(Config.IdentityResources)
     .AddInMemoryApiScopes(Config.ApiScopes)
     .AddInMemoryApiResources(Config.ApiResources)
