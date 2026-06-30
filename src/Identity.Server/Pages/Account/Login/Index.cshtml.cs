@@ -143,10 +143,18 @@ public class Index : PageModel
                 }
             }
 
-            const string error = "invalid credentials";
+            // Basarisizligin gercek nedenini ayristir: aksi halde lockout/not-allowed/2FA
+            // hepsi "invalid credentials" gibi gorunur ve teshis imkansizlasir.
+            var (error, userMessage) = result switch
+            {
+                { IsLockedOut: true } => ("locked out", "Account is locked out. Please try again later."),
+                { IsNotAllowed: true } => ("not allowed", "Login not allowed. The account may require confirmation."),
+                { RequiresTwoFactor: true } => ("requires 2FA", "Two-factor authentication is required."),
+                _ => ("invalid credentials", LoginOptions.InvalidCredentialsErrorMessage),
+            };
             await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, error, clientId: context?.Client.ClientId));
             Telemetry.Metrics.UserLoginFailure(context?.Client.ClientId, IdentityServerConstants.LocalIdentityProvider, error);
-            ModelState.AddModelError(string.Empty, LoginOptions.InvalidCredentialsErrorMessage);
+            ModelState.AddModelError(string.Empty, userMessage);
         }
 
         // something went wrong, show form with error
