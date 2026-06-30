@@ -25,14 +25,13 @@ public static class GetProductMcpTool
 public static class GetProductByNameMcpTool
 {
     [McpServerTool(Name = "search_products")]
-    [Description("Urunleri isme gore arar (kismi eslesme, buyuk/kucuk harf duyarsiz). Coklu sonuc donebilir.")]
-    public static Task<FeatureObjectResultModel<List<GetProductById.ProductResponse>>> SearchProductsAsync(
+    [Description("Urunu isme gore arar ve en iyi eslesen TEK urunu doner (kismi eslesme, buyuk/kucuk harf duyarsiz).")]
+    public static Task<FeatureObjectResultModel<GetProductById.ProductResponse>> SearchProductsAsync(
         [Description("Aranacak urun adi (kismi eslesme yeterli)")] string name,
-        [Description("Donecek azami sonuc sayisi (1-20, varsayilan 5)")] int? limit,
         IMessageBus bus,
         CancellationToken ct)
-        => bus.InvokeAsync<FeatureObjectResultModel<List<GetProductById.ProductResponse>>>(
-            new GetProductByName.GetProductByNameQuery(name, limit ?? 5), ct);
+        => bus.InvokeAsync<FeatureObjectResultModel<GetProductById.ProductResponse>>(
+            new GetProductByName.GetProductByNameQuery(name), ct);
 }
 
 [McpServerToolType]
