@@ -10,9 +10,9 @@ public static class AddBasketItem
     [RequiredScope(AuthorizationScopes.BasketWrite)]
     public record AddBasketItemCommand(
         Guid UserId,
-        Guid CourseId,
-        string CourseName,
-        decimal CoursePrice,
+        Guid ProductId,
+        string ProductName,
+        decimal Price,
         string? ImageUrl);
 
     public class AddBasketItemResponse
@@ -31,7 +31,7 @@ public static class AddBasketItem
             var basket = await session.Query<Basket>()
                 .FirstOrDefaultAsync(x => x.UserId == cmd.UserId, ct);
 
-            var newItem = new BasketItem(cmd.CourseId, cmd.CourseName, cmd.ImageUrl, cmd.CoursePrice);
+            var newItem = new BasketItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price);
 
             basket ??= Basket.Create(cmd.UserId);
             basket.AddItem(newItem);

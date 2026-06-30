@@ -85,9 +85,9 @@ public class BasketService(
     }
 
 
-    public async Task<ServiceResult> DeleteBasketAsync(Guid courseId)
+    public async Task<ServiceResult> DeleteBasketAsync(Guid itemId)
     {
-        var responseAsResult = await basketRefitService.DeleteItemAsync(courseId);
+        var responseAsResult = await basketRefitService.DeleteItemAsync(itemId);
 
         if (!responseAsResult.IsSuccessStatusCode)
         {
