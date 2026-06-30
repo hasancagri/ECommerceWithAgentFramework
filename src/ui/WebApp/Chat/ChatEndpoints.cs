@@ -45,10 +45,8 @@ public static class ChatEndpoints
                 payload["previous_response_id"] = body.PreviousResponseId;
 
             var client = httpClientFactory.CreateClient("orchestrator");
-            using var request = new HttpRequestMessage(HttpMethod.Post, agentPath)
-            {
-                Content = JsonContent.Create(payload),
-            };
+            using var request = new HttpRequestMessage(HttpMethod.Post, agentPath);
+            request.Content = JsonContent.Create(payload);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 

@@ -1,5 +1,6 @@
 using Common;
 using Common.Utils.Constants;
+using Shared.Enums;
 
 namespace Catalog.Api.Domains.Products.Features.Queries;
 
@@ -7,9 +8,33 @@ public static class GetAllProducts
 {
     public record GetAllProductsQuery();
 
+    public class ProductResponse
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public decimal Price { get; set; }
+        public string Sku { get; set; } = null!;
+        public BrandType Brand { get; set; }
+        public string? ImageUrl { get; set; }
+        public bool IsActive { get; set; }
+
+        public static ProductResponse From(Product p) => new()
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            Price = p.Price,
+            Sku = p.Sku,
+            Brand = p.Brand,
+            ImageUrl = p.ImageUrl,
+            IsActive = p.IsActive
+        };
+    }
+    
     public class GetAllProductsQueryHandler
     {
-        public async Task<FeatureObjectResultModel<List<GetProductById.ProductResponse>>> Handle(
+        public async Task<FeatureObjectResultModel<List<GetAllProducts.ProductResponse>>> Handle(
             GetAllProductsQuery query,
             IDocumentSession session,
             CancellationToken ct)
@@ -18,8 +43,8 @@ public static class GetAllProducts
                 .Where(x => !x.IsDeleted)
                 .ToListAsync(ct);
 
-            var response = products.Select(GetProductById.ProductResponse.From).ToList();
-            return FeatureObjectResultModel<List<GetProductById.ProductResponse>>.Ok(response);
+            var response = products.Select(GetAllProducts.ProductResponse.From).ToList();
+            return FeatureObjectResultModel<List<GetAllProducts.ProductResponse>>.Ok(response);
         }
     }
 }
@@ -30,7 +55,7 @@ public static class GetAllProductsQueryEndpoint
     {
         group.MapGet("/", async (IMessageBus bus) =>
             {
-                var result = await bus.InvokeAsync<FeatureObjectResultModel<List<GetProductById.ProductResponse>>>(
+                var result = await bus.InvokeAsync<FeatureObjectResultModel<List<GetAllProducts.ProductResponse>>>(
                     new GetAllProducts.GetAllProductsQuery());
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
             })

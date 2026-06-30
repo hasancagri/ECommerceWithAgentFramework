@@ -21,7 +21,4 @@
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
         <PackageReference Include="WolverineFx" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Caching\" />
-    </ItemGroup>
 </Project>

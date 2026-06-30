@@ -26,11 +26,11 @@ public static class GetProductByNameMcpTool
 {
     [McpServerTool(Name = "search_products")]
     [Description("Urunu isme gore arar ve en iyi eslesen TEK urunu doner (kismi eslesme, buyuk/kucuk harf duyarsiz).")]
-    public static Task<FeatureObjectResultModel<GetProductById.ProductResponse>> SearchProductsAsync(
+    public static Task<FeatureObjectResultModel<GetProductByName.ProductResponse>> SearchProductsAsync(
         [Description("Aranacak urun adi (kismi eslesme yeterli)")] string name,
         IMessageBus bus,
         CancellationToken ct)
-        => bus.InvokeAsync<FeatureObjectResultModel<GetProductById.ProductResponse>>(
+        => bus.InvokeAsync<FeatureObjectResultModel<GetProductByName.ProductResponse>>(
             new GetProductByName.GetProductByNameQuery(name), ct);
 }
 
