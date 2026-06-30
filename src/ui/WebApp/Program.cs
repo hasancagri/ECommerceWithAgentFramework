@@ -61,7 +61,6 @@ builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
 
 builder.Services.AddRefitClient<ICatalogRefitService>().ConfigureHttpClient(configure =>
     {
-        builder.Configuration.GetSection(nameof(MicroserviceOption)).Get<MicroserviceOption>();
         configure.BaseAddress = new Uri("http://catalog-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
@@ -69,7 +68,6 @@ builder.Services.AddRefitClient<ICatalogRefitService>().ConfigureHttpClient(conf
 
 builder.Services.AddRefitClient<IBasketRefitService>().ConfigureHttpClient(configure =>
     {
-        builder.Configuration.GetSection(nameof(MicroserviceOption)).Get<MicroserviceOption>();
         configure.BaseAddress = new Uri("http://basket-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
@@ -77,7 +75,6 @@ builder.Services.AddRefitClient<IBasketRefitService>().ConfigureHttpClient(confi
 
 builder.Services.AddRefitClient<IDiscountRefitService>().ConfigureHttpClient(configure =>
     {
-        builder.Configuration.GetSection(nameof(MicroserviceOption)).Get<MicroserviceOption>();
         configure.BaseAddress = new Uri("http://discount-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
@@ -85,7 +82,6 @@ builder.Services.AddRefitClient<IDiscountRefitService>().ConfigureHttpClient(con
 
 builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(configure =>
     {
-        builder.Configuration.GetSection(nameof(MicroserviceOption)).Get<MicroserviceOption>();
         configure.BaseAddress = new Uri("http://order-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
