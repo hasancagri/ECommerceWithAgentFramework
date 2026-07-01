@@ -17,7 +17,9 @@ public static class ScopeAuthorizationMiddleware
         if (scope is null)
             return;
 
-        if (http.HttpContext?.User.HasScope(scope) != true)
+        // Yerlesik HasClaim: REST tarafindaki RequireClaim("scope", x) ile ayni semantik (exact match).
+        // IdP scope'lari ayri claim olarak emit ediyor (Duende default array formati).
+        if (http.HttpContext?.User.HasClaim("scope", scope) != true)
             throw new UnauthorizedAccessException($"Required scope missing: {scope}");
     }
 }

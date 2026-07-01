@@ -52,9 +52,12 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
 
     opts.Policies.UseDurableLocalQueues();
-    // Handler-level yetki: [RequiredScope] tasiyan komut/sorgular icin token scope kontrolu
-    // (REST + MCP ortak nokta).
-    opts.Policies.AddMiddleware(typeof(ScopeAuthorizationMiddleware));
+    // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir
+    // (filter codegen sirasinda bir kez calisir; attribute'suz handler'larda hic cagri yok).
+    // REST + MCP ortak nokta.
+    opts.Policies.AddMiddleware(
+        typeof(ScopeAuthorizationMiddleware),
+        chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
@@ -82,7 +85,12 @@ builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddMcpServer()
-    .WithHttpTransport()
+    // Stateless: session'i olusturan kimlige bagli "user mismatch" (403) korumasini kapatir.
+    // Agent (Singleton) tool'lari ACILISTA token'siz kesfedip session'i ANONIM acar; login'de
+    // ayni session'a kullanici token'i ile gelince SDK 403 doner. Bu tool'lar basit request/
+    // response oldugu icin session state'e gerek yok; yetki zaten her istekte [RequiredScope] ile
+    // kontrol edilir. Stateless = her istek bagimsiz, kimlik bind'i yok.
+    .WithHttpTransport(o => o.Stateless = true)
     .WithToolsFromAssembly();
 
 
