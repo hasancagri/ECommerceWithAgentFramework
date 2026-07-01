@@ -35,8 +35,15 @@
         if (jsonText === '[DONE]') return;
         let obj;
         try { obj = JSON.parse(jsonText); } catch { return; }
-        if (typeof obj.delta === 'string') { botEl.textContent += obj.delta; }
-        else if (obj.output_text && typeof obj.output_text === 'string') { botEl.textContent += obj.output_text; }
+        // Sadece metin ciktisini bastir. Responses API'de tool-call argumanlari da 'delta' ile
+        // gelir ( or. function_call_arguments.delta) -> bunlari ATLA, yoksa {"name":...} gibi ic
+        // akis ekrana sizar.
+        const type = typeof obj.type === 'string' ? obj.type : '';
+        const isToolOrMeta = type.indexOf('function_call') !== -1 || type.indexOf('reasoning') !== -1;
+        if (!isToolOrMeta) {
+            if (typeof obj.delta === 'string') { botEl.textContent += obj.delta; }
+            else if (obj.output_text && typeof obj.output_text === 'string') { botEl.textContent += obj.output_text; }
+        }
         const id = (obj.response && obj.response.id) || obj.id;
         if (id && typeof id === 'string' && id.indexOf('resp') === 0) {
             sessionStorage.setItem(PREV_KEY, id);
@@ -80,6 +87,12 @@
                 }
             }
         }
+        // Ajan uygulama linklerini GORELI verir (urun: /Products/Detail/{guid}, sepet: /Basket);
+        // host'u istemci origin'inden ekle -> config yok, hangi ortamdaysak dogru host cikar.
+        botEl.textContent = botEl.textContent.replace(
+            /\/(?:Products\/Detail\/[0-9a-fA-F-]{36}|Basket)\b/g,
+            function (m) { return window.location.origin + m; }
+        );
         if (botEl.textContent === '') botEl.textContent = '(bos yanit)';
     }
 
