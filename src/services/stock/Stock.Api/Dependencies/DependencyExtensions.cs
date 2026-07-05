@@ -1,3 +1,5 @@
+using Common.Dependencies;
+
 namespace Stock.Api.Dependencies;
 
 public static class DependencyExtensions

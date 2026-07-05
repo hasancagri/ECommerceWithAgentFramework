@@ -1,4 +1,4 @@
-using Common.Dependencies.Models;
+using Common.Dependencies;
 
 namespace Common.Auths;
 

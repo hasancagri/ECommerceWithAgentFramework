@@ -1,4 +1,6 @@
 
+using Common.Dependencies;
+
 namespace Basket.Api.Dependencies;
 
 public static class DependencyExtensions

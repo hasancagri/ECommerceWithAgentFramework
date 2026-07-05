@@ -1,4 +1,6 @@
 
+using Common.Dependencies;
+
 namespace Catalog.Api.Dependencies;
 
 public static class DependencyExtensions

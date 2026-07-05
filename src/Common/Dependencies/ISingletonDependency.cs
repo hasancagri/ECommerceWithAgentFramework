@@ -1,4 +1,4 @@
-﻿namespace Common.Dependencies.Models;
+﻿namespace Common.Dependencies;
 
 public interface ISingletonDependency : IDependency
 {

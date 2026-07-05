@@ -2,7 +2,6 @@ global using Asp.Versioning.Builder;
 global using Asp.Versioning;
 global using Catalog.Api.Dependencies;
 global using Catalog.Api.Infrastructure;
-global using Common.Dependencies.Models;
 global using Common.Domains;
 global using Common.Exceptions;
 global using Common.Extensions;

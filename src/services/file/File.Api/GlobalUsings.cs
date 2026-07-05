@@ -1,5 +1,4 @@
 global using Asp.Versioning;
-global using Common.Dependencies.Models;
 global using Common.Exceptions;
 global using Common.Extensions;
 global using File.Api.Dependencies;

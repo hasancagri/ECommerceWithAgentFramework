@@ -1,4 +1,6 @@
 
+using Common.Dependencies;
+
 namespace Discount.Api.Dependencies;
 
 public static class DependencyExtensions
