@@ -3,17 +3,17 @@
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
 }
 <div id="chat-widget" data-authenticated="@(isAuthenticated ? "true" : "false")">
-    <button id="chat-toggle" type="button" aria-label="Yardim">💬</button>
+    <button id="chat-toggle" type="button" aria-label="Help">💬</button>
     <div id="chat-panel" class="chat-hidden">
         <div id="chat-header">
-            <span>Yardimci</span>
-            <button id="chat-close" type="button" aria-label="Kapat">×</button>
+            <span>Assistant</span>
+            <button id="chat-close" type="button" aria-label="Close">×</button>
         </div>
         <div id="chat-messages"></div>
         <form id="chat-form">
             <input id="chat-input" type="text" autocomplete="off"
-                   placeholder="Bir sey sorun..." />
-            <button type="submit">Gonder</button>
+                   placeholder="Ask something..." />
+            <button type="submit">Send</button>
         </form>
     </div>
 </div>
