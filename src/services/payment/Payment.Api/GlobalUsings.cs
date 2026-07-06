@@ -1,6 +1,7 @@
 global using Asp.Versioning.Builder;
 global using Asp.Versioning;
 global using Common.Domains;
+global using Common.Results;
 global using Common.Exceptions;
 global using Common.Extensions;
 global using Common;

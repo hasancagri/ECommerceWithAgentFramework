@@ -1,5 +1,5 @@
 namespace Common.Domains;
 
-public abstract class AggregateRoot : BaseUserTrackModel, IAggregateRoot
+public abstract class AggregateRoot : BaseUserTrackModel
 {
 }

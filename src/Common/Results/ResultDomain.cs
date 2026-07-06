@@ -1,6 +1,6 @@
 ﻿using Common.Results.BaseClasses;
 
-namespace Common.Domains;
+namespace Common.Results;
 
 public class ResultDomain: BaseResultModel
 {
