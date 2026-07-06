@@ -35,6 +35,10 @@ birkaç yanıltıcı/ölü parça. Bu refactor bunları davranışı değiştirm
   (`FeatureResultModel`, `FeatureObjectResultModel`, `FeatureListResultModel`,
   `FeaturePagedResultModel`) `namespace Common`'da **kalır**. Ergonomik giriş
   noktası; 28 tüketici dosyada değişiklik gerektirmez.
+- **`MessageItem` de `namespace Common`'da kalır.** `Results/BaseClasses/`
+  altında olmasına rağmen 10 tüketici ona `global using Common;` ile erişiyor.
+  Base sınıflar `Common.Results.BaseClasses`'e taşınsa bile onu iç-içe namespace
+  (enclosing-namespace) araması sayesinde `using` olmadan görmeye devam eder.
 - Namespace taşımaları sonrası Common içinde derlemeyi bozan yerlere gereken
   `using` satırları eklenir (derleyici yönlendirir). Tüketici projelerde
   değişiklik beklenmez.
