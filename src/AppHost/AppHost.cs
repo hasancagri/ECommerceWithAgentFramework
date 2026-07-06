@@ -5,10 +5,6 @@ var postgres = builder.AddPostgres("postgres")
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 
-var redis = builder.AddRedis("redis")
-    .WithRedisInsight()
-    .WithLifetime(ContainerLifetime.Persistent);
-
 var rabbit = builder.AddRabbitMQ("rabbitmq")
     .WithManagementPlugin()
     .WithLifetime(ContainerLifetime.Persistent);
@@ -28,26 +24,20 @@ var identityServer = builder.AddProject<Projects.Identity_Server>("identity-serv
 
 var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WithReference(catalogDb)
-    .WithReference(redis)
     .WithReference(rabbit)
     .WaitFor(catalogDb)
-    .WaitFor(redis)
     .WaitFor(rabbit);
 
 var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
     .WithReference(stockDb)
-    .WithReference(redis)
     .WithReference(rabbit)
     .WaitFor(stockDb)
-    .WaitFor(redis)
     .WaitFor(rabbit);
 
 var basketApi = builder.AddProject<Projects.Basket_Api>("basket-api")
     .WithReference(basketDb)
-    .WithReference(redis)
     .WithReference(rabbit)
     .WaitFor(basketDb)
-    .WaitFor(redis)
     .WaitFor(rabbit);
 
 var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
