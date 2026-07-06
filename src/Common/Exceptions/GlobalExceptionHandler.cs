@@ -19,7 +19,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        FeatureResultModel apiResultModel = null;
+        FeatureResultModel apiResultModel;
         switch (exception)
         {
             case RequestValidationException requestValidationException:
