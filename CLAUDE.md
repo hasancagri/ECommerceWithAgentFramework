@@ -47,7 +47,6 @@ src/
     Inputs/ Results/  request base models / result models (Feature*, ResultDomain, MessageItem)
     Utils/            Constants, Extensions, Helpers, Authorization (RequiredScope + middleware)
     Options/          IdentityOption (JWT auth binding)
-    PubSubs/          Redis pub/sub — DEAD now, kept as caching-rework scaffolding (don't remove)
 ```
 
 ### Service-internal pattern (vertical slices)
@@ -70,4 +69,4 @@ Every service follows the same layout — mirror it when adding features:
 - **Orchestrator MCP auth (rev3):** the WebApp BFF (`ChatEndpoints.cs`) always supplies the token (anonymous → `ecommerce.bff` client_credentials); the orchestrator has no m2m provider of its own; authorization happens once, at the Wolverine handler middleware shared by REST and MCP.
 - **Common refactor (2026-07-06):** net10.0 alignment, file-scoped + folder-aligned namespaces, nullable fixes, dead-code removal (SmsSenders, IAggregateRoot), `ResultDomain` → `Results/`. Behavior-neutral.
 
-Known deferred debt: no caching implemented yet (`Common/PubSubs` is scaffolding for it); orchestrator agents are Singleton so per-user tokens can't flow into tool calls yet; chat history is in-memory.
+Known deferred debt: no caching layer (Redis/cache infrastructure was removed as unused — reintroduce from scratch if needed); orchestrator agents are Singleton so per-user tokens can't flow into tool calls yet; chat history is in-memory.
