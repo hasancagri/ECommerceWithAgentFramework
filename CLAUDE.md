@@ -26,6 +26,30 @@ dotnet run --project src/AppHost                # run the whole system via Aspir
 - `src/ui/WebApp` — Razor Pages storefront; its chat widget proxies to the AgentOrchestrator.
 - `src/Common` — cross-cutting library; `src/Shared` — integration-event payloads, enums, constants shared between services; `src/ServiceDefaults` — Aspire defaults (OTel, service discovery, resilience).
 
+### Repo layout
+
+```
+src/
+  AppHost/            Aspire topology — start here
+  ServiceDefaults/    Aspire defaults (OTel, discovery, resilience)
+  Identity.Server/    Duende IdentityServer + ASP.NET Identity (HTTPS-only)
+  AgentOrchestrator/  Microsoft Agent Framework host (OpenAI-compatible endpoints)
+  Shared/             integration-event payloads, enums, constants
+  ui/WebApp/          Razor Pages storefront + chat widget
+  services/
+    gateway/          YARP reverse proxy (REST + MCP routing)
+    catalog basket order discount payment stock file   microservices (minimal API + Marten/Postgres)
+  Common/             cross-cutting library:
+    Auths/            ICurrentUser / CurrentUser
+    Dependencies/     ITransient/IScoped/ISingletonDependency markers (Scrutor auto-registration)
+    Domains/          BaseModel, AggregateRoot, Enumeration, IModel
+    Exceptions/       GlobalExceptionHandler + validation exceptions
+    Inputs/ Results/  request base models / result models (Feature*, ResultDomain, MessageItem)
+    Utils/            Constants, Extensions, Helpers, Authorization (RequiredScope + middleware)
+    Options/          IdentityOption (JWT auth binding)
+    PubSubs/          Redis pub/sub — DEAD now, kept as caching-rework scaffolding (don't remove)
+```
+
 ### Service-internal pattern (vertical slices)
 
 Every service follows the same layout — mirror it when adding features:
@@ -37,6 +61,13 @@ Every service follows the same layout — mirror it when adding features:
 - Messaging: Wolverine + RabbitMQ fanout exchanges for integration events (payload records in `Shared`); constants in `RabbitMqConstants`. Publishers also declare/bind the consumer queues so messages published before the consumer starts are not dropped.
 - DI: services implement `ITransientDependency` / `IScopedDependency` / `ISingletonDependency` marker interfaces (Common.Dependencies) and are auto-registered by Scrutor scanning in each service's `Dependencies/DependencyExtensions.cs`.
 
-### Design docs
+### Key decisions & design docs
 
-`docs/superpowers/specs/` and `docs/superpowers/plans/` hold the design specs and implementation plans for past features (payment flow, chat widget, MCP token-at-invocation). Check these before reworking those areas.
+`docs/superpowers/specs/` holds the approved design specs (the *why*) for past features — read the relevant one before reworking that area:
+
+- **Payment — client-orchestrated (A1):** the client calls Payment.Api directly with its user token, gets a `paymentId`, then creates the Order referencing it. Payment knows only amount+card; Order knows only the `paymentId`. No synchronous Order→Payment call.
+- **Chat widget:** the WebApp customer-service chat agent takes real actions via MCP tools (e.g. add to cart) with streaming responses.
+- **Orchestrator MCP auth (rev3):** the WebApp BFF (`ChatEndpoints.cs`) always supplies the token (anonymous → `ecommerce.bff` client_credentials); the orchestrator has no m2m provider of its own; authorization happens once, at the Wolverine handler middleware shared by REST and MCP.
+- **Common refactor (2026-07-06):** net10.0 alignment, file-scoped + folder-aligned namespaces, nullable fixes, dead-code removal (SmsSenders, IAggregateRoot), `ResultDomain` → `Results/`. Behavior-neutral.
+
+Known deferred debt: no caching implemented yet (`Common/PubSubs` is scaffolding for it); orchestrator agents are Singleton so per-user tokens can't flow into tool calls yet; chat history is in-memory.
