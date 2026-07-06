@@ -1,14 +1,11 @@
-﻿using Common.Results.BaseClasses;
+namespace Common.Results.BaseClasses;
 
-namespace Common
+public abstract class BaseResultObjectListModel<TData> : BaseResultModel, IResultObjectListModel<TData>
+    where TData : class
 {
-    public abstract class BaseResultObjectListModel<TData> : BaseResultModel, IResultObjectListModel<TData>
-     where TData : class
+    protected BaseResultObjectListModel()
     {
-        protected BaseResultObjectListModel()
-        {
-            Data = new List<TData>();
-        }
-        public List<TData> Data { get; set; }
+        Data = new List<TData>();
     }
+    public List<TData> Data { get; set; }
 }

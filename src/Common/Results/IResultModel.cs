@@ -1,11 +1,8 @@
-﻿
+namespace Common.Results;
 
-namespace Common
+public interface IResultModel
 {
-    public interface IResultModel
-    {
-        bool IsSuccess { get; set; }
-        List<MessageItem>? Messages { get; set; }
-        List<KeyValuePair<string, string>>? LocalizedMessages { get; set; }
-    }
+    bool IsSuccess { get; set; }
+    List<MessageItem>? Messages { get; set; }
+    List<KeyValuePair<string, string>>? LocalizedMessages { get; set; }
 }

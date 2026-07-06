@@ -1,7 +1,6 @@
-﻿namespace Common.Results
+namespace Common.Results;
+
+public interface IResultValueModel<TValue> : IResultModel
 {
-    public interface IResultValueModel<TValue> : IResultModel
-    {
-        TValue Value { get; set; }
-    }
+    TValue Value { get; set; }
 }

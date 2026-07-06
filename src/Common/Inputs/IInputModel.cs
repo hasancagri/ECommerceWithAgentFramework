@@ -1,14 +1,13 @@
-﻿using Common.Inputs.BaseClasses;
+using Common.Inputs.BaseClasses;
 
-namespace Common.Inputs
+namespace Common.Inputs;
+
+public interface IInputModel
 {
-    public interface IInputModel
-    {
-        string SearchText { get; set; }
-    }
+    string SearchText { get; set; }
+}
 
-    public class InputModel : BaseInputModel
-    {
-        public string? SearchText { get; set; }
-    }
+public class InputModel : BaseInputModel
+{
+    public string? SearchText { get; set; }
 }

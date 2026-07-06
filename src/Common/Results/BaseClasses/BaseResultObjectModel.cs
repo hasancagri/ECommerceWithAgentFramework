@@ -1,16 +1,12 @@
-﻿using Common.Results.BaseClasses;
+namespace Common.Results.BaseClasses;
 
-namespace Common
-{
-    public abstract class BaseResultObjectModel<TData> : BaseResultModel, IResultObjectModel<TData>
+public abstract class BaseResultObjectModel<TData> : BaseResultModel, IResultObjectModel<TData>
     where TData : class, new()
+{
+    protected BaseResultObjectModel()
     {
-        protected BaseResultObjectModel()
-        {
-            Data = new TData();
-        }
-        
-        public TData Data { get; set; }
-        
+        Data = new TData();
     }
+
+    public TData Data { get; set; }
 }
