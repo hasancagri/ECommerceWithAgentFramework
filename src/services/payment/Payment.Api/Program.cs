@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var paymentDb = builder.Configuration.GetConnectionString("paymentDb")!;
 builder.Services.AddMarten(opts =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.PAYMENT_SCHEMA_NAME;
+        opts.DatabaseSchemaName = SchemaConstants.PaymentSchemaName;
         opts.Connection(paymentDb);
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,

@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var fileDb = builder.Configuration.GetConnectionString("fileDb")!;
 builder.Services.AddMarten(opts =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.FILE_SCHEMA_NAME;
+        opts.DatabaseSchemaName = SchemaConstants.FileSchemaName;
         opts.Connection(fileDb);
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,

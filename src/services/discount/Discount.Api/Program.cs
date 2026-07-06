@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var discountDb = builder.Configuration.GetConnectionString("discountDb")!;
 builder.Services.AddMarten(opts =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.DISCOUNT_SCHEMA_NAME;
+        opts.DatabaseSchemaName = SchemaConstants.DiscountSchemaName;
         opts.Connection(discountDb);
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,

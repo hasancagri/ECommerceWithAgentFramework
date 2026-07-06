@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var orderDb = builder.Configuration.GetConnectionString("orderDb")!;
 builder.Services.AddMarten(opts =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.ORDER_SCHEMA_NAME;
+        opts.DatabaseSchemaName = SchemaConstants.OrderSchemaName;
         opts.Connection(orderDb);
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,

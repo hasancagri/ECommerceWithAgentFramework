@@ -2,11 +2,11 @@ namespace Shared.Utils.Constants;
 
 public class SchemaConstants
 {
-    public static readonly string STOCK_SCHEMA_NAME = "stockManagement";
-    public static readonly string PAYMENT_SCHEMA_NAME = "paymentManagement";
-    public static readonly string ORDER_SCHEMA_NAME = "orderManagement";
-    public static readonly string FILE_SCHEMA_NAME = "fileManagement";
-    public static readonly string DISCOUNT_SCHEMA_NAME = "discountManagement";
-    public static readonly string CATALOG_SCHEMA_NAME = "catalogManagement";
-    public static readonly string BASKET_SCHEMA_NAME = "basketManagement";
+    public const string StockSchemaName = "stockManagement";
+    public const string PaymentSchemaName = "paymentManagement";
+    public const string OrderSchemaName = "orderManagement";
+    public const string FileSchemaName = "fileManagement";
+    public const string DiscountSchemaName = "discountManagement";
+    public const string CatalogSchemaName = "catalogManagement";
+    public const string BasketSchemaName = "basketManagement";
 }

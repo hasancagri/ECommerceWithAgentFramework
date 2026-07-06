@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var basketDb = builder.Configuration.GetConnectionString("basketDb")!;
 builder.Services.AddMarten(opts =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.BASKET_SCHEMA_NAME;
+        opts.DatabaseSchemaName = SchemaConstants.BasketSchemaName;
         opts.Connection(basketDb);
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,

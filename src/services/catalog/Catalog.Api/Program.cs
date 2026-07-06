@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 var catalogDb = builder.Configuration.GetConnectionString("catalogDb")!;
 builder.Services.AddMarten(opts =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.CATALOG_SCHEMA_NAME;
+        opts.DatabaseSchemaName = SchemaConstants.CatalogSchemaName;
         opts.Connection(catalogDb);
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,

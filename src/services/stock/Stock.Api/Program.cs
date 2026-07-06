@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var stockDb = builder.Configuration.GetConnectionString("stockDb")!;
 builder.Services.AddMarten(opts =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.STOCK_SCHEMA_NAME;
+        opts.DatabaseSchemaName = SchemaConstants.StockSchemaName;
         opts.Connection(stockDb);
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
