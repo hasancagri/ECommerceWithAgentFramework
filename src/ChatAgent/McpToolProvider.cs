@@ -2,7 +2,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
 
-namespace AgentOrchestrator;
+namespace ChatAgent;
 
 // MCP tool'larini keşfeder (ListTools). Token okumaz; Authorization, MCP HttpClient'ina
 // takili TokenInjectingHandler tarafindan her cagriya iliştirilir (user token, yoksa m2m).

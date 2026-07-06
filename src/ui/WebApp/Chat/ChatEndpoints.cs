@@ -5,7 +5,7 @@ using WebApp.Authentication;
 
 namespace WebApp.Chat;
 
-// Tarayicidaki chat widget'i ile AgentOrchestrator arasindaki BFF proxy.
+// Tarayicidaki chat widget'i ile ChatAgent arasindaki BFF proxy.
 // Token HttpOnly cookie'de oldugundan tarayici orchestrator'a dogrudan erisemez;
 // burada auth durumuna gore agent + token secilir, SSE pass-through edilir.
 public static class ChatEndpoints

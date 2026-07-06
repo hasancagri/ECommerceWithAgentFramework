@@ -95,14 +95,14 @@ web.WithReference(basketApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
-// AgentOrchestrator: MCP tool'lari uzerinden calisan AI agent API'si (OpenAI uyumlu endpoint'ler).
+// ChatAgent: MCP tool'lari uzerinden calisan AI agent API'si (OpenAI uyumlu endpoint'ler).
 // MCP server'lara Gateway uzerinden baglanir; gateway'i WithReference ile alir =>
 // services:gateway:http:0 cozulur (fallback'e gerek kalmaz). OpenAI:ApiKey kendi user-secrets'inden.
-var agentOrchestrator = builder.AddProject<Projects.AgentOrchestrator>("agent-orchestrator")
+var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(gateway)
     .WaitFor(gateway);
 
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
-web.WithReference(agentOrchestrator);
+web.WithReference(chatAgent);
 
 await builder.Build().RunAsync();

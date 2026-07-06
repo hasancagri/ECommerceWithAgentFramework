@@ -12,7 +12,7 @@ dotnet run --project src/AppHost                # run the whole system via Aspir
 - The AppHost starts Postgres (+pgAdmin), Redis (+RedisInsight), and RabbitMQ (+management UI) as persistent containers, then all services. There is no way to meaningfully run a single service standalone — they depend on Aspire service discovery and the containers.
 - No test projects exist yet.
 - NuGet versions are centralized in `Directory.Packages.props` (`ManagePackageVersionsCentrally`); never put a `Version=` on a `PackageReference` in a csproj.
-- The AgentOrchestrator requires `OpenAI:ApiKey` from its own user-secrets: `dotnet user-secrets set OpenAI:ApiKey <key> --project src/AgentOrchestrator`.
+- The ChatAgent requires `OpenAI:ApiKey` from its own user-secrets: `dotnet user-secrets set OpenAI:ApiKey <key> --project src/ChatAgent`.
 - Code comments are written in Turkish — follow that convention when adding comments.
 
 ## Architecture
@@ -22,8 +22,8 @@ dotnet run --project src/AppHost                # run the whole system via Aspir
 - `src/services/*` — microservices (catalog, basket, order, discount, payment, stock, file), each a minimal API with its own Postgres database (Marten schema per service).
 - `src/services/gateway` — YARP reverse proxy. Routes REST and MCP traffic to services using Aspire service discovery names (`http://catalog-api`). Routes declare `AuthorizationPolicy` of either `ClientCredential` (app token) or `Password` (user token); currently both just require an authenticated token.
 - `src/Identity.Server` — Duende IdentityServer + ASP.NET Identity. **Must run over HTTPS** (`https://localhost:5001`): login cookies are SameSite=None and the issuer address must match in every service's auth config, or login loops.
-- `src/AgentOrchestrator` — Microsoft Agent Framework host exposing OpenAI-compatible endpoints (`/public/v1/*` anonymous agent with catalog tools, `/assistant/v1/*` logged-in agent with catalog+basket tools). Tools come from the services' MCP servers, reached through the gateway (`/mcp/<service>/...`). Agents are registered as **Singleton** — the hosting library resolves them once at startup, so tools are collected once and per-user tokens cannot flow into tool calls yet (known deferred debt; see `docs/superpowers/`).
-- `src/ui/WebApp` — Razor Pages storefront; its chat widget proxies to the AgentOrchestrator.
+- `src/ChatAgent` — Microsoft Agent Framework host exposing OpenAI-compatible endpoints (`/public/v1/*` anonymous agent with catalog tools, `/assistant/v1/*` logged-in agent with catalog+basket tools). Tools come from the services' MCP servers, reached through the gateway (`/mcp/<service>/...`). Agents are registered as **Singleton** — the hosting library resolves them once at startup, so tools are collected once and per-user tokens cannot flow into tool calls yet (known deferred debt; see `docs/superpowers/`).
+- `src/ui/WebApp` — Razor Pages storefront; its chat widget proxies to the ChatAgent.
 - `src/Common` — cross-cutting library; `src/Shared` — integration-event payloads, enums, constants shared between services; `src/ServiceDefaults` — Aspire defaults (OTel, service discovery, resilience).
 
 ### Repo layout
@@ -33,7 +33,7 @@ src/
   AppHost/            Aspire topology — start here
   ServiceDefaults/    Aspire defaults (OTel, discovery, resilience)
   Identity.Server/    Duende IdentityServer + ASP.NET Identity (HTTPS-only)
-  AgentOrchestrator/  Microsoft Agent Framework host (OpenAI-compatible endpoints)
+  ChatAgent/          Microsoft Agent Framework host (OpenAI-compatible endpoints)
   Shared/             integration-event payloads, enums, constants
   ui/WebApp/          Razor Pages storefront + chat widget
   services/

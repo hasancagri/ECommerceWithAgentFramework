@@ -1,4 +1,4 @@
-namespace AgentOrchestrator;
+namespace ChatAgent;
 
 public static class McpServers
 {

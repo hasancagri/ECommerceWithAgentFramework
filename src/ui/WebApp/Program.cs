@@ -37,11 +37,11 @@ builder.Services.AddSingleton(identitySettings);
 // TokenService'in M2M/refresh icin kullandigi adsiz-degil "identity" client'i.
 builder.Services.AddHttpClient("identity");
 
-// AI chat orchestrator (service discovery: services:agent-orchestrator:http:0).
+// AI chat orchestrator (service discovery: services:chat-agent:http:0).
 // Streaming oldugu icin uzun timeout.
 builder.Services.AddHttpClient("orchestrator", client =>
 {
-    client.BaseAddress = new Uri("http://agent-orchestrator");
+    client.BaseAddress = new Uri("http://chat-agent");
     client.Timeout = TimeSpan.FromMinutes(5);
 });
 

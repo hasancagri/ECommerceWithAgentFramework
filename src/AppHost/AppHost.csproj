@@ -20,7 +20,7 @@
       <ProjectReference Include="..\services\gateway\Gateway\Gateway.csproj" />
       <ProjectReference Include="..\ui\WebApp\WebApp.csproj" />
       <ProjectReference Include="..\Identity.Server\Identity.Server.csproj" />
-      <ProjectReference Include="..\AgentOrchestrator\AgentOrchestrator.csproj" />
+      <ProjectReference Include="..\ChatAgent\ChatAgent.csproj" />
     </ItemGroup>
 
     <ItemGroup>
