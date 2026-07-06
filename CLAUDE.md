@@ -65,7 +65,7 @@ Every service follows the same layout — mirror it when adding features:
 
 `docs/superpowers/specs/` holds the approved design specs (the *why*) for past features — read the relevant one before reworking that area:
 
-- **Payment — client-orchestrated (A1):** the client calls Payment.Api directly with its user token, gets a `paymentId`, then creates the Order referencing it. Payment knows only amount+card; Order knows only the `paymentId`. No synchronous Order→Payment call.
+- **Payment — client-orchestrated (A1):** the client calls Payment.Api directly with its user token, gets a `paymentId`, then creates the Order referencing it. Payment knows only amount+card; Order knows only the `paymentId`. No synchronous Order→Payment call. Note: the payment `amount` is client-supplied and not validated (learning-project tradeoff); idempotency is enforced Order-side via `paymentId` uniqueness.
 - **Chat widget:** the WebApp customer-service chat agent takes real actions via MCP tools (e.g. add to cart) with streaming responses.
 - **Orchestrator MCP auth (rev3):** the WebApp BFF (`ChatEndpoints.cs`) always supplies the token (anonymous → `ecommerce.bff` client_credentials); the orchestrator has no m2m provider of its own; authorization happens once, at the Wolverine handler middleware shared by REST and MCP.
 - **Common refactor (2026-07-06):** net10.0 alignment, file-scoped + folder-aligned namespaces, nullable fixes, dead-code removal (SmsSenders, IAggregateRoot), `ResultDomain` → `Results/`. Behavior-neutral.
