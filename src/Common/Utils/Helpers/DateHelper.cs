@@ -4,7 +4,8 @@ namespace Common.Utils.Helpers;
 
 public static class DateHelper
 {
-    public static DateTime Now(string? culture = "Europe/Istanbul")
+    // Her zaman UTC döner; eski culture parametresi yok sayılıyordu, kaldırıldı.
+    public static DateTime Now()
     {
         return DateTime.UtcNow;
     }
