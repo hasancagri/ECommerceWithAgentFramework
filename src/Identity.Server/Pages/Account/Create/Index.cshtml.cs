@@ -99,6 +99,9 @@ public class Index : PageModel
             if (claims.Count > 0)
                 await _userManager.AddClaimsAsync(user, claims);
 
+            // Yeni kayit olan her kullanici varsayilan olarak Customer rolune girer.
+            await _userManager.AddToRoleAsync(user, Roles.Customer);
+
             await _signInManager.SignInAsync(user, isPersistent: false);
 
             if (context != null)
