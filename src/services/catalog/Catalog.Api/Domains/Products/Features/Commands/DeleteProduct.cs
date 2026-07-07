@@ -8,6 +8,7 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 public static class DeleteProduct
 {
     [RequiredScope(AuthorizationScopes.CatalogWrite)]
+    [RequiredRole(Roles.Admin)]
     public record DeleteProductCommand(Guid Id);
 
     public class DeleteProductResponse
