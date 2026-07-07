@@ -1,7 +1,5 @@
-
-using Shared.Utils.Constants;
-
 var builder = WebApplication.CreateBuilder(args);
+builder.AddOpenApiDocumentation();
 
 var orderDb = builder.Configuration.GetConnectionString("orderDb")!;
 builder.Services.AddMarten(opts =>
@@ -55,6 +53,7 @@ builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+app.MapScalarDocumentation();
 
 var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1, 0))

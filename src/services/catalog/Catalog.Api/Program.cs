@@ -4,6 +4,7 @@ using Common.Utils.Constants;
 using Shared.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddOpenApiDocumentation();
 
 var catalogDb = builder.Configuration.GetConnectionString("catalogDb")!;
 builder.Services.AddMarten(opts =>
@@ -95,6 +96,7 @@ builder.Services
 
 
 var app = builder.Build();
+app.MapScalarDocumentation();
 
 var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1, 0))
