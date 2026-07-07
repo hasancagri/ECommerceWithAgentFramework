@@ -23,6 +23,10 @@
         <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
         <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
         <PackageVersion Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.3.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+        <!-- Microsoft.AspNetCore.OpenApi 10.0.9'un transitive cektigi Microsoft.OpenApi 2.0.0'da
+             yuksek onemli guvenlik acigi var (GHSA-v5pm-xwqc-g5wc); yamali surume sabitliyoruz. -->
+        <PackageVersion Include="Microsoft.OpenApi" Version="2.10.0" />
         <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.0.1" />
         <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
         <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.1" />
@@ -43,6 +47,7 @@
         <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
         <PackageVersion Include="PagedList.Core" Version="1.17.4" />
         <PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0" />
+        <PackageVersion Include="Scalar.AspNetCore" Version="2.16.10" />
         <PackageVersion Include="Scrutor" Version="7.0.0" />
         <PackageVersion Include="WolverineFx" Version="6.4.1" />
         <PackageVersion Include="WolverineFx.Http" Version="6.4.1" />
