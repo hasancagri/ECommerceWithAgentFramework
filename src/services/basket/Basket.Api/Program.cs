@@ -2,6 +2,7 @@
 using Shared.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddOpenApiDocumentation();
 
 var basketDb = builder.Configuration.GetConnectionString("basketDb")!;
 builder.Services.AddMarten(opts =>
@@ -69,6 +70,7 @@ builder.Services
     .WithToolsFromAssembly();
 
 var app = builder.Build();
+app.MapScalarDocumentation();
 
 var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1, 0))

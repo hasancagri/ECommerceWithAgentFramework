@@ -2,6 +2,7 @@
 using Shared.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddOpenApiDocumentation();
 
 var discountDb = builder.Configuration.GetConnectionString("discountDb")!;
 builder.Services.AddMarten(opts =>
@@ -54,6 +55,7 @@ builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
 var app = builder.Build();
+app.MapScalarDocumentation();
 
 var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1, 0))
