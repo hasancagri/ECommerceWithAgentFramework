@@ -1,8 +1,11 @@
+using Common.Utils.Authorization;
+using Common.Utils.Constants;
 
 namespace Discount.Api.Domains.Discounts.Features.Commands;
 
 public static class CreateDiscount
 {
+    [RequiredRole(Roles.Admin)]
     public record CreateDiscountCommand(Guid UserId, string Code, decimal Rate);
     
     public class CreateDiscountResponse
