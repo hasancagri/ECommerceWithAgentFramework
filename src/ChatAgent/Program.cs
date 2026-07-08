@@ -37,6 +37,22 @@ var gatewayUrl = builder.Configuration["services:gateway:http:0"] ?? "http://loc
 var basketUrl = $"{gatewayUrl}/mcp/{McpServers.Basket}";
 var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
 
+// Her agent'in toplayacagi MCP tool'lari: (server, url, o server'dan izin verilen tool'lar).
+// Tek kaynak; delete_product hicbir listede yok.
+// public: yalnizca arama (add_to_cart olmadigi icin get_product'a gerek yok).
+(string Name, string Url, string[] AllowedTools)[] publicAgentTools =
+[
+    (McpServers.Catalog, catalogUrl, [CatalogTools.SearchProducts])
+];
+// assistant: catalog okuma + tum basket tool'lari.
+(string Name, string Url, string[] AllowedTools)[] assistantAgentTools =
+[
+    (McpServers.Catalog, catalogUrl, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
+    (McpServers.Basket, basketUrl,
+        [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem,
+            BasketTools.ApplyDiscountCoupon, BasketTools.RemoveDiscountCoupon])
+];
+
 builder.Services.AddTransient<TokenInjectingHandler>();
 #pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers experimental; MCP icin gerekli
 builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>()
@@ -56,7 +72,7 @@ builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>()
 var publicAgent = builder.AddAIAgent("public", (sp, name) =>
 {
     var tools = sp.GetRequiredService<IMcpToolProvider>()
-        .CollectTools((McpServers.Catalog, catalogUrl));
+        .CollectTools(publicAgentTools);
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.PublicInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);
 
@@ -64,7 +80,7 @@ var publicAgent = builder.AddAIAgent("public", (sp, name) =>
 var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 {
     var tools = sp.GetRequiredService<IMcpToolProvider>()
-        .CollectTools((McpServers.Catalog, catalogUrl), (McpServers.Basket, basketUrl));
+        .CollectTools(assistantAgentTools);
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.AssistantInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);
 
