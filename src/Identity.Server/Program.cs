@@ -50,9 +50,6 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
 }
 
-// Migration'lardan SONRA: tablolar hazir olunca rolleri ve admin kullanicisini seed et.
-await app.SeedAsync();
-
 app.UseStaticFiles();
 app.UseRouting();
 app.UseIdentityServer();
