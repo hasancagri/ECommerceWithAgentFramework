@@ -1,4 +1,3 @@
-using Common.Utils.Authorization;
 using Common.Utils.Constants;
 
 namespace Discount.Api.Domains.Discounts.Features.Commands;

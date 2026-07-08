@@ -1,5 +1,4 @@
 
-using Common.Utils.Authorization;
 using Shared.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
