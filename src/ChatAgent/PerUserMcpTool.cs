@@ -2,20 +2,28 @@ using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
 
 namespace ChatAgent;
 
-// Boot'taki anonim kesiften yakalanan tool semasini (Name/Description/JsonSchema) tasir; asil
-// cagriyi CAGRI ANINDA acilan, o an ki istegin token'ina bagli TAZE stateful session'a yonlendirir.
-// Boylece hicbir session iki kimlik arasinda paylasilmaz => stateful sunucu "user mismatch" (403)
-// uretmez. Agent Singleton oldugu icin bu tool da tek ornek; kimlik bind'i nesnede degil, her
-// InvokeCoreAsync'te acilan session'da cozulur.
+// Boot'taki anonim kesiften yakalanan tool semasini (Name/Description/JsonSchema + protokol Tool tanimi)
+// tasir; asil cagriyi CAGRI ANINDA acilan, o an ki istegin token'ina bagli TAZE stateful session'a
+// yonlendirir. Boylece hicbir session iki kimlik arasinda paylasilmaz => stateful sunucu "user
+// mismatch" (403) uretmez. Agent Singleton oldugu icin bu tool da tek ornek; kimlik bind'i nesnede
+// degil, her InvokeCoreAsync'te acilan session'da cozulur.
+//
+// Cagri anda: taze session + `new McpClientTool(client, protokolTool)`. SDK'nin public ctor'u
+// onbellege alinmis Tool tanimini yeni bir client'a bagladigi icin CAGRI BASINA TEKRAR ListTools
+// GEREKMEZ (tek roundtrip tasarrufu); sonuc sekillendirmesi de native McpClientTool.InvokeAsync ile
+// birebir aynidir (ayni SDK kod yolu) => parite riski yok.
 // Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
 public sealed class PerUserMcpTool : AIFunction
 {
     private readonly HttpClient _httpClient;
     private readonly string _serverName;
     private readonly string _url;
+    private readonly Tool _protocolTool;
+    private readonly JsonSerializerOptions _serializerOptions;
     private readonly ILogger _logger;
 
     public override string Name { get; }
@@ -29,6 +37,10 @@ public sealed class PerUserMcpTool : AIFunction
         // Clone: kaynak sema, kesif client'i dispose edilince gecersiz olabilecek bir JsonDocument'e
         // bagli olabilir; kopyalayarak client'in omrunden bagimsiz kiliyoruz.
         JsonSchema = schema.JsonSchema.Clone();
+        // Protokol Tool tanimini ve serializer seceneklerini sakla: cagri aninda taze session'a
+        // bagli bir McpClientTool'u bunlardan yeniden kurariz (ListTools'a gerek kalmadan).
+        _protocolTool = schema.ProtocolTool;
+        _serializerOptions = schema.JsonSerializerOptions;
         _httpClient = httpClient;
         _serverName = serverName;
         _url = url;
@@ -50,13 +62,9 @@ public sealed class PerUserMcpTool : AIFunction
                     ownsHttpClient: false),
                 cancellationToken: cancellationToken);
 
-            // Cagriyi ve sonuc serilestirmesini SDK'nin kendi McpClientTool'una delege et:
-            // native tool ile birebir ayni davranis, yalnizca taze user-bound session uzerinde.
-            var tools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-            var tool = tools.FirstOrDefault(t => t.Name == Name);
-            if (tool is null)
-                return $"Tool '{Name}' su an '{_serverName}' sunucusunda bulunamadi.";
-
+            // Onbellege alinmis Tool tanimini bu taze session'a bagla ve SDK'nin kendi InvokeAsync'ine
+            // delege et: ListTools yapmadan, native tool ile birebir ayni davranis.
+            var tool = new McpClientTool(client, _protocolTool, _serializerOptions);
             return await tool.InvokeAsync(arguments, cancellationToken);
         }
         catch (Exception ex)
