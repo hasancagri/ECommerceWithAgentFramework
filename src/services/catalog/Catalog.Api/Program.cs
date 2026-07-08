@@ -59,10 +59,6 @@ builder.Host.UseWolverine(opts =>
     opts.Policies.AddMiddleware(
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
-    // Rol yetkisi: middleware SADECE [RequiredRole] tasiyan komut/sorgulara weave edilir.
-    opts.Policies.AddMiddleware(
-        typeof(RoleAuthorizationMiddleware),
-        chain => chain.MessageType.GetCustomAttribute<RequiredRoleAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 

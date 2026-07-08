@@ -36,10 +36,6 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.OrderCreated.Queues.Discount);
 
     opts.Policies.UseDurableLocalQueues();
-    // Rol yetkisi: middleware SADECE [RequiredRole] tasiyan komut/sorgulara weave edilir.
-    opts.Policies.AddMiddleware(
-        typeof(RoleAuthorizationMiddleware),
-        chain => chain.MessageType.GetCustomAttribute<RequiredRoleAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
@@ -58,8 +54,6 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     AuthorizationScopes.DiscountWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
-// RoleAuthorizationMiddleware HttpContext'e erisir (token'daki role claim'i).
-builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 app.MapScalarDocumentation();

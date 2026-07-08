@@ -11,7 +11,6 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 public static class CreateProduct
 {
     [RequiredScope(AuthorizationScopes.CatalogWrite)]
-    [RequiredRole(Roles.Admin)]
     public record CreateProductCommand(
         string Name,
         string Description,

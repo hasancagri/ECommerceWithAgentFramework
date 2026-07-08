@@ -1,11 +1,7 @@
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-
 namespace Stock.Api.Domains.Stocks.Features.Commands;
 
 public static class IncreaseStock
 {
-    [RequiredRole(Roles.Admin)]
     public record IncreaseStockCommand(Guid ProductId, int Amount);
 
     public class IncreaseStockResponse

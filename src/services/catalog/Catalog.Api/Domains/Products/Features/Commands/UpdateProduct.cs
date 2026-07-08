@@ -10,7 +10,6 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 public static class UpdateProduct
 {
     [RequiredScope(AuthorizationScopes.CatalogWrite)]
-    [RequiredRole(Roles.Admin)]
     public record UpdateProductCommand(
         Guid Id,
         string Name,
