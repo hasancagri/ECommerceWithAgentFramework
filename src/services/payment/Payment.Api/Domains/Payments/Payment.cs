@@ -1,4 +1,3 @@
-
 namespace Payment.Api.Domains.Payments;
 
 public class Payment : AggregateRoot

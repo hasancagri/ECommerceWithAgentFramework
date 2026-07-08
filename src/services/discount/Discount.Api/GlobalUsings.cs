@@ -13,7 +13,6 @@ global using Discount.Api.Domains.Discounts;
 global using Discount.Api.Utils;
 global using Marten;
 global using Marten.Newtonsoft;
-global using Marten.Schema;
 global using Weasel.Core;
 global using Microsoft.AspNetCore.Mvc;
 global using Shared;

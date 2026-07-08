@@ -1,4 +1,3 @@
-
 namespace Basket.Api;
 
 public static class EventHandlers

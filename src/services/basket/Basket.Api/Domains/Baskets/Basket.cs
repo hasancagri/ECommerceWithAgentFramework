@@ -1,4 +1,3 @@
-
 namespace Basket.Api.Domains.Baskets;
 
 public class Basket : AggregateRoot
@@ -16,17 +15,9 @@ public class Basket : AggregateRoot
 
     [JsonProperty("Items")] private List<BasketItem> _items = new();
 
-    [JsonIgnore] public IReadOnlyList<BasketItem> Items
-    {
-        get { return _items.AsReadOnly(); }
-    }
-
+    [JsonIgnore] public IReadOnlyList<BasketItem> Items => _items.AsReadOnly();
     public Discount? AppliedDiscount { get; private set; }
-
-    private bool IsApplyDiscount()
-    {
-        return AppliedDiscount is not null;
-    }
+    private bool IsApplyDiscount() => AppliedDiscount is not null;
 
     public decimal GetTotalPrice()
     {

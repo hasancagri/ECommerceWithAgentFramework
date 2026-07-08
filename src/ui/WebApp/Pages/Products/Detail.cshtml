@@ -11,7 +11,7 @@
             <div class="card shadow-lg border-0">
 
                 <img class="card-img-top img-fluid" alt="@Model.Product!.Name"
-                     src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/blank_course_thumbnail.jpg" : Model.Product.ImageUrl)">
+                     src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/NoImage.jpeg" : Model.Product.ImageUrl)">
                 <div class="card-body">
                     <h2 class="mb-4">@Model.Product.Name</h2>
                     <h5 class="card-title">Description</h5>

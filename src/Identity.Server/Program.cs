@@ -9,7 +9,7 @@ builder.Services.AddRazorPages();
 
 // Aspire çalışma anında enjekte eder; design-time (migration üretimi) için fallback.
 var connectionString = builder.Configuration.GetConnectionString("identityDb")
-    ?? "Host=localhost;Port=5432;Database=identityDb;Username=postgres;Password=postgres";
+                       ?? "Host=localhost;Port=5432;Database=identityDb;Username=postgres;Password=postgres";
 
 var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
 
@@ -46,8 +46,8 @@ var app = builder.Build();
 // Açılışta migration'ları uygula (dev kolaylığı; Postgres Aspire ile hazır olur).
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
-    scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
+    await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync();
+    await scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.MigrateAsync();
 }
 
 app.UseStaticFiles();

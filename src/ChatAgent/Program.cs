@@ -82,4 +82,4 @@ app.MapOpenAIResponses(assistant, "/assistant/v1/responses");
 
 app.MapOpenAIConversations(); // POST /v1/conversations
 
-app.Run();
+await app.RunAsync();

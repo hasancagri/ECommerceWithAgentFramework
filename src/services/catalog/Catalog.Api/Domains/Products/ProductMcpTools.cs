@@ -3,7 +3,6 @@ using Catalog.Api.Domains.Products.Features.Agent;
 using Catalog.Api.Domains.Products.Features.Commands;
 using Common;
 using ModelContextProtocol.Server;
-using Shared.Enums;
 
 namespace Catalog.Api.Domains.Products;
 

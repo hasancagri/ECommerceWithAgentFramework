@@ -24,7 +24,7 @@
                 <div class="card h-100 shadow-lg border-0">
                     <a asp-page="/Products/Detail" asp-route-id="@product.Id">
                         <img
-                            src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/blank_course_thumbnail.jpg" : product.ImageUrl)"
+                            src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/NoImage.jpeg" : product.ImageUrl)"
                             class="card-img-top" alt="@product.Name">
                     </a>
 

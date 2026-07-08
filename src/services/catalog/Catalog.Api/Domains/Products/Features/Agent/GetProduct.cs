@@ -29,7 +29,6 @@ public static class GetProduct
             IDocumentSession session,
             CancellationToken ct)
         {
-            // Isme gore (kismi, buyuk/kucuk harf duyarsiz) en iyi eslesen TEK aktif urun.
             var product = await session.Query<Product>()
                 .Where(x => !x.IsDeleted && x.IsActive &&
                             x.Name.Contains(query.Name, StringComparison.OrdinalIgnoreCase))
