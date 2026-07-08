@@ -61,12 +61,13 @@ builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddMcpServer()
-    // Stateless: session'i olusturan kimlige bagli "user mismatch" (403) korumasini kapatir.
-    // Agent (Singleton) tool'lari ACILISTA token'siz kesfedip session'i ANONIM acar; login'de
-    // ayni session'a kullanici token'i ile gelince SDK 403 doner. Bu tool'lar basit request/
-    // response oldugu icin session state'e gerek yok; yetki zaten her istekte kontrol edilir.
-    // Stateless = her istek bagimsiz, kimlik bind'i yok.
-    .WithHttpTransport(o => o.Stateless = true)
+    // Stateful (default): her MCP session onu OLUSTURAN kimlige baglanir. ChatAgent artik her
+    // kullanici cagrisi icin TAZE bir user-bound session acar (PerUserMcpTool); boot'taki anonim
+    // kesif session'i yalnizca ListTools yapar, hic CallTool yapmaz. Hicbir session iki kimlik
+    // arasinda paylasilmadigi icin "user mismatch" (403) cikmaz. Yetki yine handler'daki
+    // [RequiredScope] ile kontrol edilir.
+    // Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
+    .WithHttpTransport()
     .WithToolsFromAssembly();
 
 var app = builder.Build();

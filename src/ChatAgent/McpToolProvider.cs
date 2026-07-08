@@ -4,25 +4,28 @@ using ModelContextProtocol.Client;
 
 namespace ChatAgent;
 
-// MCP tool'larini keşfeder (ListTools) ve verilen allowlist'e gore filtreler. Token okumaz;
-// Authorization, MCP HttpClient'ina takili TokenInjectingHandler tarafindan her cagriya
-// iliştirilir (user token, yoksa m2m).
+// MCP tool'larini boot'ta bir kez ANONIM keşfeder (ListTools) ve allowlist'e gore filtreler; her
+// sema icin bir PerUserMcpTool uretir. Keşif token okumaz (transport acik, allowlist statik). Asil
+// yetki CAGRI ANINDA cozulur: PerUserMcpTool her cagride, HttpClient'a takili TokenInjectingHandler'in
+// forward ettigi kullanici token'iyla taze bir user-bound session acar.
+// Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
 public interface IMcpToolProvider
 {
-    Task<IList<McpClientTool>> GetToolsAsync(
+    Task<IList<AITool>> GetToolsAsync(
         string serverName, string url, IReadOnlyCollection<string> allowedTools, CancellationToken ct = default);
 }
 
-public sealed class RequestScopedMcpToolProvider(
+public sealed class McpToolProvider(
     HttpClient httpClient,
-    ILogger<RequestScopedMcpToolProvider> logger) : IMcpToolProvider
+    ILogger<McpToolProvider> logger) : IMcpToolProvider
 {
-    public async Task<IList<McpClientTool>> GetToolsAsync(
+    public async Task<IList<AITool>> GetToolsAsync(
         string serverName, string url, IReadOnlyCollection<string> allowedTools, CancellationToken ct = default)
     {
         try
         {
-            var client = await McpClient.CreateAsync(
+            // Kesif client'i: yalnizca ListTools (sema) yapar, hic CallTool yapmaz; is bitince dispose.
+            await using var client = await McpClient.CreateAsync(
                 new HttpClientTransport(
                     new HttpClientTransportOptions { Name = serverName, Endpoint = new Uri(url) },
                     httpClient,
@@ -41,7 +44,10 @@ public sealed class RequestScopedMcpToolProvider(
                 logger.LogWarning("MCP '{Server}': allowlist'teki tool(lar) sunucuda bulunamadi: {Missing}",
                     serverName, string.Join(", ", missing));
 
-            return filtered;
+            // Ham McpClientTool yerine, cagriyi kullanici-bagli taze session'a yonlendiren PerUserMcpTool uret.
+            return filtered
+                .Select(AITool (t) => new PerUserMcpTool(t, httpClient, serverName, url, logger))
+                .ToList();
         }
         catch (Exception ex)
         {

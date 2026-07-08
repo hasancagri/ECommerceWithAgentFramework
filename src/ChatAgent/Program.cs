@@ -55,7 +55,7 @@ var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
 
 builder.Services.AddTransient<TokenInjectingHandler>();
 #pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers experimental; MCP icin gerekli
-builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>()
+builder.Services.AddHttpClient<IMcpToolProvider, McpToolProvider>()
     // MCP, sunucu->istemci icin uzun-omurlu bir SSE GET acar; ServiceDefaults'in standart
     // resilience handler'inin TotalRequestTimeout'u bu baglantiyi iptal edip kesfi cokertiyor.
     // Bu yuzden MCP client'ini resilience'tan muaf tutuyoruz (MCP kendi baglanti yasam dongusunu yonetir).
@@ -63,10 +63,14 @@ builder.Services.AddHttpClient<IMcpToolProvider, RequestScopedMcpToolProvider>()
     .AddHttpMessageHandler<TokenInjectingHandler>();
 #pragma warning restore EXTEXP0001
 
-// NOT: Agent'lar Singleton. MapOpenAI* helper'lari agent'i ACILISTA root provider'dan tek
-// sefer cozup closure'a yakaliyor (Scoped calismaz). Sonuc: tool'lar acilista BIR KEZ, kullanici
-// token'i olmadan toplanir => per-user MCP tool akisi simdilik calismaz (ertelenmis auth borcu).
-// Dogru cozum: IHttpContextAccessor ile her istekte tool kuran request-aware agent.
+// NOT: Agent'lar Singleton (zorunlu): MapOpenAI* helper'lari agent'i ACILISTA root provider'dan
+// tek sefer cozup closure'a yakaliyor (Scoped kayit boot'ta crash eder). Tool KESFI de acilista
+// bir kez, anonim ListTools ile yapilir (allowlist statik). Toplanan tool'lar PerUserMcpTool'dur:
+// her cagride, HttpClient'a takili TokenInjectingHandler'in forward ettigi kullanici token'iyla TAZE
+// bir user-bound stateful session acar, cagriyi yapar, session'i kapatir. Hicbir session iki kimlik
+// arasinda paylasilmadigi icin stateful sunucular "user mismatch" (403) uretmez; yetki yine Wolverine
+// handler middleware'inde ([RequiredScope]) kontrol edilir. => per-user MCP tool akisi CALISIR.
+// Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
 
 // PUBLIC agent (anonim): yalnizca catalog.
 var publicAgent = builder.AddAIAgent("public", (sp, name) =>

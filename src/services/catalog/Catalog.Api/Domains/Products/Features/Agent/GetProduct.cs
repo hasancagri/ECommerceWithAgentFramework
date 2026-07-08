@@ -4,16 +4,11 @@ using Common.Utils.Constants;
 
 namespace Catalog.Api.Domains.Products.Features.Agent;
 
-// MCP 'get_product' tool'unun arkasindaki ajan-ozel sorgu.
-// Sepete ekleme akisi icin kullanilir: kullanici bir urunu SEPETE ATMAK isteyince
-// isimle aktif urunu bulur ve add_to_cart'a yetecek bilgiyi doner (link YOK).
 public static class GetProduct
 {
-    [RequiredScope(AuthorizationScopes.CatalogRead)]
+    [RequiredScope(AuthorizationScopes.CatalogWrite)]
     public record GetProductQuery(string Name);
 
-    // add_to_cart bu alanlari ister (productId, productName, price, imageUrl).
-    // Not: FeatureObjectResultModel<T> 'new()' kisiti istedigi icin parametresiz ctor sart.
     public class GetProductResponse
     {
         public Guid Id { get; set; }
@@ -42,7 +37,6 @@ public static class GetProduct
                 })
                 .FirstOrDefaultAsync(ct);
 
-            // Ok(null) -> FeatureObjectResultModel otomatik NotFound doner.
             return FeatureObjectResultModel<GetProductResponse>.Ok(product);
         }
     }

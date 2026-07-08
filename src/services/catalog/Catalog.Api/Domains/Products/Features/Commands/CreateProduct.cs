@@ -37,8 +37,6 @@ public static class CreateProduct
             var product = Product.Create(cmd.Name, cmd.Description, cmd.Price, cmd.Sku, cmd.Brand, cmd.ImageUrl);
             session.Store(product);
 
-            // [Transactional] sayesinde publish ayni Marten transaction'ina (outbox) yazilir;
-            // urun ve event tek commit'te kaydedilir, dual-write yok.
             await bus.PublishAsync(new IntegrationEvents.ProductCreatedEvent(
                 [new ProductStockInfo(product.Id, cmd.InitialStock)]));
 

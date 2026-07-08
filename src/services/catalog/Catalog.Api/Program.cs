@@ -53,17 +53,12 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
 
     opts.Policies.UseDurableLocalQueues();
-    // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir
-    // (filter codegen sirasinda bir kez calisir; attribute'suz handler'larda hic cagri yok).
-    // REST + MCP ortak nokta.
     opts.Policies.AddMiddleware(
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
-// Seed'i Wolverine'den SONRA kaydet: hosted service'ler kayit sirasiyla baslar, boylece
-// SeedData.StartAsync calistiginda Wolverine runtime hazir olur ve PublishAsync calisir.
 builder.Services.AddHostedService<SeedData>();
 
 builder.Services.AddApiVersioning(options =>
@@ -81,17 +76,16 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// MCP server: [McpServerToolType] isaretli tool'lari (ProductMcpTools) tarar ve HTTP transport ile sunar.
-// Tool icindeki scope kontrolu icin HttpContext'e erisim gerekiyor.
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddMcpServer()
-    // Stateless: session'i olusturan kimlige bagli "user mismatch" (403) korumasini kapatir.
-    // Agent (Singleton) tool'lari ACILISTA token'siz kesfedip session'i ANONIM acar; login'de
-    // ayni session'a kullanici token'i ile gelince SDK 403 doner. Bu tool'lar basit request/
-    // response oldugu icin session state'e gerek yok; yetki zaten her istekte [RequiredScope] ile
-    // kontrol edilir. Stateless = her istek bagimsiz, kimlik bind'i yok.
-    .WithHttpTransport(o => o.Stateless = true)
+    // Stateful (default): her MCP session onu OLUSTURAN kimlige baglanir. ChatAgent artik her
+    // kullanici cagrisi icin TAZE bir user-bound session acar (PerUserMcpTool); boot'taki anonim
+    // kesif session'i yalnizca ListTools yapar, hic CallTool yapmaz. Hicbir session iki kimlik
+    // arasinda paylasilmadigi icin "user mismatch" (403) cikmaz. Yetki yine handler'daki
+    // [RequiredScope] ile kontrol edilir.
+    // Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
+    .WithHttpTransport()
     .WithToolsFromAssembly();
 
 

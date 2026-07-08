@@ -1,9 +1,5 @@
 namespace Common.Utils.Constants;
 
-// Her servis icin "read" (list/detay/sorgu) ve "write" (create/update/delete) olmak uzere
-// iki scope. Hem policy uretiminde (AuthenticationExtension) hem de endpoint'lerdeki
-// RequireAuthorization cagrilarinda tek kaynak olarak kullanilir; boylece tanim ile kullanim
-// asla birbirinden kopmaz ve yanlis yazim derleme hatasi olur.
 public static class AuthorizationScopes
 {
     // catalog.api
