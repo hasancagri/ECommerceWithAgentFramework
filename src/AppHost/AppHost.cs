@@ -70,6 +70,7 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(discountApi)
     .WithReference(orderApi)
     .WithReference(paymentApi)
+    .WithReference(stockApi)
     .WithReference(fileApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);

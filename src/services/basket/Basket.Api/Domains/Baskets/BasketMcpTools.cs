@@ -1,8 +1,6 @@
 using System.ComponentModel;
-using Common.Auths;
 using ModelContextProtocol.Server;
-// MCP tool'lari REST'ten bagimsiz Agent handler'larini dispatch eder. GlobalUsings zaten
-// Features.Commands/Queries'i cektiginden ayni isimli tipler cakisir; alias ile netlestiriyoruz.
+
 using Agent = Basket.Api.Domains.Baskets.Features.Agent;
 
 namespace Basket.Api.Domains.Baskets;

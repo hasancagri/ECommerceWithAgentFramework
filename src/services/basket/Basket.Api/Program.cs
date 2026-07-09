@@ -1,6 +1,3 @@
-
-using Shared.Utils.Constants;
-
 var builder = WebApplication.CreateBuilder(args);
 builder.AddOpenApiDocumentation();
 
@@ -31,9 +28,6 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.OrderCreated.Queues.Basket);
 
     opts.Policies.UseDurableLocalQueues();
-    // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir
-    // (filter codegen sirasinda bir kez calisir; attribute'suz handler'larda hic cagri yok).
-    // REST + MCP ortak nokta.
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
@@ -56,17 +50,9 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// MCP server: [McpServerToolType] isaretli tool'lari (BasketMcpTools) tarar ve HTTP transport ile sunar.
-// Tool'lar kullaniciyi (CurrentUser) HttpContext'ten aldigi icin accessor gerekiyor.
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddMcpServer()
-    // Stateful (default): her MCP session onu OLUSTURAN kimlige baglanir. ChatAgent artik her
-    // kullanici cagrisi icin TAZE bir user-bound session acar (PerUserMcpTool); boot'taki anonim
-    // kesif session'i yalnizca ListTools yapar, hic CallTool yapmaz. Hicbir session iki kimlik
-    // arasinda paylasilmadigi icin "user mismatch" (403) cikmaz. Yetki yine handler'daki
-    // [RequiredScope] ile kontrol edilir.
-    // Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
     .WithHttpTransport()
     .WithToolsFromAssembly();
 
@@ -83,9 +69,6 @@ app.UseAuthorization();
 
 app.AddBasketGroupEndpointExtension(apiVersionSet);
 
-// Transport kapisi YOK: tool kesfi (ListTools) acilista token'siz calissin. Yetki, komut/sorgu
-// handler'larinda ScopeAuthorizationMiddleware ([RequiredScope]) ile. Tool icinde userId forward
-// edilen token'dan (CurrentUser) okunur; UseAuthentication global oldugu icin User dolar.
 app.MapMcp("/mcp");
 
 await app.RunAsync();

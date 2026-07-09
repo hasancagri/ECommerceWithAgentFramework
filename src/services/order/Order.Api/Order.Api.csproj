@@ -19,6 +19,7 @@
         <PackageReference Include="WolverineFx.RabbitMQ" />
         <PackageReference Include="Asp.Versioning.Http" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,4 +1,3 @@
-
 namespace Basket.Api.Domains.Baskets;
 
 public static class BasketEndpointExtension

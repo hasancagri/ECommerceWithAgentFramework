@@ -62,7 +62,7 @@ public static class McpToolProviderExtensions
     // Verilen MCP server'larin allowlist'e gore filtrelenmis tool'larini tek listede toplar
     // (agent factory icinde). Her server girisi izin verilen tool adlarini ZORUNLU belirtir.
     public static IList<AITool> CollectTools(
-        this IMcpToolProvider provider, params (string Name, string Url, string[] AllowedTools)[] servers)
+        this IMcpToolProvider provider, params (string Name, string Url, string[] allowedTools)[] servers)
     {
         List<AITool> tools = [];
         foreach (var (name, url, allowedTools) in servers)

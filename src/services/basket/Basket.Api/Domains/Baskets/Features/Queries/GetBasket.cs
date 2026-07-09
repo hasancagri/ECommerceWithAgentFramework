@@ -1,8 +1,4 @@
 
-using Common.Auths;
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-
 namespace Basket.Api.Domains.Baskets.Features.Queries;
 
 public static class GetBasket

@@ -31,6 +31,11 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.ProductCreated.Queues.Stock);
 
     opts.Policies.UseDurableLocalQueues();
+    // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.
+    // REST + MCP ortak yetki noktasi.
+    opts.Policies.AddMiddleware(
+        typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
+        chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
@@ -49,6 +54,15 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// MCP server: [McpServerToolType] isaretli tool'lari (StockMcpTools) tarar ve HTTP transport ile sunar.
+// Tool kesfi (ListTools) acilista token'siz calisir; yetki handler'daki [RequiredScope] ile kontrol edilir.
+// ScopeAuthorizationMiddleware HttpContext'ten scope claim'ini okudugu icin accessor gerekiyor.
+builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
 var app = builder.Build();
 app.MapScalarDocumentation();
 
@@ -61,5 +75,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.AddStockGroupEndpointExtension(apiVersionSet);
+
+// Transport kapisi YOK: tool kesfi (ListTools) acilista token'siz calissin. Yetki, sorgu
+// handler'larinda ScopeAuthorizationMiddleware ([RequiredScope]) ile kontrol edilir.
+app.MapMcp("/mcp");
 
 await app.RunAsync();

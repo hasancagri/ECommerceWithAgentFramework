@@ -10,9 +10,6 @@ public static class McpServers
     public const string Stock = "stock";
 }
 
-
-// MCP tool adlari. Servislerdeki [McpServerTool(Name = ...)] ile birebir ayni degerler.
-// Allowlist'lerde kullanilir; magic string tekrarini onler.
 public static class CatalogTools
 {
     public const string GetProduct = "get_product";
@@ -27,6 +24,26 @@ public static class BasketTools
     public const string RemoveBasketItem = "remove_basket_item";
     public const string ApplyDiscountCoupon = "apply_discount_coupon";
     public const string RemoveDiscountCoupon = "remove_discount_coupon";
+}
+
+public static class DiscountTools
+{
+    public const string GetDiscount = "get_discount";
+}
+
+public static class OrderTools
+{
+    public const string GetOrders = "get_orders";
+}
+
+public static class PaymentTools
+{
+    public const string GetMyPayments = "get_my_payments";
+}
+
+public static class StockTools
+{
+    public const string GetStock = "get_stock";
 }
 
 public static class Prompts
@@ -70,10 +87,22 @@ public static class Prompts
         aracını hedef ürünle çağır.
 
         5) İNDİRİM KUPONU UYGULAMA ("kupon uygula", "indirim kodu gir", "şu kodu uygula"):
-        apply_discount_coupon aracını kupon koduyla çağır.
+        önce get_discount aracını kupon koduyla çağırıp geçerli olup olmadığını ve gerçek indirim
+        oranını (rate) öğren. Kupon bulunmazsa kullanıcıya geçersiz olduğunu söyle. Geçerliyse
+        apply_discount_coupon aracını kupon kodu ve get_discount'tan dönen oranla çağır; indirim
+        oranını ASLA kendin uydurma.
 
         6) KUPONU KALDIRMA ("kuponu kaldır", "indirimi iptal et"): remove_discount_coupon
         aracını çağır.
+
+        7) STOK DURUMU ("stokta var mı", "kaç adet kaldı", "stok durumu"): get_stock aracını
+        ürünün Id'siyle çağır. Ürün Id'sini bilmiyorsan önce search_products ile bul.
+
+        8) SİPARİŞLERİM ("siparişlerim", "geçmiş siparişlerim", "siparişimin durumu"): get_orders
+        aracını çağır ve sonucu kullanıcıya özetle.
+
+        9) ÖDEMELERİM ("ödemelerim", "ödeme geçmişim"): get_my_payments aracını çağır ve sonucu
+        kullanıcıya özetle.
 
         Önemli: "var mı", "mevcut mu" gibi bulunurluk soruları bir EKLEME İSTEĞİ DEĞİLDİR;
         kullanıcı açıkça "ekle/at" demedikçe sepete asla ekleme yapma.

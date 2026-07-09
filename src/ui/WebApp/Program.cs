@@ -10,7 +10,6 @@ using WebApp.Services.Refit;
 using WebApp.Authentication;
 using WebApp.Chat;
 using WebApp.Extensions;
-using WebApp.Options;
 
 
 var builder = WebApplication.CreateBuilder(args);

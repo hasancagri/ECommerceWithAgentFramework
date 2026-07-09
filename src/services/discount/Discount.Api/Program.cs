@@ -35,6 +35,9 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.OrderCreated.Queues.Discount);
 
     opts.Policies.UseDurableLocalQueues();
+    opts.Policies.AddMiddleware(
+        typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
+        chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
@@ -54,6 +57,12 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
 var app = builder.Build();
 app.MapScalarDocumentation();
 
@@ -66,5 +75,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.AddDiscountGroupEndpointExtension(apiVersionSet);
+
+app.MapMcp("/mcp");
 
 await app.RunAsync();

@@ -1,6 +1,5 @@
 namespace Basket.Api.Domains.Baskets.Features.Agent;
 
-// MCP (agent) tool'una ozel: REST Command'undan bagimsiz; response ileride ayri evrilebilsin diye ayri tutuldu.
 public static class AddBasketItem
 {
     [RequiredScope(AuthorizationScopes.BasketWrite)]

@@ -15,10 +15,6 @@ string apiKey = builder.Configuration["OpenAI:ApiKey"]
                     "OpenAI:ApiKey is not set");
 string model = builder.Configuration["OpenAI:Model"] ?? "gpt-4o-mini";
 
-
-// IChatClient'ı DI'a kaydet (doğrudan OpenAI). Istekteki "model" alani proxy agent adini
-// (public/assistant) tasiyor ve per-request ModelId olarak default'u eziyordu; ConfigureOptions
-// ile her cagride configdeki gercek modeli geri zorla (yoksa OpenAI "model_not_found" verir).
 IChatClient chatClient = new OpenAIClient(apiKey)
     .GetChatClient(model)
     .AsIChatClient()
@@ -36,21 +32,29 @@ builder.AddOpenAIConversations();
 var gatewayUrl = builder.Configuration["services:gateway:http:0"] ?? "http://localhost:5178";
 var basketUrl = $"{gatewayUrl}/mcp/{McpServers.Basket}";
 var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
+var discountUrl = $"{gatewayUrl}/mcp/{McpServers.Discount}";
+var orderUrl = $"{gatewayUrl}/mcp/{McpServers.Order}";
+var paymentUrl = $"{gatewayUrl}/mcp/{McpServers.Payment}";
+var stockUrl = $"{gatewayUrl}/mcp/{McpServers.Stock}";
 
 // Her agent'in toplayacagi MCP tool'lari: (server, url, o server'dan izin verilen tool'lar).
 // Tek kaynak; delete_product hicbir listede yok.
 // public: yalnizca arama (add_to_cart olmadigi icin get_product'a gerek yok).
-(string Name, string Url, string[] AllowedTools)[] publicAgentTools =
+(string Name, string Url, string[] allowedTools)[] publicAgentTools =
 [
-    (McpServers.Catalog, catalogUrl, [CatalogTools.SearchProducts])
+    (Name: McpServers.Catalog, Url: catalogUrl, [CatalogTools.SearchProducts])
 ];
-// assistant: catalog okuma + tum basket tool'lari.
-(string Name, string Url, string[] AllowedTools)[] assistantAgentTools =
+// assistant: catalog okuma + tum basket tool'lari + servis-basi okuma tool'lari (stok, siparis, odeme, indirim).
+(string Name, string Url, string[] allowedTools)[] assistantAgentTools =
 [
-    (McpServers.Catalog, catalogUrl, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
-    (McpServers.Basket, basketUrl,
+    (Name: McpServers.Catalog, Url: catalogUrl, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
+    (Name: McpServers.Basket, Url: basketUrl,
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem,
-            BasketTools.ApplyDiscountCoupon, BasketTools.RemoveDiscountCoupon])
+            BasketTools.ApplyDiscountCoupon, BasketTools.RemoveDiscountCoupon]),
+    (Name: McpServers.Discount, Url: discountUrl, [DiscountTools.GetDiscount]),
+    (Name: McpServers.Order, Url: orderUrl, [OrderTools.GetOrders]),
+    (Name: McpServers.Payment, Url: paymentUrl, [PaymentTools.GetMyPayments]),
+    (Name: McpServers.Stock, Url: stockUrl, [StockTools.GetStock])
 ];
 
 builder.Services.AddTransient<TokenInjectingHandler>();
@@ -62,15 +66,6 @@ builder.Services.AddHttpClient<IMcpToolProvider, McpToolProvider>()
     .RemoveAllResilienceHandlers()
     .AddHttpMessageHandler<TokenInjectingHandler>();
 #pragma warning restore EXTEXP0001
-
-// NOT: Agent'lar Singleton (zorunlu): MapOpenAI* helper'lari agent'i ACILISTA root provider'dan
-// tek sefer cozup closure'a yakaliyor (Scoped kayit boot'ta crash eder). Tool KESFI de acilista
-// bir kez, anonim ListTools ile yapilir (allowlist statik). Toplanan tool'lar PerUserMcpTool'dur:
-// her cagride, HttpClient'a takili TokenInjectingHandler'in forward ettigi kullanici token'iyla TAZE
-// bir user-bound stateful session acar, cagriyi yapar, session'i kapatir. Hicbir session iki kimlik
-// arasinda paylasilmadigi icin stateful sunucular "user mismatch" (403) uretmez; yetki yine Wolverine
-// handler middleware'inde ([RequiredScope]) kontrol edilir. => per-user MCP tool akisi CALISIR.
-// Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
 
 // PUBLIC agent (anonim): yalnizca catalog.
 var publicAgent = builder.AddAIAgent("public", (sp, name) =>

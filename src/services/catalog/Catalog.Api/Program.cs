@@ -37,10 +37,7 @@ builder.Host.UseWolverine(opts =>
         e.ExchangeType = ExchangeType.Fanout;
         e.BindQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
     });
-
-    // Binding'i publisher da tanimlasin: fanout exchange'e bagli kuyruk publish aninda yoksa
-    // mesaj sessizce dusurulur. Kuyrugu Catalog da bildirince, Stock henuz ayaga kalkmamis olsa
-    // bile mesajlar kalici kuyrukta birikir, kaybolmaz (startup sirasindan bagimsiz).
+    
     rabbit.DeclareExchange(RabbitMqConstants.ProductCreated.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
@@ -79,12 +76,6 @@ builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddMcpServer()
-    // Stateful (default): her MCP session onu OLUSTURAN kimlige baglanir. ChatAgent artik her
-    // kullanici cagrisi icin TAZE bir user-bound session acar (PerUserMcpTool); boot'taki anonim
-    // kesif session'i yalnizca ListTools yapar, hic CallTool yapmaz. Hicbir session iki kimlik
-    // arasinda paylasilmadigi icin "user mismatch" (403) cikmaz. Yetki yine handler'daki
-    // [RequiredScope] ile kontrol edilir.
-    // Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
     .WithHttpTransport()
     .WithToolsFromAssembly();
 
@@ -102,9 +93,6 @@ app.UseAuthorization();
 
 app.AddProductGroupEndpointExtension(apiVersionSet);
 
-// Transport kapisi YOK: tool kesfi (ListTools) acilista token'siz calissin. Yetki, komut/sorgu
-// handler'larinda ScopeAuthorizationMiddleware ([RequiredScope]) ile kontrol edilir. UseAuthentication
-// global oldugu icin token GELDIGINDE HttpContext.User yine dolar.
 app.MapMcp("/mcp");
 
 await app.RunAsync();

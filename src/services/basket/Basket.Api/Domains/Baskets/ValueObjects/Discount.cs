@@ -1,4 +1,3 @@
-
 namespace Basket.Api.Domains.Baskets.ValueObjects;
 
 public record Discount
