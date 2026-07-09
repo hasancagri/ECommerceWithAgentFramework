@@ -7,10 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 dotnet build ECommerceWithAgentFramework.slnx   # build everything (.NET 10, slnx solution)
 dotnet run --project src/AppHost                # run the whole system via Aspire (needs Docker)
+dotnet test ECommerceWithAgentFramework.slnx    # run unit tests (xUnit + Shouldly)
 ```
 
 - The AppHost starts Postgres (+pgAdmin), Redis (+RedisInsight), and RabbitMQ (+management UI) as persistent containers, then all services. There is no way to meaningfully run a single service standalone — they depend on Aspire service discovery and the containers.
-- No test projects exist yet.
+- Unit tests live in `tests/<Service>.Api.Tests` (one project per service, xUnit + Shouldly), each referencing its service project and covering pure domain logic (aggregates/value objects) — no Marten/Wolverine. Note: the service root namespace (e.g. `Basket`) collides with the aggregate type name, so tests alias the type (`global using BasketAggregate = ...Basket;`). No integration tests yet.
 - NuGet versions are centralized in `Directory.Packages.props` (`ManagePackageVersionsCentrally`); never put a `Version=` on a `PackageReference` in a csproj.
 - The ChatAgent requires `OpenAI:ApiKey` from its own user-secrets: `dotnet user-secrets set OpenAI:ApiKey <key> --project src/ChatAgent`.
 - Code comments are written in Turkish — follow that convention when adding comments.
