@@ -87,7 +87,7 @@
         }
 
         <div class="mt-3 text-center">
-            <p>Hesabınız yok mu? <a href="/Account/Create/Index" class="btn btn-outline-primary btn-sm">Kayıt Ol</a></p>
+            <p>Hesabınız yok mu? <a asp-page="/Account/Create/Index" asp-route-returnUrl="@Model.Input.ReturnUrl" class="btn btn-outline-primary btn-sm">Kayıt Ol</a></p>
         </div>
     </div>
 </div>
