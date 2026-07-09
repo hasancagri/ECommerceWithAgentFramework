@@ -6,7 +6,7 @@ namespace Catalog.Api.Domains.Products.Features.Agent;
 
 public static class GetProduct
 {
-    [RequiredScope(AuthorizationScopes.CatalogWrite)]
+    [RequiredScope(AuthorizationScopes.CatalogRead)]
     public record GetProductQuery(string Name);
 
     public class GetProductResponse
