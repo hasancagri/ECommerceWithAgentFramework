@@ -4,9 +4,9 @@ description: "Task list for Product Sale Readiness (Completeness Gating)"
 
 # Tasks: Product Sale Readiness (Completeness Gating)
 
-**Input**: Design documents from `specs/001-product-sale-readiness/`
+**Input**: `spec.md`
 
-**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/product-queries.md
+**Prerequisites**: spec.md (bu feature anayasadaki "Küçük" kademe — Artefakt Ölçekleme; plan/research/data-model/contracts/quickstart üretilmez. Kritik tasarım gerekçeleri aşağıda Notes'ta korunur.)
 
 **Tests**: DAHİL. Anayasa "yeni kural/aggregate davranışı test edilir" der; saf domain
 birim testleri (xUnit + Shouldly) yazılır ve TDD sırasıyla önce başarısız olmalıdır.
@@ -88,7 +88,7 @@ Catalog kök: `src/services/catalog/Catalog.Api/`.
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [x] T010 Repo kökünde `dotnet build` ve `dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj` — tüm domain testleri geçer.
-- [ ] T011 `quickstart.md` E2E senaryolarını Aspire üzerinden doğrula (`dotnet run --project src/aspire/AppHost/AppHost.csproj`): eksikler aramada yok, tamamlanınca çıkıyor, tam-ama-pasif görünmüyor.
+- [ ] T011 E2E doğrulama — Aspire üzerinden (`dotnet run --project src/aspire/AppHost/AppHost.csproj`): (1) müşteri/asistan aramasında hiçbir seed ürünü satışta görünmez (hepsi eksik); (2) bir ürünü `Update` ile açıklama+görsel doldur (aktif) → aramada satışta görünür; (3) tam bir ürünü `Deactivate` et → aramada görünmez; (4) `GetAllProducts` 200 ürünün hepsini listeler, her biri `IsComplete=false`/`IsOnSale=false` işaretli.
 
 ---
 
@@ -149,3 +149,10 @@ Task: "GetProductByName WHERE'i IsActive && IsComplete yap (Queries/GetProductBy
 - Enrichment agent (AI açıklama + gerçek görsel) bu tasks kapsamında DEĞİL — ayrı feature (spec Out of Scope).
 - [P] = farklı dosya, bağımlılık yok. Her task sonrası veya mantıklı gruplarda commit.
 - Anayasa: iş kuralı handler'da değil aggregate'te; sorgular yalnızca kalıcı bool filtreler.
+
+### Korunan tasarım kararları (retrospektif — kaldırılan research.md'den)
+
+- **Tamlık kalıcı `bool IsComplete` olarak saklanır, uçuşta hesaplanmaz.** Marten sorguları Postgres'e çevrildiğinden WHERE koşulu (`IsActive && IsComplete`) ancak kalıcı bir alanla SQL'e/indekse çevrilebilir; computed getter, whitespace-trim mantığını SQL'e çeviremezdi ve kuralı her sorguda tekrar ettirirdi (anayasa II ihlali).
+- **`IsOnSale` saklanmaz, `IsActive && IsComplete`'ten türetilir.** Ayrı bir kalıcı alan üçüncü bir senkron-tutulacak durum ve drift riski yaratırdı.
+- **Satılabilirlik filtresi yalnızca keşif/satın-alma noktalarında.** `SearchProducts`, `GetProduct`, `GetProductByName` filtrelenir; **`GetProductById` filtrelenmez** — o bir arama değil doğrudan id-lookup'tır ve admin/UI detay akışlarınca kullanılır, kısıtlamak onları bozardı.
+- **Migration yok.** Eski Marten dokümanlarında `IsComplete` alanı yoksa `false` deserialize edilir (satış-dışı = doğru güvenli varsayılan; seed ürünleri zaten eksik).
