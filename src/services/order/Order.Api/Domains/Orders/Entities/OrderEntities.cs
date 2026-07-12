@@ -1,4 +1,3 @@
-
 namespace Order.Api.Domains.Orders.Entities;
 
 public class OrderItem : BaseModel

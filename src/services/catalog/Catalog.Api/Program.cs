@@ -1,8 +1,3 @@
-using Catalog.Api.Domains.Products;
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-using Shared.Utils.Constants;
-
 var builder = WebApplication.CreateBuilder(args);
 builder.AddOpenApiDocumentation();
 

@@ -1,9 +1,5 @@
-using Common.Utils.Authorization;
-
 namespace Order.Api.Domains.Orders.Features.Agent;
 
-// MCP (agent) tool'una ozel: REST Query'sinden bagimsiz; response ileride ayri evrilebilsin diye ayri tutuldu.
-// REST handler userId'yi sub claim'den okur; burada userId tool tarafindan token'dan cozulup mesaja gecirilir.
 public static class GetOrders
 {
     [RequiredScope(AuthorizationScopes.OrderRead)]

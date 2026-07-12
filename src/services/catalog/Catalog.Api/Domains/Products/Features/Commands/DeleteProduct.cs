@@ -1,8 +1,3 @@
-using Common;
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-using Wolverine.Attributes;
-
 namespace Catalog.Api.Domains.Products.Features.Commands;
 
 public static class DeleteProduct

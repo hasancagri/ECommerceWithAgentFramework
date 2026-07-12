@@ -5,7 +5,7 @@ public class SeedData(IServiceProvider serviceProvider)
 {
     private const int ProductCount = 200;
     private const int MinStock = 1;
-    private const int MaxStock = 100;
+    private const int MaxStock = 10;
 
     private static readonly Dictionary<BrandType, string[]> ModelsByBrand = new()
     {

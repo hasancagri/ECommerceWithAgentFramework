@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-// MCP tool'lari REST'ten bagimsiz Agent handler'larini dispatch eder. GlobalUsings zaten
-// Features.Queries'i cektiginden ayni isimli tipler cakisir; alias ile netlestiriyoruz.
 using Agent = Stock.Api.Domains.Stocks.Features.Agent;
 
 namespace Stock.Api.Domains.Stocks;

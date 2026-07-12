@@ -1,8 +1,3 @@
-using Common;
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-using Shared.Enums;
-
 namespace Catalog.Api.Domains.Products.Features.Queries;
 
 public static class GetProductById

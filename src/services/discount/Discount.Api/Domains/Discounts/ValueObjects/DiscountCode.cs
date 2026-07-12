@@ -1,4 +1,3 @@
-
 namespace Discount.Api.Domains.Discounts.ValueObjects;
 
 public sealed record DiscountCode

@@ -1,5 +1,3 @@
-using Shared.Enums;
-
 namespace Catalog.Api.Domains.Products;
 
 public class Product : AggregateRoot

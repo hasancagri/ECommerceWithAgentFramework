@@ -2,7 +2,6 @@ using Common.Utils.Authorization;
 
 namespace Stock.Api.Domains.Stocks.Features.Agent;
 
-// MCP (agent) tool'una ozel: REST Query'sinden bagimsiz; response ileride ayri evrilebilsin diye ayri tutuldu.
 public static class GetStockByProductId
 {
     [RequiredScope(AuthorizationScopes.StockRead)]

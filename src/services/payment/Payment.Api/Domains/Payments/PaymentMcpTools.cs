@@ -1,8 +1,7 @@
 using System.ComponentModel;
 using Common.Auths;
 using ModelContextProtocol.Server;
-// MCP tool'lari REST'ten bagimsiz Agent handler'larini dispatch eder. GlobalUsings zaten
-// Features.Queries'i cektiginden ayni isimli tipler cakisir; alias ile netlestiriyoruz.
+
 using Agent = Payment.Api.Domains.Payments.Features.Agent;
 
 namespace Payment.Api.Domains.Payments;

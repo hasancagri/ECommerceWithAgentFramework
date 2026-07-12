@@ -1,5 +1,3 @@
-using Common.Auths;
-
 namespace Payment.Api.Domains.Payments.Features.Commands;
 
 public static class CreatePayment

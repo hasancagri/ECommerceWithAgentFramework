@@ -1,9 +1,5 @@
-using Common.Utils.Authorization;
-
 namespace Payment.Api.Domains.Payments.Features.Agent;
 
-// MCP (agent) tool'una ozel: REST Query'sinden bagimsiz; response ileride ayri evrilebilsin diye ayri tutuldu.
-// REST endpoint userId'yi [FromQuery] alir; burada userId tool tarafindan token'dan (CurrentUser) cozulup gecirilir.
 public static class GetAllPaymentsByUserId
 {
     [RequiredScope(AuthorizationScopes.PaymentRead)]

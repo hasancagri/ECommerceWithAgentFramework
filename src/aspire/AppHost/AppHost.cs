@@ -62,8 +62,6 @@ var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WithReference(paymentDb)
     .WaitFor(paymentDb);
 
-// Gateway (YARP): downstream'lere service discovery ile baglanir (cluster adresleri
-// http://catalog-api gibi). Proxy'ledigi servisleri ve auth icin identity'yi referans alir.
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)

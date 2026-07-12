@@ -1,7 +1,8 @@
-
 namespace Discount.Api;
 
-public static class EventHandlers
+// Sinif adi Wolverine'in handler kesif kurali geregi "Handler" ile bitmeli; "EventHandlers"
+// (cogul) kesfedilmez ve mesajlar "no known handler" ile sessizce dusurulur.
+public static class OrderCreatedHandler
 {
     public static async Task Handle(IntegrationEvents.OrderCreatedEvent evt, IDocumentSession session, CancellationToken ct)
     {
