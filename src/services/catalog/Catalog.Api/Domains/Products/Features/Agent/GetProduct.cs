@@ -25,7 +25,7 @@ public static class GetProduct
             CancellationToken ct)
         {
             var product = await session.Query<Product>()
-                .Where(x => !x.IsDeleted && x.IsActive &&
+                .Where(x => !x.IsDeleted && x.IsActive && x.IsComplete &&
                             x.Name.Contains(query.Name, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.Name)
                 .Select(x => new GetProductResponse

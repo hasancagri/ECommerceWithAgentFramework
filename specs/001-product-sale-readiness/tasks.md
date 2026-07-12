@@ -29,8 +29,8 @@ Catalog kök: `src/services/catalog/Catalog.Api/`.
 
 **Purpose**: Yeni test projesi altyapısı (bugün `Catalog.Api.Tests` yok).
 
-- [ ] T001 `tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj` oluştur (Basket.Api.Tests pattern'i: net10.0, Nullable+ImplicitUsings, IsTestProject; PackageReference: Microsoft.NET.Test.Sdk, xunit, xunit.runner.visualstudio, Shouldly; ProjectReference: `..\..\src\services\catalog\Catalog.Api\Catalog.Api.csproj`)
-- [ ] T002 Yeni test projesini `ECommerceWithAgentFramework.slnx` içindeki `/tests/` klasörüne kaydet (`<Project Path="tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj" />`)
+- [x] T001 `tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj` oluştur (Basket.Api.Tests pattern'i: net10.0, Nullable+ImplicitUsings, IsTestProject; PackageReference: Microsoft.NET.Test.Sdk, xunit, xunit.runner.visualstudio, Shouldly; ProjectReference: `..\..\src\services\catalog\Catalog.Api\Catalog.Api.csproj`)
+- [x] T002 Yeni test projesini `ECommerceWithAgentFramework.slnx` içindeki `/tests/` klasörüne kaydet (`<Project Path="tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj" />`)
 
 ---
 
@@ -40,8 +40,8 @@ Catalog kök: `src/services/catalog/Catalog.Api/`.
 
 **⚠️ CRITICAL**: Bu faz bitmeden hiçbir user story tamamlanamaz (sorgular ve admin response'u `IsComplete`'e dayanır).
 
-- [ ] T003 [P] TDD: `tests/Catalog.Api.Tests/ProductCompletenessTests.cs` içinde çekirdek invariant için ÖNCE BAŞARISIZ OLAN domain testleri yaz — `Product.Create` boş açıklama VEYA null/boş görselle → `IsComplete == false` & `IsOnSale == false`; her ikisi dolu + aktif → `IsComplete == true` & `IsOnSale == true`; yalnız-whitespace açıklama → eksik. (Shouldly ile)
-- [ ] T004 `src/services/catalog/Catalog.Api/Domains/Products/Product.cs`: kalıcı `bool IsComplete { get; private set; }`, computed `bool IsOnSale => IsActive && IsComplete;` ve `private void RecalculateCompleteness()` (`= !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(ImageUrl)`) ekle; `Create`, `Update`, `UpdateImageUrl` sonunda çağır. T003 testleri geçmeli.
+- [x] T003 [P] TDD: `tests/Catalog.Api.Tests/ProductCompletenessTests.cs` içinde çekirdek invariant için ÖNCE BAŞARISIZ OLAN domain testleri yaz — `Product.Create` boş açıklama VEYA null/boş görselle → `IsComplete == false` & `IsOnSale == false`; her ikisi dolu + aktif → `IsComplete == true` & `IsOnSale == true`; yalnız-whitespace açıklama → eksik. (Shouldly ile)
+- [x] T004 `src/services/catalog/Catalog.Api/Domains/Products/Product.cs`: kalıcı `bool IsComplete { get; private set; }`, computed `bool IsOnSale => IsActive && IsComplete;` ve `private void RecalculateCompleteness()` (`= !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(ImageUrl)`) ekle; `Create`, `Update`, `UpdateImageUrl` sonunda çağır. T003 testleri geçmeli.
 
 **Checkpoint**: Aggregate tamlık durumu tutarlı; sorgular ve admin response'u artık `IsComplete` kullanabilir.
 
@@ -53,9 +53,9 @@ Catalog kök: `src/services/catalog/Catalog.Api/`.
 
 **Independent Test**: Katalogda eksik+tam ürün karışımıyla arama yap → yalnızca tam+aktif ürünler döner; eksikler yok.
 
-- [ ] T005 [P] [US1] `src/services/catalog/Catalog.Api/Domains/Products/Features/Agent/SearchProducts.cs`: WHERE'e `&& x.IsComplete` ekle (mevcut `!IsDeleted && IsActive` yanına).
-- [ ] T006 [P] [US1] `src/services/catalog/Catalog.Api/Domains/Products/Features/Agent/GetProduct.cs`: WHERE'e `&& x.IsComplete` ekle (add_to_cart öncesi satılamaz ürün gelmesin).
-- [ ] T007 [P] [US1] `src/services/catalog/Catalog.Api/Domains/Products/Features/Queries/GetProductByName.cs`: WHERE'i `!IsDeleted && x.IsActive && x.IsComplete && Name.Contains(...)` yap (bugün yalnız `!IsDeleted` filtreliyor).
+- [x] T005 [P] [US1] `src/services/catalog/Catalog.Api/Domains/Products/Features/Agent/SearchProducts.cs`: WHERE'e `&& x.IsComplete` ekle (mevcut `!IsDeleted && IsActive` yanına).
+- [x] T006 [P] [US1] `src/services/catalog/Catalog.Api/Domains/Products/Features/Agent/GetProduct.cs`: WHERE'e `&& x.IsComplete` ekle (add_to_cart öncesi satılamaz ürün gelmesin).
+- [x] T007 [P] [US1] `src/services/catalog/Catalog.Api/Domains/Products/Features/Queries/GetProductByName.cs`: WHERE'i `!IsDeleted && x.IsActive && x.IsComplete && Name.Contains(...)` yap (bugün yalnız `!IsDeleted` filtreliyor).
 
 **Checkpoint**: US1 bağımsız çalışır — eksik/pasif ürünler müşteri/asistan aramasında görünmez (SC-001, SC-003, SC-004 sorgu tarafı).
 
@@ -67,7 +67,7 @@ Catalog kök: `src/services/catalog/Catalog.Api/`.
 
 **Independent Test**: Eksik aktif bir ürünün alanları doldurulur → `IsOnSale == true`; yalnız açıklama doldurulursa → hâlâ eksik.
 
-- [ ] T008 [US2] `tests/Catalog.Api.Tests/ProductCompletenessTests.cs` içine geçiş testleri ekle — eksik→`Update` ile açıklama+görsel dolunca `IsComplete`/`IsOnSale` `true`; yalnız açıklama dolunca (görsel boş) hâlâ `false`; tam ürünün açıklaması sonradan boşaltılınca satıştan düşer (`IsOnSale == false`); `UpdateImageUrl` ile görsel dolunca (açıklama zaten dolu) tamamlanır. (T004'e bağlı)
+- [x] T008 [US2] `tests/Catalog.Api.Tests/ProductCompletenessTests.cs` içine geçiş testleri ekle — eksik→`Update` ile açıklama+görsel dolunca `IsComplete`/`IsOnSale` `true`; yalnız açıklama dolunca (görsel boş) hâlâ `false`; tam ürünün açıklaması sonradan boşaltılınca satıştan düşer (`IsOnSale == false`); `UpdateImageUrl` ile görsel dolunca (açıklama zaten dolu) tamamlanır. (T004'e bağlı)
 
 **Checkpoint**: Tamamlanan ürünün otomatik satışa-hazır olması aggregate düzeyinde kanıtlı (SC-002 domain tarafı; E2E'si quickstart'ta).
 
@@ -79,7 +79,7 @@ Catalog kök: `src/services/catalog/Catalog.Api/`.
 
 **Independent Test**: GetAllProducts çağır → eksik+tam hepsi listelenir; her öğede `IsComplete` ve `IsOnSale` ayırt edilebilir.
 
-- [ ] T009 [US3] `src/services/catalog/Catalog.Api/Domains/Products/Features/Queries/GetAllProducts.cs`: `ProductResponse`'a `bool IsComplete` ve `bool IsOnSale` ekle ve `From(Product p)` map'inde doldur (filtre değişmez — hepsi listelenmeye devam eder).
+- [x] T009 [US3] `src/services/catalog/Catalog.Api/Domains/Products/Features/Queries/GetAllProducts.cs`: `ProductResponse`'a `bool IsComplete` ve `bool IsOnSale` ekle ve `From(Product p)` map'inde doldur (filtre değişmez — hepsi listelenmeye devam eder).
 
 **Checkpoint**: Admin envanterde satılabilirlik görünür (SC-005).
 
@@ -87,7 +87,7 @@ Catalog kök: `src/services/catalog/Catalog.Api/`.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T010 Repo kökünde `dotnet build` ve `dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj` — tüm domain testleri geçer.
+- [x] T010 Repo kökünde `dotnet build` ve `dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj` — tüm domain testleri geçer.
 - [ ] T011 `quickstart.md` E2E senaryolarını Aspire üzerinden doğrula (`dotnet run --project src/aspire/AppHost/AppHost.csproj`): eksikler aramada yok, tamamlanınca çıkıyor, tam-ama-pasif görünmüyor.
 
 ---

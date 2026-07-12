@@ -37,8 +37,9 @@ public static class GetProductByName
             CancellationToken ct)
         {
             // Isme gore (kismi, buyuk/kucuk harf duyarsiz) en iyi eslesen TEK urun.
+            // Musteri aramasi: yalnizca satista (aktif VE tam) urunler gorunur.
             var product = await session.Query<Product>()
-                .Where(x => !x.IsDeleted &&
+                .Where(x => !x.IsDeleted && x.IsActive && x.IsComplete &&
                             x.Name.Contains(query.Name, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.Name)
                 .FirstOrDefaultAsync(ct);
