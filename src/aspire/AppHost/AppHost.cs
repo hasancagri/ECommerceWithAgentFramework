@@ -86,9 +86,7 @@ web.WithReference(basketApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
-// ChatAgent: MCP tool'lari uzerinden calisan AI agent API'si (OpenAI uyumlu endpoint'ler).
-// MCP server'lara Gateway uzerinden baglanir; gateway'i WithReference ile alir =>
-// services:gateway:http:0 cozulur (fallback'e gerek kalmaz). OpenAI:ApiKey kendi user-secrets'inden.
+
 var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(gateway)
     .WaitFor(gateway);

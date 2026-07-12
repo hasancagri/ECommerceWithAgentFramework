@@ -1,5 +1,3 @@
-using Shared.Payloads;
-
 namespace Shared;
 
 public static class IntegrationEvents

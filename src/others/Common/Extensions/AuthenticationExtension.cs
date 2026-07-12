@@ -8,13 +8,11 @@ namespace Common.Extensions;
 
 public static class AuthenticationExtension
 {
-    // Her servis SADECE kendi scope'larini (AuthorizationScopes sabitleri) gecer; policy adi = scope adi.
-    // Sabitlerle gecildigi icin yazim hatasi derleme zamaninda yakalanir ve scope tanimi ile kullanim
-    // (endpoint'lerdeki RequireAuthorization) tek kaynaktan beslenir.
     public static IServiceCollection AddAuthenticationAndAuthorizationExtension(this IServiceCollection services,
         IConfiguration configuration, params string[] scopes)
     {
-        var identityOptions = configuration.GetSection(nameof(IdentityOption)).Get<IdentityOption>()!;
+        var identityOptions = configuration.GetSection(nameof(IdentityOption))
+            .Get<IdentityOption>()!;
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
