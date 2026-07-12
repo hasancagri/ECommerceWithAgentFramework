@@ -49,6 +49,12 @@ dotnet test --filter "FullyQualifiedName~BasketTests.AddItem_AddsItemToBasket"
   komutları `.claude/skills/speckit-*` skill'leri olarak gelir. `.claude/settings.local.json`
   gitignore'dadır, `.claude/skills/` ise takip edilir.
 - Doğrudan koda atlamadan önce en azından spec (ve gerekiyorsa plan) üretilir.
+- **Artefakt seti feature büyüklüğüne göre ölçeklenir** (anayasadaki "Artefakt
+  Ölçekleme" kuralı): _trivial_ değişiklik spec-kit'siz; _küçük_ feature (tek
+  aggregate, yeni tablo/endpoint-kontratı/integration-event yok, belirsizlik yok)
+  yalnızca `spec.md` + `tasks.md` üretir — `plan/research/data-model/contracts/quickstart`
+  üretme; _tam_ feature (yeni aggregate/tablo, servisler-arası event, yeni kontrat
+  veya belirsizlik) tam akıştan geçer. Şüphedeyse bir üst kademeyi seç.
 
 ## Teknoloji Yığını
 

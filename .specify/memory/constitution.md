@@ -108,6 +108,24 @@ ve **scope** bazında yetkilendirir (`AuthorizationScopes.*`).
 5. `/speckit-tasks` — sıralı görevler
 6. `/speckit-implement` — uygulama
 
+### Artefakt Ölçekleme (feature büyüklüğüne göre)
+
+Akış her feature için aynı **törenle** dayatılmaz; üretilen artefakt seti işin
+büyüklüğüne göre ölçeklenir. Amaç, "boş-doğru" (mevcut durumu tekrar eden, yeni bilgi
+katmayan) dosya üretmemektir. Üç kademe:
+
+- **Trivial** — davranış değiştirmeyen ya da yeni iş kuralı getirmeyen değişiklik
+  (bug fix, refactor, metin/konfig). Spec-kit gerekmez; doğrudan implement + commit.
+- **Küçük** — *tümü* sağlanıyorsa: tek aggregate içinde kalır, yeni tablo/şema yok,
+  yeni endpoint kontratı yok, servisler-arası (integration event) etki yok, kayda
+  değer belirsizlik yok. Yalnızca **`spec.md` + `tasks.md`** üretilir;
+  `plan/research/data-model/contracts/quickstart` **üretilmez**.
+- **Tam** — yukarıdaki maddelerden biri bile bozuluyorsa (yeni aggregate/tablo,
+  servisler-arası event, yeni endpoint kontratı, veya belirsizlik) tam akış işletilir.
+
+Kademe seçimi spec'in başında bir satırla gerekçelendirilir. Şüphedeyse bir üst
+kademe seçilir. `001-product-sale-readiness` retrospektif olarak "Küçük"tü.
+
 Kalite kapıları:
 
 - Testler xUnit + Shouldly ile yazılır; domain birim testleri saftır (host/entegrasyon
@@ -126,4 +144,4 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-12
+**Version**: 1.1.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-12
