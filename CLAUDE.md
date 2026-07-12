@@ -164,6 +164,10 @@ Event kontratları `Shared.IntegrationEvents` içinde yaşar. Yayınlama/tüketm
 
 ## Konvansiyonlar
 
+- **Özlü yazım — her madde, görev ve cümle en fazla 150 karakter.** Tüm repo
+  dokümanları için geçerlidir (spec, tasks, CLAUDE.md, constitution...), ileriye
+  dönük; mevcut belgeler bu yüzden yeniden biçimlendirilmez. Sığmıyorsa maddeyi böl
+  veya ayrıntıyı ilgili yere taşı; tasks.md ne yapılacağını listeler, nasılını değil.
 - **Using'ler:** her projenin tek bir `GlobalUsings.cs`'i vardır. Paylaşılan namespace'leri dosyalara tek tek `using` serpiştirmek yerine oraya ekle.
 - **DI kaydı Scrutor ile otomatiktir:** `Common.Dependencies` içindeki `ITransientDependency` / `IScopedDependency` / `ISingletonDependency` marker arayüzlerinden birini implemente et; `AddAllDependencies()` onu otomatik kaydeder. Bunları `Program.cs`'te elle kaydetme.
 - Agent / agent framework tipleri **Singleton**'dır — framework bunları başlangıçta yakalar; kullanıcıya özel davranış, agent'ı scope'lamakla değil, kullanıcının token'ını çağrı anında enjekte ederek sağlanır.
