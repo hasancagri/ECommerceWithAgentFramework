@@ -18,7 +18,7 @@ description: "Task list for Product Sale Readiness (Completeness Gating)"
 - [x] T008 `ProductCompletenessTests.cs` geçiş testleri: `Update` ile tamamlanınca `true`; yalnız açıklama → hâlâ `false`; açıklama sonradan boşalınca satıştan düşer; `UpdateImageUrl` ile tamamlanır.
 - [x] T009 `Features/Queries/GetAllProducts.cs`: `ProductResponse`'a `IsComplete` + `IsOnSale` ekle (filtre değişmez — admin hepsini görür).
 - [x] T010 `dotnet build` + `dotnet test tests/Catalog.Api.Tests/...` geçer.
-- [ ] T011 E2E (Aspire, `dotnet run --project src/aspire/AppHost/AppHost.csproj`): (1) seed ürünleri aramada görünmez; (2) `Update` ile doldurulan aktif ürün aramada çıkar; (3) `Deactivate` edilen tam ürün görünmez; (4) `GetAllProducts` 200 ürünü `IsComplete=false`/`IsOnSale=false` ile listeler.
+- [x] T011 E2E (Aspire): (1)✓ 200 seed ürün aramada görünmez; (2)✓ `Update` ile tamamlanan aktif ürün aramada çıkar (`IsOnSale=true`); (3)~ `Deactivate` HTTP endpoint'i yok (T008 birim testi kapsar); yerine canlı "tamlık kaybı → satıştan düşme" doğrulandı; (4)✓ `GetAllProducts` 200 ürünü `IsComplete/IsOnSale=false` listeler.
 
 ## Korunan tasarım kararları (retrospektif — kaldırılan research.md'den)
 
