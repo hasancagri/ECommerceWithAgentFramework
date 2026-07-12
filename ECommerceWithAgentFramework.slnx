@@ -1,16 +1,16 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/agents/">
-    <Project Path="src/ChatAgent/ChatAgent.csproj" />
+    <Project Path="src/agents/ChatAgent/ChatAgent.csproj" />
   </Folder>
   <Folder Name="/src/aspire/">
-    <Project Path="src/AppHost/AppHost.csproj" />
-    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
+    <Project Path="src/aspire/AppHost/AppHost.csproj" />
+    <Project Path="src/aspire/ServiceDefaults/ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/others/">
-    <Project Path="src/Common/Common.csproj" />
-    <Project Path="src/Identity.Server/Identity.Server.csproj" />
-    <Project Path="src/Shared/Shared.csproj" />
+    <Project Path="src/others/Common/Common.csproj" />
+    <Project Path="src/others/Identity.Server/Identity.Server.csproj" />
+    <Project Path="src/others/Shared/Shared.csproj" />
   </Folder>
   <Folder Name="/src/services/">
     <Project Path="src/services/basket/Basket.Api/Basket.Api.csproj" />
@@ -24,5 +24,12 @@
   </Folder>
   <Folder Name="/src/ui/">
     <Project Path="src/ui/WebApp/WebApp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Basket.Api.Tests/Basket.Api.Tests.csproj" />
+    <Project Path="tests/Discount.Api.Tests/Discount.Api.Tests.csproj" />
+    <Project Path="tests/Order.Api.Tests/Order.Api.Tests.csproj" />
+    <Project Path="tests/Payment.Api.Tests/Payment.Api.Tests.csproj" />
+    <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />
   </Folder>
 </Solution>

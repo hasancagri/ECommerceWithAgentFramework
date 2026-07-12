@@ -10,7 +10,6 @@ global using Discount.Api.Domains.Discounts.Features.Commands;
 global using Discount.Api.Domains.Discounts.Features.Queries;
 global using Discount.Api.Domains.Discounts.ValueObjects;
 global using Discount.Api.Domains.Discounts;
-global using Discount.Api.Utils;
 global using Marten;
 global using Marten.Newtonsoft;
 global using Weasel.Core;

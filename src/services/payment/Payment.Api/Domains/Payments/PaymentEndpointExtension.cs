@@ -1,5 +1,4 @@
-﻿
-namespace Payment.Api.Domains.Payments;
+﻿namespace Payment.Api.Domains.Payments;
 
 public static class PaymentEndpointExtension
 {

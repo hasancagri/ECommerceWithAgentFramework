@@ -1,4 +1,3 @@
-
 using Shared.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +23,9 @@ builder.Services.AddMarten(opts =>
 builder.Host.UseWolverine(opts =>
 {
     opts.Policies.UseDurableLocalQueues();
+    opts.Policies.AddMiddleware(
+        typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
+        chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
@@ -42,6 +44,12 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
 var app = builder.Build();
 app.MapScalarDocumentation();
 
@@ -54,5 +62,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.AddPaymentGroupEndpointExtension(apiVersionSet);
+
+app.MapMcp("/mcp");
 
 await app.RunAsync();

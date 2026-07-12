@@ -1,21 +1,12 @@
-using Catalog.Api.Domains.Products;
-using Shared.Enums;
-using Shared.Payloads;
-using Wolverine.Marten.Publishing;
-
 namespace Catalog.Api.Infrastructure;
 
-// IInitialData, Wolverine runtime baslamadan once (MartenActivator icinde) calistigi icin
-// orada PublishAsync patlar. Bu yuzden seed'i IHostedService olarak kaydedip Wolverine'den
-// SONRA baslatiyoruz (Program.cs'te UseWolverine'den sonra AddHostedService).
-public class SeedData(IServiceProvider serviceProvider) : IHostedService
+public class SeedData(IServiceProvider serviceProvider)
+    : IHostedService
 {
-    private const int ProductCount = 1000;
+    private const int ProductCount = 200;
+    private const int MinStock = 1;
+    private const int MaxStock = 10;
 
-    // Her urun, Stock.Api'de bu adetle stok kaydina baslar (baslangic degeri).
-    private const int InitialStock = 100;
-
-    // Her marka icin gercekci model serileri; isimler bunlardan turetilir.
     private static readonly Dictionary<BrandType, string[]> ModelsByBrand = new()
     {
         [BrandType.Apple] = ["iPhone", "iPad", "MacBook Pro", "AirPods", "Apple Watch"],
@@ -30,19 +21,18 @@ public class SeedData(IServiceProvider serviceProvider) : IHostedService
         [BrandType.Xiaomi] = ["Redmi Note", "Mi", "Poco", "Redmi", "Mi Pad"]
     };
 
-    public async Task StartAsync(CancellationToken cancellation)
+    //Burada Dual-Write mantığı korunur
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
         var sessionFactory = scope.ServiceProvider.GetRequiredService<OutboxedSessionFactory>();
 
-        // Outbox'a enlist edilmis session: asagidaki PublishAsync dogrudan broker'a gitmez,
-        // ayni Marten transaction'ina (outbox tablosuna) yazilir. Boylece urunler ve event TEK
-        // commit'te kaydedilir, dual-write penceresi kapanir.
         await using var session = sessionFactory.OpenSession(bus);
 
-        var alreadySeeded = await session.Query<Product>().AnyAsync(token: cancellation);
-        if (alreadySeeded) 
+        var alreadySeeded = await session.Query<Product>()
+            .AnyAsync(token: cancellationToken);
+        if (alreadySeeded)
             return;
 
         var brands = Enum.GetValues<BrandType>();
@@ -53,14 +43,14 @@ public class SeedData(IServiceProvider serviceProvider) : IHostedService
             var brand = brands[i % brands.Length];
             var models = ModelsByBrand[brand];
             var model = models[i / brands.Length % models.Length];
-            var edition = i / (brands.Length * models.Length) + 1; 
+            var edition = i / (brands.Length * models.Length) + 1;
 
             var name = $"{brand} {model} {edition}";
-            var price = 10m * (i % 100 + 1); 
+            var price = 10m * (i % 100 + 1);
 
             products.Add(Product.Create(
                 name: name,
-                description: $"{name} - brand new {brand} product.",
+                description: "",
                 price: price,
                 sku: $"SKU-{i:D5}",
                 brand: brand,
@@ -69,15 +59,12 @@ public class SeedData(IServiceProvider serviceProvider) : IHostedService
 
         session.Store(products.ToArray());
 
-        // Tek event, liste payload: Stock.Api 1000 ayri mesaj yerine tek mesajla toplu stok acar.
         var items = products
-            .Select(product => new ProductStockInfo(product.Id, InitialStock))
+            .Select(product => new ProductStockInfo(product.Id, Random.Shared.Next(MinStock, MaxStock + 1)))
             .ToList();
         await bus.PublishAsync(new IntegrationEvents.ProductCreatedEvent(items));
-
-        // Urunler + outbox mesaji tek commit; commit sonrasi Wolverine event'i broker'a relay eder.
-        await session.SaveChangesAsync(cancellation);
+        await session.SaveChangesAsync(cancellationToken);
     }
 
-    public Task StopAsync(CancellationToken cancellation) => Task.CompletedTask;
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

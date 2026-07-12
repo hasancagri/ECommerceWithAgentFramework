@@ -1,5 +1,4 @@
-﻿
-namespace Discount.Api.Utils;
+﻿namespace Discount.Api;
 
 public class DiscountCodeGenerator
 {

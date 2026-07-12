@@ -1,0 +1,31 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.3.5">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <UserSecretsId>dd72660d-cbeb-46b3-858a-a6717a0cfa4f</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+      <ProjectReference Include="..\..\services\catalog\Catalog.Api\Catalog.Api.csproj" />
+      <ProjectReference Include="..\..\services\stock\Stock.Api\Stock.Api.csproj" />
+      <ProjectReference Include="..\..\services\basket\Basket.Api\Basket.Api.csproj" />
+      <ProjectReference Include="..\..\services\file\File.Api\File.Api.csproj" />
+      <ProjectReference Include="..\..\services\order\Order.Api\Order.Api.csproj" />
+      <ProjectReference Include="..\..\services\discount\Discount.Api\Discount.Api.csproj" />
+      <ProjectReference Include="..\..\services\payment\Payment.Api\Payment.Api.csproj" />
+      <ProjectReference Include="..\..\services\gateway\Gateway\Gateway.csproj" />
+      <ProjectReference Include="..\..\ui\WebApp\WebApp.csproj" />
+      <ProjectReference Include="..\..\others\Identity.Server\Identity.Server.csproj" />
+      <ProjectReference Include="..\..\agents\ChatAgent\ChatAgent.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+        <PackageReference Include="Aspire.Hosting.RabbitMQ" />
+    </ItemGroup>
+
+</Project>

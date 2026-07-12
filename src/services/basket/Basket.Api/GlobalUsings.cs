@@ -12,7 +12,6 @@ global using Common.Extensions;
 global using Common;
 global using Marten;
 global using Marten.Newtonsoft;
-global using Marten.Schema;
 global using Weasel.Core;
 global using Microsoft.AspNetCore.Mvc;
 global using Newtonsoft.Json;
@@ -24,3 +23,7 @@ global using Wolverine.Marten;
 global using Wolverine.RabbitMQ;
 global using Wolverine;
 global using Common.Utils.Constants;
+global using Common.Auths;
+global using Common.Utils.Authorization;
+global using Shared.Utils.Constants;
+

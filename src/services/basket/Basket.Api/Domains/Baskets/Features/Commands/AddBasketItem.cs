@@ -1,13 +1,7 @@
-
-using Common.Auths;
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-
 namespace Basket.Api.Domains.Baskets.Features.Commands;
 
 public static class AddBasketItem
 {
-    [RequiredScope(AuthorizationScopes.BasketWrite)]
     public record AddBasketItemCommand(
         Guid UserId,
         Guid ProductId,

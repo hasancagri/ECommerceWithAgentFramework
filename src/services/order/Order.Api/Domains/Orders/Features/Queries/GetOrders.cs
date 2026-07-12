@@ -1,4 +1,3 @@
-
 namespace Order.Api.Domains.Orders.Features.Queries;
 
 public static class GetOrders

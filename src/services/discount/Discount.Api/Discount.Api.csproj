@@ -21,16 +21,18 @@
         <PackageReference Include="Asp.Versioning.Http" />
         <PackageReference Include="Duende.IdentityModel" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
     </ItemGroup>
     
     <ItemGroup>
-      <ProjectReference Include="..\..\..\Common\Common.csproj" />
-      <ProjectReference Include="..\..\..\ServiceDefaults\ServiceDefaults.csproj" />
-      <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
+      <ProjectReference Include="..\..\..\others\Common\Common.csproj" />
+      <ProjectReference Include="..\..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
+      <ProjectReference Include="..\..\..\others\Shared\Shared.csproj" />
     </ItemGroup>
     
     <ItemGroup>
       <Folder Include="Domains\" />
+      <Folder Include="Domains\Discounts\Features\Agent\" />
     </ItemGroup>
 
 </Project>

@@ -19,12 +19,17 @@
         <PackageReference Include="Asp.Versioning.Http" />
         <PackageReference Include="Scrutor" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\Common\Common.csproj" />
-        <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
-        <ProjectReference Include="..\..\..\ServiceDefaults\ServiceDefaults.csproj" />
+        <ProjectReference Include="..\..\..\others\Common\Common.csproj" />
+        <ProjectReference Include="..\..\..\others\Shared\Shared.csproj" />
+        <ProjectReference Include="..\..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Domains\Stocks\Features\Agent\" />
     </ItemGroup>
 
 </Project>

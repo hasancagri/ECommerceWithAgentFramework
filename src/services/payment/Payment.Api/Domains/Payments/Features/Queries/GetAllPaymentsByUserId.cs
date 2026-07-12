@@ -1,4 +1,3 @@
-
 namespace Payment.Api.Domains.Payments.Features.Queries;
 
 public static class GetAllPaymentsByUserId

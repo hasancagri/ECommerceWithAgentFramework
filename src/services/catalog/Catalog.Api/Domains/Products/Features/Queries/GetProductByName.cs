@@ -1,9 +1,3 @@
-using Common;
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-using Microsoft.AspNetCore.Mvc;
-using Shared.Enums;
-
 namespace Catalog.Api.Domains.Products.Features.Queries;
 
 public static class GetProductByName

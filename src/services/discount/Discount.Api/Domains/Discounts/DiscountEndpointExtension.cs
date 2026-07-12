@@ -1,5 +1,4 @@
-﻿
-namespace Discount.Api.Domains.Discounts;
+﻿namespace Discount.Api.Domains.Discounts;
 
 public static class DiscountEndpointExtension
 {

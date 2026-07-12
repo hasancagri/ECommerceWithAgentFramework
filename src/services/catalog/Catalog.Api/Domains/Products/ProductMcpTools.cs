@@ -1,9 +1,3 @@
-using System.ComponentModel;
-using Catalog.Api.Domains.Products.Features.Agent;
-using Catalog.Api.Domains.Products.Features.Commands;
-using Common;
-using ModelContextProtocol.Server;
-
 namespace Catalog.Api.Domains.Products;
 
 
