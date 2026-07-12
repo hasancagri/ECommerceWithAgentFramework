@@ -32,5 +32,5 @@
 ## Notes
 
 - Tamlık kuralı (Description + ImageUrl) ve "satışta = tam VE aktif" ayrımı FR-001/FR-002'de netleştirildi; ilgili senaryolarla ölçülebilir.
-- Agent yapısı/tetikleme/içerik kaynağı bilinçli olarak "Deferred to Planning" bölümüne alındı — bunlar HOW; spec NE/NEDEN'e odaklı kaldığından [NEEDS CLARIFICATION] gerektirmedi.
+- **Kapsam daraltıldı (2026-07-12):** Enrichment agent'ı bu feature'dan çıkarıldı; ayrı bir feature olacak (bkz. spec "Out of Scope"). Bu spec yalnızca domain satılabilirlik kuralını kapsar.
 - Constitution uyumu: kural aggregate invariant'ı olarak ifade edildi (Principle II), Catalog Bounded Context içinde kaldı (Principle I).
