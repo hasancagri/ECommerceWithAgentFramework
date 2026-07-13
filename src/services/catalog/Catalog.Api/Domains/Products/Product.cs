@@ -54,6 +54,26 @@ public class Product : AggregateRoot
         RecalculateCompleteness();
     }
 
+    // Enrichment (002): aciklama BOSSA doldurur, doluysa dokunmaz (FR-005, idempotent).
+    public void SetDescriptionIfEmpty(string description)
+    {
+        if (string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(description))
+        {
+            Description = description;
+            RecalculateCompleteness();
+        }
+    }
+
+    // Enrichment (002): gorsel URL BOSSA doldurur, doluysa dokunmaz (FR-005, idempotent).
+    public void SetImageUrlIfEmpty(string imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(ImageUrl) && !string.IsNullOrWhiteSpace(imageUrl))
+        {
+            ImageUrl = imageUrl;
+            RecalculateCompleteness();
+        }
+    }
+
     // Invariant: IsComplete daima aciklama+gorsel dolulugunu yansitir (FR-001, FR-004).
     private void RecalculateCompleteness()
     {

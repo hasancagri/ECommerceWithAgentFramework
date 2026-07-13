@@ -2,6 +2,7 @@
   <Folder Name="/src/" />
   <Folder Name="/src/agents/">
     <Project Path="src/agents/ChatAgent/ChatAgent.csproj" />
+    <Project Path="src/agents/ProductEnrichmentAgent/ProductEnrichmentAgent.csproj" />
   </Folder>
   <Folder Name="/src/aspire/">
     <Project Path="src/aspire/AppHost/AppHost.csproj" />

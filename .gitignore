@@ -9,3 +9,6 @@ riderModule.iml
 
 # Claude Code local settings (spec-kit skills under .claude/skills stay tracked)
 .claude/settings.local.json
+
+# File.Api runtime-generated product images (enrichment output; not source)
+src/services/file/File.Api/Images/

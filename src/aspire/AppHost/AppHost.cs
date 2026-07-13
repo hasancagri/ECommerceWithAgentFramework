@@ -92,4 +92,12 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
 
+// Product Enrichment Agent (headless worker): eksik urunleri Catalog/File MCP ile tamamlar.
+// Gateway uzerinden /mcp/catalog + /mcp/file cagirir; Identity'den kendi m2m token'ini alir.
+builder.AddProject<Projects.ProductEnrichmentAgent>("enrichment-agent")
+    .WithReference(gateway)
+    .WithReference(identityServer)
+    .WaitFor(gateway)
+    .WaitFor(identityServer);
+
 await builder.Build().RunAsync();

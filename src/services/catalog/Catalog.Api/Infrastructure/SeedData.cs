@@ -3,7 +3,7 @@ namespace Catalog.Api.Infrastructure;
 public class SeedData(IServiceProvider serviceProvider)
     : IHostedService
 {
-    private const int ProductCount = 200;
+    private const int ProductCount = 30;
     private const int MinStock = 1;
     private const int MaxStock = 10;
 

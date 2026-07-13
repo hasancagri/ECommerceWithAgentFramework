@@ -44,7 +44,8 @@ public static class Config
         new ApiScope("stock.read", "Stock API - okuma"),
         new ApiScope("stock.write", "Stock API - yazma (artir/azalt)"),
 
-        // file.api: HTTP endpoint yok (sadece RabbitMQ/Wolverine event consumer) → scope yok.
+        // file.api: enrichment agent'in gorsel upload MCP tool'unu korur.
+        new ApiScope("file.write", "File API - yazma (gorsel upload)"),
     ];
 
     // ApiResource adi = servisin dogruladigi Audience (appsettings IdentityOption.Audience).
@@ -81,10 +82,10 @@ public static class Config
             Scopes = { "stock.read", "stock.write" },
             UserClaims = ApiUserClaims,
         },
-        // file.api: HTTP yuzeyi olmadigi icin scope tasimaz; audience tutarliligi
-        // icin tanimli birakildi (servis yine de auth extension'i cagiriyor).
+        // file.api: MCP upload yuzeyi file.write scope'uyla korunur.
         new ApiResource("file.api", "File API")
         {
+            Scopes = { "file.write" },
             UserClaims = ApiUserClaims,
         },
     ];
@@ -103,6 +104,21 @@ public static class Config
                 "catalog.read",
                 "discount.read",
                 "stock.read",
+            },
+        },
+        // Product Enrichment Agent (headless worker): kendi m2m kimligiyle Catalog'u
+        // okur/yazar ve File'a gorsel yukler. En-az-yetki: yalnizca gereken 3 scope.
+        new Client
+        {
+            ClientId = "enrichment.agent",
+            ClientName = "Product Enrichment Agent (m2m)",
+            AllowedGrantTypes = GrantTypes.ClientCredentials,
+            ClientSecrets = { new Secret("enrichment-secret".Sha256()) },
+            AllowedScopes =
+            {
+                "catalog.read",
+                "catalog.write",
+                "file.write",
             },
         },
         // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
