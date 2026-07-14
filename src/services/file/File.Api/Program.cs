@@ -38,6 +38,9 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.UploadCoursePicture.Queues.File);
 
     opts.Policies.UseDurableLocalQueues();
+    opts.Policies.AddMiddleware(
+        typeof(ScopeAuthorizationMiddleware),
+        chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
 
@@ -49,14 +52,33 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-builder.Services.AddAuthenticationAndAuthorizationExtension(builder.Configuration);
+builder.Services.AddAuthenticationAndAuthorizationExtension(
+    builder.Configuration,
+    AuthorizationScopes.FileWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
 
 var app = builder.Build();
 app.MapScalarDocumentation();
 
+// Uretilen urun gorsellerini statik serve et: /images/{ProductId}.png (SC-003: gercek, gorulebilir).
+var imagesPath = Path.Combine(app.Environment.ContentRootPath, "Images");
+Directory.CreateDirectory(imagesPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(imagesPath),
+    RequestPath = "/images"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapMcp("/mcp");
 
 await app.RunAsync();

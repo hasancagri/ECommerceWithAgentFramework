@@ -25,4 +25,7 @@ public static class AuthorizationScopes
     // stock.api
     public const string StockRead = "stock.read";
     public const string StockWrite = "stock.write";
+
+    // file.api
+    public const string FileWrite = "file.write";
 }

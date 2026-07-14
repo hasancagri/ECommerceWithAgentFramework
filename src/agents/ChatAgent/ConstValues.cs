@@ -10,6 +10,15 @@ public static class McpServers
     public const string Stock = "stock";
 }
 
+// Her MCP'nin baglanacagi named HttpClient; handler MCP'ye ozeldir, global degil.
+// WithToken: kendi server'larimiz -> TokenInjectingHandler ile kullanici token'ini forward eder.
+// NoToken:   dis MCP'ler (or. gmail'i dogrudan cagirirken) -> handler yok, token gitmez.
+public static class McpClients
+{
+    public const string WithToken = "mcp-with-token";
+    public const string NoToken = "mcp-no-token";
+}
+
 public static class CatalogTools
 {
     public const string GetProduct = "get_product";

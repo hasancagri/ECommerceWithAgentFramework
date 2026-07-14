@@ -37,35 +37,44 @@ var orderUrl = $"{gatewayUrl}/mcp/{McpServers.Order}";
 var paymentUrl = $"{gatewayUrl}/mcp/{McpServers.Payment}";
 var stockUrl = $"{gatewayUrl}/mcp/{McpServers.Stock}";
 
-// Her agent'in toplayacagi MCP tool'lari: (server, url, o server'dan izin verilen tool'lar).
-// Tek kaynak; delete_product hicbir listede yok.
+// Her agent'in toplayacagi MCP tool'lari: (server, url, baglanacagi named-client, izin verilen tool'lar).
+// Tek kaynak; delete_product hicbir listede yok. ClientName = MCP'ye ozel handler/baglanti; kendi
+// server'larimiz Identity token forward eder. Yeni bir dis MCP kendi ClientName'iyle eklenir.
 // public: yalnizca arama (add_to_cart olmadigi icin get_product'a gerek yok).
-(string Name, string Url, string[] allowedTools)[] publicAgentTools =
+(string Name, string Url, string ClientName, string[] allowedTools)[] publicAgentTools =
 [
-    (Name: McpServers.Catalog, Url: catalogUrl, [CatalogTools.SearchProducts])
+    (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts])
 ];
 // assistant: catalog okuma + tum basket tool'lari + servis-basi okuma tool'lari (stok, siparis, odeme, indirim).
-(string Name, string Url, string[] allowedTools)[] assistantAgentTools =
+(string Name, string Url, string ClientName, string[] allowedTools)[] assistantAgentTools =
 [
-    (Name: McpServers.Catalog, Url: catalogUrl, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
-    (Name: McpServers.Basket, Url: basketUrl,
+    (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
+    (McpServers.Basket, basketUrl, McpClients.WithToken,
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem,
             BasketTools.ApplyDiscountCoupon, BasketTools.RemoveDiscountCoupon]),
-    (Name: McpServers.Discount, Url: discountUrl, [DiscountTools.GetDiscount]),
-    (Name: McpServers.Order, Url: orderUrl, [OrderTools.GetOrders]),
-    (Name: McpServers.Payment, Url: paymentUrl, [PaymentTools.GetMyPayments]),
-    (Name: McpServers.Stock, Url: stockUrl, [StockTools.GetStock])
+    (McpServers.Discount, discountUrl, McpClients.WithToken, [DiscountTools.GetDiscount]),
+    (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders]),
+    (McpServers.Payment, paymentUrl, McpClients.WithToken, [PaymentTools.GetMyPayments]),
+    (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock])
 ];
 
 builder.Services.AddTransient<TokenInjectingHandler>();
+
+// Iki auth davranisi, iki named-client (yapi tek; MCP hangisini istedigini ClientName ile secer):
+// WithToken -> TokenInjectingHandler kullanici token'ini forward eder (kendi server'larimiz).
+// NoToken   -> handler yok; token gitmez (dis MCP'ler, or. gmail'i dogrudan cagirirken).
+// MCP uzun-omurlu bir SSE GET actigi icin standart resilience handler'i baglantiyi kesip kesfi
+// cokertir; bu yuzden ikisini de resilience'tan muaf tutuyoruz (MCP kendi baglanti dongusunu yonetir).
 #pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers experimental; MCP icin gerekli
-builder.Services.AddHttpClient<IMcpToolProvider, McpToolProvider>()
-    // MCP, sunucu->istemci icin uzun-omurlu bir SSE GET acar; ServiceDefaults'in standart
-    // resilience handler'inin TotalRequestTimeout'u bu baglantiyi iptal edip kesfi cokertiyor.
-    // Bu yuzden MCP client'ini resilience'tan muaf tutuyoruz (MCP kendi baglanti yasam dongusunu yonetir).
+builder.Services.AddHttpClient(McpClients.WithToken)
     .RemoveAllResilienceHandlers()
     .AddHttpMessageHandler<TokenInjectingHandler>();
+
+builder.Services.AddHttpClient(McpClients.NoToken)
+    .RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
+
+builder.Services.AddSingleton<IMcpToolProvider, McpToolProvider>();
 
 // PUBLIC agent (anonim): yalnizca catalog.
 var publicAgent = builder.AddAIAgent("public", (sp, name) =>

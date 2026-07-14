@@ -44,6 +44,13 @@ builder.Services.AddHttpClient("orchestrator", client =>
     client.Timeout = TimeSpan.FromMinutes(5);
 });
 
+// Urun gorselleri icin file-api'ye BFF proxy'si (service discovery: services:file-api:http:0).
+// DB'deki URL gateway-goreli (/file/images/{id}.png); WebApp ayni yolu ayni origin'den servis eder.
+builder.Services.AddHttpClient("file-images", client =>
+{
+    client.BaseAddress = new Uri("http://file-api");
+});
+
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
 
@@ -198,5 +205,20 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.MapChatProxy();
+
+// Urun gorseli proxy'si: DB'deki gateway-goreli /file/images/{name} yolunu ayni origin'den servis
+// eder. file-api ic servis oldugundan (browser 'http://file-api'yi cozemez) WebApp sunucu tarafinda
+// ceker ve geri yayinlar. Anonim: gorseller herkese acik (login gerektirmez).
+app.MapGet("/file/images/{name}", async (string name, IHttpClientFactory factory, CancellationToken ct) =>
+{
+    var http = factory.CreateClient("file-images");
+    var upstream = await http.GetAsync($"/images/{name}", ct);
+    if (!upstream.IsSuccessStatusCode)
+        return Results.NotFound();
+
+    var contentType = upstream.Content.Headers.ContentType?.ToString() ?? "image/png";
+    var bytes = await upstream.Content.ReadAsByteArrayAsync(ct);
+    return Results.File(bytes, contentType);
+}).AllowAnonymous();
 
 app.Run();
