@@ -1,7 +1,5 @@
 namespace Stock.Api;
 
-// Sinif adi Wolverine'in handler kesif kurali geregi "Handler" ile bitmeli; "EventHandlers"
-// (cogul) kesfedilmez ve mesajlar "no known handler" ile sessizce dusurulur.
 public static class ProductCreatedHandler
 {
     // Event her zaman liste tasir: CreateProduct 1 elemanli, SeedData N elemanli yayinlar.
