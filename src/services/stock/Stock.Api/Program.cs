@@ -54,9 +54,6 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// MCP server: [McpServerToolType] isaretli tool'lari (StockMcpTools) tarar ve HTTP transport ile sunar.
-// Tool kesfi (ListTools) acilista token'siz calisir; yetki handler'daki [RequiredScope] ile kontrol edilir.
-// ScopeAuthorizationMiddleware HttpContext'ten scope claim'ini okudugu icin accessor gerekiyor.
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddMcpServer()
@@ -76,8 +73,6 @@ app.UseAuthorization();
 
 app.AddStockGroupEndpointExtension(apiVersionSet);
 
-// Transport kapisi YOK: tool kesfi (ListTools) acilista token'siz calissin. Yetki, sorgu
-// handler'larinda ScopeAuthorizationMiddleware ([RequiredScope]) ile kontrol edilir.
 app.MapMcp("/mcp");
 
 await app.RunAsync();
