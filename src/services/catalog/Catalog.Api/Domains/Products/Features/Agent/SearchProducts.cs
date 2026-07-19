@@ -1,7 +1,3 @@
-using Common;
-using Common.Utils.Authorization;
-using Common.Utils.Constants;
-
 namespace Catalog.Api.Domains.Products.Features.Agent;
 
 public static class SearchProducts

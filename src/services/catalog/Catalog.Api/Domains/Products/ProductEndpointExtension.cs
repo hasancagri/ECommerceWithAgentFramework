@@ -1,6 +1,3 @@
-using Catalog.Api.Domains.Products.Features.Commands;
-using Catalog.Api.Domains.Products.Features.Queries;
-
 namespace Catalog.Api.Domains.Products;
 
 public static class ProductEndpointExtension

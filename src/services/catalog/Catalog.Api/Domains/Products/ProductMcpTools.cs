@@ -1,6 +1,5 @@
 namespace Catalog.Api.Domains.Products;
 
-
 [McpServerToolType]
 public static class GetProductMcpTool
 {
@@ -25,17 +24,4 @@ public static class GetProductByNameMcpTool
         CancellationToken ct)
         => bus.InvokeAsync<FeatureObjectResultModel<SearchProducts.SearchProductResponse>>(
             new SearchProducts.SearchProductsQuery(name), ct);
-}
-
-[McpServerToolType]
-public static class DeleteProductMcpTool
-{
-    [McpServerTool(Name = "delete_product")]
-    [Description("Verilen Id'ye sahip urunu siler.")]
-    public static Task<FeatureObjectResultModel<DeleteProduct.DeleteProductResponse>> DeleteProductAsync(
-        [Description("Silinecek urunun Id'si")] Guid id,
-        IMessageBus bus,
-        CancellationToken ct)
-        => bus.InvokeAsync<FeatureObjectResultModel<DeleteProduct.DeleteProductResponse>>(
-            new DeleteProduct.DeleteProductCommand(id), ct);
 }

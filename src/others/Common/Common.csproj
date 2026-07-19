@@ -20,4 +20,8 @@
         <PackageReference Include="Scrutor" />
         <PackageReference Include="WolverineFx" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Utils\Extensions\" />
+      <Folder Include="Utils\Helpers\" />
+    </ItemGroup>
 </Project>

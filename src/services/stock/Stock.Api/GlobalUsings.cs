@@ -21,3 +21,7 @@ global using Wolverine.Attributes;
 global using Wolverine.Marten;
 global using Wolverine.RabbitMQ;
 global using Wolverine;
+global using Common.Utils.Authorization;
+global using System.ComponentModel;
+global using ModelContextProtocol.Server;
+global using Shared.Utils.Constants;

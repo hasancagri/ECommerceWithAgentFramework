@@ -1,5 +1,3 @@
-using Common.Utils.Authorization;
-
 namespace Discount.Api.Domains.Discounts.Features.Agent;
 
 // MCP (agent) tool'una ozel: REST Query'sinden bagimsiz; response ileride ayri evrilebilsin diye ayri tutuldu.
