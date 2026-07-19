@@ -2,6 +2,7 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 
 public static class DeleteProduct
 {
+    [InvalidatesCache("catalog-products")]
     [RequiredScope(AuthorizationScopes.CatalogWrite)]
     public record DeleteProductCommand(Guid Id);
 

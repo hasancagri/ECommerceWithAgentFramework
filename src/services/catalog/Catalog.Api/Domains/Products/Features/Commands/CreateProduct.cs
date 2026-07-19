@@ -2,6 +2,7 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 
 public static class CreateProduct
 {
+    [InvalidatesCache("catalog-products")]
     [RequiredScope(AuthorizationScopes.CatalogWrite)]
     public record CreateProductCommand(
         string Name,

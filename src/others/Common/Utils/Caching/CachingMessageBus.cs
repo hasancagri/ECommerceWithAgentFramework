@@ -1,0 +1,148 @@
+using System.Reflection;
+using Common.Results.BaseClasses;
+using Microsoft.Extensions.Caching.Hybrid;
+using Wolverine;
+
+namespace Common.Utils.Caching;
+
+/// <summary>
+/// IMessageBus'ı şeffaf saran declarative caching aspect'i (AOP). Endpoint'ler ve handler'lar
+/// AYNEN kalır; davranış yalnız query/command tipindeki <see cref="CachedAttribute"/> /
+/// <see cref="InvalidatesCacheAttribute"/> ile sürülür.
+///
+/// - [Cached] query: çağrı iki katmanlı (L1→L2→kaynak) HybridCache.GetOrCreateAsync ile sarılır;
+///   stampede koruması + tag'leme native. Negatif sonuç (IsSuccess=false) önbeklenmez.
+/// - [InvalidatesCache] command: inner çağrı (yani yazma + commit) tamamlandıktan SONRA, sonuç
+///   başarılıysa RemoveByTagAsync ile ilgili girdiler iki katmandan boşalır (FR-006).
+///
+/// Diğer tüm IMessageBus üyeleri değişmeden inner'a forward edilir.
+/// </summary>
+public sealed class CachingMessageBus(
+    IMessageBus inner,
+    HybridCache cache,
+    CacheAspectOptions options,
+    CacheMetrics metrics)
+    : IMessageBus
+{
+    // ---- Cache/invalidation uygulanan tek nokta: InvokeAsync<T> ----
+
+    public Task<T> InvokeAsync<T>(object message, CancellationToken cancellation = default, TimeSpan? timeout = null)
+        => InvokeCoreAsync(message, token => inner.InvokeAsync<T>(message, token, timeout), cancellation);
+
+    public Task<T> InvokeAsync<T>(object message, DeliveryOptions deliveryOptions,
+        CancellationToken cancellation = default, TimeSpan? timeout = null)
+        => InvokeCoreAsync(message, token => inner.InvokeAsync<T>(message, deliveryOptions, token, timeout), cancellation);
+
+    private async Task<T> InvokeCoreAsync<T>(object message, Func<CancellationToken, Task<T>> innerCall,
+        CancellationToken ct)
+    {
+        var messageType = message.GetType();
+        var cached = messageType.GetCustomAttribute<CachedAttribute>();
+        if (cached is not null)
+            return await GetOrCreateAsync(message, cached, innerCall, ct);
+
+        var result = await innerCall(ct);
+
+        var invalidates = messageType.GetCustomAttribute<InvalidatesCacheAttribute>();
+        // Boşaltma commit SONRASI: innerCall döndüyse Wolverine [Transactional] handler commit'i tamamdır.
+        // Başarısız yazmada (IsSuccess=false) boşaltma yapılmaz.
+        if (invalidates is not null && result is not BaseResultModel { IsSuccess: false })
+        {
+            await cache.RemoveByTagAsync(invalidates.Tag, ct);
+            metrics.RecordInvalidation();
+        }
+
+        return result;
+    }
+
+    private async Task<T> GetOrCreateAsync<T>(object message, CachedAttribute cached,
+        Func<CancellationToken, Task<T>> innerCall, CancellationToken ct)
+    {
+        var key = CacheKeyFactory.Build(options.KeyPrefix, message);
+        var entryOptions = new HybridCacheEntryOptions { Expiration = TimeSpan.FromSeconds(cached.TtlSeconds) };
+        // L1 (LocalCacheExpiration ≤5sn) global ayardan gelir (bkz. AddCachingAspect) — burada set edilmez.
+
+        // factory yalnız cache-miss'te çalışır → hit/miss ayrımını buradan tespit ederiz (FR-014).
+        var factoryRan = false;
+        try
+        {
+            var result = await cache.GetOrCreateAsync(
+                key,
+                async token =>
+                {
+                    factoryRan = true;
+                    var value = await innerCall(token);
+                    // Negatif sonuç önbeklenmez: sentinel ile factory'yi hataya düşür → HybridCache yazmaz.
+                    if (value is BaseResultModel { IsSuccess: false })
+                        throw new NegativeResultException(value!);
+                    return value;
+                },
+                entryOptions,
+                tags: [cached.Tag],
+                cancellationToken: ct);
+
+            if (factoryRan) metrics.RecordMiss();
+            else metrics.RecordHit();
+            return result;
+        }
+        catch (NegativeResultException ex)
+        {
+            metrics.RecordMiss(); // negatif sonuç kaynağa gitti (önbeklenmedi)
+            return (T)ex.Result;
+        }
+    }
+
+    // Negatif (NotFound/başarısız) sonucu önbeklememek için factory'den fırlatılan iç sentinel.
+    private sealed class NegativeResultException(object result) : Exception
+    {
+        public object Result { get; } = result;
+    }
+
+    // ---- Değişmeden inner'a forward edilen üyeler ----
+
+    public string? TenantId
+    {
+        get => inner.TenantId;
+        set => inner.TenantId = value!;
+    }
+
+    public Task InvokeAsync(object message, CancellationToken cancellation = default, TimeSpan? timeout = null)
+        => inner.InvokeAsync(message, cancellation, timeout);
+
+    public Task InvokeAsync(object message, DeliveryOptions deliveryOptions, CancellationToken cancellation = default,
+        TimeSpan? timeout = null)
+        => inner.InvokeAsync(message, deliveryOptions, cancellation, timeout);
+
+    public IAsyncEnumerable<T> StreamAsync<T>(object message, CancellationToken cancellation = default)
+        => inner.StreamAsync<T>(message, cancellation);
+
+    public IAsyncEnumerable<T> StreamAsync<T>(object message, DeliveryOptions deliveryOptions,
+        CancellationToken cancellation = default)
+        => inner.StreamAsync<T>(message, deliveryOptions, cancellation);
+
+    public Task InvokeForTenantAsync(string tenantId, object message, CancellationToken cancellation = default,
+        TimeSpan? timeout = null)
+        => inner.InvokeForTenantAsync(tenantId, message, cancellation, timeout);
+
+    public Task<T> InvokeForTenantAsync<T>(string tenantId, object message, CancellationToken cancellation = default,
+        TimeSpan? timeout = null)
+        => inner.InvokeForTenantAsync<T>(tenantId, message, cancellation, timeout);
+
+    public IDestinationEndpoint EndpointFor(string endpointName) => inner.EndpointFor(endpointName);
+
+    public IDestinationEndpoint EndpointFor(Uri uri) => inner.EndpointFor(uri);
+
+    public IReadOnlyList<Envelope> PreviewSubscriptions(object message) => inner.PreviewSubscriptions(message);
+
+    public IReadOnlyList<Envelope> PreviewSubscriptions(object message, DeliveryOptions deliveryOptions)
+        => inner.PreviewSubscriptions(message, deliveryOptions);
+
+    public ValueTask SendAsync<T>(T message, DeliveryOptions? deliveryOptions = null)
+        => inner.SendAsync(message, deliveryOptions);
+
+    public ValueTask PublishAsync<T>(T message, DeliveryOptions? deliveryOptions = null)
+        => inner.PublishAsync(message, deliveryOptions);
+
+    public ValueTask BroadcastToTopicAsync(string topicName, object message, DeliveryOptions? deliveryOptions = null)
+        => inner.BroadcastToTopicAsync(topicName, message, deliveryOptions);
+}

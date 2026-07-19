@@ -2,6 +2,7 @@ namespace Catalog.Api.Domains.Products.Features.Queries;
 
 public static class GetProductById
 {
+    [Cached("catalog-products", 60)]
     [RequiredScope(AuthorizationScopes.CatalogRead)]
     public record GetProductByIdQuery(Guid Id);
 

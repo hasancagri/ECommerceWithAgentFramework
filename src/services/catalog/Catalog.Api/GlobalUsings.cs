@@ -19,6 +19,7 @@ global using Shared.Enums;
 global using Shared.Payloads;
 global using Wolverine.Marten.Publishing;
 global using Common.Utils.Authorization;
+global using Common.Utils.Caching;
 global using Common.Utils.Constants;
 global using Shared.Utils.Constants;
 global using Common;

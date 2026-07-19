@@ -58,7 +58,11 @@ public static class Extensions
             {
                 metrics.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddRuntimeInstrumentation()
+                    // Caching aspect'inin custom meter'ı: cache.hits/misses/invalidations (FR-014/SC-008).
+                    // Meter adı Common.Utils.Caching.CacheMetrics.MeterName ile aynı olmalı (ServiceDefaults
+                    // Common'a referans vermez, bu yüzden literal).
+                    .AddMeter("Ecommerce.Caching");
             })
             .WithTracing(tracing =>
             {
