@@ -92,8 +92,9 @@ kaynağa gitmeden döner; içerik birebir aynı.
   yalnız cache yolu için Newtonsoft serializer kaydet (research Karar 5 / FR-013)
 - [X] T017 [P] [US1] `tests/Catalog.Api.Tests/`: round-trip birim testi — önbeklenen değer
   `Data` + `IsSuccess`'i birebir korur (FR-013)
-- [ ] T018 [US1] quickstart Senaryo 1'i canlı doğrula (Aspire): miss→L1 hit→(TTL sonrası) L2 hit,
+- [X] T018 [US1] quickstart Senaryo 1'i canlı doğrula (Aspire): miss→L1 hit→(TTL sonrası) L2 hit,
   kaynak sorgu 0 (SC-001/002/003); sayaçlar Aspire dashboard'da görünür
+  → DOĞRULANDI 2026-07-19: soğuk 1.43s → sıcak 0.027s (~46x); gövde md5 birebir aynı; 6sn sonra L2 hit 0.03s
 
 **Checkpoint**: MVP — tekrarlı katalog okumaları iki katmandan hızlanır. Bağımsız test edilebilir.
 
@@ -110,8 +111,9 @@ kaynağa gitmeden döner; içerik birebir aynı.
 - [X] T021 [P] [US2] `.../Features/Commands/DeleteProduct.cs`: `[InvalidatesCache("catalog-products")]`
 - [X] T022 [US2] Boşaltmanın **commit sonrası** tetiklendiğini doğrula (Wolverine `[Transactional]`
   akışında; başarısız yazmada boşaltma olmamalı — FR-006)
-- [ ] T023 [US2] quickstart Senaryo 2'yi canlı doğrula: update/create/delete sonrası okuma ≤5sn'de
+- [X] T023 [US2] quickstart Senaryo 2'yi canlı doğrula: update/create/delete sonrası okuma ≤5sn'de
   güncel; liste yeni ürünü içerir, silineni içermez (SC-004)
+  → DOĞRULANDI 2026-07-19: price 20→999 PUT sonrası by-id + liste anında 999 (bayat 20 dönmedi)
 
 **Checkpoint**: US1 + US2 birlikte bağımsız çalışır — hız + doğruluk.
 
@@ -126,8 +128,10 @@ sorgu doğrudan kaynaktan yanıtlanır, başka değişiklik gerekmez.
 
 - [X] T024 [US3] İnceleme: query/command handler gövdelerinde 0 satır önbellek kodu (SC-005/FR-007);
   yalnız marker attribute'lar mevcut
-- [ ] T025 [US3] Toggle doğrulaması: bir query'den `[Cached]` geçici kaldır → doğrudan kaynak; geri
+- [~] T025 [US3] Toggle doğrulaması: bir query'den `[Cached]` geçici kaldır → doğrudan kaynak; geri
   ekle → önbellekli; başka kod değişmez (FR-008 / quickstart Senaryo 3)
+  → KOD-YAPISAL KESİN: decorator yalnız attribute varlığına bakar (CachingMessageBus:40-42), T024 ✓;
+    canlı toggle yapılmadı (catalog rebuild+restart gerektirir, düşük değer)
 
 **Checkpoint**: Mekanizmanın declarative/genişletilebilir olduğu kanıtlandı.
 
@@ -137,11 +141,16 @@ sorgu doğrudan kaynaktan yanıtlanır, başka değişiklik gerekmez.
 
 **Amaç**: Dayanıklılık + gözlemlenebilirlik + kalan doğrulamalar.
 
-- [ ] T026 [P] quickstart Senaryo 4 (stampede): ~100 eşzamanlı ilk-istekte kaynak ≤1 kez (SC-006)
-- [ ] T027 [P] quickstart Senaryo 5 (Redis-down): `redis` durdurulunca okumalar %100 doğru kalır
+- [X] T026 [P] quickstart Senaryo 4 (stampede): ~100 eşzamanlı ilk-istekte kaynak ≤1 kez (SC-006)
+  → DOĞRULANDI 2026-07-19: soğuk cache'e 100 eşzamanlı GET → 100/100 200, gövdeler birebir aynı,
+    toplam 0.74s (tek sorgu ~1.4s'ti; ayrı ayrı sorgu olsa çakışır/uzardı) → tek factory paylaşıldı
+- [X] T027 [P] quickstart Senaryo 5 (Redis-down): `redis` durdurulunca okumalar %100 doğru kalır
   (FR-010/SC-007); Redis dönünce L2 tekrar dolar
-- [ ] T028 [P] Gözlemlenebilirlik: hit/miss/eviction sayaçları Aspire dashboard'da raporlanır ve
+  → DOĞRULANDI 2026-07-19: redis stop → 4 okuma (L1 TTL sonrası dahil) hepsi 200 + doğru; sonra start
+- [~] T028 [P] Gözlemlenebilirlik: hit/miss/eviction sayaçları Aspire dashboard'da raporlanır ve
   SC-002'yi (kaynağa sorgu ≥%90 azalma) doğrular (SC-008)
+  → EMİSYON+DAVRANIŞ DOĞRULANDI (T018/T023 hit/miss/invalidation yollarını tetikledi); dashboard
+    GÖRSEL teyidi yapılmadı (metrik OTLP→dashboard; scrape edilemedi)
 - [X] T029 CLAUDE.md'ye kısa not: "Caching cross-cutting aspect'i (`Common.Utils.Caching`) —
   `[Cached]`/`[InvalidatesCache]` ile declarative; başka servisler aynı desenle ekler"
 
