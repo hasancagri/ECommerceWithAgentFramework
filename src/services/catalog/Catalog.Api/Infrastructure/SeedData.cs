@@ -25,7 +25,9 @@ public class SeedData(IServiceProvider serviceProvider)
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
-        var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
+        // Outbox session concrete Wolverine MessageContext ister; caching decorator'lı IMessageBus'ı
+        // OpenSession'a vermek InvalidCastException'a yol açar. Seed'de caching gerekmez → IMessageContext.
+        var bus = scope.ServiceProvider.GetRequiredService<IMessageContext>();
         var sessionFactory = scope.ServiceProvider.GetRequiredService<OutboxedSessionFactory>();
 
         await using var session = sessionFactory.OpenSession(bus);
