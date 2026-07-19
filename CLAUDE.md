@@ -155,6 +155,21 @@ Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar 
 
 Event kontratları `Shared.IntegrationEvents` içinde yaşar. Yayınlama/tüketme, Wolverine-üzerinden-RabbitMQ ile **fanout exchange**'ler kullanılarak yapılır; exchange/queue adları `RabbitMqConstants` içinde merkezileştirilmiştir. Her servis ihtiyaç duyduğu exchange/queue'ları kendi `Program.cs`'indeki `UseWolverine(...)` bloğunda tanımlar ve gelen event'leri `EventHandlers.cs`'te işler. Handler keşfi assembly taramasıyla olur; yani bir event handler'ın sadece keşfedilebilir bir `Handle`/`Consume` metodu olması yeterlidir.
 
+### Önbellekleme (AOP, declarative — cross-cutting)
+
+Okuma sorguları **handler'a kod yazmadan** önbelleklenir. Aspect `Common.Utils.Caching`'te yaşar
+ve `IMessageBus`'ı şeffaf saran bir decorator'dır (`CachingMessageBus`, Scrutor `Decorate`);
+endpoint ve handler değişmez. Motor **HybridCache** (L1 in-memory + opsiyonel L2 Redis).
+
+- Bir query record'una `[Cached("tag", ttlSeconds)]` ekle → sonucu önbeklenir. `ttlSeconds` = **L2**
+  Expiration; L1 TTL global (≤5sn), `AddCachingAspect(...)`'te ayarlı.
+- Bir command record'una `[InvalidatesCache("tag")]` ekle → başarılı + commit sonrası `RemoveByTagAsync`
+  ile iki katman boşalır. Negatif sonuç (NotFound) önbeklenmez.
+- Servis `Program.cs`'te `UseWolverine`'den **sonra** `AddCachingAspect("<prefix>")` çağırır; L2 için
+  Redis conn-string varsa `AddRedisDistributedCache("redis")`. İlk tüketici: Catalog.
+- Neden middleware değil decorator: Wolverine `Before/After` short-circuit'te değer döndüremiyor
+  (kanıtlandı). Gerekçe Obsidian `adr-aop-caching-mechanism`; sınır kararı `adr-cache-vs-readmodel`.
+
 ### Yetkilendirme (scope-tabanlı, rol yok)
 
 - Kimlik `Identity.Server` (Duende) tarafından verilir. Servisler `AddAuthenticationAndAuthorizationExtension(config, ...scopes)` çağırır ve `AuthorizationScopes.CatalogRead` / `BasketWrite` gibi scope'lar ister.

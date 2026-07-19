@@ -68,6 +68,13 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
+if (builder.Configuration.GetConnectionString("redis") is not null)
+    builder.AddRedisDistributedCache("redis");
+
+// Declarative caching aspect'i: HybridCache + IMessageBus'ı şeffaf sar. UseWolverine'den sonra olmalı.
+builder.Services.AddCachingAspect("catalog");
+
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddMcpServer()

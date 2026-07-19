@@ -9,6 +9,10 @@ var rabbit = builder.AddRabbitMQ("rabbitmq")
     .WithManagementPlugin()
     .WithLifetime(ContainerLifetime.Persistent);
 
+// L2 (paylaşımlı) önbellek katmanı — HybridCache'in IDistributedCache backing'i (opsiyonel).
+var redis = builder.AddRedis("redis")
+    .WithLifetime(ContainerLifetime.Persistent);
+
 var catalogDb = postgres.AddDatabase("catalogDb");
 var basketDb = postgres.AddDatabase("basketDb");
 var orderDb = postgres.AddDatabase("orderDb");
@@ -25,8 +29,10 @@ var identityServer = builder.AddProject<Projects.Identity_Server>("identity-serv
 var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WithReference(catalogDb)
     .WithReference(rabbit)
+    .WithReference(redis)
     .WaitFor(catalogDb)
-    .WaitFor(rabbit);
+    .WaitFor(rabbit)
+    .WaitFor(redis);
 
 var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
     .WithReference(stockDb)

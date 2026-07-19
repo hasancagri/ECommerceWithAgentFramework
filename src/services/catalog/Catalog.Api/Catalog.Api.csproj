@@ -19,6 +19,7 @@
         <PackageReference Include="WolverineFx.Postgresql" />
         <PackageReference Include="WolverineFx.RabbitMQ" />
         <PackageReference Include="Asp.Versioning.Http" />
+        <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" />
         <PackageReference Include="Duende.IdentityModel" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="ModelContextProtocol.AspNetCore" />

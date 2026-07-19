@@ -13,9 +13,11 @@
         <PackageReference Include="Microsoft.AspNetCore.Http" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" />
         <PackageReference Include="Microsoft.Data.SqlClient" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
         <PackageReference Include="Microsoft.Extensions.Http" />
         <PackageReference Include="PagedList.Core" />
+        <PackageReference Include="Scrutor" />
         <PackageReference Include="WolverineFx" />
     </ItemGroup>
 </Project>
