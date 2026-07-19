@@ -23,3 +23,4 @@ global using Wolverine.Marten;
 global using Wolverine.RabbitMQ;
 global using Wolverine;
 global using Common.Utils.Constants;
+global using Common.Utils.Authorization;

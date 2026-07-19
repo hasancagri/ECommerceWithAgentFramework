@@ -1,4 +1,3 @@
-
 namespace Discount.Api.Domains.Discounts.Features.Queries;
 
 public static class GetDiscountByCode

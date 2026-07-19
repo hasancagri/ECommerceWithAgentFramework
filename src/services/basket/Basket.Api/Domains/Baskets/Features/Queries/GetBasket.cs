@@ -1,4 +1,3 @@
-
 namespace Basket.Api.Domains.Baskets.Features.Queries;
 
 public static class GetBasket

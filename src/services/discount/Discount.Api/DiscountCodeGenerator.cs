@@ -1,6 +1,6 @@
 ﻿namespace Discount.Api;
 
-public class DiscountCodeGenerator
+public static class DiscountCodeGenerator
 {
     private const string Allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 

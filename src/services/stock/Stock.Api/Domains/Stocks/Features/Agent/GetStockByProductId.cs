@@ -1,5 +1,3 @@
-using Common.Utils.Authorization;
-
 namespace Stock.Api.Domains.Stocks.Features.Agent;
 
 public static class GetStockByProductId

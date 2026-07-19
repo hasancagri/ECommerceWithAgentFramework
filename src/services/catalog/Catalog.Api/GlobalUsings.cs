@@ -29,3 +29,4 @@ global using System.ComponentModel;
 global using Catalog.Api.Domains.Products.Features.Agent;
 global using Catalog.Api.Domains.Products.Features.Commands;
 global using ModelContextProtocol.Server;
+global using Catalog.Api.Domains.Products.Features.Queries;

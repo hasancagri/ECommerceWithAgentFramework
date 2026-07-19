@@ -1,6 +1,6 @@
 namespace Basket.Api;
 
-public static class EventHandlers
+public static class BasketEventHandlers
 {
     public static async Task Handle(IntegrationEvents.OrderCreatedEvent evt, IDocumentSession session, CancellationToken ct)
     {

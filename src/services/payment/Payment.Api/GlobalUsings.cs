@@ -21,3 +21,5 @@ global using Wolverine;
 global using Common.Utils.Constants;
 global using Common.Utils.Authorization;
 global using Common.Auths;
+global using System.ComponentModel;
+global using ModelContextProtocol.Server;

@@ -1,6 +1,6 @@
 namespace Shared.Utils.Constants;
 
-public class SchemaConstants
+public abstract class SchemaConstants
 {
     public const string StockSchemaName = "stockManagement";
     public const string PaymentSchemaName = "paymentManagement";
