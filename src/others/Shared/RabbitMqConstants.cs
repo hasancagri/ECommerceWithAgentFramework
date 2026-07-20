@@ -42,4 +42,34 @@ public static class RabbitMqConstants
             public const string Catalog = "catalog.course-picture-uploaded";
         }
     }
+
+    public static class ProductChanged
+    {
+        public const string Exchange = "product.changed";
+
+        public static class Queues
+        {
+            public const string Storefront = "storefront.product-changed";
+        }
+    }
+
+    public static class StockChanged
+    {
+        public const string Exchange = "stock.changed";
+
+        public static class Queues
+        {
+            public const string Storefront = "storefront.stock-changed";
+        }
+    }
+
+    public static class DiscountChanged
+    {
+        public const string Exchange = "discount.changed";
+
+        public static class Queues
+        {
+            public const string Storefront = "storefront.discount-changed";
+        }
+    }
 }

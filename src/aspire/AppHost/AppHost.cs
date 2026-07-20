@@ -21,6 +21,7 @@ var fileDb = postgres.AddDatabase("fileDb");
 var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
+var storefrontDb = postgres.AddDatabase("storefrontDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -64,6 +65,18 @@ var fileApi = builder.AddProject<Projects.File_Api>("file-api")
     .WaitFor(fileDb)
     .WaitFor(rabbit);
 
+// Bootstrap (research.md madde 5) MCP ile catalog/stock/discount'u bir kerelik cagirir => referans.
+var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api")
+    .WithReference(storefrontDb)
+    .WithReference(rabbit)
+    .WithReference(catalogApi)
+    .WithReference(stockApi)
+    .WithReference(discountApi)
+    .WithReference(identityServer)
+    .WaitFor(storefrontDb)
+    .WaitFor(rabbit)
+    .WaitFor(identityServer);
+
 var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WithReference(paymentDb)
     .WaitFor(paymentDb);
@@ -76,6 +89,7 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(paymentApi)
     .WithReference(stockApi)
     .WithReference(fileApi)
+    .WithReference(storefrontApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
@@ -87,6 +101,7 @@ web.WithReference(basketApi)
     .WithReference(orderApi)
     .WithReference(fileApi)
     .WithReference(paymentApi)
+    .WithReference(storefrontApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 

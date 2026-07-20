@@ -1,18 +1,17 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using Agent = Discount.Api.Domains.Discounts.Features.Agent;
 
 namespace Discount.Api.Domains.Discounts;
 
 [McpServerToolType]
-public static class GetDiscountMcpTool
+public static class GetDiscountByProductIdMcpTool
 {
-    [McpServerTool(Name = "get_discount")]
-    [Description("Kupon kodundan indirim bilgisini (kod, oran) getirir; sepete kupon uygulamadan once dogrulamak icin.")]
-    public static Task<FeatureObjectResultModel<Agent.GetDiscountByCode.GetDiscountByCodeResponse>> GetDiscountAsync(
-        [Description("Indirim kupon kodu")] string code,
+    [McpServerTool(Name = "get_discount_by_product")]
+    [Description("Bir ürüne tanımlı indirim oranını (varsa) ürün Id'sine göre getirir.")]
+    public static Task<FeatureObjectResultModel<GetDiscountByProductId.GetDiscountByProductIdResponse>> GetDiscountByProductIdAsync(
+        [Description("İndirim durumu sorgulanacak ürünün Id'si")] Guid productId,
         IMessageBus bus,
         CancellationToken ct)
-        => bus.InvokeAsync<FeatureObjectResultModel<Agent.GetDiscountByCode.GetDiscountByCodeResponse>>(
-            new Agent.GetDiscountByCode.GetDiscountByCodeQuery(code), ct);
+        => bus.InvokeAsync<FeatureObjectResultModel<GetDiscountByProductId.GetDiscountByProductIdResponse>>(
+            new GetDiscountByProductId.GetDiscountByProductIdQuery(productId), ct);
 }

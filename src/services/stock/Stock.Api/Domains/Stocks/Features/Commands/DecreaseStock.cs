@@ -16,6 +16,7 @@ public static class DecreaseStock
         public async Task<FeatureObjectResultModel<DecreaseStockResponse>> Handle(
             DecreaseStockCommand cmd,
             IDocumentSession session,
+            IMessageBus bus,
             CancellationToken ct)
         {
             if (cmd.Amount <= 0)
@@ -34,6 +35,10 @@ public static class DecreaseStock
 
             stock.Decrease(cmd.Amount);
             session.Store(stock);
+
+            // 003-storefront-read-model: writer-publishes — Storefront'un StockInfo'sunu besler.
+            await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(
+                stock.ProductId, stock.Quantity > 0, DateTime.UtcNow));
 
             return FeatureObjectResultModel<DecreaseStockResponse>.Ok(new DecreaseStockResponse
             {

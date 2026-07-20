@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Storefront Composite Read Model
+# Specification Quality Checklist: Storefront Composite Read Model (Ürün Vitrin Görünümü)
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-07-19
@@ -31,8 +31,12 @@
 
 ## Notes
 
-- Composite/read-model doğası mimari; requirement'lar davranış/sonuç odağıyla tech-agnostik
-  yazıldı. Somut teknoloji (Marten document, RabbitMQ, servis adı) bilinçle plan'a bırakıldı.
-- Ertelenen kapsam açık: başka composite görünümler, admin/toplu raporlama, bildirim
-  içeriği (thin vs fat), dayanıklı yayın (outbox) → plan/ileride.
-- Tüm maddeler geçti; `/speckit-clarify` (opsiyonel) veya doğrudan `/speckit-plan`'e hazır.
+- 2026-07-19 revizyonu: feature, sipariş-detay merkezli görünümden ürün (ProductId)
+  merkezli vitrin görünümüne çevrildi (kullanıcıyla plan aşamasında görüşülerek).
+  Sipariş/ödeme kapsam dışı; görünüm herkese açık (yetki/ownership kontrolü yok).
+- Yeni: Discount context'in kullanıcı-bazlı → ürün-bazlı model dönüşümü (US3) bu
+  feature'ın kapsamına eklendi — Storefront'un "indirim" alanının otoriter kaynağı
+  olabilmesi için gerekli önkoşul.
+- Tüm maddeler geçti; doğrudan `/speckit-plan`'e hazır (plan.md/research.md/
+  data-model.md/contracts önceki order-merkezli tasarımdan kalma — bu revizyonla
+  yeniden yazılacak).

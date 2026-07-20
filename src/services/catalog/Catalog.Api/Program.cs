@@ -42,6 +42,15 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ProductCreatedEvent>()
         .ToRabbitExchange(RabbitMqConstants.ProductCreated.Exchange);
 
+    rabbit.DeclareExchange(RabbitMqConstants.ProductChanged.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.ProductChanged.Queues.Storefront);
+    });
+
+    opts.PublishMessage<Shared.IntegrationEvents.ProductChangedEvent>()
+        .ToRabbitExchange(RabbitMqConstants.ProductChanged.Exchange);
+
     opts.ListenToRabbitQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
 
     opts.Policies.UseDurableLocalQueues();

@@ -27,6 +27,15 @@ builder.Host.UseWolverine(opts =>
 
     opts.ListenToRabbitQueue(RabbitMqConstants.ProductCreated.Queues.Stock);
 
+    rabbit.DeclareExchange(RabbitMqConstants.StockChanged.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.StockChanged.Queues.Storefront);
+    });
+
+    opts.PublishMessage<Shared.IntegrationEvents.StockChangedEvent>()
+        .ToRabbitExchange(RabbitMqConstants.StockChanged.Exchange);
+
     opts.Policies.UseDurableLocalQueues();
     // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.
     // REST + MCP ortak yetki noktasi.

@@ -21,6 +21,7 @@
     <Project Path="src/services/order/Order.Api/Order.Api.csproj" />
     <Project Path="src/services/payment/Payment.Api/Payment.Api.csproj" />
     <Project Path="src/services/stock/Stock.Api/Stock.Api.csproj" />
+    <Project Path="src/services/storefront/Storefront.Api/Storefront.Api.csproj" />
   </Folder>
   <Folder Name="/src/ui/">
     <Project Path="src/ui/WebApp/WebApp.csproj" />
@@ -32,5 +33,6 @@
     <Project Path="tests/Order.Api.Tests/Order.Api.Tests.csproj" />
     <Project Path="tests/Payment.Api.Tests/Payment.Api.Tests.csproj" />
     <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />
+    <Project Path="tests/Storefront.Api.Tests/Storefront.Api.Tests.csproj" />
   </Folder>
 </Solution>

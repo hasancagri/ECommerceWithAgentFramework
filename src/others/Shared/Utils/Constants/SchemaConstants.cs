@@ -9,4 +9,5 @@ public abstract class SchemaConstants
     public const string DiscountSchemaName = "discountManagement";
     public const string CatalogSchemaName = "catalogManagement";
     public const string BasketSchemaName = "basketManagement";
+    public const string StorefrontSchemaName = "storefrontManagement";
 }

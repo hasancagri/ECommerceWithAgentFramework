@@ -17,6 +17,7 @@ public static class DeleteProduct
         public async Task<FeatureObjectResultModel<DeleteProductResponse>> Handle(
             DeleteProductCommand cmd,
             IDocumentSession session,
+            IMessageBus bus,
             CancellationToken ct)
         {
             var product = await session.LoadAsync<Product>(cmd.Id, ct);
@@ -25,6 +26,10 @@ public static class DeleteProduct
 
             product.Delete();
             session.Store(product);
+
+            // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
+            await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
+                product.Id, product.Name, product.ImageUrl, IsDeleted: true, DateTime.UtcNow));
 
             return FeatureObjectResultModel<DeleteProductResponse>.Ok(new DeleteProductResponse { Id = product.Id });
         }

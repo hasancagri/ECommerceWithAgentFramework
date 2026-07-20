@@ -28,4 +28,7 @@ public static class AuthorizationScopes
 
     // file.api
     public const string FileWrite = "file.write";
+
+    // storefront.api
+    public const string StorefrontRead = "storefront.read";
 }
