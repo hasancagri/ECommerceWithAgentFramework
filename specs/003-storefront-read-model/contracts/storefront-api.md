@@ -1,4 +1,8 @@
-# Contract: Storefront.Api Read Endpoint + MCP Tool
+# Contract: Storefront.Api Read Endpoint
+
+> 2026-07-20 revizyonu (as-built): response'a `stockQuantity` eklendi, `isInStock`
+> ondan türetiliyor; okuma tek `LoadAsync<StorefrontView>`; `StorefrontMcpTools.cs`
+> KALDIRILDI (MCP tool artık yok).
 
 ## HTTP — GetProductStorefrontView
 
@@ -12,29 +16,28 @@ Authorization: Bearer <token with storefront.read scope>   (anonim M2M token kab
 ```json
 {
   "productId": "guid",
-  "name": "string",
+  "name": "string|null",
   "imageUrl": "string|null",
   "isDeleted": false,
+  "stockQuantity": 12,
   "isInStock": true,
   "discountRate": 0.10
 }
 ```
 
-`isInStock`/`discountRate` alanları kaynak event'i henüz gelmediyse `null` döner
-(FR-008) — hata fırlatılmaz.
+`name`/`stockQuantity`/`isInStock`/`discountRate` alanları kaynak event'i henüz gelmediyse
+`null` döner (FR-008) — hata fırlatılmaz. `isInStock` = `stockQuantity > 0` (stok
+raporlanmadıysa `null`).
 
-**404 Not Found** — `productId` Storefront'ta hiç bilinmiyor (Catalog'dan hiç
-`ProductChangedEvent` gelmemiş).
+**404 Not Found** — `productId` Storefront'ta hiç bilinmiyor (`StorefrontView` satırı hiç
+oluşmamış; Catalog/Stock/Discount'tan hiç event gelmemiş).
 
-## MCP — GetProductStorefrontView tool
+## MCP
 
-`StorefrontMcpTools.cs`, aynı sorguyu (`IMessageBus.InvokeAsync`) ince bir sarmalayıcı
-olarak MCP'ye açar — iş mantığı eklemez (repo konvansiyonu, CLAUDE.md "MCP tool'ları").
-
-```csharp
-[McpServerTool, Description("Bir ürünün Catalog+Stock+Discount birleşik vitrin görünümünü döner.")]
-public async Task<...> GetProductStorefrontView(Guid productId, IMessageBus bus, CancellationToken ct)
-```
+Bu feature için MCP tool YOKTUR. İlk tasarımda `StorefrontMcpTools.cs` (`get_product_
+storefront_view`) vardı; 2026-07-20'de kaldırıldı — agent artık storefront view tool'una
+sahip değil. Gerekirse ince bir `IMessageBus.InvokeAsync` sarmalayıcısı olarak geri
+eklenebilir.
 
 ## Discount.Api — değişen/yeni kontratlar (ürün-bazlı dönüşüm)
 

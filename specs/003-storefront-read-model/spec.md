@@ -15,6 +15,19 @@ kontrolü yoktur. Sipariş ve ödeme bu feature'ın kapsamı dışındadır. Dis
 bugünkü kullanıcı-bazlı (sipariş sonrası otomatik üretilen ödül kuponu) modeli, ürün-bazlı
 indirime dönüştürülür — bu dönüşüm bu feature'ın kapsamındadır."
 
+## Amendment (2026-07-20, as-built — PR #10 + #11)
+
+Uygulama sonrası şu kararlar değişti (detay: research.md, data-model.md):
+
+- **Depo:** 3 ayrı doküman değil, **tek `StorefrontView`** (ProductId anahtarlı). Sıra
+  bağımlılığı listener `.Sequential()` + Marten optimistic concurrency ile çözüldü.
+- **Stok:** görünüm `bool "stokta/tükendi"` yanında **gerçek adedi** (`StockQuantity`)
+  taşır; in-stock `Quantity > 0`'dan türetilir.
+- **Bootstrap KALDIRILDI (FR-011 geri alındı):** Storefront saf push-only, dışarı hiç
+  senkron çağrı yapmaz. Bilinçli bedel: cold-start dolumu yok (greenfield varsayımı).
+- **`IsAvailableForSale`** alanı eklendi — ayrı bir süreç sahiplenir; ingestion yazmaz.
+- **MCP tool KALDIRILDI** (`get_product_storefront_view`).
+
 ## Artefakt Ölçekleme Kademesi
 
 **Tam (Full)**. Gerekçe: yeni bir bounded context (yeni servis + yeni DB + yeni şema),
@@ -109,8 +122,9 @@ doğrulanır (US2 ile birleşik).
   upsert).
 - **Silinmiş ürün**: Görünümde bir ürün silinmişse (soft-delete) o durum kaynağın son
   bildirdiği haliyle yansır; görünüm otoriter karar üretmez.
-- **Bootstrap**: Görünüm ilk ayağa kalktığında geçmiş veri için başlangıç doldurması
-  gerekir; event'ler yalnız bundan sonraki değişimi taşır.
+- **Cold-start (Bootstrap kaldırıldı, 2026-07-20)**: Görünüm saf push-only'dir; ilk
+  ayağa kalkışta geçmiş veri için dolum YAPMAZ. Yalnız servis ayağa kalktıktan sonra
+  oluşan/değişen ürünler görünür (greenfield varsayımı; FR-011 geri alındı).
 - **Var olmayan ürün için indirim**: Silinmiş/var olmayan bir ProductId'ye indirim
   tanımlama girişimi reddedilir (Discount context kendi tarafında doğrular).
 
@@ -140,9 +154,9 @@ doğrulanır (US2 ile birleşik).
 - **FR-010**: İlk teslimat kapsamı MUST yalnızca ürün-vitrin görünümü olsun; sipariş ve
   ödeme bu feature'ın kapsamı dışındadır; aynı desenle başka composite görünümler
   sonradan eklenebilir.
-- **FR-011**: Görünümü sağlayan çözüm, ilk ayağa kalkışta mevcut ürünler için
-  başlangıç doldurması (bootstrap) MUST sağlasın; yalnızca yeni değişikliklere bağlı
-  kalmasın.
+- **FR-011 (GERİ ALINDI, 2026-07-20)**: ~~Görünüm ilk ayağa kalkışta mevcut ürünler için
+  başlangıç doldurması (bootstrap) sağlasın.~~ Kaldırıldı — Storefront saf push-only;
+  bootstrap yok, yalnız yeni değişikliklere bağlıdır (bkz. Amendment, research.md madde 5).
 - **FR-012**: Discount context, bir ürüne indirim oranı tanımlama/güncelleme/kaldırma
   yeteneğini MUST sunsun (bugünkü kullanıcı-bazlı ödül-kuponu modelinden ürün-bazlı
   modele dönüşüm); bir üründe MUST en fazla bir aktif indirim oranı bulunsun.
@@ -192,8 +206,8 @@ doğrulanır (US2 ile birleşik).
 - **Tazelik modeli**: Anlık tazelik hedeflenir (event-tetikli); kısa süreli, kaynaklar
   arası eventual consistency kabul edilir. TTL/polling birincil mekanizma değildir.
 - **Sınır**: Görünüm kendi deposuna sahiptir; paylaşılan veritabanı yoktur;
-  cross-service iletişim yalnızca integration event ile olur (anayasa madde I).
-  Bootstrap için tek istisna: ilk açılışta MCP üzerinden bir kerelik senkron çekim.
+  cross-service iletişim yalnızca integration event ile olur (anayasa madde I). Görünüm
+  saf push-only'dir — dışarı hiç senkron çağrı yapmaz (Bootstrap kaldırıldı, 2026-07-20).
 - **Kapsam sınırı**: İlk sürüm yalnızca ürün-vitrin görünümünü kapsar; sipariş, ödeme
   ve kullanıcıya-özel başka görünümler ertelenmiştir. Sipariş/ödeme kapsamı gerekirse
   ayrı bir feature olarak ele alınır.

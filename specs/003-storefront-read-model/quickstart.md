@@ -1,5 +1,9 @@
 # Quickstart: Storefront Composite Read Model (Ürün Vitrin Görünümü)
 
+> **As-built uyarısı (2026-07-20):** Tek `StorefrontView` dokümanı; response `stockQuantity`
+> taşır (`isInStock` = `> 0`); Bootstrap yok (saf push-only) → boş DB'de yalnız açılıştan
+> sonraki değişimler görünür; MCP tool yok. Bkz. [spec.md](./spec.md) Amendment.
+
 ## Ön koşullar
 
 - `dotnet run --project src/aspire/AppHost/AppHost.csproj` ile tüm sistem ayakta
