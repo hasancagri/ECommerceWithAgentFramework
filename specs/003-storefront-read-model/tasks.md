@@ -1,5 +1,10 @@
 # Tasks: Storefront Composite Read Model (Ürün Vitrin Görünümü)
 
+> **As-built uyarısı (2026-07-20, PR #10 + #11):** Bu görev listesi ilk tasarımın
+> execution kaydıdır (3 ayrı doküman, Bootstrap, timestamp guard, MCP tool). Uygulama
+> sonrası tasarım değişti; güncel hâl için bkz. [spec.md](./spec.md) Amendment +
+> data-model.md. Aşağıdaki görevler TARİHSEL'dir, yeniden yazılmadı.
+
 **Input**: Design documents from `/specs/003-storefront-read-model/`
 
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md (hepsi mevcut)

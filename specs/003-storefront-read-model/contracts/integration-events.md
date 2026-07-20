@@ -1,9 +1,13 @@
 # Contract: Integration Events (Shared.IntegrationEvents)
 
+> 2026-07-20 revizyonu (as-built): event'lerden `OccurredAtUtc` KALDIRILDI (timestamp
+> stale-guard kalktı, sıralama listener `.Sequential()` ile); `StockChangedEvent`
+> `bool IsInStock` yerine `int Quantity` taşır.
+
 Tüm event'ler fat (self-contained) — Storefront event'i aldıktan sonra kaynağa geri
-dönüp ek veri çekmez (research.md madde 3). Her event `OccurredAtUtc` taşır;
-Storefront handler'ları bunu stale-event guard için kullanır (data-model.md upsert
-kuralları). Hepsi `ProductId` ile anahtarlı.
+dönüp ek veri çekmez (research.md madde 3). Hepsi `ProductId` ile anahtarlı. Sıralama
+Storefront tarafında listener `.Sequential()` (kaynak-içi FIFO) ile sağlanır — event
+kendi içinde bir timestamp taşımaz.
 
 ## ProductChangedEvent — YENİ
 
@@ -15,11 +19,10 @@ public record ProductChangedEvent(
     Guid ProductId,
     string Name,
     string? ImageUrl,
-    bool IsDeleted,
-    DateTime OccurredAtUtc);
+    bool IsDeleted);
 ```
 
-Tüketici: `Storefront.Api` → `CatalogInfo` upsert.
+Tüketici: `Storefront.Api` → `StorefrontView` (Catalog alanları) upsert.
 
 Not: Mevcut `ProductCreatedEvent` (Stock'un tükettiği) DOKUNULMAZ — farklı amaç
 (Stock'un başlangıç stok kaydı açması). `ProductChangedEvent` ayrı, yeni bir event'tir.
@@ -32,11 +35,10 @@ Yayıncı: `Stock.Api` (`IncreaseStock`, `DecreaseStock` handler'ları VE mevcut
 ```csharp
 public record StockChangedEvent(
     Guid ProductId,
-    bool IsInStock,      // Quantity > 0
-    DateTime OccurredAtUtc);
+    int Quantity);       // gerçek adet; in-stock Storefront'ta Quantity > 0'dan türetilir
 ```
 
-Tüketici: `Storefront.Api` → `StockInfo` upsert.
+Tüketici: `Storefront.Api` → `StorefrontView.StockQuantity` upsert.
 
 ## DiscountChangedEvent — YENİ
 
@@ -46,11 +48,10 @@ research.md madde 7, ürün-bazlı modele dönüşüm).
 ```csharp
 public record DiscountChangedEvent(
     Guid ProductId,
-    decimal? Rate,        // null = indirim kaldırıldı
-    DateTime OccurredAtUtc);
+    decimal? Rate);       // null = indirim kaldırıldı
 ```
 
-Tüketici: `Storefront.Api` → `DiscountInfo` upsert.
+Tüketici: `Storefront.Api` → `StorefrontView.DiscountRate` upsert.
 
 ## RabbitMqConstants eklemeleri
 

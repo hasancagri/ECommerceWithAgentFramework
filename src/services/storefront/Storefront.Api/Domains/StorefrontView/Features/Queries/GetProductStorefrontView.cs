@@ -8,22 +8,24 @@ public static class GetProductStorefrontView
     public class ProductStorefrontViewResponse
     {
         public Guid ProductId { get; set; }
-        public string Name { get; set; } = default!;
+        public string? Name { get; set; }
         public string? ImageUrl { get; set; }
         public bool IsDeleted { get; set; }
 
         // null = kaynak henuz raporlamadi (kismi satir, FR-008) — "bilinmiyor" anlamina gelir.
+        public int? StockQuantity { get; set; }
         public bool? IsInStock { get; set; }
         public decimal? DiscountRate { get; set; }
 
-        public static ProductStorefrontViewResponse From(CatalogInfo catalog, StockInfo? stock, DiscountInfo? discount) => new()
+        public static ProductStorefrontViewResponse From(StorefrontView view) => new()
         {
-            ProductId = catalog.ProductId,
-            Name = catalog.Name,
-            ImageUrl = catalog.ImageUrl,
-            IsDeleted = catalog.IsDeleted,
-            IsInStock = stock?.IsInStock,
-            DiscountRate = discount?.Rate
+            ProductId = view.ProductId,
+            Name = view.Name,
+            ImageUrl = view.ImageUrl,
+            IsDeleted = view.IsDeleted,
+            StockQuantity = view.StockQuantity,
+            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null,
+            DiscountRate = view.DiscountRate
         };
     }
 
@@ -34,17 +36,14 @@ public static class GetProductStorefrontView
             IQuerySession session,
             CancellationToken ct)
         {
-            // 3 LoadAsync de Storefront'un KENDI veritabanina yapilir — kaynak servislere senkron
-            // cagri YOK (FR-002/003). Tek "yok" durumu CatalogInfo bulunamadiginda olusur.
-            var catalog = await session.LoadAsync<CatalogInfo>(query.ProductId, ct);
-            if (catalog is null)
+            // Tek LoadAsync Storefront'un KENDI veritabanina yapilir — kaynak servislere senkron
+            // cagri YOK (FR-002/003). "Yok" durumu satir hic olusmadiginda olusur.
+            var view = await session.LoadAsync<StorefrontView>(query.ProductId, ct);
+            if (view is null)
                 return FeatureObjectResultModel<ProductStorefrontViewResponse>.NotFound();
 
-            var stock = await session.LoadAsync<StockInfo>(query.ProductId, ct);
-            var discount = await session.LoadAsync<DiscountInfo>(query.ProductId, ct);
-
             return FeatureObjectResultModel<ProductStorefrontViewResponse>.Ok(
-                ProductStorefrontViewResponse.From(catalog, stock, discount));
+                ProductStorefrontViewResponse.From(view));
         }
     }
 }

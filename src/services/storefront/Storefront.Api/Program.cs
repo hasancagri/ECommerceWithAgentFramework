@@ -11,10 +11,10 @@ builder.Services.AddMarten(opts =>
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
             configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 
-        // Hicbiri rich aggregate degil (invariant tasimaz); ProductId, Marten Id'si olarak kullanilir.
-        opts.Schema.For<CatalogInfo>().Identity(x => x.ProductId);
-        opts.Schema.For<StockInfo>().Identity(x => x.ProductId);
-        opts.Schema.For<DiscountInfo>().Identity(x => x.ProductId);
+        // Rich aggregate degil (invariant tasimaz); ProductId, Marten Id'si. Tek composite satir.
+        // Optimistic concurrency: farkli kaynaklarin ayni satira eszamanli yazmasinda lost-update
+        // olmaz — cakisan handler ConcurrencyException alir, Wolverine retry'da taze yukleyip uygular.
+        opts.Schema.For<StorefrontView>().Identity(x => x.ProductId).UseOptimisticConcurrency(true);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -25,11 +25,14 @@ builder.Host.UseWolverine(opts =>
         .AutoProvision();
 
     // Exchange'ler + kuyruk baglamalari kaynak servislerde (Catalog/Stock/Discount) declare edilir;
-    // Storefront yalnizca kendi kuyruklarini dinler.
-    opts.ListenToRabbitQueue(RabbitMqConstants.ProductChanged.Queues.Storefront);
-    opts.ListenToRabbitQueue(RabbitMqConstants.StockChanged.Queues.Storefront);
-    opts.ListenToRabbitQueue(RabbitMqConstants.DiscountChanged.Queues.Storefront);
+    // Storefront yalnizca kendi kuyruklarini dinler. Sequential(): her kuyruk tek-thread islenir →
+    // kaynak-ici FIFO korunur (timestamp guard'a gerek kalmaz).
+    opts.ListenToRabbitQueue(RabbitMqConstants.ProductChanged.Queues.Storefront).Sequential();
+    opts.ListenToRabbitQueue(RabbitMqConstants.StockChanged.Queues.Storefront).Sequential();
+    opts.ListenToRabbitQueue(RabbitMqConstants.DiscountChanged.Queues.Storefront).Sequential();
 
+    // Composite satirda kaynaklar-arasi eszamanli yazim cakismasi (optimistic concurrency) → retry.
+    opts.OnException<JasperFx.ConcurrencyException>().RetryTimes(5);
     opts.Policies.UseDurableLocalQueues();
     // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.
     // REST + MCP ortak yetki noktasi.

@@ -1,5 +1,11 @@
 # Implementation Plan: Storefront Composite Read Model (Ürün Vitrin Görünümü)
 
+> **As-built uyarısı (2026-07-20, PR #10 + #11):** Bu plan ilk tasarımı yansıtır; uygulama
+> sonrası bazı kararlar değişti — tek `StorefrontView` dokümanı (3 ayrı değil), stok adedi
+> (`StockQuantity`), Bootstrap kaldırıldı (saf push-only), event'lerde `OccurredAtUtc` yok,
+> MCP tool yok. Güncel tasarım için bkz. [spec.md](./spec.md) Amendment + data-model.md +
+> research.md. Aşağıdaki 3-doküman/bootstrap detayları TARİHSEL'dir.
+
 **Branch**: `003-storefront-read-model` | **Date**: 2026-07-19 | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `/specs/003-storefront-read-model/spec.md`

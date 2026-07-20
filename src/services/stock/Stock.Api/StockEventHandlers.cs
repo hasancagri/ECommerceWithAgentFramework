@@ -28,9 +28,8 @@ public static class ProductCreatedHandler
         session.Store(toCreate);
         await session.SaveChangesAsync(ct);
 
-        // 003-storefront-read-model: ilk stok kaydi acilinca da Storefront'un StockInfo'sunu besle.
-        var occurredAtUtc = DateTime.UtcNow;
+        // 003-storefront-read-model: ilk stok kaydi acilinca da Storefront'un view'ini besle.
         foreach (var stock in toCreate)
-            await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(stock.ProductId, stock.Quantity > 0, occurredAtUtc));
+            await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(stock.ProductId, stock.Quantity));
     }
 }
