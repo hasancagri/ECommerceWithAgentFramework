@@ -1,4 +1,3 @@
-using Storefront.Api.Domains.StorefrontView.Features.Queries;
 using static Storefront.Api.Domains.StorefrontView.Features.Queries.GetProductStorefrontView;
 
 namespace Storefront.Api.Tests;
@@ -6,46 +5,49 @@ namespace Storefront.Api.Tests;
 public class ProductStorefrontViewResponseTests
 {
     [Fact]
-    public void From_AllSourcesPresent_MapsAllFields()
+    public void From_AllSourcesPresent_MapsAllFields_DerivesInStock()
     {
         var productId = Guid.NewGuid();
-        var occurredAt = DateTime.UtcNow;
-        var catalog = CatalogInfo.Create(productId, "Ürün A", "https://img/a.png", false, occurredAt);
-        var stock = StockInfo.Create(productId, true, occurredAt);
-        var discount = DiscountInfo.Create(productId, 0.15m, occurredAt);
+        var view = StorefrontView.Create(productId);
+        view.ApplyCatalog("Ürün A", "https://img/a.png", isDeleted: false);
+        view.ApplyStock(7);
+        view.ApplyDiscount(0.15m);
 
-        var response = ProductStorefrontViewResponse.From(catalog, stock, discount);
+        var response = ProductStorefrontViewResponse.From(view);
 
         response.ProductId.ShouldBe(productId);
         response.Name.ShouldBe("Ürün A");
         response.ImageUrl.ShouldBe("https://img/a.png");
         response.IsDeleted.ShouldBeFalse();
+        response.StockQuantity.ShouldBe(7);
         response.IsInStock.ShouldBe(true);
         response.DiscountRate.ShouldBe(0.15m);
     }
 
     [Fact]
-    public void From_MissingStockAndDiscount_ReturnsNullFields_NoException()
+    public void From_StockNotReported_LeavesStockFieldsNull()
     {
-        var productId = Guid.NewGuid();
-        var catalog = CatalogInfo.Create(productId, "Yeni Ürün", null, false, DateTime.UtcNow);
+        var view = StorefrontView.Create(Guid.NewGuid());
+        view.ApplyCatalog("Yeni Ürün", null, isDeleted: false);
 
-        var response = ProductStorefrontViewResponse.From(catalog, stock: null, discount: null);
+        var response = ProductStorefrontViewResponse.From(view);
 
         response.Name.ShouldBe("Yeni Ürün");
+        response.StockQuantity.ShouldBeNull();
         response.IsInStock.ShouldBeNull();
         response.DiscountRate.ShouldBeNull();
     }
 
     [Fact]
-    public void From_MissingDiscountOnly_KeepsStockValue()
+    public void From_ZeroStock_DerivesInStockFalse()
     {
-        var productId = Guid.NewGuid();
-        var catalog = CatalogInfo.Create(productId, "Ürün", null, false, DateTime.UtcNow);
-        var stock = StockInfo.Create(productId, false, DateTime.UtcNow);
+        var view = StorefrontView.Create(Guid.NewGuid());
+        view.ApplyCatalog("Ürün", null, isDeleted: false);
+        view.ApplyStock(0);
 
-        var response = ProductStorefrontViewResponse.From(catalog, stock, discount: null);
+        var response = ProductStorefrontViewResponse.From(view);
 
+        response.StockQuantity.ShouldBe(0);
         response.IsInStock.ShouldBe(false);
         response.DiscountRate.ShouldBeNull();
     }

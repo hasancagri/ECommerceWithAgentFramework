@@ -24,7 +24,7 @@ public static class RemoveProductDiscount
             session.Store(discount);
 
             // 003-storefront-read-model: writer-publishes — Rate: null, Storefront'ta indirimi kaldirir.
-            await bus.PublishAsync(new IntegrationEvents.DiscountChangedEvent(cmd.ProductId, Rate: null, DateTime.UtcNow));
+            await bus.PublishAsync(new IntegrationEvents.DiscountChangedEvent(cmd.ProductId, Rate: null));
 
             return FeatureResultModel.Ok();
         }

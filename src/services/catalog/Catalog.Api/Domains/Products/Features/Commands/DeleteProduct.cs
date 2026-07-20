@@ -29,7 +29,7 @@ public static class DeleteProduct
 
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
-                product.Id, product.Name, product.ImageUrl, IsDeleted: true, DateTime.UtcNow));
+                product.Id, product.Name, product.ImageUrl, IsDeleted: true));
 
             return FeatureObjectResultModel<DeleteProductResponse>.Ok(new DeleteProductResponse { Id = product.Id });
         }

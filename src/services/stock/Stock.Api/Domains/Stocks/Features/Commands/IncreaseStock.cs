@@ -34,7 +34,7 @@ public static class IncreaseStock
 
             // 003-storefront-read-model: writer-publishes — Storefront'un StockInfo'sunu besler.
             await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(
-                stock.ProductId, stock.Quantity > 0, DateTime.UtcNow));
+                stock.ProductId, stock.Quantity));
 
             return FeatureObjectResultModel<IncreaseStockResponse>.Ok(new IncreaseStockResponse
             {

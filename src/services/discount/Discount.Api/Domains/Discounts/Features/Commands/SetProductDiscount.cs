@@ -47,7 +47,7 @@ public static class SetProductDiscount
             session.Store(discount);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un DiscountInfo'sunu besler.
-            await bus.PublishAsync(new IntegrationEvents.DiscountChangedEvent(cmd.ProductId, cmd.Rate, DateTime.UtcNow));
+            await bus.PublishAsync(new IntegrationEvents.DiscountChangedEvent(cmd.ProductId, cmd.Rate));
 
             return FeatureObjectResultModel<SetProductDiscountResponse>.Ok(new SetProductDiscountResponse
             {
