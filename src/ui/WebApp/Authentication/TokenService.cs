@@ -10,7 +10,7 @@ public class TokenService(IHttpClientFactory httpClientFactory, IdentityServerSe
     // Anonim (login'siz) gezinme icin public okuma scope'lari.
     // ecommerce.bff client'inin client_credentials ile alabilecegi API scope'lari olmali.
     private const string ReadScopes =
-        "catalog.read discount.read stock.read";
+        "catalog.read discount.read stock.read storefront.read";
 
     // Kullanici YOKKEN (anonim) okuma icin uygulamanin kendi kimligi.
     public async Task<TokenResponse> GetClientAccessTokenAsync()

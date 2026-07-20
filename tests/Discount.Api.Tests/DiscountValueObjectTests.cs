@@ -1,37 +1,5 @@
 namespace Discount.Api.Tests;
 
-public class DiscountCodeTests
-{
-    [Fact]
-    public void Create_ValidCode_ReturnsOk_AndUppercases()
-    {
-        var result = DiscountCode.Create("summer0001");
-
-        result.IsSuccess.ShouldBeTrue();
-        result.Data!.Value.ShouldBe("SUMMER0001");
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Create_EmptyOrWhitespace_ReturnsError(string code)
-    {
-        var result = DiscountCode.Create(code);
-
-        result.IsSuccess.ShouldBeFalse();
-    }
-
-    [Theory]
-    [InlineData("short")]
-    [InlineData("elevenchars")]
-    public void Create_WrongLength_ReturnsError(string code)
-    {
-        var result = DiscountCode.Create(code);
-
-        result.IsSuccess.ShouldBeFalse();
-    }
-}
-
 public class DiscountRateTests
 {
     [Theory]

@@ -25,13 +25,16 @@ builder.Host.UseWolverine(opts =>
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    rabbit.DeclareExchange(RabbitMqConstants.OrderCreated.Exchange, e =>
+    // 003-storefront-read-model: kullanici-bazli odul-kuponu modeli kaldirildi (research.md madde 7)
+    // — OrderCreated artik Discount tarafindan dinlenmiyor.
+    rabbit.DeclareExchange(RabbitMqConstants.DiscountChanged.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.OrderCreated.Queues.Discount);
+        e.BindQueue(RabbitMqConstants.DiscountChanged.Queues.Storefront);
     });
 
-    opts.ListenToRabbitQueue(RabbitMqConstants.OrderCreated.Queues.Discount);
+    opts.PublishMessage<Shared.IntegrationEvents.DiscountChangedEvent>()
+        .ToRabbitExchange(RabbitMqConstants.DiscountChanged.Exchange);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(

@@ -9,6 +9,7 @@ public static class StockEndpointExtension
             .WithApiVersionSet(apiVersionSet)
             .GetStockByProductIdGroupItemEndpoint()
             .IncreaseStockGroupItemEndpoint()
-            .DecreaseStockGroupItemEndpoint();
+            .DecreaseStockGroupItemEndpoint()
+            .GetAllStockGroupItemEndpoint();
     }
 }

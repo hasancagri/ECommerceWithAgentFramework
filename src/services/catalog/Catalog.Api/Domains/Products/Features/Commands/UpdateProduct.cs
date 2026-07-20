@@ -24,6 +24,7 @@ public static class UpdateProduct
         public async Task<FeatureObjectResultModel<UpdateProductResponse>> Handle(
             UpdateProductCommand cmd,
             IDocumentSession session,
+            IMessageBus bus,
             CancellationToken ct)
         {
             var product = await session.LoadAsync<Product>(cmd.Id, ct);
@@ -32,6 +33,10 @@ public static class UpdateProduct
 
             product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku, cmd.Brand, cmd.ImageUrl);
             session.Store(product);
+
+            // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
+            await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
+                product.Id, product.Name, product.ImageUrl, IsDeleted: false, DateTime.UtcNow));
 
             return FeatureObjectResultModel<UpdateProductResponse>.Ok(new UpdateProductResponse { Id = product.Id });
         }

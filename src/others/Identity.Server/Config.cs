@@ -46,6 +46,9 @@ public static class Config
 
         // file.api: gorsel upload MCP tool'unu korur.
         new ApiScope("file.write", "File API - yazma (gorsel upload)"),
+
+        // storefront.api: herkese acik urun-vitrin gorunumu (yine de anonim-M2M scope ister).
+        new ApiScope("storefront.read", "Storefront API - okuma (urun vitrin gorunumu)"),
     ];
 
     // ApiResource adi = servisin dogruladigi Audience (appsettings IdentityOption.Audience).
@@ -86,6 +89,11 @@ public static class Config
         new ApiResource("file.api", "File API")
         {
             Scopes = { "file.write" },
+            UserClaims = ApiUserClaims,
+        },
+        new ApiResource("storefront.api", "Storefront API")
+        {
+            Scopes = { "storefront.read" },
             UserClaims = ApiUserClaims,
         },
     ];
@@ -131,6 +139,7 @@ public static class Config
                 "payment.read", "payment.write",
                 "discount.read", "discount.write",
                 "stock.read", "stock.write",
+                "storefront.read",
             },
         },
     ];

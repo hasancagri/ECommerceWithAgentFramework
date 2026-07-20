@@ -3,7 +3,7 @@ namespace Stock.Api;
 public static class ProductCreatedHandler
 {
     // Event her zaman liste tasir: CreateProduct 1 elemanli, SeedData N elemanli yayinlar.
-    public static async Task Handle(IntegrationEvents.ProductCreatedEvent evt, IDocumentSession session, CancellationToken ct)
+    public static async Task Handle(IntegrationEvents.ProductCreatedEvent evt, IDocumentSession session, IMessageBus bus, CancellationToken ct)
     {
         if (evt.Products.Count == 0)
             return;
@@ -27,5 +27,10 @@ public static class ProductCreatedHandler
 
         session.Store(toCreate);
         await session.SaveChangesAsync(ct);
+
+        // 003-storefront-read-model: ilk stok kaydi acilinca da Storefront'un StockInfo'sunu besle.
+        var occurredAtUtc = DateTime.UtcNow;
+        foreach (var stock in toCreate)
+            await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(stock.ProductId, stock.Quantity > 0, occurredAtUtc));
     }
 }

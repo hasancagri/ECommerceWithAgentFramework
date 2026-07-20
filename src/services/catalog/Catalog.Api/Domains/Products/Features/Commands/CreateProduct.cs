@@ -33,6 +33,10 @@ public static class CreateProduct
             await bus.PublishAsync(new IntegrationEvents.ProductCreatedEvent(
                 [new ProductStockInfo(product.Id, cmd.InitialStock)]));
 
+            // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
+            await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
+                product.Id, product.Name, product.ImageUrl, IsDeleted: false, DateTime.UtcNow));
+
             return FeatureObjectResultModel<CreateProductResponse>.Ok(new CreateProductResponse { Id = product.Id });
         }
     }
