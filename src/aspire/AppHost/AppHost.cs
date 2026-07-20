@@ -65,13 +65,9 @@ var fileApi = builder.AddProject<Projects.File_Api>("file-api")
     .WaitFor(fileDb)
     .WaitFor(rabbit);
 
-// Bootstrap (research.md madde 5) MCP ile catalog/stock/discount'u bir kerelik cagirir => referans.
 var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api")
     .WithReference(storefrontDb)
     .WithReference(rabbit)
-    .WithReference(catalogApi)
-    .WithReference(stockApi)
-    .WithReference(discountApi)
     .WithReference(identityServer)
     .WaitFor(storefrontDb)
     .WaitFor(rabbit)

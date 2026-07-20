@@ -1,7 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
 builder.AddOpenApiDocumentation();
-// Bootstrap (research.md madde 5), Catalog/Stock/Discount'u mantıksal servis adıyla (http://catalog-api
-// vb.) çağırıyor — bu isimleri gerçek Aspire endpoint'ine çözen HttpClient service-discovery burada açılır.
 builder.AddServiceDefaults();
 
 var storefrontDb = builder.Configuration.GetConnectionString("storefrontDb")!;
@@ -54,17 +52,6 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     AuthorizationScopes.StorefrontRead);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
-
-// Bootstrap (research.md madde 5): mevcut m2m.client (catalog.read/discount.read/stock.read) ile
-// client_credentials token uretip Catalog/Stock/Discount'un kendi REST uclarini bir kerelik cagirir.
-var bootstrapIdentitySettings = builder.Configuration.GetSection("Bootstrap:IdentityServer")
-    .Get<Storefront.Api.Bootstrap.BootstrapIdentityServerSettings>()!;
-builder.Services.AddSingleton(bootstrapIdentitySettings);
-builder.Services.AddHttpClient("identity");
-builder.Services.AddHttpClient("catalog-api", c => c.BaseAddress = new Uri("http://catalog-api"));
-builder.Services.AddHttpClient("stock-api", c => c.BaseAddress = new Uri("http://stock-api"));
-builder.Services.AddHttpClient("discount-api", c => c.BaseAddress = new Uri("http://discount-api"));
-builder.Services.AddHostedService<Storefront.Api.Bootstrap.StorefrontBootstrapHostedService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services
