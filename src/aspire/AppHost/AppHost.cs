@@ -1,4 +1,11 @@
+using Aspire.Hosting.Kubernetes;
+using Aspire.Hosting.Kubernetes.Resources;
+
 var builder = DistributedApplication.CreateBuilder(args);
+
+// K8s publish hedefi: `aspire publish` bu environment ile kaynaklari bir Helm chart'a cevirir.
+// Yerel `aspire run` (F5) davranisini degistirmez; yalnizca publish yolunu etkiler.
+builder.AddKubernetesEnvironment("k8s");
 
 var postgres = builder.AddPostgres("postgres")
     .WithPgAdmin()
@@ -33,7 +40,13 @@ var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WithReference(redis)
     .WaitFor(catalogDb)
     .WaitFor(rabbit)
-    .WaitFor(redis);
+    .WaitFor(redis)
+    // K8s publish: catalog-api'yi 3 replica ile olceklendir (kod-olarak, tek yerde).
+    .PublishAsKubernetesService(resource =>
+    {
+        if (resource.Workload is Deployment deployment)
+            deployment.Spec.Replicas = 3;
+    });
 
 var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
     .WithReference(stockDb)

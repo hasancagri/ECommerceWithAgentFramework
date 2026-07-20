@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>dd72660d-cbeb-46b3-858a-a6717a0cfa4f</UserSecretsId>
+        <!-- Aspire.Hosting.Kubernetes publish API'leri [Experimental]; preview'de kullanmak icin bastir. -->
+        <NoWarn>ASPIRECOMPUTE003;ASPIREPUBLISHERS001;$(NoWarn)</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,7 +27,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+      <PackageReference Include="Aspire.Hosting.Kubernetes" />
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" />
         <PackageReference Include="Aspire.Hosting.RabbitMQ" />
         <PackageReference Include="Aspire.Hosting.Redis" />
     </ItemGroup>

@@ -12,3 +12,9 @@ riderModule.iml
 
 # File.Api runtime-generated product images (upload output; not source)
 src/services/file/File.Api/Images/
+
+# Aspire K8s publish ciktisi (turetilmis Helm chart; AppHost tek dogruluk kaynagi)
+artifacts/k8s/
+artifacts/k8s-*/
+# Yerel deploy override'lari sir icerebilir; ornek disinda commit edilmez
+deploy/k8s/values.local.yaml
