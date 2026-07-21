@@ -31,6 +31,21 @@
                     <input type="email" class="form-control" placeholder="Email" asp-for="Input.Email" >
                 </div>
 
+                @if (Model.OfferedScopes.Count > 0)
+                {
+                    <div class="form-group">
+                        <label>Yetkiler (hangi işlemleri yapabilesin?)</label>
+                        @foreach (var scope in Model.OfferedScopes)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       name="Input.SelectedScopes" value="@scope" id="scope_@scope" />
+                                <label class="form-check-label" for="scope_@scope">@scope</label>
+                            </div>
+                        }
+                    </div>
+                }
+
                 <button class="btn btn-primary" name="Input.Button" value="create">Create</button>
                 <button class="btn btn-secondary" name="Input.Button" value="cancel">Cancel</button>
             </form>

@@ -20,6 +20,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddScoped<ApiKeyService>();
+
 // "Beni hatırla" işaretlenince persistent cookie bu süre kadar yaşar (varsayılan 14 gün yerine).
 builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = Identity.Server.Pages.Login.LoginOptions.RememberMeLoginDuration);
@@ -41,6 +43,29 @@ builder.Services.AddIdentityServer(options =>
             b.UseNpgsql(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly)))
     .AddAspNetIdentity<ApplicationUser>();
 
+// Admin API uclari (issue/revoke) icin kendi token'larimizi dogrulayan JWT bearer.
+// Default sema (cookie, UI) degismez; policy Bearer semasini acikca ister.
+var apiAuthority = builder.Configuration["ApiKeyAuth:Authority"] ?? "https://localhost:5001";
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = apiAuthority;
+        options.RequireHttpsMetadata = false;
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateAudience = false,
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy("apikeys.manage", policy =>
+    {
+        policy.AddAuthenticationSchemes("Bearer");
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("scope", "apikeys.manage");
+    }));
+
 var app = builder.Build();
 
 // Açılışta migration'ları uygula (dev kolaylığı; Postgres Aspire ile hazır olur).
@@ -56,5 +81,6 @@ app.UseIdentityServer();
 app.UseAuthorization();
 
 app.MapRazorPages().RequireAuthorization();
+app.MapApiKeyEndpoints();
 
 app.Run();

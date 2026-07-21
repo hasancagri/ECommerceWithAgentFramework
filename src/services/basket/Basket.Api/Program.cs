@@ -47,6 +47,8 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
     AuthorizationScopes.BasketRead,
     AuthorizationScopes.BasketWrite);
+// Dış tüketiciler icin opak UserKey (X-User-Key) custom auth semasi. JWT'ye dokunmaz.
+builder.Services.AddApiKeyAuthentication(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
@@ -65,6 +67,8 @@ var apiVersionSet = app.NewApiVersionSet()
     .Build();
 
 app.UseAuthentication();
+// X-User-Key varsa eager cozer: gecersiz->401, gecerli->principal (UseAuthorization'dan once).
+app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 app.AddBasketGroupEndpointExtension(apiVersionSet);

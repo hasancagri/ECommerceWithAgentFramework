@@ -7,6 +7,15 @@ public static class Config
     // Servislerin token'da bekledigi ekstra claim'ler (role/email policy'leri icin).
     private static readonly string[] ApiUserClaims = ["role", "email", "name"];
 
+    // Kayıt ekranında kullanıcının seçebileceği operatör-tanımlı scope kümesi (UserScopes).
+    // Okumalar anonim olduğu için yalnızca yazma scope'ları sunulur (en az ayrıcalık).
+    public static readonly string[] OfferedRegistrationScopes =
+    [
+        "basket.write",
+        "order.write",
+        "payment.write",
+    ];
+
     public static IEnumerable<IdentityResource> IdentityResources =>
     [
         new IdentityResources.OpenId(),
@@ -49,6 +58,9 @@ public static class Config
 
         // storefront.api: herkese acik urun-vitrin gorunumu (yine de anonim-M2M scope ister).
         new ApiScope("storefront.read", "Storefront API - okuma (urun vitrin gorunumu)"),
+
+        // identity: UserKey (ApiKeys) yonetim yetkisi — admin issue/revoke uclarini korur.
+        new ApiScope("apikeys.manage", "API Key yonetimi (admin issue/revoke)"),
     ];
 
     // ApiResource adi = servisin dogruladigi Audience (appsettings IdentityOption.Audience).
@@ -113,6 +125,16 @@ public static class Config
                 "discount.read",
                 "stock.read",
             },
+        },
+        // Admin m2m: UserKey issue/revoke uclarini cagirmak icin apikeys.manage tasir.
+        // (v1'de uclar X-Internal-Secret ile korunur; bu client uretim scope-korumasi icin hazir.)
+        new Client
+        {
+            ClientId = "apikeys.admin",
+            ClientName = "API Key admin (m2m)",
+            AllowedGrantTypes = GrantTypes.ClientCredentials,
+            ClientSecrets = { new Secret("apikeys-admin-secret".Sha256()) },
+            AllowedScopes = { "apikeys.manage" },
         },
         // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
         // anonim okuma icin de Client Credentials.

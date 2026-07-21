@@ -29,7 +29,9 @@
   <Folder Name="/tests/">
     <Project Path="tests/Basket.Api.Tests/Basket.Api.Tests.csproj" />
     <Project Path="tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj" />
+    <Project Path="tests/Common.Tests/Common.Tests.csproj" />
     <Project Path="tests/Discount.Api.Tests/Discount.Api.Tests.csproj" />
+    <Project Path="tests/Identity.Server.Tests/Identity.Server.Tests.csproj" />
     <Project Path="tests/Order.Api.Tests/Order.Api.Tests.csproj" />
     <Project Path="tests/Payment.Api.Tests/Payment.Api.Tests.csproj" />
     <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />

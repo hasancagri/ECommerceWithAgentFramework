@@ -2,7 +2,6 @@ namespace Payment.Api.Domains.Payments.Features.Agent;
 
 public static class GetAllPaymentsByUserId
 {
-    [RequiredScope(AuthorizationScopes.PaymentRead)]
     public record GetAllPaymentsByUserIdQuery(Guid UserId);
 
     public class GetAllPaymentsByUserIdResponse

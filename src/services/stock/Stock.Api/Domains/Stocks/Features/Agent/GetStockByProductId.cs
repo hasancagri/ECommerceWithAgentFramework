@@ -2,7 +2,6 @@ namespace Stock.Api.Domains.Stocks.Features.Agent;
 
 public static class GetStockByProductId
 {
-    [RequiredScope(AuthorizationScopes.StockRead)]
     public record GetStockByProductIdQuery(Guid ProductId);
 
     public class GetStockResponse
