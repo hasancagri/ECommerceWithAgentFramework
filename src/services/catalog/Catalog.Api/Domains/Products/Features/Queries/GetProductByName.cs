@@ -2,7 +2,6 @@ namespace Catalog.Api.Domains.Products.Features.Queries;
 
 public static class GetProductByName
 {
-    [RequiredScope(AuthorizationScopes.CatalogRead)]
     public record GetProductByNameQuery(string Name);
     
     public class ProductResponse
@@ -62,7 +61,7 @@ public static class GetProductByNameQueryEndpoint
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
             })
             .WithName("GetProductByName")
-            .RequireAuthorization(AuthorizationScopes.CatalogRead);
+            .AllowAnonymous();
         return group;
     }
 }

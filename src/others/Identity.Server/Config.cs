@@ -29,8 +29,7 @@ public static class Config
     // read = liste/detay/sorgu, write = olustur/guncelle/sil.
     public static IEnumerable<ApiScope> ApiScopes =>
     [
-        // catalog.api
-        new ApiScope("catalog.read", "Catalog API - okuma (liste/detay)"),
+        // catalog.api (okuma anonim — scope yok; yalnizca yazma korunur)
         new ApiScope("catalog.write", "Catalog API - yazma (olustur/guncelle/sil)"),
 
         // basket.api
@@ -69,7 +68,7 @@ public static class Config
     [
         new ApiResource("catalog.api", "Catalog API")
         {
-            Scopes = { "catalog.read", "catalog.write" },
+            Scopes = { "catalog.write" },
             UserClaims = ApiUserClaims,
         },
         new ApiResource("basket.api", "Basket API")
@@ -121,7 +120,6 @@ public static class Config
             ClientSecrets = { new Secret("dev-secret".Sha256()) },
             AllowedScopes =
             {
-                "catalog.read",
                 "discount.read",
                 "stock.read",
             },
@@ -155,7 +153,7 @@ public static class Config
             AllowedScopes =
             {
                 "openid", "profile", "email", "roles",
-                "catalog.read", "catalog.write",
+                "catalog.write",
                 "basket.read", "basket.write",
                 "order.read", "order.write",
                 "payment.read", "payment.write",

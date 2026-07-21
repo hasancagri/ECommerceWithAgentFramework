@@ -2,8 +2,7 @@ namespace Common.Utils.Constants;
 
 public static class AuthorizationScopes
 {
-    // catalog.api
-    public const string CatalogRead = "catalog.read";
+    // catalog.api (okuma anonim — read scope'u yok)
     public const string CatalogWrite = "catalog.write";
 
     // basket.api

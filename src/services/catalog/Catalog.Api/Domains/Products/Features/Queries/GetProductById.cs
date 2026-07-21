@@ -3,7 +3,6 @@ namespace Catalog.Api.Domains.Products.Features.Queries;
 public static class GetProductById
 {
     [Cached("catalog-products", 60)]
-    [RequiredScope(AuthorizationScopes.CatalogRead)]
     public record GetProductByIdQuery(Guid Id);
 
     public class ProductResponse
@@ -57,7 +56,7 @@ public static class GetProductByIdQueryEndpoint
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
             })
             .WithName("GetProductById")
-            .RequireAuthorization(AuthorizationScopes.CatalogRead);
+            .AllowAnonymous();
         return group;
     }
 }

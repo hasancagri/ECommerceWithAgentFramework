@@ -137,8 +137,7 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("email");
         options.Scope.Add("roles");
         options.Scope.Add("offline_access"); // refresh token
-        // catalog
-        options.Scope.Add("catalog.read");
+        // catalog (okuma anonim — read scope istenmez)
         options.Scope.Add("catalog.write");
         // basket
         options.Scope.Add("basket.read");
