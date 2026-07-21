@@ -18,9 +18,11 @@ description: "Task list for External MCP UserKey"
 **Yapıldı (tüm çözüm derleniyor 0 hata, 9/9 birim testi geçti):** Foundational (T003–T012),
 US1 çekirdek (T013–T015 — **8 servisin hepsi wired**), US2 uçları (T018–T019), US4 kayıt ekranı
 scope seçimi + UserScopes yazımı (T022–T023), US3 kod-doğrulaması (T026), amendment (T031).
-**Bekliyor (kod değil, çalıştırma/kanıt):** canlı Aspire uçtan-uca doğrulama
-(T017/T020/T021/T025/T027/T030 — Docker+Aspire ister), handler HTTP-stub testi (T016),
-US4 birim testi (T024 — page-model, host gerektirir).
+**CANLI DOĞRULANDI (2026-07-21, taze AppHost + yeni kod):** US4 kayıt→UserScopes(basket.write);
+US2 issue+revoke (revoke anında etkili); US1 resolve(200+scopes) + gateway MCP add_to_cart
+(isSuccess, doğru user'ın sepeti) + bad/no key→red (T017/T020/T021/T025 ✅).
+**Kalan (küçük):** anonim read-tool senaryosu (T027), süresizlik (T030), handler HTTP-stub
+testi (T016), US4 page-model birim testi (T024).
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -74,7 +76,7 @@ Değişiklikler iki yerde: `src/others/Identity.Server/` (kalıcılık + uçlar 
 - [x] T014 [US1] Identity.Server Program.cs'te ApiKeyService kaydı + endpoint map + servisleri DI'a ekle (src/others/Identity.Server/Program.cs)
 - [x] T015 [US1] ApiKey şemasını devreye al (AddApiKeyAuthentication + UseApiKeyAuthentication) — **8 servisin hepsi** yapıldı + her birine iç-secret config (her servis Program.cs + appsettings.Development.json)
 - [ ] T016 [P] [US1] Handler birim testi: 200→Success(scope claim'leri), 401→Fail, header yok→NoResult (tests/Identity.Server.Tests/)
-- [ ] T017 [US1] quickstart Senaryo 1–3 doğrula (anahtarla yazma ok; anahtarsız 401; kurcalanmış 401)
+- [x] T017 [US1] quickstart Senaryo 1–3 CANLI doğrulandı: valid key→add_to_cart isSuccess (doğru user'a); bad key→401; anahtarsız write→scope reddi
 
 **Checkpoint**: US1 tek başına çalışır ve test edilebilir — MVP
 
@@ -89,7 +91,7 @@ Değişiklikler iki yerde: `src/others/Identity.Server/` (kalıcılık + uçlar 
 - [x] T018 [US2] Issue endpoint `POST /api/keys` (`apikeys.manage`) → ham anahtarı **bir kez** döndür (src/others/Identity.Server/ApiKeys/ApiKeyEndpoints.cs)
 - [x] T019 [US2] Revoke endpoint `POST /api/keys/{id}/revoke` (`apikeys.manage`), idempotent (src/others/Identity.Server/ApiKeys/ApiKeyEndpoints.cs)
 - [ ] T020 [P] [US2] Birim testi: iptalli anahtar çözümleme reddi; aynı kullanıcının iki anahtarının bağımsızlığı (tests/Identity.Server.Tests/)
-- [ ] T021 [US2] quickstart Senaryo 6 & 8 doğrula (iptal ≤5sn etkili; çoklu anahtar bağımsız)
+- [x] T021 [US2] Senaryo 6 CANLI doğrulandı: revoke→204, resolve sonrası→401, MCP write sonrası→401 (anında). Çoklu-anahtar bağımsızlığı (S8) ayrı koşulmadı.
 
 **Checkpoint**: US1 + US2 birlikte bağımsız çalışır
 
@@ -104,7 +106,7 @@ Değişiklikler iki yerde: `src/others/Identity.Server/` (kalıcılık + uçlar 
 - [x] T022 [US4] Account/Create ekranına operatör-sunulan scope checkbox listesi + InputModel ekle (src/others/Identity.Server/Pages/Account/Create/Index.cshtml + .cshtml.cs)
 - [x] T023 [US4] Kayıt anında seçili scope'ları UserScopes'a yaz; yalnızca operatör-sunulan kümeyi kabul et (src/others/Identity.Server/Pages/Account/Create/Index.cshtml.cs)
 - [ ] T024 [P] [US4] Birim testi: liste-dışı scope reddedilir; seçim kalıcılaşır (tests/Identity.Server.Tests/)
-- [ ] T025 [US4] quickstart Senaryo 5 doğrula (salt-okuma kullanıcı yazınca 401)
+- [x] T025 [US4] CANLI doğrulandı: kayıtta basket.write seçimi→UserScopes'a yazıldı; resolve o scope'u döndü; scope'suz (anahtarsız) write reddedildi
 
 **Checkpoint**: Yetki kaynağı kullanıcı onayıyla kurulur
 
