@@ -128,7 +128,7 @@ Değişiklikler iki yerde: `src/others/Identity.Server/` (kalıcılık + uçlar 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
 - [ ] T028 [P] Drift varsa spec-kit dokümanlarını as-built ile hizala (specs/004-external-mcp-userkey/)
-- [x] T029 Admin uçları (issue/revoke) X-Internal-Secret'tan **apikeys.manage** scope'a taşındı (Identity.Server JWT bearer + policy; apikeys.admin client_credentials). Resolve iç-secret'ta (karar). Kalan: sabit-zamanlı hash karşılaştırma.
+- [x] T029 Admin uçları **apikeys.manage** scope'a taşındı (JWT bearer + policy; apikeys.admin client_credentials). Resolve iç-secret'ta (karar). X-Internal-Secret karşılaştırması **sabit-zamanlı** (SHA-256 + FixedTimeEquals). Key hash lookup SQL-indexli (kod-içi karşılaştırma yok).
 - [ ] T030 quickstart Senaryo 7 (süresizlik) + tüm senaryoları Aspire üzerinde uçtan uca çalıştır
 - [x] T031 [P] Anayasa V'e PATCH amendment (v1.1.1): JWT-olmayan custom şema meşru, yetki scope-tabanlı kalır (.specify/memory/constitution.md) — remediation'da yapıldı
 

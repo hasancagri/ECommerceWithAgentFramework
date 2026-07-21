@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -53,8 +55,14 @@ public static class ApiKeyEndpoints
         if (string.IsNullOrEmpty(expected))
             return false;
 
-        return http.Request.Headers.TryGetValue(InternalSecretHeader, out var provided)
-               && provided.ToString() == expected;
+        if (!http.Request.Headers.TryGetValue(InternalSecretHeader, out var provided))
+            return false;
+
+        // Sabit-zamanlı karşılaştırma: her iki değerin SHA-256'sını FixedTimeEquals ile karşılaştır.
+        // Eşit-uzunluk (32 bayt) → uzunluk sızıntısı yok; `==` yerine timing-saldırısına dayanıklı.
+        var providedHash = SHA256.HashData(Encoding.UTF8.GetBytes(provided.ToString()));
+        var expectedHash = SHA256.HashData(Encoding.UTF8.GetBytes(expected));
+        return CryptographicOperations.FixedTimeEquals(providedHash, expectedHash);
     }
 
     private record ResolveRequest(string Key);
