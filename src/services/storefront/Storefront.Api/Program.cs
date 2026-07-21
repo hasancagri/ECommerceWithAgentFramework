@@ -21,12 +21,9 @@ builder.Services.AddMarten(opts =>
 
 builder.Host.UseWolverine(opts =>
 {
-    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
+    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    // Exchange'ler + kuyruk baglamalari kaynak servislerde (Catalog/Stock/Discount) declare edilir;
-    // Storefront yalnizca kendi kuyruklarini dinler. Sequential(): her kuyruk tek-thread islenir →
-    // kaynak-ici FIFO korunur (timestamp guard'a gerek kalmaz).
     opts.ListenToRabbitQueue(RabbitMqConstants.ProductChanged.Queues.Storefront).Sequential();
     opts.ListenToRabbitQueue(RabbitMqConstants.StockChanged.Queues.Storefront).Sequential();
     opts.ListenToRabbitQueue(RabbitMqConstants.DiscountChanged.Queues.Storefront).Sequential();

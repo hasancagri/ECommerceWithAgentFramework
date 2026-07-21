@@ -12,6 +12,11 @@ public class OrderItem : BaseModel
 
     public static OrderItem Create(Guid productId, string productName, decimal unitPrice)
     {
-        return new OrderItem { ProductId = productId, ProductName = productName, UnitPrice = unitPrice };
+        return new OrderItem
+        {
+            ProductId = productId,
+            ProductName = productName,
+            UnitPrice = unitPrice
+        };
     }
 }

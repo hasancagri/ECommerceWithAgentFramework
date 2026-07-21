@@ -36,8 +36,6 @@ public static class GetProductStorefrontView
             IQuerySession session,
             CancellationToken ct)
         {
-            // Tek LoadAsync Storefront'un KENDI veritabanina yapilir — kaynak servislere senkron
-            // cagri YOK (FR-002/003). "Yok" durumu satir hic olusmadiginda olusur.
             var view = await session.LoadAsync<StorefrontView>(query.ProductId, ct);
             if (view is null)
                 return FeatureObjectResultModel<ProductStorefrontViewResponse>.NotFound();
