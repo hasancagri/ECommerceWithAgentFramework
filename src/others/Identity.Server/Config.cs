@@ -7,15 +7,6 @@ public static class Config
     // Servislerin token'da bekledigi ekstra claim'ler (role/email policy'leri icin).
     private static readonly string[] ApiUserClaims = ["role", "email", "name"];
 
-    // Kayıt ekranında kullanıcının seçebileceği operatör-tanımlı scope kümesi (UserScopes).
-    // Okumalar anonim olduğu için yalnızca yazma scope'ları sunulur (en az ayrıcalık).
-    public static readonly string[] OfferedRegistrationScopes =
-    [
-        "basket.write",
-        "order.write",
-        "payment.write",
-    ];
-
     public static IEnumerable<IdentityResource> IdentityResources =>
     [
         new IdentityResources.OpenId(),

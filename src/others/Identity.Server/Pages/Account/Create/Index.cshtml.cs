@@ -16,24 +16,18 @@ public class Index : PageModel
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IIdentityServerInteractionService _interaction;
-    private readonly ApplicationDbContext _db;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
 
-    // Kayit ekraninda checkbox olarak sunulan operator-tanimli scope kumesi.
-    public IReadOnlyList<string> OfferedScopes => Config.OfferedRegistrationScopes;
-
     public Index(
         IIdentityServerInteractionService interaction,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        ApplicationDbContext db)
+        SignInManager<ApplicationUser> signInManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _interaction = interaction;
-        _db = db;
     }
 
     public IActionResult OnGet(string? returnUrl)
@@ -104,15 +98,6 @@ public class Index : PageModel
                 claims.Add(new Claim(JwtClaimTypes.Email, Input.Email));
             if (claims.Count > 0)
                 await _userManager.AddClaimsAsync(user, claims);
-
-            // Yalnizca operator-sunulan kumeden secilenleri UserScopes'a yaz (FR-013).
-            // Listede olmayan/uydurma scope'lar sessizce elenir; UserKey bunlari miras alir.
-            var grantedScopes = Input.SelectedScopes
-                .Where(s => Config.OfferedRegistrationScopes.Contains(s))
-                .Distinct();
-            foreach (var scope in grantedScopes)
-                _db.UserScopes.Add(UserScope.Create(user.Id, scope));
-            await _db.SaveChangesAsync();
 
             await _signInManager.SignInAsync(user, isPersistent: false);
 
