@@ -1,11 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 
-namespace Identity.Server;
+namespace Identity.Server.ApiKeys;
 
 // İç introspection + admin (issue/revoke) uçları.
 // - resolve: saf iç introspection → paylaşılan X-Internal-Secret header (servisler her write'ta çağırır).

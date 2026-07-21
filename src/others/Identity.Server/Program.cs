@@ -1,5 +1,6 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Identity.Server;
+using Identity.Server.ApiKeys;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

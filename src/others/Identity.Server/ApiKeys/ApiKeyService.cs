@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Identity.Server;
+namespace Identity.Server.ApiKeys;
 
 // Anahtar üretimi (umk_ + 32 rastgele bayt), SHA-256 hash, hash ile çözümleme + UserScopes okuma.
 public class ApiKeyService(ApplicationDbContext db, UserManager<ApplicationUser> users)
