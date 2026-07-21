@@ -87,10 +87,12 @@ Faz 0 — spec'teki gereksinimler ve mevcut kod tabanı ışığında çözülen
 
 ## D9 — Okuma yüzeyini anonimleştirme kapsamı (Q2=A)
 
-- **Decision**: Dış erişim **MCP yüzeyi** üzerinden. Read MCP tool'ları/`Features/Queries` handler'ları
-  `[RequiredScope]` taşımaz ve `/mcp` gateway route'u auth'suz → okumalar zaten anonim erişilebilir.
-  Anahtar verilirse read yine kişiselleşir (ör. `get_basket` o kullanıcının sepeti). Anahtar yoksa
-  anonim (Guid.Empty) → kullanıcıya özel read'ler boş/anonim döner.
+- **Decision**: Dış erişim **MCP yüzeyi** üzerinden; `/mcp` gateway route'u auth'suz.
+  **As-built düzeltme (2026-07-21):** 6 MCP read Agent slice'ı aslında `[RequiredScope(…Read)]`
+  taşıyordu (get_basket/get_orders/get_product/search_products/stock/payments) → bunlar KALDIRILDI ki
+  read'ler gerçekten anonim olsun (yalnız write command'larında scope kalır). Anahtar verilirse read
+  yine kişiselleşir (`get_basket` o kullanıcının sepeti); yoksa anonim (Guid.Empty). Bu, write-only
+  key sahibinin kendi verisini okumasını da mümkün kılar (aksi halde read scope yokluğundan reddedilirdi).
 - **Rationale**: Q2=A tüm okumalar anonim. REST API gateway policy'leri (ClientCredential/Password)
   WebApp iç yolu; bu feature kapsamı dışı, dokunulmaz.
 - **Alternatives**: REST read'leri de anonimleştirmek → WebApp auth modeline sızar, kapsamı şişirir.

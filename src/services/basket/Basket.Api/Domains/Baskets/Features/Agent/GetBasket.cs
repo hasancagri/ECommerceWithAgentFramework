@@ -2,7 +2,6 @@ namespace Basket.Api.Domains.Baskets.Features.Agent;
 
 public static class GetBasket
 {
-    [RequiredScope(AuthorizationScopes.BasketRead)]
     public record GetBasketQuery(Guid UserId);
 
     public class GetBasketResponse

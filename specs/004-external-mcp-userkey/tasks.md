@@ -21,8 +21,10 @@ scope seçimi + UserScopes yazımı (T022–T023), US3 kod-doğrulaması (T026),
 **CANLI DOĞRULANDI (2026-07-21, taze AppHost + yeni kod):** US4 kayıt→UserScopes(basket.write);
 US2 issue+revoke (revoke anında etkili); US1 resolve(200+scopes) + gateway MCP add_to_cart
 (isSuccess, doğru user'ın sepeti) + bad/no key→red (T017/T020/T021/T025 ✅).
-**Kalan (küçük):** anonim read-tool senaryosu (T027), süresizlik (T030), handler HTTP-stub
-testi (T016), US4 page-model birim testi (T024).
+**Ek (2026-07-21):** T016 handler birim testi (Common.Tests, 3/3); T026 DÜZELTİLDİ (6 Agent read
+slice'ından read-scope kaldırıldı → read'ler gerçekten anonim, canlı doğrulandı T027). Testler: 12/12.
+**Kalan (küçük):** süresizlik senaryosu (T030), US4 page-model birim testi (T024 — host harness
+gerektirir, anayasa kaçınır; canlı doğrulandı).
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -75,7 +77,7 @@ Değişiklikler iki yerde: `src/others/Identity.Server/` (kalıcılık + uçlar 
 - [x] T013 [US1] Resolve endpoint `POST /api/keys/resolve` (iç-secret guard) → userId/email/ad/scopes döndür (src/others/Identity.Server/ApiKeys/ApiKeyEndpoints.cs)
 - [x] T014 [US1] Identity.Server Program.cs'te ApiKeyService kaydı + endpoint map + servisleri DI'a ekle (src/others/Identity.Server/Program.cs)
 - [x] T015 [US1] ApiKey şemasını devreye al (AddApiKeyAuthentication + UseApiKeyAuthentication) — **8 servisin hepsi** yapıldı + her birine iç-secret config (her servis Program.cs + appsettings.Development.json)
-- [ ] T016 [P] [US1] Handler birim testi: 200→Success(scope claim'leri), 401→Fail, header yok→NoResult (tests/Identity.Server.Tests/)
+- [x] T016 [P] [US1] Handler birim testi (stub HttpMessageHandler): 200→Success+scope claim, 401→Fail, header yok→NoResult (tests/Common.Tests/ApiKeyAuthenticationHandlerTests.cs, 3/3)
 - [x] T017 [US1] quickstart Senaryo 1–3 CANLI doğrulandı: valid key→add_to_cart isSuccess (doğru user'a); bad key→401; anahtarsız write→scope reddi
 
 **Checkpoint**: US1 tek başına çalışır ve test edilebilir — MVP
@@ -118,8 +120,8 @@ Değişiklikler iki yerde: `src/others/Identity.Server/` (kalıcılık + uçlar 
 
 **Independent Test**: Hiç anahtar göndermeden okuma 200 döner.
 
-- [x] T026 [US3] Read'lerin `[RequiredScope]` taşımadığı doğrulandı (attribute yalnız Command'larda) + `/mcp` route'u policy'siz → read'ler zaten anonim; düzeltme gerekmedi (servisler)
-- [ ] T027 [US3] quickstart Senaryo 4 doğrula (anonim okuma 200)
+- [x] T026 [US3] **DÜZELTİLDİ**: 6 MCP read Agent slice'ı `[RequiredScope(…Read)]` taşıyordu (get_basket/get_orders/get_product/search_products/stock/payments) → hepsinden KALDIRILDI. (İlk grep eksikti, hatalı "gerek yok" denmişti.) Böylece read'ler gerçekten anonim + write-only key sahibi kendi verisini okuyabilir.
+- [x] T027 [US3] CANLI doğrulandı: anonim catalog search_products → düzgün Result (auth reddi değil); write-only key sahibi get_basket ile kendi sepetini okudu
 
 **Checkpoint**: Tüm story'ler bağımsız çalışır
 

@@ -2,7 +2,6 @@ namespace Order.Api.Domains.Orders.Features.Agent;
 
 public static class GetOrders
 {
-    [RequiredScope(AuthorizationScopes.OrderRead)]
     public record GetOrdersQuery(Guid UserId);
 
     public record GetOrdersResponse

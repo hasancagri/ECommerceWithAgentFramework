@@ -2,7 +2,6 @@ namespace Catalog.Api.Domains.Products.Features.Agent;
 
 public static class SearchProducts
 {
-    [RequiredScope(AuthorizationScopes.CatalogRead)]
     public record SearchProductsQuery(string Name);
 
     public class SearchProductResponse
