@@ -6,8 +6,8 @@ using Microsoft.Extensions.Configuration;
 namespace Identity.Server;
 
 // İç introspection + admin (issue/revoke) uçları.
-// v1 koruması: paylaşılan X-Internal-Secret header (D8). Üretimde admin uçları için
-// apikeys.manage scope zorlaması hedeflenir (Config'te tanımlı) — sertleştirme ayrı iş.
+// - resolve: saf iç introspection → paylaşılan X-Internal-Secret header (servisler her write'ta çağırır).
+// - issue/revoke: admin → apikeys.manage scope zorunlu (Bearer; apikeys.admin client_credentials).
 public static class ApiKeyEndpoints
 {
     public const string InternalSecretHeader = "X-Internal-Secret";
@@ -29,28 +29,22 @@ public static class ApiKeyEndpoints
                 : Results.Ok(new ResolveResponse(resolved.UserId, resolved.Email, null, null, resolved.Scopes));
         });
 
-        // Issue (admin)
+        // Issue (admin) — apikeys.manage scope zorunlu
         group.MapPost("/", async (
-            IssueRequest body, HttpContext http, ApiKeyService service, IConfiguration config, CancellationToken ct) =>
+            IssueRequest body, ApiKeyService service, CancellationToken ct) =>
         {
-            if (!IsInternalCallAuthorized(http, config))
-                return Results.Unauthorized();
-
             var (entity, rawKey) = await service.IssueAsync(body.UserId, body.Name, ct);
             return Results.Created($"/api/keys/{entity.Id}",
                 new IssueResponse(entity.Id, rawKey, entity.UserId, entity.Name, entity.CreatedAt));
-        });
+        }).RequireAuthorization("apikeys.manage");
 
-        // Revoke (admin) — idempotent
+        // Revoke (admin) — idempotent, apikeys.manage scope zorunlu
         group.MapPost("/{id:guid}/revoke", async (
-            Guid id, HttpContext http, ApiKeyService service, IConfiguration config, CancellationToken ct) =>
+            Guid id, ApiKeyService service, CancellationToken ct) =>
         {
-            if (!IsInternalCallAuthorized(http, config))
-                return Results.Unauthorized();
-
             var found = await service.RevokeAsync(id, ct);
             return found ? Results.NoContent() : Results.NotFound();
-        });
+        }).RequireAuthorization("apikeys.manage");
     }
 
     private static bool IsInternalCallAuthorized(HttpContext http, IConfiguration config)

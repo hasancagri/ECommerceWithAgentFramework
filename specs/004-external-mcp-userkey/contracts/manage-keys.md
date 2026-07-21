@@ -43,5 +43,6 @@ Kullanıcı seçtikçe `UserScopes` yazılır.
 
 ## Notes
 
-- Operatörün `apikeys.manage` scope'unu nasıl edindiği (admin client/kullanıcı) tasks'ta netleşir.
+- Operatör `apikeys.manage`'i `apikeys.admin` client'ından client_credentials ile alır.
+  Identity.Server bu uçlarda kendi JWT'sini doğrular (Bearer şeması); resolve iç-secret'ta kalır.
 - Ham anahtar yeniden gösterilemez; kaybolursa iptal + yeni anahtar üretilir.
