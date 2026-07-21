@@ -39,6 +39,12 @@ Faz 0 — spec'teki gereksinimler ve mevcut kod tabanı ışığında çözülen
   değişmeden çalışır; iç ChatAgent (JWT) ve dış anahtar (ApiKey) aynı endpoint'leri kullanır.
 - **Alternatives**: Her policy'ye `AuthenticationSchemes` elle eklemek → dağınık, kırılgan. Reddedildi.
 
+> **As-built notu (2026-07-21):** D4'teki "forward smart policy scheme" yerine daha basit
+> **EAGER middleware** uygulandı (`ApiKeyAuthenticationMiddleware`): default şema Bearer kalır;
+> `X-User-Key` varsa middleware ApiKey şemasını `AuthenticateAsync` ile çözer, geçersizse 401,
+> geçerliyse `Context.User`'ı kurar (UseAuthentication ↔ UseAuthorization arası). Bu tek middleware
+> hem D4 (iki şema bir arada) hem D5 (geçersiz anahtar read'de de 401) ihtiyacını karşılar.
+
 ## D5 — NoResult / Fail semantiği ve "geçersiz anahtar read'de de reddedilir"
 
 - **Decision**: Handler: header yok → `NoResult()` (anonim; read'ler geçer). Header var, çözülemez

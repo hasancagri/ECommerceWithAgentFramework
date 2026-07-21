@@ -20,6 +20,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddScoped<ApiKeyService>();
+
 // "Beni hatırla" işaretlenince persistent cookie bu süre kadar yaşar (varsayılan 14 gün yerine).
 builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = Identity.Server.Pages.Login.LoginOptions.RememberMeLoginDuration);
@@ -56,5 +58,6 @@ app.UseIdentityServer();
 app.UseAuthorization();
 
 app.MapRazorPages().RequireAuthorization();
+app.MapApiKeyEndpoints();
 
 app.Run();

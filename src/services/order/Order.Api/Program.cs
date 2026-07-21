@@ -60,6 +60,9 @@ builder.Services
     .WithHttpTransport()
     .WithToolsFromAssembly();
 
+// Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
+builder.Services.AddApiKeyAuthentication(builder.Configuration);
+
 var app = builder.Build();
 app.MapScalarDocumentation();
 
@@ -69,6 +72,7 @@ var apiVersionSet = app.NewApiVersionSet()
     .Build();
 
 app.UseAuthentication();
+app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 app.AddOrderGroupEndpointExtension(apiVersionSet);
