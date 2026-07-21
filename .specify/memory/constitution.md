@@ -75,6 +75,10 @@ ve **scope** bazında yetkilendirir (`AuthorizationScopes.*`).
   scope kullanılır.
 - Scope zorlaması endpoint'lerde `.RequireAuthorization(...)` ile, Wolverine mesaj
   handler'larında ise `[RequiredScope]` + `ScopeAuthorizationMiddleware` ile uygulanır.
+- Kimlik doğrulama şeması JWT bearer ile sınırlı değildir: dış entegrasyonlar için
+  JWT-olmayan custom authentication şemaları (ör. opak UserKey) meşrudur — koşul,
+  yetkinin **yine scope-tabanlı** kalması ve rol getirilmemesidir. İlkenin özü
+  mekanizma değil, "scope, rol değil"dir.
 - `Identity.Server` HTTPS üzerinden çalışmak zorundadır; tüm servislerin `Authority`
   değeri issuer ile eşleşir.
 
@@ -144,4 +148,4 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-12
+**Version**: 1.1.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-21
