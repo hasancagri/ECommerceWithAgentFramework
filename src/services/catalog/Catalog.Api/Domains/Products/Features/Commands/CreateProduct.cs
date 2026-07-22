@@ -3,7 +3,6 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 public static class CreateProduct
 {
     [InvalidatesCache("catalog-products")]
-    [RequiredScope(AuthorizationScopes.CatalogWrite)]
     public record CreateProductCommand(
         string Name,
         string Description,
@@ -51,8 +50,7 @@ public static class CreateProductCommandEndpoint
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<CreateProduct.CreateProductResponse>>(cmd);
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
             })
-            .WithName("CreateProduct")
-            .RequireAuthorization(AuthorizationScopes.CatalogWrite);
+            .WithName("CreateProduct");
         return group;
     }
 }

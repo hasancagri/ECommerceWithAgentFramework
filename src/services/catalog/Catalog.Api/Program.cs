@@ -21,6 +21,11 @@ builder.Services.AddMarten(opts =>
 
 builder.Host.UseWolverine(opts =>
 {
+    // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali; kirli kapanan
+    // debug oturumlarinin hayalet-node StopRemoteAgent timeout gurultusunu kokten onler.
+    if (builder.Environment.IsDevelopment())
+        opts.Durability.Mode = DurabilityMode.Solo;
+
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
@@ -59,8 +64,6 @@ builder.Host.UseWolverine(opts =>
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
-
-builder.Services.AddHostedService<SeedData>();
 
 builder.Services.AddApiVersioning(options =>
 {

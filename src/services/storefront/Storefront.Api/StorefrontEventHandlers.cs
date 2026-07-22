@@ -1,6 +1,6 @@
 namespace Storefront.Api;
 
-public class StorefrontEventHandlers
+public static class StorefrontEventHandlers
 {
     public static async Task Handle(IntegrationEvents.DiscountChangedEvent evt, IDocumentSession session, CancellationToken ct)
     {

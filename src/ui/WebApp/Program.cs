@@ -151,8 +151,6 @@ builder.Services.AddAuthentication(configureOption =>
         // payment
         options.Scope.Add("payment.read");
         options.Scope.Add("payment.write");
-        // stock
-        options.Scope.Add("stock.read");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // role/email id_token'da geliyor (Config.cs: AlwaysIncludeUserClaimsInIdToken),

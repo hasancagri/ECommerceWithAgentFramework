@@ -43,13 +43,21 @@ public static class RabbitMqConstants
         }
     }
 
+    // Storefront TEK kuyruk dinler: üç exchange de aynı kuyruğa bağlanır ve Sequential işlenir.
+    // Aynı StorefrontView satırına eşzamanlı yazım yapısal olarak imkânsızlaşır (ConcurrencyException
+    // kaynağı yok edilir; Program.cs'teki retry kuralı yedek güvence olarak durur).
+    public static class StorefrontEvents
+    {
+        public const string Queue = "storefront.events";
+    }
+
     public static class ProductChanged
     {
         public const string Exchange = "product.changed";
 
         public static class Queues
         {
-            public const string Storefront = "storefront.product-changed";
+            public const string Storefront = StorefrontEvents.Queue;
         }
     }
 
@@ -59,7 +67,7 @@ public static class RabbitMqConstants
 
         public static class Queues
         {
-            public const string Storefront = "storefront.stock-changed";
+            public const string Storefront = StorefrontEvents.Queue;
         }
     }
 
@@ -69,7 +77,7 @@ public static class RabbitMqConstants
 
         public static class Queues
         {
-            public const string Storefront = "storefront.discount-changed";
+            public const string Storefront = StorefrontEvents.Queue;
         }
     }
 }

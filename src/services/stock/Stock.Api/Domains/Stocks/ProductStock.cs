@@ -27,4 +27,19 @@ public class ProductStock : AggregateRoot
     {
         Quantity -= amount;
     }
+
+    // 005-supplier-ingestion: feed mutlak adet verir; set semantigi Increase/Decrease'ten ayridir.
+    // Invariant: stok adedi negatif olamaz — kural handler'da degil aggregate'te korunur.
+    public ResultDomain SetQuantity(int quantity)
+    {
+        if (quantity < 0)
+            return ResultDomain.Error(new MessageItem
+            {
+                Property = nameof(Quantity),
+                Code = StockResourceConstants.STOCK_QUANTITY_CANNOT_BE_NEGATIVE
+            });
+
+        Quantity = quantity;
+        return ResultDomain.Ok();
+    }
 }

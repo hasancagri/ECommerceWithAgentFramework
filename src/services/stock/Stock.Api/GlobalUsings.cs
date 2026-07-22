@@ -5,6 +5,7 @@ global using Common.Exceptions;
 global using Common.Extensions;
 global using Common.Utils.Constants;
 global using Common;
+global using Common.Results;
 global using Marten.Newtonsoft;
 global using Marten;
 global using Microsoft.AspNetCore.Mvc;

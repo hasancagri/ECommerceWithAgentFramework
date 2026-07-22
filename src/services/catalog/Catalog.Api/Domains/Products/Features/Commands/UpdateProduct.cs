@@ -3,7 +3,6 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 public static class UpdateProduct
 {
     [InvalidatesCache("catalog-products")]
-    [RequiredScope(AuthorizationScopes.CatalogWrite)]
     public record UpdateProductCommand(
         Guid Id,
         string Name,
@@ -52,8 +51,7 @@ public static class UpdateProductCommandEndpoint
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<UpdateProduct.UpdateProductResponse>>(cmd);
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
             })
-            .WithName("UpdateProduct")
-            .RequireAuthorization(AuthorizationScopes.CatalogWrite);
+            .WithName("UpdateProduct");
         return group;
     }
 }

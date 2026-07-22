@@ -2,7 +2,6 @@ namespace Discount.Api.Domains.Discounts.Features.Queries;
 
 public static class GetDiscountByProductId
 {
-    [RequiredScope(AuthorizationScopes.DiscountRead)]
     public record GetDiscountByProductIdQuery(Guid ProductId);
 
     public class GetDiscountByProductIdResponse
@@ -50,8 +49,7 @@ public static class GetDiscountByProductIdEndpoint
             .WithName("GetDiscountByProductId")
             .MapToApiVersion(1, 0)
             .Produces<GetDiscountByProductId.GetDiscountByProductIdResponse>()
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization(AuthorizationScopes.DiscountRead);
+            .Produces(StatusCodes.Status404NotFound);
 
         return group;
     }

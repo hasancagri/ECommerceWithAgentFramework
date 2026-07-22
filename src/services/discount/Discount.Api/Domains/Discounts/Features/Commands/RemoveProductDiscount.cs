@@ -2,7 +2,6 @@ namespace Discount.Api.Domains.Discounts.Features.Commands;
 
 public static class RemoveProductDiscount
 {
-    [RequiredScope(AuthorizationScopes.DiscountWrite)]
     public record RemoveProductDiscountCommand(Guid ProductId);
 
     [Transactional]
@@ -44,8 +43,7 @@ public static class RemoveProductDiscountCommandEndpoint
             .WithName("RemoveProductDiscount")
             .MapToApiVersion(1, 0)
             .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization(AuthorizationScopes.DiscountWrite);
+            .Produces(StatusCodes.Status404NotFound);
 
         return group;
     }

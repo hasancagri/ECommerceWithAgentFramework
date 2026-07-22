@@ -1,0 +1,9 @@
+global using Asp.Versioning.Builder;
+global using Asp.Versioning;
+global using Common;
+global using Common.Exceptions;
+global using Common.Extensions;
+global using Shared;
+global using Supplier.Api.Dependencies;
+global using Supplier.Api.Domains.Feeds;
+global using System;

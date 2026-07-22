@@ -1,0 +1,2002 @@
+[
+  {
+    "externalId": "SUP-1001",
+    "name": "Samsung Model 1",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 59.9,
+    "stockQuantity": 7,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1002",
+    "name": "Sony Model 2",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 69.9,
+    "stockQuantity": 14,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1003",
+    "name": "Lenovo Model 3",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 79.9,
+    "stockQuantity": 21,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1004",
+    "name": "Dell Model 4",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 89.9,
+    "stockQuantity": 28,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1005",
+    "name": "Hp Model 5",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 99.9,
+    "stockQuantity": 35,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1006",
+    "name": "Asus Model 6",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 109.9,
+    "stockQuantity": 42,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1007",
+    "name": "Xiaomi Model 7",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 119.9,
+    "stockQuantity": 49,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1008",
+    "name": "Nike Model 8",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 129.9,
+    "stockQuantity": 6,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1009",
+    "name": "Adidas Model 9",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 139.9,
+    "stockQuantity": 13,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1010",
+    "name": "Apple Model 10",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 149.9,
+    "stockQuantity": 20,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1011",
+    "name": "Samsung Model 11",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 159.9,
+    "stockQuantity": 27,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1012",
+    "name": "Sony Model 12",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 169.9,
+    "stockQuantity": 34,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1013",
+    "name": "Lenovo Model 13",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 179.9,
+    "stockQuantity": 41,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1014",
+    "name": "Dell Model 14",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 189.9,
+    "stockQuantity": 48,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1015",
+    "name": "Hp Model 15",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 199.9,
+    "stockQuantity": 5,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1016",
+    "name": "Asus Model 16",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 209.9,
+    "stockQuantity": 12,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1017",
+    "name": "Xiaomi Model 17",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 219.9,
+    "stockQuantity": 19,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1018",
+    "name": "Nike Model 18",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 229.9,
+    "stockQuantity": 26,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1019",
+    "name": "Adidas Model 19",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 239.9,
+    "stockQuantity": 33,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1020",
+    "name": "Apple Model 20",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 249.9,
+    "stockQuantity": 40,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1021",
+    "name": "Samsung Model 21",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 259.9,
+    "stockQuantity": 47,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1022",
+    "name": "Sony Model 22",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 269.9,
+    "stockQuantity": 4,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1023",
+    "name": "Lenovo Model 23",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 279.9,
+    "stockQuantity": 11,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1024",
+    "name": "Dell Model 24",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 289.9,
+    "stockQuantity": 18,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1025",
+    "name": "Hp Model 25",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 299.9,
+    "stockQuantity": 25,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1026",
+    "name": "Asus Model 26",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 309.9,
+    "stockQuantity": 32,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1027",
+    "name": "Xiaomi Model 27",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 319.9,
+    "stockQuantity": 39,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1028",
+    "name": "Nike Model 28",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 329.9,
+    "stockQuantity": 46,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1029",
+    "name": "Adidas Model 29",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 339.9,
+    "stockQuantity": 3,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1030",
+    "name": "Apple Model 30",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 349.9,
+    "stockQuantity": 10,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1031",
+    "name": "Samsung Model 31",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 359.9,
+    "stockQuantity": 17,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1032",
+    "name": "Sony Model 32",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 369.9,
+    "stockQuantity": 24,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1033",
+    "name": "Lenovo Model 33",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 379.9,
+    "stockQuantity": 31,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1034",
+    "name": "Dell Model 34",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 389.9,
+    "stockQuantity": 38,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1035",
+    "name": "Hp Model 35",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 399.9,
+    "stockQuantity": 45,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1036",
+    "name": "Asus Model 36",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 409.9,
+    "stockQuantity": 2,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1037",
+    "name": "Xiaomi Model 37",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 419.9,
+    "stockQuantity": 9,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1038",
+    "name": "Nike Model 38",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 429.9,
+    "stockQuantity": 16,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1039",
+    "name": "Adidas Model 39",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 439.9,
+    "stockQuantity": 23,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1040",
+    "name": "Apple Model 40",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 449.9,
+    "stockQuantity": 30,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1041",
+    "name": "Samsung Model 41",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 459.9,
+    "stockQuantity": 37,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1042",
+    "name": "Sony Model 42",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 469.9,
+    "stockQuantity": 44,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1043",
+    "name": "Lenovo Model 43",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 479.9,
+    "stockQuantity": 1,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1044",
+    "name": "Dell Model 44",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 489.9,
+    "stockQuantity": 8,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1045",
+    "name": "Hp Model 45",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 499.9,
+    "stockQuantity": 15,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1046",
+    "name": "Asus Model 46",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 509.9,
+    "stockQuantity": 22,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1047",
+    "name": "Xiaomi Model 47",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 519.9,
+    "stockQuantity": 29,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1048",
+    "name": "Nike Model 48",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 529.9,
+    "stockQuantity": 36,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1049",
+    "name": "Adidas Model 49",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 539.9,
+    "stockQuantity": 43,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1050",
+    "name": "Apple Model 50",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 549.9,
+    "stockQuantity": 0,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1051",
+    "name": "Samsung Model 51",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 559.9,
+    "stockQuantity": 7,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1052",
+    "name": "Sony Model 52",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 569.9,
+    "stockQuantity": 14,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1053",
+    "name": "Lenovo Model 53",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 579.9,
+    "stockQuantity": 21,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1054",
+    "name": "Dell Model 54",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 589.9,
+    "stockQuantity": 28,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1055",
+    "name": "Hp Model 55",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 599.9,
+    "stockQuantity": 35,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1056",
+    "name": "Asus Model 56",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 609.9,
+    "stockQuantity": 42,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1057",
+    "name": "Xiaomi Model 57",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 619.9,
+    "stockQuantity": 49,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1058",
+    "name": "Nike Model 58",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 629.9,
+    "stockQuantity": 6,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1059",
+    "name": "Adidas Model 59",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 639.9,
+    "stockQuantity": 13,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1060",
+    "name": "Apple Model 60",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 649.9,
+    "stockQuantity": 20,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1061",
+    "name": "Samsung Model 61",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 659.9,
+    "stockQuantity": 27,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1062",
+    "name": "Sony Model 62",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 669.9,
+    "stockQuantity": 34,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1063",
+    "name": "Lenovo Model 63",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 679.9,
+    "stockQuantity": 41,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1064",
+    "name": "Dell Model 64",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 689.9,
+    "stockQuantity": 48,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1065",
+    "name": "Hp Model 65",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 699.9,
+    "stockQuantity": 5,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1066",
+    "name": "Asus Model 66",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 709.9,
+    "stockQuantity": 12,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1067",
+    "name": "Xiaomi Model 67",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 719.9,
+    "stockQuantity": 19,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1068",
+    "name": "Nike Model 68",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 729.9,
+    "stockQuantity": 26,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1069",
+    "name": "Adidas Model 69",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 739.9,
+    "stockQuantity": 33,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1070",
+    "name": "Apple Model 70",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 749.9,
+    "stockQuantity": 40,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1071",
+    "name": "Samsung Model 71",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 759.9,
+    "stockQuantity": 47,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1072",
+    "name": "Sony Model 72",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 769.9,
+    "stockQuantity": 4,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1073",
+    "name": "Lenovo Model 73",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 779.9,
+    "stockQuantity": 11,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1074",
+    "name": "Dell Model 74",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 789.9,
+    "stockQuantity": 18,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1075",
+    "name": "Hp Model 75",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 799.9,
+    "stockQuantity": 25,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1076",
+    "name": "Asus Model 76",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 809.9,
+    "stockQuantity": 32,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1077",
+    "name": "Xiaomi Model 77",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 819.9,
+    "stockQuantity": 39,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1078",
+    "name": "Nike Model 78",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 829.9,
+    "stockQuantity": 46,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1079",
+    "name": "Adidas Model 79",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 839.9,
+    "stockQuantity": 3,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1080",
+    "name": "Apple Model 80",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 849.9,
+    "stockQuantity": 10,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1081",
+    "name": "Samsung Model 81",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 859.9,
+    "stockQuantity": 17,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1082",
+    "name": "Sony Model 82",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 869.9,
+    "stockQuantity": 24,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1083",
+    "name": "Lenovo Model 83",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 879.9,
+    "stockQuantity": 31,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1084",
+    "name": "Dell Model 84",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 889.9,
+    "stockQuantity": 38,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1085",
+    "name": "Hp Model 85",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 899.9,
+    "stockQuantity": 45,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1086",
+    "name": "Asus Model 86",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 909.9,
+    "stockQuantity": 2,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1087",
+    "name": "Xiaomi Model 87",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 919.9,
+    "stockQuantity": 9,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1088",
+    "name": "Nike Model 88",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 929.9,
+    "stockQuantity": 16,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1089",
+    "name": "Adidas Model 89",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 939.9,
+    "stockQuantity": 23,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1090",
+    "name": "Apple Model 90",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 949.9,
+    "stockQuantity": 30,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1091",
+    "name": "Samsung Model 91",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 959.9,
+    "stockQuantity": 37,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1092",
+    "name": "Sony Model 92",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 969.9,
+    "stockQuantity": 44,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1093",
+    "name": "Lenovo Model 93",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 979.9,
+    "stockQuantity": 1,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1094",
+    "name": "Dell Model 94",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 989.9,
+    "stockQuantity": 8,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1095",
+    "name": "Hp Model 95",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 999.9,
+    "stockQuantity": 15,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1096",
+    "name": "Asus Model 96",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1009.9,
+    "stockQuantity": 22,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1097",
+    "name": "Xiaomi Model 97",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1019.9,
+    "stockQuantity": 29,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1098",
+    "name": "Nike Model 98",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1029.9,
+    "stockQuantity": 36,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1099",
+    "name": "Adidas Model 99",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1039.9,
+    "stockQuantity": 43,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1100",
+    "name": "Apple Model 100",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1049.9,
+    "stockQuantity": 0,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1101",
+    "name": "Samsung Model 101",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1059.9,
+    "stockQuantity": 7,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1102",
+    "name": "Sony Model 102",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1069.9,
+    "stockQuantity": 14,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1103",
+    "name": "Lenovo Model 103",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1079.9,
+    "stockQuantity": 21,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1104",
+    "name": "Dell Model 104",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1089.9,
+    "stockQuantity": 28,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1105",
+    "name": "Hp Model 105",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1099.9,
+    "stockQuantity": 35,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1106",
+    "name": "Asus Model 106",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1109.9,
+    "stockQuantity": 42,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1107",
+    "name": "Xiaomi Model 107",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1119.9,
+    "stockQuantity": 49,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1108",
+    "name": "Nike Model 108",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1129.9,
+    "stockQuantity": 6,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1109",
+    "name": "Adidas Model 109",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1139.9,
+    "stockQuantity": 13,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1110",
+    "name": "Apple Model 110",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1149.9,
+    "stockQuantity": 20,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1111",
+    "name": "Samsung Model 111",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1159.9,
+    "stockQuantity": 27,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1112",
+    "name": "Sony Model 112",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1169.9,
+    "stockQuantity": 34,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1113",
+    "name": "Lenovo Model 113",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1179.9,
+    "stockQuantity": 41,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1114",
+    "name": "Dell Model 114",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1189.9,
+    "stockQuantity": 48,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1115",
+    "name": "Hp Model 115",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1199.9,
+    "stockQuantity": 5,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1116",
+    "name": "Asus Model 116",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1209.9,
+    "stockQuantity": 12,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1117",
+    "name": "Xiaomi Model 117",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1219.9,
+    "stockQuantity": 19,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1118",
+    "name": "Nike Model 118",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1229.9,
+    "stockQuantity": 26,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1119",
+    "name": "Adidas Model 119",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1239.9,
+    "stockQuantity": 33,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1120",
+    "name": "Apple Model 120",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1249.9,
+    "stockQuantity": 40,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1121",
+    "name": "Samsung Model 121",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1259.9,
+    "stockQuantity": 47,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1122",
+    "name": "Sony Model 122",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1269.9,
+    "stockQuantity": 4,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1123",
+    "name": "Lenovo Model 123",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1279.9,
+    "stockQuantity": 11,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1124",
+    "name": "Dell Model 124",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1289.9,
+    "stockQuantity": 18,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1125",
+    "name": "Hp Model 125",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1299.9,
+    "stockQuantity": 25,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1126",
+    "name": "Asus Model 126",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1309.9,
+    "stockQuantity": 32,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1127",
+    "name": "Xiaomi Model 127",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1319.9,
+    "stockQuantity": 39,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1128",
+    "name": "Nike Model 128",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1329.9,
+    "stockQuantity": 46,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1129",
+    "name": "Adidas Model 129",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1339.9,
+    "stockQuantity": 3,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1130",
+    "name": "Apple Model 130",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1349.9,
+    "stockQuantity": 10,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1131",
+    "name": "Samsung Model 131",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1359.9,
+    "stockQuantity": 17,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1132",
+    "name": "Sony Model 132",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1369.9,
+    "stockQuantity": 24,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1133",
+    "name": "Lenovo Model 133",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1379.9,
+    "stockQuantity": 31,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1134",
+    "name": "Dell Model 134",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1389.9,
+    "stockQuantity": 38,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1135",
+    "name": "Hp Model 135",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1399.9,
+    "stockQuantity": 45,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1136",
+    "name": "Asus Model 136",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1409.9,
+    "stockQuantity": 2,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1137",
+    "name": "Xiaomi Model 137",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1419.9,
+    "stockQuantity": 9,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1138",
+    "name": "Nike Model 138",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1429.9,
+    "stockQuantity": 16,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1139",
+    "name": "Adidas Model 139",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1439.9,
+    "stockQuantity": 23,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1140",
+    "name": "Apple Model 140",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1449.9,
+    "stockQuantity": 30,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1141",
+    "name": "Samsung Model 141",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1459.9,
+    "stockQuantity": 37,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1142",
+    "name": "Sony Model 142",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1469.9,
+    "stockQuantity": 44,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1143",
+    "name": "Lenovo Model 143",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1479.9,
+    "stockQuantity": 1,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1144",
+    "name": "Dell Model 144",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1489.9,
+    "stockQuantity": 8,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1145",
+    "name": "Hp Model 145",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1499.9,
+    "stockQuantity": 15,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1146",
+    "name": "Asus Model 146",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1509.9,
+    "stockQuantity": 22,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1147",
+    "name": "Xiaomi Model 147",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1519.9,
+    "stockQuantity": 29,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1148",
+    "name": "Nike Model 148",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1529.9,
+    "stockQuantity": 36,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1149",
+    "name": "Adidas Model 149",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1539.9,
+    "stockQuantity": 43,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1150",
+    "name": "Apple Model 150",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1549.9,
+    "stockQuantity": 0,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1151",
+    "name": "Samsung Model 151",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1559.9,
+    "stockQuantity": 7,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1152",
+    "name": "Sony Model 152",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1569.9,
+    "stockQuantity": 14,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1153",
+    "name": "Lenovo Model 153",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1579.9,
+    "stockQuantity": 21,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1154",
+    "name": "Dell Model 154",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1589.9,
+    "stockQuantity": 28,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1155",
+    "name": "Hp Model 155",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1599.9,
+    "stockQuantity": 35,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1156",
+    "name": "Asus Model 156",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1609.9,
+    "stockQuantity": 42,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1157",
+    "name": "Xiaomi Model 157",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1619.9,
+    "stockQuantity": 49,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1158",
+    "name": "Nike Model 158",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1629.9,
+    "stockQuantity": 6,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1159",
+    "name": "Adidas Model 159",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1639.9,
+    "stockQuantity": 13,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1160",
+    "name": "Apple Model 160",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1649.9,
+    "stockQuantity": 20,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1161",
+    "name": "Samsung Model 161",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1659.9,
+    "stockQuantity": 27,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1162",
+    "name": "Sony Model 162",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1669.9,
+    "stockQuantity": 34,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1163",
+    "name": "Lenovo Model 163",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1679.9,
+    "stockQuantity": 41,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1164",
+    "name": "Dell Model 164",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1689.9,
+    "stockQuantity": 48,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1165",
+    "name": "Hp Model 165",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1699.9,
+    "stockQuantity": 5,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1166",
+    "name": "Asus Model 166",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1709.9,
+    "stockQuantity": 12,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1167",
+    "name": "Xiaomi Model 167",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1719.9,
+    "stockQuantity": 19,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1168",
+    "name": "Nike Model 168",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1729.9,
+    "stockQuantity": 26,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1169",
+    "name": "Adidas Model 169",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1739.9,
+    "stockQuantity": 33,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1170",
+    "name": "Apple Model 170",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1749.9,
+    "stockQuantity": 40,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1171",
+    "name": "Samsung Model 171",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1759.9,
+    "stockQuantity": 47,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1172",
+    "name": "Sony Model 172",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1769.9,
+    "stockQuantity": 4,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1173",
+    "name": "Lenovo Model 173",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1779.9,
+    "stockQuantity": 11,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1174",
+    "name": "Dell Model 174",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1789.9,
+    "stockQuantity": 18,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1175",
+    "name": "Hp Model 175",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1799.9,
+    "stockQuantity": 25,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1176",
+    "name": "Asus Model 176",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1809.9,
+    "stockQuantity": 32,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1177",
+    "name": "Xiaomi Model 177",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1819.9,
+    "stockQuantity": 39,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1178",
+    "name": "Nike Model 178",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1829.9,
+    "stockQuantity": 46,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1179",
+    "name": "Adidas Model 179",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1839.9,
+    "stockQuantity": 3,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1180",
+    "name": "Apple Model 180",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1849.9,
+    "stockQuantity": 10,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  },
+  {
+    "externalId": "SUP-1181",
+    "name": "Samsung Model 181",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1859.9,
+    "stockQuantity": 17,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1182",
+    "name": "Sony Model 182",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1869.9,
+    "stockQuantity": 24,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1183",
+    "name": "Lenovo Model 183",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1879.9,
+    "stockQuantity": 31,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1184",
+    "name": "Dell Model 184",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1889.9,
+    "stockQuantity": 38,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1185",
+    "name": "Hp Model 185",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1899.9,
+    "stockQuantity": 45,
+    "discountCode": "SUMMER25",
+    "discountPercent": 10
+  },
+  {
+    "externalId": "SUP-1186",
+    "name": "Asus Model 186",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 1909.9,
+    "stockQuantity": 2,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1187",
+    "name": "Xiaomi Model 187",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 1919.9,
+    "stockQuantity": 9,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1188",
+    "name": "Nike Model 188",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 1929.9,
+    "stockQuantity": 16,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1189",
+    "name": "Adidas Model 189",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 1939.9,
+    "stockQuantity": 23,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1190",
+    "name": "Apple Model 190",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 1949.9,
+    "stockQuantity": 30,
+    "discountCode": "SUMMER25",
+    "discountPercent": 15
+  },
+  {
+    "externalId": "SUP-1191",
+    "name": "Samsung Model 191",
+    "description": "Samsung ürünü",
+    "brand": "Samsung",
+    "price": 1959.9,
+    "stockQuantity": 37,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1192",
+    "name": "Sony Model 192",
+    "description": "Sony ürünü",
+    "brand": "Sony",
+    "price": 1969.9,
+    "stockQuantity": 44,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1193",
+    "name": "Lenovo Model 193",
+    "description": "Lenovo ürünü",
+    "brand": "Lenovo",
+    "price": 1979.9,
+    "stockQuantity": 1,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1194",
+    "name": "Dell Model 194",
+    "description": "Dell ürünü",
+    "brand": "Dell",
+    "price": 1989.9,
+    "stockQuantity": 8,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1195",
+    "name": "Hp Model 195",
+    "description": "Hp ürünü",
+    "brand": "Hp",
+    "price": 1999.9,
+    "stockQuantity": 15,
+    "discountCode": "SUMMER25",
+    "discountPercent": 20
+  },
+  {
+    "externalId": "SUP-1196",
+    "name": "Asus Model 196",
+    "description": "Asus ürünü",
+    "brand": "Asus",
+    "price": 2009.9,
+    "stockQuantity": 22,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1197",
+    "name": "Xiaomi Model 197",
+    "description": "Xiaomi ürünü",
+    "brand": "Xiaomi",
+    "price": 2019.9,
+    "stockQuantity": 29,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1198",
+    "name": "Nike Model 198",
+    "description": "Nike ürünü",
+    "brand": "Nike",
+    "price": 2029.9,
+    "stockQuantity": 36,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1199",
+    "name": "Adidas Model 199",
+    "description": "Adidas ürünü",
+    "brand": "Adidas",
+    "price": 2039.9,
+    "stockQuantity": 43,
+    "discountCode": null,
+    "discountPercent": null
+  },
+  {
+    "externalId": "SUP-1200",
+    "name": "Apple Model 200",
+    "description": "Apple ürünü",
+    "brand": "Apple",
+    "price": 2049.9,
+    "stockQuantity": 0,
+    "discountCode": "SUMMER25",
+    "discountPercent": 5
+  }
+]
