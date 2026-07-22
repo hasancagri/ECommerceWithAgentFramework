@@ -27,8 +27,9 @@ Her kayıt ortak ara modele çevrilir, ara depoda saklanır ve ilgili servislere
 
 1. **Given** üç tedarikçide toplam N ürün, **When** run tetiklenir, **Then** katalogda N yeni ürün oluşur.
 2. **Given** feed'de stok adedi olan kayıt, **When** aktarım biter, **Then** ürünün stok kaydı bu adedi gösterir.
-3. **Given** ham marka metni ("APPLE INC." gibi), **When** kayıt işlenir, **Then** ürün sistemin marka tanımına eşlenmiştir.
+3. **Given** feed'deki marka metni ("Apple" gibi), **When** kayıt işlenir, **Then** ürün sistemin marka tanımına eşlenmiştir.
 4. **Given** run tamamlanır, **When** özet istenir, **Then** yeni/güncellenen/atlanan/hatalı sayıları raporlanır.
+5. **Given** indirim yüzdesi taşıyan kayıt, **When** aktarım biter, **Then** üründe bu oranda ürün indirimi tanımlıdır.
 
 ---
 
@@ -60,6 +61,7 @@ Tedarikçi bir ürünün fiyatını/bilgisini değiştirir. Sonraki aktarımda y
 
 1. **Given** içeriği değişen tek kayıt, **When** run tetiklenir, **Then** yalnız o ürün güncellenir, gerisi atlanır.
 2. **Given** güncellenen kayıt, **When** işlem biter, **Then** ara depodaki içerik izi (hash) yeni içeriği yansıtır.
+3. **Given** indirimi feed'den kaldırılan ürün, **When** run tetiklenir, **Then** üründeki indirim kaldırılır.
 
 ---
 
@@ -85,6 +87,7 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 - Feed boş dönerse: hata değildir; sıfır kayıt işlenir, özet bunu gösterir (silme/delist tetiklemez).
 - Aynı feed içinde mükerrer harici kimlik: ilk kayıt esas alınır, sonrakiler hatalı işaretlenir.
 - Marka metni sistemin marka tanımlarına eşlenemezse: kayıt hatalı işaretlenir, nedeni kaydedilir.
+- İndirim yüzdesi geçersizse (≤ 0 veya > 100): kayıt hatalı işaretlenir; ürün/stok yazımı yapılmaz.
 - Domain servisine yazma başarısız olursa: kayıt hatalı işaretlenir; sonraki run'da yeniden denenir.
 - Run sürerken ikinci tetikleme gelirse: reddedilir veya kuyruklanır; aynı anda iki run çalışmaz.
 
@@ -99,7 +102,7 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 - **FR-003**: Her feed, tedarikçinin TÜM ürünlerini içeren tam bir anlık görüntü (full feed) olmalıdır; delta/artımlı feed yoktur.
 - **FR-004**: Veri setleri kullanıcı tarafından hazırlanır ve simülatörün kendi veritabanına açılışta yüklenir (seed).
 - **FR-005**: Kataloglar marka bazında ayrık olmalıdır: A = Apple/Samsung/Sony, B = Nike/Adidas, C = Lenovo/Dell/Hp/Asus/Xiaomi.
-- **FR-006**: Her feed kaydı en az şunları taşımalıdır: harici kimlik, ad, açıklama, ham marka metni, fiyat, stok adedi.
+- **FR-006**: Feed kaydı en az şunları taşır: harici kimlik, ad, açıklama, ham marka, fiyat, stok adedi; opsiyonel indirim kodu + yüzdesi.
 
 #### Aktarım (ingestion)
 
@@ -116,9 +119,11 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 #### Domain'e yazım
 
 - **FR-016**: Domain servislerine yazım, her biri tek bir servise bağlı ayrı akıllı yazıcılar (agent) üzerinden yapılmalıdır.
-- **FR-017**: Katalog yazıcısı ürünü oluşturur/günceller; stok yazıcısı stok adedini işler; her yazıcı yalnız kendi servisine erişir.
+- **FR-017**: Katalog yazıcısı ürünü, stok yazıcısı stok adedini, indirim yazıcısı ürün indirimini işler; her yazıcı yalnız kendi servisine erişir.
 - **FR-018**: Ham marka metni, sistemin tanımlı markalarına eşlenmelidir; eşlenemeyen kayıt hatalı sayılır (FR-020).
 - **FR-019**: Yazım, servislerin mevcut arayüzleri (MCP araçları) üzerinden olmalıdır; hiçbir servisin veritabanına doğrudan erişilmez.
+- **FR-025**: İndirim yüzdeli kayıt (0 < yüzde ≤ 100) ürün indirimi olarak yazılır; indirim kodu domain'e yazılmaz, ara modelde kalır.
+- **FR-026**: Daha önce indirim yazılmış ürünün yeni feed'inde indirim yoksa, üründeki indirim kaldırılır.
 
 #### Hata yönetimi ve gözlemlenebilirlik
 
@@ -131,9 +136,10 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 ### Key Entities
 
 - **Tedarikçi (simüle)**: Dış ürün kaynağı kimliği; feed biçimi ve marka kümesiyle tanımlanır. Simülatörde yaşar.
-- **Tedarikçi Ürünü**: Simülatörün yayınladığı kaynak kayıt; harici kimlik, ad, açıklama, ham marka, fiyat, stok adedi.
+- **Tedarikçi Ürünü**: Simülatörün yayınladığı kaynak kayıt; harici kimlik, ad, açıklama, ham marka, fiyat, stok adedi,
+  opsiyonel indirim kodu + yüzdesi.
 - **Ara Kayıt (StagingRecord)**: Çekilen kaydın ingestion tarafındaki izi; tedarikçi + harici kimlik anahtarı, ham veri,
-  içerik izi (hash), normalize alanlar, opsiyonel barkod, durum, işlenme zamanı ve hata nedeni.
+  içerik izi (hash), normalize alanlar, opsiyonel barkod/indirim kodu/indirim yüzdesi, durum, işlenme zamanı ve hata nedeni.
 - **Aktarım Özeti (IngestionRun)**: Bir tetiklemenin sonucu; başlangıç/bitiş, tedarikçi kırılımlı sayaçlar ve genel durum.
 
 ## Success Criteria *(mandatory)*
@@ -146,6 +152,7 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 - **SC-004**: Feed'deki bozuk kayıtlar aktarımı durdurmaz; sağlam kayıtların tamamı işlenir, bozuklar nedenleriyle listelenir.
 - **SC-005**: Herhangi bir ara kaydın tedarikçiden geldiği ham hali, tedarikçiye tekrar gidilmeden görüntülenebilir.
 - **SC-006**: Yeni bir tedarikçi eklemek yalnız bir çevirici (adapter) ve veri seti gerektirir; ara depo şeması değişmez.
+- **SC-007**: İndirim yüzdeli kayıtların ürünlerinde aynı oranda indirim görünür; indirimi feed'den kalkan üründe kalkar.
 
 ## Assumptions
 
@@ -157,5 +164,8 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 - Aktarım tetiklemesi manueldir (istek üzerine); zamanlanmış çalıştırma bu kapsamda yoktur.
 - Veri setlerinin içeriğini (ürün listeleri) kullanıcı hazırlar; her set makul boyuttadır (feed başına ≤ ~100 kayıt).
 - Domain'e yazımda mevcut kimlik altyapısı (scope-tabanlı yetki, servis kimliği) yeniden kullanılır; yeni yetki modeli icat edilmez.
+- Aktarım tetikleme/görüntüleme uçları şimdilik anonimdir (kullanıcı kararı, 2026-07-22); domain yazımları scope korumalı kalır.
 - Her iki yeni proje sisteme Aspire üzerinden dahil olur ve "her context kendi veritabanı" ilkesine uyar.
-- Mevcut katalog seed mekanizmasının kaderi (kaldırma/koşullu devre dışı bırakma) planlama aşamasında kararlaştırılır.
+- Catalog SeedData tamamen kaldırılır; ürünler yalnız tedarikçi aktarımından gelir (kullanıcı kararı, 2026-07-22).
+- Feed verileri temiz ve tekdüzedir (nokta ondalık, temiz marka adı); bozuk kayıt yalnız eksik alanla simüle edilir.
+- İndirim kodu bilgilendirme amaçlıdır (kampanya etiketi); kupon/kullanıcıya özel indirim bu feature'ın kapsamı dışıdır.
