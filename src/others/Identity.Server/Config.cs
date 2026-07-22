@@ -40,7 +40,6 @@ public static class Config
         new ApiScope("discount.write", "Discount API - yazma"),
 
         // stock.api
-        new ApiScope("stock.read", "Stock API - okuma"),
         new ApiScope("stock.write", "Stock API - yazma (artir/azalt)"),
 
         // file.api: gorsel upload MCP tool'unu korur.
@@ -84,7 +83,7 @@ public static class Config
         },
         new ApiResource("stock.api", "Stock API")
         {
-            Scopes = { "stock.read", "stock.write" },
+            Scopes = { "stock.write" },
             UserClaims = ApiUserClaims,
         },
         // file.api: MCP upload yuzeyi file.write scope'uyla korunur.
@@ -112,7 +111,6 @@ public static class Config
             AllowedScopes =
             {
                 "discount.read",
-                "stock.read",
             },
         },
         // Admin m2m: UserKey issue/revoke uclarini cagirmak icin apikeys.manage tasir.
@@ -149,7 +147,7 @@ public static class Config
                 "order.read", "order.write",
                 "payment.read", "payment.write",
                 "discount.read", "discount.write",
-                "stock.read", "stock.write",
+                "stock.write",
                 "storefront.read",
             },
         },

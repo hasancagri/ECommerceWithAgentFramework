@@ -43,8 +43,7 @@ public static class GetStockByProductIdEndpoint
             var result = await bus.InvokeAsync<FeatureObjectResultModel<GetStockByProductId.GetStockResponse>>(
                 new GetStockByProductId.GetStockByProductIdQuery(productId));
             return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
-        }).WithName("GetStockByProductId")
-            .RequireAuthorization(AuthorizationScopes.StockRead);
+        }).WithName("GetStockByProductId");
         return group;
     }
 }

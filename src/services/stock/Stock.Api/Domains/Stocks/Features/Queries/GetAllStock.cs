@@ -2,7 +2,6 @@ namespace Stock.Api.Domains.Stocks.Features.Queries;
 
 public static class GetAllStock
 {
-    [RequiredScope(AuthorizationScopes.StockRead)]
     public record GetAllStockQuery();
 
     public class StockItemResponse
@@ -43,8 +42,7 @@ public static class GetAllStockQueryEndpoint
                     new GetAllStock.GetAllStockQuery());
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
             })
-            .WithName("GetAllStock")
-            .RequireAuthorization(AuthorizationScopes.StockRead);
+            .WithName("GetAllStock");
         return group;
     }
 }

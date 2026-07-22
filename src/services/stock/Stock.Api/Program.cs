@@ -55,7 +55,6 @@ builder.Services.AddApiVersioning(options =>
 
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
-    AuthorizationScopes.StockRead,
     AuthorizationScopes.StockWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
