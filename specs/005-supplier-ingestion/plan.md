@@ -44,9 +44,9 @@ Marten 9.5.0, Aspire, Duende IdentityServer (mevcut). Yeni NuGet paketi gerekmiy
   ince sarmalayıcıdır. IngestionAgent Wolverine'siz — ChatAgent emsali, gerekçe Complexity Tracking'te.
 - **IV. Result pattern**: Yeni command'lar Result döner; ingestion'da beklenen hatalar StagingRecord durumu +
   ErrorReason ile taşınır, exception fırlatılmaz.
-- **V. Scope-tabanlı yetki**: `ingestion.agent` client'ı (client_credentials) `catalog.write stock.write discount.write`
-  alır; domain yazımları bu scope'larla korunur. Ingestion uçları şimdilik anonim (kullanıcı kararı; tetikleme
-  domain'e doğrudan yazmaz, scope ileride eklenebilir). Rol yok.
+- **V. Scope-tabanlı yetki**: SAPMA (kullanıcı kararı, 2026-07-22): token yalnız alışveriş akışında (basket/order/payment).
+  Katalog/stok/indirim yazımları ve ingestion uçları şimdilik anonim; `ingestion.agent` M2M client iptal.
+  Yetki ileride eklenirse scope-tabanlı olur, rol yok (ilkenin özü korunur). Gerekçe Complexity Tracking'te.
 
 **Post-design re-check (Phase 1 sonrası)**: Sapmalar değişmedi; hepsi Complexity Tracking'te gerekçeli. GEÇER.
 
@@ -79,7 +79,7 @@ src/services/supplier/Supplier.Api/          # YENİ — tedarikçi simülatör�
 └── Datasets/{acme,nordic,tekno}.json        # kullanıcı verisi (kanonik JSON), açılışta seed
 
 src/agents/IngestionAgent/                   # YENİ — MAF Workflows ingestion uygulaması (Wolverine YOK)
-├── Program.cs                               # Marten (ingestionDb), auth, M2M MCP client'lar, workflow DI
+├── Program.cs                               # Marten (ingestionDb), tokensiz named MCP client'lar, workflow DI
 ├── Workflows/                               # Fetch → Adapter → StagingGate → agent executor'ları → Summary
 ├── Adapters/                                # ISupplierFeedAdapter + AcmeJson/NordicCsv/TeknoXml (ACL)
 ├── Agents/                                  # CatalogAgent, StockAgent, DiscountAgent (agent başına tek MCP)
@@ -88,9 +88,10 @@ src/agents/IngestionAgent/                   # YENİ — MAF Workflows ingestion
 
 src/services/catalog/Catalog.Api/            # DEĞİŞİR — create_product/update_product MCP tool'ları
 │                                            # Infrastructure/SeedData.cs SİLİNİR (Program.cs kaydı dahil)
+│                                            # yazma command'larından [RequiredScope] kaldırılır (şimdilik anonim)
 src/services/stock/Stock.Api/                # DEĞİŞİR — SetStock command + SetQuantity + set_stock MCP tool
-src/services/discount/Discount.Api/          # DEĞİŞİR — set_product_discount + remove_product_discount MCP tool
-src/others/Identity.Server/Config.cs         # DEĞİŞİR — ingestion.agent client (M2M, 3 write scope)
+src/services/discount/Discount.Api/          # DEĞİŞİR — set_product_discount + remove_product_discount MCP tool,
+│                                            # yazma command'larından [RequiredScope] kaldırılır (şimdilik anonim)
 src/others/Shared/.../SchemaConstants.cs     # DEĞİŞİR — Supplier + Ingestion şema adları
 src/aspire/AppHost/AppHost.cs                # DEĞİŞİR — supplierDb, ingestionDb, 2 yeni proje resource
 
@@ -110,3 +111,4 @@ uygulaması olarak ChatAgent emsaliyle `src/agents` altında. Testler mevcut `te
 | StagingRecord aggregate değil | Teknik iz/staging dokümanı (storefront read-model emsali) | Aggregate töreni invariant'sız veriye değer katmaz |
 | Üç ayrı yazıcı agent | Kullanıcı kararı: agent başına tek MCP, net sorumluluk | Tek agent üç MCP'yi karıştırır, izole test zorlaşır |
 | Yeni servis ama yeni bounded context değil | Simülatör context haritasına "external system" girer | Simülatörü BC saymak sahte bir domain yaratırdı |
+| Yazma uçları şimdilik anonim (İlke V sapması) | Kullanıcı kararı: token yalnız alışveriş akışında | M2M client + token handler bu aşamada tören olurdu; scope tek satırla geri eklenebilir |

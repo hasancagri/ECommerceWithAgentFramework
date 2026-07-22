@@ -28,19 +28,19 @@
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Tüm story'lerin kullandığı kimlik, host ve staging temelini kur
+**Purpose**: Tüm story'lerin kullandığı host, staging ve yazma-yolu temelini kur
 
 **⚠️ CRITICAL**: Bu faz bitmeden hiçbir user story başlayamaz
 
-- [ ] T006 [P] `ingestion.agent` client'ı ekle (client_credentials; catalog.write stock.write discount.write) — src/others/Identity.Server/Config.cs
+- [ ] T006 [P] Yazma yolunu anonimleştir: `[RequiredScope]` + `.RequireAuthorization` kaldır — Catalog.Api ve Discount.Api Features/Commands/*.cs
 - [ ] T007 Supplier.Api Program.cs: Marten (supplierDb/`supplierManagement`), v1 URL sürümleme, minimal API host — src/services/supplier/Supplier.Api/Program.cs
 - [ ] T008 IngestionAgent Program.cs: Marten (ingestionDb/`ingestionManagement`), OpenAI config, DI iskeleti — src/agents/IngestionAgent/Program.cs
 - [ ] T009 [P] `FeedRecord` ara modeli + kanonik JSON üretimi + SHA-256 ContentHash helper — src/agents/IngestionAgent/Staging/FeedRecord.cs
 - [ ] T010 [P] `StagingRecord` dokümanı (Id=`{supplier}:{externalId}`, RawPayload, durum enum'u) — src/agents/IngestionAgent/Staging/StagingRecord.cs
 - [ ] T011 [P] `IngestionRun` + `SupplierRunResult` dokümanları (tedarikçi kırılımlı sayaçlar) — src/agents/IngestionAgent/Staging/IngestionRun.cs
-- [ ] T012 M2M token handler (TokenInjectingHandler'ın client_credentials varyantı) + 3 named MCP HttpClient — src/agents/IngestionAgent/Program.cs
+- [ ] T012 Üç named MCP HttpClient (catalog/stock/discount; tokensiz — token yalnız alışveriş akışında) — src/agents/IngestionAgent/Program.cs
 
-**Checkpoint**: İki proje Aspire'da ayağa kalkar; DB'ler ve M2M kimlik hazır
+**Checkpoint**: İki proje Aspire'da ayağa kalkar; DB'ler hazır, domain yazma yolu anonim
 
 ---
 
@@ -118,7 +118,7 @@
 ### Implementation for User Story 3
 
 - [ ] T043 [US3] `ProductStock.SetQuantity(int)` davranış metodu + negatif adet için resource sabiti — src/services/stock/Stock.Api/Domains/Stocks/ProductStock.cs
-- [ ] T044 [US3] `SetStock` command slice (`[Transactional]`, `[RequiredScope(StockWrite)]`) — src/services/stock/Stock.Api/Domains/Stocks/Features/Commands/SetStock.cs
+- [ ] T044 [US3] `SetStock` command slice (`[Transactional]`, scope'suz — yazma yolu şimdilik anonim) — src/services/stock/Stock.Api/Domains/Stocks/Features/Commands/SetStock.cs
 - [ ] T045 [P] [US3] Stock MCP'ye `set_stock` tool'u — src/services/stock/Stock.Api/Domains/Stocks/StockMcpTools.cs
 - [ ] T046 [P] [US3] Catalog MCP'ye `update_product` tool'u (UpdateProductCommand sarmalar) — src/services/catalog/Catalog.Api/Domains/Products/ProductMcpTools.cs
 - [ ] T047 [P] [US3] Discount MCP'ye `remove_product_discount` tool'u (RemoveProductDiscountCommand sarmalar) — src/services/discount/Discount.Api/Domains/Discounts/DiscountMcpTools.cs

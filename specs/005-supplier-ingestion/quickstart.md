@@ -1,7 +1,8 @@
 # Quickstart: Tedarikçi Entegrasyonu Doğrulama (005)
 
 Uçtan uca doğrulama rehberi. Kontratlar için `contracts/`, model için `data-model.md`.
-Ingestion uçları anonimdir; token yalnız agent'ların domain yazımında (M2M, arka planda) kullanılır.
+Bu akışta token hiç kullanılmaz: ingestion uçları da domain yazımları da anonimdir (kullanıcı kararı, 2026-07-22).
+Token sistemde yalnız kullanıcı alışveriş akışında (basket/order/payment) kalır.
 
 ## Ön koşullar
 

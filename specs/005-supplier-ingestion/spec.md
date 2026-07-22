@@ -163,8 +163,8 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 - n8n kullanılmaz; akış orkestrasyonu kod içindedir (bu feature 2026-07-14 n8n kararını geçersiz kılar).
 - Aktarım tetiklemesi manueldir (istek üzerine); zamanlanmış çalıştırma bu kapsamda yoktur.
 - Veri setlerinin içeriğini (ürün listeleri) kullanıcı hazırlar; her set makul boyuttadır (feed başına ≤ ~100 kayıt).
-- Domain'e yazımda mevcut kimlik altyapısı (scope-tabanlı yetki, servis kimliği) yeniden kullanılır; yeni yetki modeli icat edilmez.
-- Aktarım tetikleme/görüntüleme uçları şimdilik anonimdir (kullanıcı kararı, 2026-07-22); domain yazımları scope korumalı kalır.
+- Token yalnız alışveriş akışındadır (basket/order/payment); katalog/stok/indirim yazımları şimdilik anonimdir (kullanıcı kararı, 2026-07-22).
+- Aktarım tetikleme/görüntüleme uçları da anonimdir; yeni yetki modeli icat edilmez, ileride eklenirse scope-tabanlı olur.
 - Her iki yeni proje sisteme Aspire üzerinden dahil olur ve "her context kendi veritabanı" ilkesine uyar.
 - Catalog SeedData tamamen kaldırılır; ürünler yalnız tedarikçi aktarımından gelir (kullanıcı kararı, 2026-07-22).
 - Feed verileri temiz ve tekdüzedir (nokta ondalık, temiz marka adı); bozuk kayıt yalnız eksik alanla simüle edilir.

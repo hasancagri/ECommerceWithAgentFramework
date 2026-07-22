@@ -28,12 +28,13 @@ Keşif 2026-07-22'de kod üzerinde yapıldı; tüm bulgular bu oturumda yeniden 
 - **Gerekçe**: "Her context kendi veritabanı" ilkesi; Marten zaten standart; deterministik Id upsert'ü basitleştirir.
 - **Alternatifler**: Domain servislerinin DB'sine yazmak — BC ihlali; dosya/queue — sorgulanabilirlik (FR-023) kaybolur.
 
-## R5. Domain'e yazım: MCP + M2M client
+## R5. Domain'e yazım: MCP, tokensiz (GÜNCELLENDİ 2026-07-22)
 
-- **Karar**: IdS'e `ingestion.agent` client'ı (client_credentials; `catalog.write stock.write discount.write`).
-  Token deseni WebApp `TokenService` emsali; MCP çağrısına token enjekte eden yeni M2M handler yazılır.
-- **Gerekçe**: FR-019 + mevcut kimlik altyapısının yeniden kullanımı (spec varsayımı); `m2m.client` şablon olarak hazır.
-- **Alternatifler**: Servis API'lerini doğrudan çağırmak — MCP-as-contract duruşuna aykırı; DB'ye yazmak — yasak.
+- **Karar**: Yazım MCP tool'larıyla, token KULLANILMAZ. Kullanıcı kararı: token yalnız alışveriş akışında
+  (basket/order/payment). Catalog/Discount yazma command'larından `[RequiredScope]` + endpoint
+  `.RequireAuthorization` kaldırılır; yeni `SetStock` scope'suz doğar. `ingestion.agent` M2M client İPTAL.
+- **Gerekçe**: FR-019 (MCP-as-contract) korunur; geliştirme sadeliği. Yetki gerekirse ileride scope-tabanlı eklenir.
+- **Alternatifler**: M2M client + token handler — ilk plan buydu, kullanıcı kararıyla iptal; DB'ye yazmak — yasak.
 
 ## R6. Yazıcı agent'lar: agent başına tek MCP
 
@@ -89,11 +90,11 @@ Keşif 2026-07-22'de kod üzerinde yapıldı; tüm bulgular bu oturumda yeniden 
 - **Gerekçe**: Kullanıcı kararı (2026-07-22): "SeedData istemiyorum"; katalog yalnız ingestion'dan beslenir.
 - **Alternatifler**: `Seed:Enabled` bayrağı — reddedildi; olduğu gibi bırakmak — seed + feed ürünleri karışırdı.
 
-## R14. Ingestion API yetkisi
+## R14. Ingestion API yetkisi (GÜNCELLENDİ 2026-07-22)
 
-- **Karar**: Ingestion uçlarının tamamı şimdilik anonim; `ingestion.write` scope'u ertelendi (kullanıcı kararı, 2026-07-22).
-  Domain yazımları yine korunur: agent'lar `ingestion.agent` M2M token'ıyla scope'lu command'ları çağırır.
-- **Gerekçe**: Tetikleme ucu domain'e doğrudan yazmaz; asıl yazımlar zaten `[RequiredScope]` arkasında. Geliştirme sadeliği.
+- **Karar**: Ingestion uçlarının tamamı anonim; domain yazımları da şimdilik anonim (bkz. R5).
+  Token sistemde yalnız kullanıcı alışveriş akışında (basket/order/payment) kalır.
+- **Gerekçe**: Kullanıcı kararı; geliştirme sadeliği. Anayasa V özü korunur: yetki eklenirse scope olur, rol asla.
 - **Alternatifler**: `ingestion.write` scope'u — ertelendi, ileride tek `.RequireAuthorization` satırıyla eklenebilir.
 
 ## R15. Eşzamanlılık (tek run)
