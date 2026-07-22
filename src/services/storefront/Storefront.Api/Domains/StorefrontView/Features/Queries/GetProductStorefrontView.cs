@@ -2,7 +2,6 @@ namespace Storefront.Api.Domains.StorefrontView.Features.Queries;
 
 public static class GetProductStorefrontView
 {
-    [RequiredScope(AuthorizationScopes.StorefrontRead)]
     public record GetProductStorefrontViewQuery(Guid ProductId);
 
     public class ProductStorefrontViewResponse
@@ -59,8 +58,7 @@ public static class GetProductStorefrontViewEndpoint
             .WithName("GetProductStorefrontView")
             .MapToApiVersion(1, 0)
             .Produces<GetProductStorefrontView.ProductStorefrontViewResponse>()
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization(AuthorizationScopes.StorefrontRead);
+            .Produces(StatusCodes.Status404NotFound);
 
         return group;
     }
