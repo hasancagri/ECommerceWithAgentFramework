@@ -32,7 +32,7 @@
 
 **⚠️ CRITICAL**: Bu faz bitmeden hiçbir user story başlayamaz
 
-- [ ] T006 [P] Yazma yolunu anonimleştir: `[RequiredScope]` + `.RequireAuthorization` kaldır — Catalog.Api ve Discount.Api Features/Commands/*.cs
+- [ ] T006 [P] Scope kaldır: Catalog+Discount yazma command'ları ve Discount okuma query'leri anonim olur — Catalog.Api/Discount.Api Features/*/*.cs
 - [ ] T007 Supplier.Api Program.cs: Marten (supplierDb/`supplierManagement`), v1 URL sürümleme, minimal API host — src/services/supplier/Supplier.Api/Program.cs
 - [ ] T008 IngestionAgent Program.cs: Marten (ingestionDb/`ingestionManagement`), OpenAI config, DI iskeleti — src/agents/IngestionAgent/Program.cs
 - [ ] T009 [P] `FeedRecord` ara modeli + kanonik JSON üretimi + SHA-256 ContentHash helper — src/agents/IngestionAgent/Staging/FeedRecord.cs

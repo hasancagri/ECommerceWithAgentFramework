@@ -21,7 +21,7 @@ Kaynağın kendisini simüle eden tipli, temiz kayıt (kanonik veri seti). Marte
 | DiscountCode | string? | Opsiyonel kampanya etiketi |
 | DiscountPercent | decimal? | Opsiyonel, 0–100 |
 
-- `Datasets/{acme,nordic,tekno}.json`'dan açılışta seed edilir (doluysa atlanır).
+- `Datasets/{acme,nordic,tekno}.json`'dan açılışta UPSERT ile seed edilir (dataset değişikliği restart'ta yansır; US3 testi buna dayanır).
 - Bozuk kayıt simülasyonu veri setinde eksik alanla yapılır (ör. boş Name, boş Brand).
 
 ## IngestionAgent — FeedRecord (ara model, tek başına kalıcı değil)
@@ -99,7 +99,7 @@ Completed + hash aynı     → dokunulmaz (Skipped sayacı artar, FR-012)
 ## Stock.Api — mevcut aggregate'e eklenen davranış
 
 - `ProductStock.SetQuantity(int quantity)`: mutlak adet atar; `quantity < 0` → Result hata (resource sabitiyle).
-- Yeni slice: `Features/Commands/SetStock.cs` (`[Transactional]`, `[RequiredScope(StockWrite)]`).
+- Yeni slice: `Features/Commands/SetStock.cs` (`[Transactional]`, scope'suz — yazma yolu şimdilik anonim).
 
 ## Değişmeyenler
 
