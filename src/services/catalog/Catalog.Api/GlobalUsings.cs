@@ -1,7 +1,6 @@
 global using Asp.Versioning.Builder;
 global using Asp.Versioning;
 global using Catalog.Api.Dependencies;
-global using Catalog.Api.Infrastructure;
 global using Common.Domains;
 global using Common.Exceptions;
 global using Common.Extensions;
@@ -26,7 +25,6 @@ global using Common;
 global using Microsoft.AspNetCore.Mvc;
 global using Wolverine.Attributes;
 global using System.ComponentModel;
-global using Catalog.Api.Domains.Products.Features.Agent;
 global using Catalog.Api.Domains.Products.Features.Commands;
 global using ModelContextProtocol.Server;
 global using Catalog.Api.Domains.Products.Features.Queries;

@@ -1,9 +1,11 @@
-# Contract: Tedarikçi Feed'leri (Supplier.Api)
+# Contract: Tedarikçi Feed'leri
 
-Üç uç, üç biçim; hepsi anonim (dış dünya simülasyonu), full snapshot döner (FR-003). Veriler temiz/tekdüzedir:
-nokta ondalık, temiz marka adları. İndirim alanları her şemada tanımlı ama boş bırakılabilir (opsiyonel).
+Üç tedarikçi, üç biçim, İKİ transport (R17): acme+nordic HTTP ucu (anonim), tekno DOSYA-bırakma.
+Full snapshot döner (FR-003). Veriler temiz/tekdüzedir: nokta ondalık, temiz marka adları.
+İndirim alanları her şemada tanımlı ama boş bırakılabilir (opsiyonel).
 
-Kanonik veri `Supplier.Api/Datasets/*.json`'dadır (kullanıcı hazırlar); uçlar bunu kendi biçiminde render eder.
+acme/nordic kanonik verisi `Supplier.Api/Datasets/*.json`'dadır; uçlar istek anında okuyup kendi biçiminde
+render eder (DB yok, R12). tekno'nun kaynağı doğrudan `data/supplier-drops/tekno.xml` dosyasıdır.
 
 ## acme — JSON API
 
@@ -37,10 +39,10 @@ NRD-2001;Air Max 90;Koşu ayakkabısı;Nike;129.90;40;;
 NRD-2002;Ultraboost;Koşu ayakkabısı;Adidas;149.90;35;SPOR15;15
 ```
 
-## tekno — XML feed
+## tekno — XML dosya-bırakma (HTTP ucu YOK, R17)
 
-`GET /v1/feeds/tekno` → `200 application/xml`. `<discount>` elemanı opsiyoneldir.
-Markalar: Lenovo, Dell, Hp, Asus, Xiaomi.
+Kaynak: `data/supplier-drops/tekno.xml` (IngestionAgent config'iyle bulunur; yol AppHost'tan env ile gelir).
+`<discount>` elemanı opsiyoneldir. Markalar: Lenovo, Dell, Hp, Asus, Xiaomi. Dosya yoksa tedarikçi `Unreachable`.
 
 ```xml
 <products>

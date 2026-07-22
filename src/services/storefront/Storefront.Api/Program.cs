@@ -24,9 +24,9 @@ builder.Host.UseWolverine(opts =>
     opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    opts.ListenToRabbitQueue(RabbitMqConstants.ProductChanged.Queues.Storefront).Sequential();
-    opts.ListenToRabbitQueue(RabbitMqConstants.StockChanged.Queues.Storefront).Sequential();
-    opts.ListenToRabbitQueue(RabbitMqConstants.DiscountChanged.Queues.Storefront).Sequential();
+    // TEK kuyruk (storefront.events): üç exchange de buraya bağlı; Sequential işleme sayesinde
+    // aynı view satırına eşzamanlı yazım olmaz — ConcurrencyException kaynağında çözülür.
+    opts.ListenToRabbitQueue(RabbitMqConstants.StorefrontEvents.Queue).Sequential();
 
     // Composite satirda kaynaklar-arasi eszamanli yazim cakismasi (optimistic concurrency) → retry.
     opts.OnException<JasperFx.ConcurrencyException>().RetryTimes(5);
@@ -37,6 +37,8 @@ builder.Host.UseWolverine(opts =>
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif bu sınıfı atlıyor (nedeni araştırılacak); açık kayıt garantili yol.
+    opts.Discovery.IncludeType(typeof(Storefront.Api.StorefrontEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>

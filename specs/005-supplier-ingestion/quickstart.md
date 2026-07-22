@@ -12,7 +12,7 @@ Token sistemde yalnız kullanıcı alışveriş akışında (basket/order/paymen
 
 ## Senaryo 1 — İlk aktarım (US1, SC-001, SC-007)
 
-1. Feed'leri gör: `GET <supplier-api>/v1/feeds/acme` (JSON), `/nordic` (CSV), `/tekno` (XML).
+1. Feed'leri gör: `GET <supplier-api>/v1/feeds/acme` (JSON), `/nordic` (CSV); tekno = `data/supplier-drops/tekno.xml` dosyası (R17).
 2. Tetikle: `curl -X POST <ingestion>/v1/ingestion/runs` → `202` + runId.
 3. Özet: `GET /v1/ingestion/runs/{runId}` → tüm sağlam kayıtlar `new`, tedarikçi kırılımlı.
 4. Katalog: `GET <catalog-api>/v1/products` → N ürün, markalar eşlenmiş; stoklar feed adediyle eşit.
@@ -25,8 +25,7 @@ Token sistemde yalnız kullanıcı alışveriş akışında (basket/order/paymen
 
 ## Senaryo 3 — Güncelleme (US3, SC-003)
 
-1. `Datasets/acme.json`'da tek ürünün fiyatını değiştir; Aspire panelinden `supplier-api`'yi yeniden başlat.
-   (Simülatör seed'i upsert çalışır — plan kararı; dataset değişikliği restart'ta DB'ye yansır.)
+1. `Datasets/acme.json`'da tek ürünün fiyatını değiştir. Restart GEREKMEZ: uçlar dosyayı istek anında okur (R12).
 2. Tetikle → özet: 1 `updated`, kalanlar `skipped`; katalogda yalnız o ürünün fiyatı değişmiş.
 3. İndirimi silinen kayıt varsa üründeki indirim kalkmış olmalı (FR-026).
 
@@ -43,8 +42,9 @@ Token sistemde yalnız kullanıcı alışveriş akışında (basket/order/paymen
 
 ## Senaryo 6 — Erişilemeyen tedarikçi (edge)
 
-1. Aspire panelinden `supplier-api`'yi durdurup tetikle.
-2. Run biter; özette tedarikçiler `Unreachable`, akış çökmez, run `Completed` kalır.
+1. Aspire panelinden `supplier-api`'yi durdurup tetikle → acme+nordic `Unreachable`.
+2. `data/supplier-drops/tekno.xml`'i geçici olarak yeniden adlandırıp tetikle → tekno `Unreachable`.
+3. Run biter; akış çökmez, run `Completed` kalır.
 
 ## Birim testleri
 

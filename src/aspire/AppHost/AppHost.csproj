@@ -22,6 +22,8 @@
       <ProjectReference Include="..\..\ui\WebApp\WebApp.csproj" />
       <ProjectReference Include="..\..\others\Identity.Server\Identity.Server.csproj" />
       <ProjectReference Include="..\..\agents\ChatAgent\ChatAgent.csproj" />
+      <ProjectReference Include="..\..\agents\IngestionAgent\IngestionAgent.csproj" />
+      <ProjectReference Include="..\..\services\supplier\Supplier.Api\Supplier.Api.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -44,4 +44,38 @@ public class ProductStockTests
 
         stock.Quantity.ShouldBe(-2);
     }
+
+    [Fact]
+    public void SetQuantity_SetsAbsoluteValue()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 10);
+
+        var result = stock.SetQuantity(42);
+
+        result.IsSuccess.ShouldBeTrue();
+        stock.Quantity.ShouldBe(42);
+    }
+
+    [Fact]
+    public void SetQuantity_Zero_IsAllowed()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 10);
+
+        var result = stock.SetQuantity(0);
+
+        result.IsSuccess.ShouldBeTrue();
+        stock.Quantity.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SetQuantity_Negative_ReturnsError_AndDoesNotChangeQuantity()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 10);
+
+        var result = stock.SetQuantity(-1);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_QUANTITY_CANNOT_BE_NEGATIVE);
+        stock.Quantity.ShouldBe(10);
+    }
 }

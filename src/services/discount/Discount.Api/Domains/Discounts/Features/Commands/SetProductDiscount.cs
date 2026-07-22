@@ -2,7 +2,6 @@ namespace Discount.Api.Domains.Discounts.Features.Commands;
 
 public static class SetProductDiscount
 {
-    [RequiredScope(AuthorizationScopes.DiscountWrite)]
     public record SetProductDiscountCommand(Guid ProductId, decimal Rate);
 
     public class SetProductDiscountResponse
@@ -74,8 +73,7 @@ public static class SetProductDiscountCommandEndpoint
             .WithName("SetProductDiscount")
             .MapToApiVersion(1, 0)
             .Produces<SetProductDiscount.SetProductDiscountResponse>()
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .RequireAuthorization(AuthorizationScopes.DiscountWrite);
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
 
         return group;
     }

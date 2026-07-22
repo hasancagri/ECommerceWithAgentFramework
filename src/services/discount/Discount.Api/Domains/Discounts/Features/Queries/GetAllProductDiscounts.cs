@@ -2,7 +2,6 @@ namespace Discount.Api.Domains.Discounts.Features.Queries;
 
 public static class GetAllProductDiscounts
 {
-    [RequiredScope(AuthorizationScopes.DiscountRead)]
     public record GetAllProductDiscountsQuery();
 
     public class ProductDiscountResponse
@@ -45,8 +44,7 @@ public static class GetAllProductDiscountsQueryEndpoint
                     new GetAllProductDiscounts.GetAllProductDiscountsQuery());
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
             })
-            .WithName("GetAllProductDiscounts")
-            .RequireAuthorization(AuthorizationScopes.DiscountRead);
+            .WithName("GetAllProductDiscounts");
         return group;
     }
 }

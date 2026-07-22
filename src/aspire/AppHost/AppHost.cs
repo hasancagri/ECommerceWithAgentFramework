@@ -22,6 +22,7 @@ var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
+var ingestionDb = postgres.AddDatabase("ingestionDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -105,6 +106,22 @@ web.WithReference(basketApi)
 var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(gateway)
     .WaitFor(gateway);
+
+// Tedarikçi simülatörü: DB'siz (dataset dosyalarını istek anında okur — 005/R12).
+var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
+
+// Ingestion: staging DB (ingestionDb) + MCP yazımı için domain servisleri.
+builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
+    .WithReference(ingestionDb)
+    .WithReference(supplierApi)
+    .WithReference(catalogApi)
+    .WithReference(stockApi)
+    .WithReference(discountApi)
+    .WaitFor(ingestionDb)
+    .WaitFor(supplierApi)
+    .WaitFor(catalogApi)
+    .WaitFor(stockApi)
+    .WaitFor(discountApi);
 
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);

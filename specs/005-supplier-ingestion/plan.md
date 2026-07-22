@@ -70,13 +70,14 @@ specs/005-supplier-ingestion/
 ### Source Code (repository root)
 
 ```text
-src/services/supplier/Supplier.Api/          # YENİ — tedarikçi simülatörü (bilinçli DDD'siz)
-├── Program.cs                               # Marten (supplierDb), dataset seed, minimal API
+src/services/supplier/Supplier.Api/          # YENİ — tedarikçi simülatörü (bilinçli DDD'siz, DB'SİZ — R12)
+├── Program.cs                               # minimal API host (Marten yok), in-proc Wolverine
 ├── Domains/Feeds/
-│   ├── SupplierProduct.cs                   # düz doküman (aggregate değil)
-│   ├── FeedEndpointExtension.cs             # /v1/feeds/{acme|nordic|tekno}
-│   └── Features/Queries/Get{Acme|Nordic|Tekno}Feed.cs   # format render (JSON/CSV/XML)
-└── Datasets/{acme,nordic,tekno}.json        # kullanıcı verisi (kanonik JSON), açılışta seed
+│   ├── SupplierProduct.cs                   # dataset DTO'su (Marten dokümanı değil)
+│   ├── FeedEndpointExtension.cs             # /v1/feeds/{acme|nordic} (tekno HTTP'de değil — R17)
+│   └── Features/Queries/Get{Acme|Nordic}Feed.cs   # dosya → format render (JSON/CSV)
+├── Datasets/{acme,nordic}.json              # kullanıcı verisi (kanonik JSON), istek anında okunur
+data/supplier-drops/tekno.xml                # tekno = dosya-bırakma tedarikçisi (R17)
 
 src/agents/IngestionAgent/                   # YENİ — MAF Workflows ingestion uygulaması (Wolverine YOK)
 ├── Program.cs                               # Marten (ingestionDb), tokensiz named MCP client'lar, workflow DI

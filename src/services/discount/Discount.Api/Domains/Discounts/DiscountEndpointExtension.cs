@@ -9,8 +9,7 @@ public static class DiscountEndpointExtension
             .GetDiscountByProductIdGroupItemEndpoint()
             .SetProductDiscountGroupItemEndpoint()
             .RemoveProductDiscountGroupItemEndpoint()
-            .GetAllProductDiscountsGroupItemEndpoint()
-            .RequireAuthorization();
+            .GetAllProductDiscountsGroupItemEndpoint();
 
     }
 }

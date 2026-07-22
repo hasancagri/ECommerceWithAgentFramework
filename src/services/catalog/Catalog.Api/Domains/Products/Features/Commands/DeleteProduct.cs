@@ -3,7 +3,6 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 public static class DeleteProduct
 {
     [InvalidatesCache("catalog-products")]
-    [RequiredScope(AuthorizationScopes.CatalogWrite)]
     public record DeleteProductCommand(Guid Id);
 
     public class DeleteProductResponse
@@ -46,8 +45,7 @@ public static class DeleteProductCommandEndpoint
                     new DeleteProduct.DeleteProductCommand(id));
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
             })
-            .WithName("DeleteProduct")
-            .RequireAuthorization(AuthorizationScopes.CatalogWrite);
+            .WithName("DeleteProduct");
         return group;
     }
 }

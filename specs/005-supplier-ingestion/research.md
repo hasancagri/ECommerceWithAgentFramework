@@ -77,12 +77,22 @@ Keşif 2026-07-22'de kod üzerinde yapıldı; tüm bulgular bu oturumda yeniden 
 - **Gerekçe**: Feed'de SKU yok; harici kimlik zaten tedarikçi-öneki taşıyan benzersiz bir koddur.
 - **Alternatifler**: `{SUPPLIER}-{externalId}` birleşimi — kimlikte önek zaten var, çift önek üretir.
 
-## R12. Veri setleri ve temizlik
+## R12. Veri setleri ve temizlik (GÜNCELLENDİ 2026-07-22, implement)
 
-- **Karar**: Kanonik veri `Supplier.Api/Datasets/*.json` (kullanıcı hazırlar); açılışta `supplierDb`'ye seed edilir.
-  Uçlar formatı isteğe göre render eder (JSON/CSV/XML). Veriler temiz/tekdüze; bozuk kayıt yalnız eksik alanla simüle edilir.
-- **Gerekçe**: Kullanıcı kararı (2026-07-22): format pisliğiyle uğraşılmayacak; tek kanonik dosya formatı bakımı kolaylaştırır.
-- **Alternatifler**: Format-özgü dataset dosyaları — üç ayrı el bakımı; kirli veri — kullanıcı istemedi.
+- **Karar**: Simülatör DB'SİZ — `supplierDb`/Marten/seed YOK. Kanonik veri dosyada yaşar; uçlar istek anında okuyup render eder.
+  acme/nordic: `Supplier.Api/Datasets/{acme,nordic}.json`. tekno: `data/supplier-drops/tekno.xml` (dosya-bırakma, bkz. R17).
+- **Gerekçe**: Kullanıcı kararı. DB kopyası hiçbir senaryoya hizmet etmiyordu; upsert seed "dataset'ten silinen kayıt DB'de
+  kalır" hatası taşıyordu. Dosyadan okumada dataset değişikliği restart'sız yansır (Senaryo 3 sadeleşir).
+- **Alternatifler**: supplierDb + açılış seed'i — ilk plan; bayat kayıt kusuru + tören nedeniyle iptal.
+
+## R17. Tedarikçi başına transport + uç (YENİ 2026-07-22, implement)
+
+- **Karar**: Transport ve format iki ayrı eksendir, ikisi de TEDARİKÇİ BAŞINA tanımlanır. Generic `/feeds/{code}` ucu YOK;
+  her HTTP tedarikçisinin kendi ucu var. tekno HTTP'den çıkarıldı: XML DOSYA ile gelir (`data/supplier-drops/tekno.xml`).
+  IngestionAgent fetch tanımı: `SupplierSource(Code, Kind: HttpUrl|FilePath, Address)`; adapter yalnız ham gövdeyi çözer.
+- **Gerekçe**: Kullanıcı kararı: "tedarikçi bana XML dosya ile de gelebilir, URL ile de; generic tutarsam tedarikçi
+  değişikliğinde başım ağrır." Her tedarikçi kendi dış sözleşmesidir (ACL felsefesi); iki transport da canlı test edilir.
+- **Alternatifler**: Format-eksenli generic route — erken soyutlama, reddedildi; üçü de HTTP — dosya yolu ölü kod kalırdı.
 
 ## R13. Catalog SeedData
 

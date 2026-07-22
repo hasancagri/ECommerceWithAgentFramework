@@ -97,10 +97,10 @@ Feed'de bozuk/eksik kayıtlar vardır. Bunlar akışı durdurmaz; nedenleriyle i
 
 #### Tedarikçi simülatörü
 
-- **FR-001**: Sistem, üç tedarikçi kimliğini tek bir simülatör servisiyle sunmalıdır; her tedarikçinin feed'i ayrı uçtan çekilir.
-- **FR-002**: Üç feed üç farklı biçimde yayınlanmalıdır: A = JSON API, B = CSV dump, C = XML feed.
+- **FR-001**: Üç tedarikçi kimliği simüle edilir; HTTP tedarikçilerinin her biri AYRI uçtan çekilir (generic uç yok, R17).
+- **FR-002**: Üç feed üç biçim + iki transport: A = JSON API (HTTP), B = CSV dump (HTTP), C = XML dosya-bırakma (R17).
 - **FR-003**: Her feed, tedarikçinin TÜM ürünlerini içeren tam bir anlık görüntü (full feed) olmalıdır; delta/artımlı feed yoktur.
-- **FR-004**: Veri setleri kullanıcı tarafından hazırlanır ve simülatörün kendi veritabanına açılışta yüklenir (seed).
+- **FR-004**: Veri setleri kullanıcı tarafından dosya olarak hazırlanır; simülatör DB'sizdir, uçlar dosyayı istek anında okur (R12).
 - **FR-005**: Kataloglar marka bazında ayrık olmalıdır: A = Apple/Samsung/Sony, B = Nike/Adidas, C = Lenovo/Dell/Hp/Asus/Xiaomi.
 - **FR-006**: Feed kaydı en az şunları taşır: harici kimlik, ad, açıklama, ham marka, fiyat, stok adedi; opsiyonel indirim kodu + yüzdesi.
 
