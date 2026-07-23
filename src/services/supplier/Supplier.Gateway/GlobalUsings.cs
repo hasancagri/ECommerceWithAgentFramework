@@ -1,0 +1,8 @@
+global using Marten;
+global using Marten.Newtonsoft;
+global using Shared;
+global using Shared.Utils.Constants;
+global using Supplier.Gateway.Domains.Feeds;
+global using System;
+global using Weasel.Core;
+global using Wolverine;

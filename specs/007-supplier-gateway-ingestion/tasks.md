@@ -15,9 +15,9 @@
 
 ## Phase 1: Setup (proje iskeleti)
 
-- [ ] T001 Supplier.Gateway projesini oluştur: src/services/supplier/Supplier.Gateway/ (csproj: ServiceDefaults+Shared ref; Marten, WolverineFx.RabbitMQ) + slnx kaydı
-- [ ] T002 [P] tests/Supplier.Gateway.Tests projesini oluştur (xUnit + Shouldly) + slnx kaydı
-- [ ] T003 AppHost'a supplierGatewayDb ve supplier-gateway resource'unu ekle (supplier-api + rabbit + db ref/WaitFor) — src/aspire/AppHost/AppHost.cs
+- [X] T001 Supplier.Gateway projesini oluştur: src/services/supplier/Supplier.Gateway/ (csproj: ServiceDefaults+Shared ref; Marten, WolverineFx.RabbitMQ) + slnx kaydı
+- [X] T002 [P] tests/Supplier.Gateway.Tests projesini oluştur (xUnit + Shouldly) + slnx kaydı
+- [X] T003 AppHost'a supplierGatewayDb ve supplier-gateway resource'unu ekle (supplier-api + rabbit + db ref/WaitFor) — src/aspire/AppHost/AppHost.cs
 
 ---
 
@@ -25,9 +25,9 @@
 
 **⚠️ CRITICAL**: Kanonik kontrat bitmeden story fazları başlayamaz.
 
-- [ ] T004 SupplierProductSnapshotReceived record'unu ekle — src/others/Shared/IntegrationEvents.cs (şema: contracts/supplier-product-snapshot-event.md)
-- [ ] T005 [P] RabbitMqConstants.SupplierProductSnapshot ekle (Exchange/Queue/DeadLetter) — src/others/Shared/RabbitMqConstants.cs
-- [ ] T006 [P] SchemaConstants.SupplierGatewaySchemaName ekle — src/others/Shared/Utils/Constants/SchemaConstants.cs
+- [X] T004 SupplierProductSnapshotReceived record'unu ekle — src/others/Shared/IntegrationEvents.cs (şema: contracts/supplier-product-snapshot-event.md)
+- [X] T005 [P] RabbitMqConstants.SupplierProductSnapshot ekle (Exchange/Queue/DeadLetter) — src/others/Shared/RabbitMqConstants.cs
+- [X] T006 [P] SchemaConstants.SupplierGatewaySchemaName ekle — src/others/Shared/Utils/Constants/SchemaConstants.cs
 
 **Checkpoint**: Kontrat derleniyor; US1 ve US2 paralel başlayabilir.
 
@@ -39,15 +39,15 @@
 
 **Independent Test**: Gateway tek başına; ilk çekim N mesaj, değişmemiş ikinci çekim 0 mesaj (quickstart S1-S3'ün Gateway yarısı).
 
-- [ ] T007 [US1] FeedSnapshot dokümanı: Id/Content/PublishedAtUtc + IsUnchanged/Absorb — src/services/supplier/Supplier.Gateway/Domains/Feeds/FeedSnapshot.cs
-- [ ] T008 [P] [US1] SupplierFeedAdapter: tedarikçi tel şekli → kanonik event (DiscountCode düşer) — .../Domains/Feeds/SupplierFeedAdapter.cs
-- [ ] T009 [US1] FeedPullService: kilit, fetch (erişilemez/boş feed sessiz geçer, FR-008), ilki-kazanır dedup, kapı, ÖNCE publish SONRA save — .../FeedPullService.cs
-- [ ] T010 [US1] Program.cs: Marten (FeedSnapshot, supplierGatewayManagement), Wolverine publish→exchange, feed HttpClient, periyot config — .../Program.cs
-- [ ] T011 [US1] FeedScheduler (BackgroundService, PeriodicTimer 30 dk + ilk gecikme) — .../Domains/Feeds/FeedScheduler.cs
-- [ ] T012 [US1] POST /v1/feeds/pull ucu (202/409, contracts/supplier-gateway-api.md) — .../Domains/Feeds/FeedEndpointExtension.cs
-- [ ] T013 [P] [US1] FeedSnapshot kapı testleri: yok→yayınla, aynı→sus, farklı→yayınla — tests/Supplier.Gateway.Tests/FeedSnapshotTests.cs
-- [ ] T014 [P] [US1] Adapter alan eşleme testleri (kanonik dönüşüm, DiscountCode dışarıda) — tests/Supplier.Gateway.Tests/SupplierFeedAdapterTests.cs
-- [ ] T015 [P] [US1] Feed uç durum testleri: erişilemez/boş feed sessiz (FR-008), feed içi mükerrerde ilki kazanır (FR-007) — tests/Supplier.Gateway.Tests/FeedPullTests.cs
+- [X] T007 [US1] FeedSnapshot dokümanı: Id/Content/PublishedAtUtc + IsUnchanged/Absorb — src/services/supplier/Supplier.Gateway/Domains/Feeds/FeedSnapshot.cs
+- [X] T008 [P] [US1] SupplierFeedAdapter: tedarikçi tel şekli → kanonik event (DiscountCode düşer) — .../Domains/Feeds/SupplierFeedAdapter.cs
+- [X] T009 [US1] FeedPullService: kilit, fetch (erişilemez/boş feed sessiz geçer, FR-008), ilki-kazanır dedup, kapı, ÖNCE publish SONRA save — .../FeedPullService.cs
+- [X] T010 [US1] Program.cs: Marten (FeedSnapshot, supplierGatewayManagement), Wolverine publish→exchange, feed HttpClient, periyot config — .../Program.cs
+- [X] T011 [US1] FeedScheduler (BackgroundService, PeriodicTimer 30 dk + ilk gecikme) — .../Domains/Feeds/FeedScheduler.cs
+- [X] T012 [US1] POST /v1/feeds/pull ucu (202/409, contracts/supplier-gateway-api.md) — .../Domains/Feeds/FeedEndpointExtension.cs
+- [X] T013 [P] [US1] FeedSnapshot kapı testleri: yok→yayınla, aynı→sus, farklı→yayınla — tests/Supplier.Gateway.Tests/FeedSnapshotTests.cs
+- [X] T014 [P] [US1] Adapter alan eşleme testleri (kanonik dönüşüm, DiscountCode dışarıda) — tests/Supplier.Gateway.Tests/SupplierFeedAdapterTests.cs
+- [X] T015 [P] [US1] Feed uç durum testleri: erişilemez/boş feed sessiz (FR-008), feed içi mükerrerde ilki kazanır (FR-007) — tests/Supplier.Gateway.Tests/FeedPullTests.cs
 
 **Checkpoint**: Kuyruk dolar/boş kalır; tüketici olmadan da management UI'dan doğrulanabilir.
 
