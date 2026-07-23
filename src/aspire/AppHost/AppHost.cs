@@ -22,7 +22,6 @@ var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
-var ingestionDb = postgres.AddDatabase("ingestionDb");
 var supplierGatewayDb = postgres.AddDatabase("supplierGatewayDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
@@ -120,16 +119,12 @@ builder.AddProject<Projects.Supplier_Gateway>("supplier-gateway")
     .WaitFor(supplierApi)
     .WaitFor(rabbit);
 
-// Ingestion: staging DB (ingestionDb) + MCP yazımı için domain servisleri + kuyruk tüketimi (007).
+// Ingestion (007): DB'siz saf tüketici — kuyruktan okur, MCP ile domain servislerine yazar.
 builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
-    .WithReference(ingestionDb)
-    .WithReference(supplierApi)
     .WithReference(rabbit)
     .WithReference(catalogApi)
     .WithReference(stockApi)
     .WithReference(discountApi)
-    .WaitFor(ingestionDb)
-    .WaitFor(supplierApi)
     .WaitFor(rabbit)
     .WaitFor(catalogApi)
     .WaitFor(stockApi)

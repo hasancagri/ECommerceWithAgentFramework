@@ -1,5 +1,4 @@
 using IngestionAgent.Workflows._01_CatalogWrite;
-using IngestionAgent.Workflows._02_DomainWrite.Agents;
 using IngestionAgent.Workflows._02_StockWrite;
 using IngestionAgent.Workflows._03_DiscountWrite;
 

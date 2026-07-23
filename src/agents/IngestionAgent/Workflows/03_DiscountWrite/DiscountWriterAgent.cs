@@ -1,7 +1,7 @@
-namespace IngestionAgent.Workflows._02_DomainWrite.Agents;
+namespace IngestionAgent.Workflows._03_DiscountWrite;
 
-// İndirim yazıcısı: yalnız discount MCP'sine bağlı (FR-016).
-// set_product_discount upsert'tir; remove yalnız "indirim kalktı" kararında çağrılır.
+// İndirim yazıcısı: yalnız discount MCP'sine bağlı (FR-016/005).
+// set_product_discount upsert'tir; remove agent yüzünde idempotenttir (FR-022).
 public sealed class DiscountWriterAgent(McpConnection connection)
 {
     public async Task<ToolOutcome> SetAsync(Guid productId, decimal rate, CancellationToken ct)

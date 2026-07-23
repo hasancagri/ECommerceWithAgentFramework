@@ -94,11 +94,11 @@
 
 **Independent Test**: Agent'ta Staging/Run/Feed tipleri ve Marten referansı yok; build + test temiz; akış çalışıyor (quickstart S7).
 
-- [ ] T029 [P] [US4] Sil: StagingRecord.cs, IngestionRun.cs, FeedRecord.cs (Domains/) + tests/IngestionAgent.Tests/StagingRecordTests.cs
-- [ ] T030 [US4] Sil: FeedClient.cs, IngestionScheduler.cs, IngestionRunService.cs, 01_StagingGate/, Api/IngestionEndpoints.cs — src/agents/IngestionAgent/
-- [ ] T031 [US4] Agent Program.cs: Marten/ingestionDb sökümü, Feeds HttpClient kaldır, csproj'dan Marten referansı çıkar
-- [ ] T032 [US4] AppHost: ingestionDb resource'u ve ingestion-agent'ın supplier-api/db referanslarını kaldır — src/aspire/AppHost/AppHost.cs
-- [ ] T033 [US4] SchemaConstants.IngestionSchemaName'i sil; çözüm geneli derleme + test (kırık referans taraması)
+- [X] T029 [P] [US4] Sil: StagingRecord.cs, IngestionRun.cs, FeedRecord.cs (Domains/) + tests/IngestionAgent.Tests/StagingRecordTests.cs
+- [X] T030 [US4] Sil: FeedClient.cs, IngestionScheduler.cs, IngestionRunService.cs, 01_StagingGate/, Api/IngestionEndpoints.cs — src/agents/IngestionAgent/
+- [X] T031 [US4] Agent Program.cs: Marten/ingestionDb sökümü, Feeds HttpClient kaldır, csproj'dan Marten referansı çıkar
+- [X] T032 [US4] AppHost: ingestionDb resource'u ve ingestion-agent'ın supplier-api/db referanslarını kaldır — src/aspire/AppHost/AppHost.cs
+- [X] T033 [US4] SchemaConstants.IngestionSchemaName'i sil; çözüm geneli derleme + test (kırık referans taraması)
 
 **Checkpoint**: Agent DB'siz ve sade; tüm akış yalnız yeni yoldan çalışıyor.
 

@@ -1,6 +1,6 @@
-namespace IngestionAgent.Workflows._02_DomainWrite.Agents;
+namespace IngestionAgent.Workflows._02_StockWrite;
 
-// Stok yazıcısı: yalnız stock MCP'sine bağlı (FR-016), tek tool'u set_stock.
+// Stok yazıcısı: yalnız stock MCP'sine bağlı (FR-016/005), tek tool'u set_stock.
 public sealed class StockWriterAgent(McpConnection connection)
 {
     public async Task<ToolOutcome> SetStockAsync(Guid productId, int quantity, CancellationToken ct)

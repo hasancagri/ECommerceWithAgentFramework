@@ -1,4 +1,4 @@
-using IngestionAgent.Workflows._02_DomainWrite.Agents;
+using IngestionAgent.Workflows._01_CatalogWrite;
 
 namespace IngestionAgent.Workflows._02_StockWrite;
 

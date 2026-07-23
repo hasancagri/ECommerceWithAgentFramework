@@ -10,6 +10,5 @@ public abstract class SchemaConstants
     public const string CatalogSchemaName = "catalogManagement";
     public const string BasketSchemaName = "basketManagement";
     public const string StorefrontSchemaName = "storefrontManagement";
-    public const string IngestionSchemaName = "ingestionManagement";
     public const string SupplierGatewaySchemaName = "supplierGatewayManagement";
 }
