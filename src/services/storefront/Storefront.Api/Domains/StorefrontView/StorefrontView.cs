@@ -12,7 +12,11 @@ public class StorefrontView
     public Guid ProductId { get; private set; }
 
     // Catalog kaynagi — henuz gelmediyse null (kismi satir). Name null = "Catalog raporlamadi".
+    // 006: Description/Price/Brand eklendi; Price null = fat veri gelmedi (dolu-satir filtresinin isareti).
     public string? Name { get; private set; }
+    public string? Description { get; private set; }
+    public decimal? Price { get; private set; }
+    public string? Brand { get; private set; }
     public string? ImageUrl { get; private set; }
     public bool IsDeleted { get; private set; }
 
@@ -28,9 +32,13 @@ public class StorefrontView
     public static StorefrontView Create(Guid productId) =>
         new() { ProductId = productId };
 
-    public void ApplyCatalog(string name, string? imageUrl, bool isDeleted)
+    public void ApplyCatalog(string name, string description, decimal price, string brand,
+        string? imageUrl, bool isDeleted)
     {
         Name = name;
+        Description = description;
+        Price = price;
+        Brand = brand;
         ImageUrl = imageUrl;
         IsDeleted = isDeleted;
     }
