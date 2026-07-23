@@ -82,7 +82,7 @@
 
 - [X] T026 [US3] IngestionWriteException: kayıt kimliği + hata kodu bağlamı taşır — src/agents/IngestionAgent/Infrastructure/IngestionWriteException.cs
 - [X] T027 [US3] Agent Program.cs: kademeli sınırlı retry (research R6) + MoveToErrorQueue + DLQ tanımı (RabbitMqConstants adlarıyla) — src/agents/IngestionAgent/Program.cs
-- [ ] T028 [US3] Canlı doğrulama: quickstart S4 (retry), S5 (DLQ inceleme), S6 (yeniden teslim zararsız)
+- [X] T028 [US3] Canlı doğrulama: retry+DLQ+requeue geçti; sessiz-ack bug'ı bulunup düzeltildi (MCP timeout + Invalidate + Completed guard)
 
 **Checkpoint**: Dayanıklılık senaryoları canlı doğrulandı.
 

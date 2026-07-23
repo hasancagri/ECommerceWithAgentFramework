@@ -16,12 +16,39 @@ file sealed record ToolMessage(string? Code);
 file sealed record ToolResponse(bool IsSuccess, ToolData? Data, List<ToolMessage>? Messages);
 
 // MCP tool çağrısı + sonuç çözümü. Çağıran biziz — "tool çağrılmadı" belirsizliği yok.
+// Bağlantı + çağrı KENDİ zaman aşımıyla sarılır (Wolverine'in 60sn execution timeout'undan kısa):
+// asılı istek (kapalı servisi bekleten Aspire proxy'si) dış iptalle yutulup mesaj yanlışlıkla
+// başarılı ack'leniyordu (S4 bulgusu) — artık burada hataya dönüşür → retry/DLQ politikası işler.
 public static class McpToolInvoker
 {
+    private static readonly TimeSpan CallTimeout = TimeSpan.FromSeconds(15);
+
     public static async Task<ToolOutcome> CallAsync(
-        this McpClient client, string tool, IReadOnlyDictionary<string, object?> args, CancellationToken ct)
+        this McpConnection connection, string tool, IReadOnlyDictionary<string, object?> args, CancellationToken ct)
     {
-        var result = await client.CallToolAsync(tool, args, cancellationToken: ct);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        cts.CancelAfter(CallTimeout);
+
+        McpClient? client = null;
+        try
+        {
+            client = await connection.GetAsync(cts.Token);
+            return Parse(await client.CallToolAsync(tool, args, cancellationToken: cts.Token));
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            if (client is not null) connection.Invalidate(client);
+            throw new TimeoutException($"MCP tool '{tool}' {CallTimeout.TotalSeconds:0}s içinde yanıt vermedi");
+        }
+        catch
+        {
+            if (client is not null) connection.Invalidate(client);
+            throw;
+        }
+    }
+
+    private static ToolOutcome Parse(CallToolResult result)
+    {
         var text = result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text;
 
         if (result.IsError == true)

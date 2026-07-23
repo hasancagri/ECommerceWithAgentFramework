@@ -6,8 +6,7 @@ public sealed class DiscountWriterAgent(McpConnection connection)
 {
     public async Task<ToolOutcome> SetAsync(Guid productId, decimal rate, CancellationToken ct)
     {
-        var client = await connection.GetAsync(ct);
-        return await client.CallAsync("set_product_discount", new Dictionary<string, object?>
+        return await connection.CallAsync("set_product_discount", new Dictionary<string, object?>
         {
             ["productId"] = productId,
             ["rate"] = rate
@@ -16,8 +15,7 @@ public sealed class DiscountWriterAgent(McpConnection connection)
 
     public async Task<ToolOutcome> RemoveAsync(Guid productId, CancellationToken ct)
     {
-        var client = await connection.GetAsync(ct);
-        return await client.CallAsync("remove_product_discount", new Dictionary<string, object?>
+        return await connection.CallAsync("remove_product_discount", new Dictionary<string, object?>
         {
             ["productId"] = productId
         }, ct);

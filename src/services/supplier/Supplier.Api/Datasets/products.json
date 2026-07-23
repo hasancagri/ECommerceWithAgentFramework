@@ -47,7 +47,7 @@
     "price": 99.9,
     "stockQuantity": 35,
     "discountCode": "SUMMER25",
-    "discountPercent": 10
+    "discountPercent": 14
   },
   {
     "externalId": "SUP-1006",
@@ -94,10 +94,10 @@
     "name": "Apple Model 10",
     "description": "Apple ürünü",
     "brand": "Apple",
-    "price": 149.9,
+    "price": 154.9,
     "stockQuantity": 20,
     "discountCode": "SUMMER25",
-    "discountPercent": 15
+    "discountPercent": 25
   },
   {
     "externalId": "SUP-1011",

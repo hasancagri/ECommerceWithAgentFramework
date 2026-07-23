@@ -5,8 +5,7 @@ public sealed class StockWriterAgent(McpConnection connection)
 {
     public async Task<ToolOutcome> SetStockAsync(Guid productId, int quantity, CancellationToken ct)
     {
-        var client = await connection.GetAsync(ct);
-        return await client.CallAsync("set_stock", new Dictionary<string, object?>
+        return await connection.CallAsync("set_stock", new Dictionary<string, object?>
         {
             ["productId"] = productId,
             ["quantity"] = quantity

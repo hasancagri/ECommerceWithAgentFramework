@@ -31,5 +31,10 @@ public sealed class SupplierSnapshotHandler
 
         if (job.Failure is not null)
             throw new IngestionWriteException(message.ExternalId, job.Failure);
+
+        // Dış iptal (Wolverine 60sn execution timeout) RunAsync'ten Failure'sız dönebiliyor;
+        // zincir sonuna ulaşmamış run başarı DEĞİLDİR — sessiz ack yerine retry/DLQ (S4 bulgusu).
+        if (!job.Completed)
+            throw new IngestionWriteException(message.ExternalId, "WORKFLOW_INCOMPLETE");
     }
 }

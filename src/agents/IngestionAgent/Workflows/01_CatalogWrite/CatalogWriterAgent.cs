@@ -9,8 +9,7 @@ public sealed class CatalogWriterAgent(McpConnection connection)
     public async Task<ToolOutcome> UpsertProductAsync(
         IntegrationEvents.SupplierProductSnapshotReceived message, CancellationToken ct)
     {
-        var client = await connection.GetAsync(ct);
-        return await client.CallAsync("upsert_product", new Dictionary<string, object?>
+        return await connection.CallAsync("upsert_product", new Dictionary<string, object?>
         {
             ["name"] = message.Name,
             ["description"] = message.Description,

@@ -9,6 +9,7 @@ public sealed class RecordJob
     public Guid? ProductId { get; set; } // CatalogWrite doldurur (upsert cevabından)
     public string? CatalogAction { get; set; } // "created"/"updated"; StockWrite'ın atlama kararı
     public string? Failure { get; set; } // dolarsa handler exception'a çevirir → retry/DLQ
+    public bool Completed { get; set; } // son executor işaretler; iptalle yarım kalan run başarı sayılmaz
 }
 
 public static class Failures

@@ -13,7 +13,10 @@ public sealed class DiscountWriteExecutor(DiscountWriterAgent discountAgent)
         RecordJob job, IWorkflowContext context, CancellationToken cancellationToken)
     {
         if (job.Failure is not null)
+        {
+            job.Completed = true; // zincir sonuna ulaşıldı; Failure handler'da exception'a döner
             return job;
+        }
 
         try
         {
@@ -30,6 +33,7 @@ public sealed class DiscountWriteExecutor(DiscountWriterAgent discountAgent)
             job.Failure = Failures.Describe(DiscountWriteFailed, ex.Message);
         }
 
+        job.Completed = true;
         return job;
     }
 }
