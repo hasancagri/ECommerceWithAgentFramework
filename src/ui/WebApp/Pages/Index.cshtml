@@ -30,6 +30,21 @@
 
                     <div class="card-body">
                         <h5 class="card-title">@product.Name</h5>
+                        <p class="card-text">
+                            @* FR-009: stok null = bilinmiyor, rozet yok; 0 = stokta yok; >0 = stokta. *@
+                            @if (product.IsInStock == true)
+                            {
+                                <span class="badge bg-success">In Stock</span>
+                            }
+                            else if (product.IsInStock == false)
+                            {
+                                <span class="badge bg-secondary">Out of Stock</span>
+                            }
+                            @if (product.DiscountRate is not null)
+                            {
+                                <span class="badge bg-danger">%@((product.DiscountRate.Value * 100).ToString("0.#")) Off</span>
+                            }
+                        </p>
                         <p class="card-text">@product.TruncateDescription(100)</p>
                         <p class="card-text">
                             <small class="text-muted">Brand: <strong>@product.Brand</strong></small>
