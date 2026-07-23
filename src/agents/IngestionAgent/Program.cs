@@ -34,6 +34,8 @@ builder.Host.UseWolverine(opts =>
         .Then.MoveToErrorQueue();
 
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif handler'ı atlayabiliyor (Storefront emsali); açık kayıt garantili yol.
+    opts.Discovery.IncludeType(typeof(SupplierSnapshotHandler));
 });
 
 // MCP client: tokensiz (yazma yolu anonim, R5). MCP'nin uzun ömürlü SSE bağlantısını standart
