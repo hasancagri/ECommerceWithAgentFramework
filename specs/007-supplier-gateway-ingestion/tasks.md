@@ -107,7 +107,7 @@
 ## Phase 7: Polish & Cross-Cutting
 
 - [X] T034 [P] README + CLAUDE.md: akış tarifini güncelle (Supplier.Gateway + state'siz IngestionAgent)
-- [ ] T035 Tam canlı doğrulama: quickstart S1-S3 + S7; spec SC-001..SC-007 üzerinden kontrol
+- [X] T035 Tam canlı doğrulama: quickstart S1-S3 + S7; spec SC-001..SC-007 üzerinden kontrol
 
 ---
 
