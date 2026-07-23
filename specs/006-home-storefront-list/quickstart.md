@@ -47,3 +47,6 @@ Aspire panelinden `storefront-api`, `catalog-api`, `webapp`, `rabbitmq` resource
 
 Fiyatsız eski satırlar için: AppHost'u durdur, Postgres volume'unu sıfırla, sistemi yeniden başlat ve supplier ingestion'ın koşmasını bekle.
 Kod tarafında backfill yoktur (spec varsayımı).
+
+Veri-kayıpsız alternatif (canlı doğrulamada kullanıldı): her ürüne aynı değerlerle no-op `PUT /api/v1/products` at.
+Update her koşulda fat event yayınlar; satırlar reset'siz zenginleşir.

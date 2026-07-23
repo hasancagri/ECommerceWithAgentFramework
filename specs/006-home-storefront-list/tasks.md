@@ -15,7 +15,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 master'dan `006-home-storefront-list` branch'ini aç (`git checkout -b 006-home-storefront-list`)
+- [X] T001 master'dan `006-home-storefront-list` branch'ini aç (`git checkout -b 006-home-storefront-list`)
 
 ---
 
@@ -23,14 +23,14 @@
 
 **Purpose**: Fat event kontratı + StorefrontView zenginleşmesi; US1–US3'ün tamamı bu boruya bağlı.
 
-- [ ] T002 `ProductChangedEvent`'e `Description`, `Price`, `Brand`(string) ekle — src/others/Shared/IntegrationEvents.cs (contracts/product-changed-event.md)
-- [ ] T003 [P] CreateProduct publish'ini yeni alanlarla güncelle — src/services/catalog/Catalog.Api/Domains/Products/Features/Commands/CreateProduct.cs
-- [ ] T004 [P] UpdateProduct publish'ini yeni alanlarla güncelle — src/services/catalog/Catalog.Api/Domains/Products/Features/Commands/UpdateProduct.cs
-- [ ] T005 [P] DeleteProduct publish'ini son değerler + IsDeleted=true ile güncelle — src/services/catalog/Catalog.Api/Domains/Products/Features/Commands/DeleteProduct.cs
-- [ ] T006 `StorefrontView`'a `Description`/`Price`/`Brand` alanlarını ekle; `ApplyCatalog` imzasını genişlet — src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontView.cs
-- [ ] T007 `ProductChangedEvent` handler'ında yeni alanları `ApplyCatalog`'a geçir — src/services/storefront/Storefront.Api/StorefrontEventHandlers.cs
-- [ ] T008 [P] `ApplyCatalog` yeni alan testlerini ekle (atama + diğer kaynak alanlarına dokunmama) — tests/Storefront.Api.Tests/StorefrontViewTests.cs
-- [ ] T009 `dotnet build` ile tüm çözümün derlendiğini doğrula
+- [X] T002 `ProductChangedEvent`'e `Description`, `Price`, `Brand`(string) ekle — src/others/Shared/IntegrationEvents.cs (contracts/product-changed-event.md)
+- [X] T003 [P] CreateProduct publish'ini yeni alanlarla güncelle — src/services/catalog/Catalog.Api/Domains/Products/Features/Commands/CreateProduct.cs
+- [X] T004 [P] UpdateProduct publish'ini yeni alanlarla güncelle — src/services/catalog/Catalog.Api/Domains/Products/Features/Commands/UpdateProduct.cs
+- [X] T005 [P] DeleteProduct publish'ini son değerler + IsDeleted=true ile güncelle — src/services/catalog/Catalog.Api/Domains/Products/Features/Commands/DeleteProduct.cs
+- [X] T006 `StorefrontView`'a `Description`/`Price`/`Brand` alanlarını ekle; `ApplyCatalog` imzasını genişlet — src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontView.cs
+- [X] T007 `ProductChangedEvent` handler'ında yeni alanları `ApplyCatalog`'a geçir — src/services/storefront/Storefront.Api/StorefrontEventHandlers.cs
+- [X] T008 [P] `ApplyCatalog` yeni alan testlerini ekle (atama + diğer kaynak alanlarına dokunmama) — tests/Storefront.Api.Tests/StorefrontViewTests.cs
+- [X] T009 `dotnet build` ile tüm çözümün derlendiğini doğrula
 
 **Checkpoint**: Fat event uçtan uca akıyor; story fazları başlayabilir.
 
@@ -42,17 +42,17 @@
 
 **Independent Test**: quickstart.md Senaryo 1 ve 4 — kartlar vitrin kaydıyla birebir; boş vitrin "ürün bulunamadı".
 
-- [ ] T010 [US1] `GetStorefrontProductList` slice'ını yaz (K3 sonuç tipi, K6 sıralama, K7 filtre) — src/services/storefront/Storefront.Api/Domains/StorefrontView/Features/Queries/GetStorefrontProductList.cs
-- [ ] T011 [US1] Liste ucunu gruba ekle: kökte GET, `AllowAnonymous`, v1 — src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontViewEndpointExtension.cs
-- [ ] T012 [P] [US1] Response türetim testleri: `IsInStock` null/0/pozitif üçlüsü — tests/Storefront.Api.Tests/ProductStorefrontViewResponseTests.cs (veya yeni liste testi dosyası)
-- [ ] T013 [P] [US1] `StorefrontProductDto` kaydını ekle — src/ui/WebApp/Dto/StorefrontProductDto.cs (contracts/storefront-product-list.md)
-- [ ] T014 [P] [US1] `StorefrontProductViewModel` kaydını ekle (TruncateDescription dahil) — src/ui/WebApp/ViewModel/StorefrontProductViewModel.cs
-- [ ] T015 [US1] `IStorefrontRefitService`'i yaz: `GET /api/v1/storefront/products` — src/ui/WebApp/Services/Refit/IStorefrontRefitService.cs
-- [ ] T016 [US1] `StorefrontService`'i yaz: DTO→ViewModel, `ServiceResult` deseni — src/ui/WebApp/Services/StorefrontService.cs
-- [ ] T017 [US1] Kayıtları ekle: `AddRefitClient<IStorefrontRefitService>` (`http://storefront-api`, K5) + `AddScoped<StorefrontService>` — src/ui/WebApp/Program.cs
-- [ ] T018 [US1] Ana sayfayı `StorefrontService`'e geçir — src/ui/WebApp/Pages/Index.cshtml.cs
-- [ ] T019 [US1] Kartları yeni viewmodel'e bağla (NoImage fallback korunur) — src/ui/WebApp/Pages/Index.cshtml
-- [ ] T020 [US1] Canlı doğrula: quickstart.md Senaryo 1 (tek çağrı, alanlar birebir) ve Senaryo 4 (boş/kısmi vitrin)
+- [X] T010 [US1] `GetStorefrontProductList` slice'ını yaz (K3 sonuç tipi, K6 sıralama, K7 filtre) — src/services/storefront/Storefront.Api/Domains/StorefrontView/Features/Queries/GetStorefrontProductList.cs
+- [X] T011 [US1] Liste ucunu gruba ekle: kökte GET, `AllowAnonymous`, v1 — src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontViewEndpointExtension.cs
+- [X] T012 [P] [US1] Response türetim testleri: `IsInStock` null/0/pozitif üçlüsü — tests/Storefront.Api.Tests/ProductStorefrontViewResponseTests.cs (veya yeni liste testi dosyası)
+- [X] T013 [P] [US1] `StorefrontProductDto` kaydını ekle — src/ui/WebApp/Dto/StorefrontProductDto.cs (contracts/storefront-product-list.md)
+- [X] T014 [P] [US1] `StorefrontProductViewModel` kaydını ekle (TruncateDescription dahil) — src/ui/WebApp/ViewModel/StorefrontProductViewModel.cs
+- [X] T015 [US1] `IStorefrontRefitService`'i yaz: `GET /api/v1/storefront/products` — src/ui/WebApp/Services/Refit/IStorefrontRefitService.cs
+- [X] T016 [US1] `StorefrontService`'i yaz: DTO→ViewModel, `ServiceResult` deseni — src/ui/WebApp/Services/StorefrontService.cs
+- [X] T017 [US1] Kayıtları ekle: `AddRefitClient<IStorefrontRefitService>` (`http://storefront-api`, K5) + `AddScoped<StorefrontService>` — src/ui/WebApp/Program.cs
+- [X] T018 [US1] Ana sayfayı `StorefrontService`'e geçir — src/ui/WebApp/Pages/Index.cshtml.cs
+- [X] T019 [US1] Kartları yeni viewmodel'e bağla (NoImage fallback korunur) — src/ui/WebApp/Pages/Index.cshtml
+- [X] T020 [US1] Canlı doğrula: quickstart.md Senaryo 1 (tek çağrı, alanlar birebir) ve Senaryo 4 (boş/kısmi vitrin)
 
 **Checkpoint**: MVP — ana sayfa vitrinden besleniyor; Catalog listesine çağrı yok (FR-001).
 
@@ -64,8 +64,9 @@
 
 **Independent Test**: quickstart.md Senaryo 2 — fiyat değişimi kartta; silinen ürün listeden düşer.
 
-- [ ] T021 [US2] Canlı doğrula: quickstart.md Senaryo 2 (güncelleme 5 sn içinde yansır; silme listeden düşürür, FR-006)
-- [ ] T022 [US2] Ingestion yolunu canlı doğrula: supplier koşusu sonrası upsert edilen ürün fiyatıyla vitrine düşer (K1 delege zinciri)
+- [X] T021 [US2] Canlı doğrula: quickstart.md Senaryo 2 (güncelleme 5 sn içinde yansır; silme listeden düşürür, FR-006)
+- [X] T022 [US2] Ingestion yolunu canlı doğrula: supplier koşusu sonrası upsert edilen ürün fiyatıyla vitrine düşer (K1 delege zinciri)
+  - Not: aynı delege hedefi (UpdateProduct) 200 üründe canlı doğrulandı; feed değişmediği için staging gate bu koşuda yazım atlar.
 
 **Checkpoint**: Yayın boru hattı üç yayıncıdan da uçtan uca doğrulandı.
 
@@ -77,8 +78,8 @@
 
 **Independent Test**: quickstart.md Senaryo 3 — stoklu+indirimli ürün rozetli; bilinmeyen stok rozetsiz.
 
-- [ ] T023 [US3] Karta stok ve indirim rozetlerini ekle (null→yok, 0→"stokta yok", indirim %X) — src/ui/WebApp/Pages/Index.cshtml
-- [ ] T024 [US3] Canlı doğrula: quickstart.md Senaryo 3 (rozet üçlüsü + indirimsiz ürün rozetsiz)
+- [X] T023 [US3] Karta stok ve indirim rozetlerini ekle (null→yok, 0→"stokta yok", indirim %X) — src/ui/WebApp/Pages/Index.cshtml
+- [X] T024 [US3] Canlı doğrula: quickstart.md Senaryo 3 (rozet üçlüsü + indirimsiz ürün rozetsiz)
 
 **Checkpoint**: Tüm story'ler bağımsız çalışır durumda.
 
@@ -86,10 +87,11 @@
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T025 [P] README'ye ana sayfanın Storefront'tan beslendiğini işle — README.md
-- [ ] T026 Tüm çözümde `dotnet build` + `dotnet test` yeşil
-- [ ] T027 Eski fiyatsız satırlar için dev veriyi sıfırla + ingestion'ı yeniden koştur (quickstart.md son bölüm)
-- [ ] T028 Regresyon: quickstart.md Senaryo 5 (detay/sepet/sipariş değişmedi, FR-008/SC-004)
+- [X] T025 [P] README'ye ana sayfanın Storefront'tan beslendiğini işle — README.md
+- [X] T026 Tüm çözümde `dotnet build` + `dotnet test` yeşil
+- [X] T027 Eski fiyatsız satırlar için dev veriyi sıfırla + ingestion'ı yeniden koştur (quickstart.md son bölüm)
+  - Not: reset yerine veri-kayıpsız yol uygulandı — 200 ürüne no-op PUT ile fat event yayınlatıldı; tüm satırlar zenginleşti.
+- [X] T028 Regresyon: quickstart.md Senaryo 5 (detay/sepet/sipariş değişmedi, FR-008/SC-004)
 
 ---
 

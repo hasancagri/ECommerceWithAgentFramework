@@ -40,9 +40,10 @@
                             {
                                 <span class="badge bg-secondary">Out of Stock</span>
                             }
+                            @* DiscountRate 0-100 arası yüzdedir (Discount.DiscountRate VO) — çarpan yok. *@
                             @if (product.DiscountRate is not null)
                             {
-                                <span class="badge bg-danger">%@((product.DiscountRate.Value * 100).ToString("0.#")) Off</span>
+                                <span class="badge bg-danger">%@(product.DiscountRate.Value.ToString("0.#")) Off</span>
                             }
                         </p>
                         <p class="card-text">@product.TruncateDescription(100)</p>
