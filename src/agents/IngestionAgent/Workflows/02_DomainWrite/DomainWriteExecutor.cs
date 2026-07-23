@@ -6,19 +6,21 @@ namespace IngestionAgent.Workflows._02_DomainWrite;
 // Aşama 2 — domain'e yazım (kayıt başına): her yazıcı agent kendi MCP'sine bağlı (FR-016), LLM yok.
 // Sıra: upsert_product → (gerekliyse) set_stock → (gerekliyse) set/remove_product_discount.
 // Gate Failure/Skipped dediyse kayda DOKUNMAZ. Nihai durum kayıt başına tek yazımla gider.
+// 007 geçiş notu: RecordJob burada ESKİ tip (_01_StagingGate); tam ad, Workflows.RecordJob
+// (yeni, state'siz) ile çakışmayı önler. Bu dosya US4'te eski akışla birlikte silinir.
 public sealed class DomainWriteExecutor(
     IDocumentStore store,
     CatalogWriterAgent catalogAgent,
     StockWriterAgent stockAgent,
     DiscountWriterAgent discountAgent)
-    : Executor<RecordJob, RecordJob>("domain-write")
+    : Executor<_01_StagingGate.RecordJob, _01_StagingGate.RecordJob>("domain-write")
 {
     private const string CatalogWriteFailed = "CATALOG_WRITE_FAILED";
     private const string StockWriteFailed = "STOCK_WRITE_FAILED";
     private const string DiscountWriteFailed = "DISCOUNT_WRITE_FAILED";
 
-    public override async ValueTask<RecordJob> HandleAsync(
-        RecordJob job, IWorkflowContext context, CancellationToken cancellationToken)
+    public override async ValueTask<_01_StagingGate.RecordJob> HandleAsync(
+        _01_StagingGate.RecordJob job, IWorkflowContext context, CancellationToken cancellationToken)
     {
         if (job.Failure is not null || job.Skipped)
             return job; // kapıda elenmiş kayıt: yazma yolu hiç açılmaz
@@ -36,7 +38,7 @@ public sealed class DomainWriteExecutor(
         return job;
     }
 
-    private async Task WriteRecordAsync(RecordJob job, CancellationToken ct)
+    private async Task WriteRecordAsync(_01_StagingGate.RecordJob job, CancellationToken ct)
     {
         var record = job.Record;
         var staging = job.Staging!;
@@ -88,7 +90,7 @@ public sealed class DomainWriteExecutor(
 
     // Kaydın nihai durumu: kayıt başına tek yazım. İçerik ancak Completed'la mühürlendiği için
     // yarım kalan kayıt bir sonraki run'da yeniden işlenir (retry + idempotent yazımlar).
-    private async Task PersistAsync(RecordJob job, CancellationToken ct)
+    private async Task PersistAsync(_01_StagingGate.RecordJob job, CancellationToken ct)
     {
         var staging = job.Staging!;
         if (job.Failure is null) staging.MarkCompleted();

@@ -59,16 +59,16 @@
 
 **Independent Test**: Kuyruğa elle bir kanonik mesaj bırak; ürün/stok/indirim servislerde güncellenir (quickstart S1 tüketici yarısı).
 
-- [ ] T016 [US2] RecordJob'u sadeleştir: Message/ProductId/CatalogAction/Failure (staging alanları çıkar) — src/agents/IngestionAgent/Workflows/RecordJob.cs
-- [ ] T017 [P] [US2] CatalogWriteExecutor: upsert, created/updated'ı job'a yazar — src/agents/IngestionAgent/Workflows/01_CatalogWrite/CatalogWriteExecutor.cs
-- [ ] T018 [P] [US2] StockWriteExecutor: created ise atla, updated ise set_stock — src/agents/IngestionAgent/Workflows/02_StockWrite/StockWriteExecutor.cs
-- [ ] T019 [P] [US2] DiscountWriteExecutor: yüzde dolu→set, boş→remove — src/agents/IngestionAgent/Workflows/03_DiscountWrite/DiscountWriteExecutor.cs
-- [ ] T020 [US2] SupplierSnapshotHandler: Wolverine handler, workflow koşusu, Failure→exception köprüsü — src/agents/IngestionAgent/Workflows/SupplierSnapshotHandler.cs
-- [ ] T021 [US2] AppHost: ingestion-agent'a rabbitmq referansı (+WaitFor) — src/aspire/AppHost/AppHost.cs
-- [ ] T022 [US2] Agent Program.cs: UseWolverine + ListenToRabbitQueue(ingestion...); eski IngestionScheduler kaydını kaldır (çift yazım olmasın) — src/agents/IngestionAgent/Program.cs
-- [ ] T023 [P] [US2] Discount agent yüzü idempotent: NotFound→Ok — src/services/discount/Discount.Api/Domains/Discounts/Features/Agent/RemoveProductDiscount.cs
-- [ ] T024 [P] [US2] Discount idempotency birim testi: indirimsiz üründe remove → Ok (FR-022) — tests/Discount.Api.Tests/RemoveProductDiscountAgentTests.cs
-- [ ] T025 [P] [US2] Yazım kararı testleri: created→stok atla, updated→stok yaz, yüzde boş→remove — tests/IngestionAgent.Tests/WriteDecisionTests.cs
+- [X] T016 [US2] RecordJob'u sadeleştir: Message/ProductId/CatalogAction/Failure (staging alanları çıkar) — src/agents/IngestionAgent/Workflows/RecordJob.cs
+- [X] T017 [P] [US2] CatalogWriteExecutor: upsert, created/updated'ı job'a yazar — src/agents/IngestionAgent/Workflows/01_CatalogWrite/CatalogWriteExecutor.cs
+- [X] T018 [P] [US2] StockWriteExecutor: created ise atla, updated ise set_stock — src/agents/IngestionAgent/Workflows/02_StockWrite/StockWriteExecutor.cs
+- [X] T019 [P] [US2] DiscountWriteExecutor: yüzde dolu→set, boş→remove — src/agents/IngestionAgent/Workflows/03_DiscountWrite/DiscountWriteExecutor.cs
+- [X] T020 [US2] SupplierSnapshotHandler: Wolverine handler, workflow koşusu, Failure→exception köprüsü — src/agents/IngestionAgent/Workflows/SupplierSnapshotHandler.cs
+- [X] T021 [US2] AppHost: ingestion-agent'a rabbitmq referansı (+WaitFor) — src/aspire/AppHost/AppHost.cs
+- [X] T022 [US2] Agent Program.cs: UseWolverine + ListenToRabbitQueue(ingestion...); eski IngestionScheduler kaydını kaldır (çift yazım olmasın) — src/agents/IngestionAgent/Program.cs
+- [X] T023 [P] [US2] Discount agent yüzü idempotent: NotFound→Ok — src/services/discount/Discount.Api/Domains/Discounts/Features/Agent/RemoveProductDiscount.cs
+- [X] T024 [P] [US2] Discount idempotency birim testi: indirimsiz üründe remove → Ok (FR-022) — tests/Discount.Api.Tests/RemoveProductDiscountAgentTests.cs
+- [X] T025 [P] [US2] Yazım kararı testleri: created→stok atla, updated→stok yaz, yüzde boş→remove — tests/IngestionAgent.Tests/WriteDecisionTests.cs
 
 **Checkpoint**: Uçtan uca mutlu yol canlı (quickstart S1-S3 tamamı).
 

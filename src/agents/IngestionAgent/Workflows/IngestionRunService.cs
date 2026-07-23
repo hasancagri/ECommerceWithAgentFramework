@@ -76,7 +76,8 @@ public sealed class IngestionRunService(
                 }
 
                 // Kayıt başına koşu: executor'lar job'ı işaretler, sonuç buradan okunur.
-                var job = new RecordJob { Record = record };
+                // 007 geçiş notu: eski tip tam adla — Workflows.RecordJob (yeni) ile çakışmasın.
+                var job = new _01_StagingGate.RecordJob { Record = record };
                 await using var run = await InProcessExecution.RunAsync(
                     workflow, job, cancellationToken: CancellationToken.None);
 

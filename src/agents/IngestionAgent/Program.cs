@@ -1,4 +1,7 @@
+using System.Reflection;
 using IngestionAgent.Workflows._02_DomainWrite.Agents;
+using Wolverine;
+using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,8 +50,25 @@ builder.Services.AddSingleton<CatalogWriterAgent>(sp => new(Connection(sp, "cata
 builder.Services.AddSingleton<StockWriterAgent>(sp => new(Connection(sp, "stock", stockMcp)));
 builder.Services.AddSingleton<DiscountWriterAgent>(sp => new(Connection(sp, "discount", discountMcp)));
 
+// 007: kanonik mesajın tüketicisi (FR-013). Eski scheduler kapatıldı — çift yazım olmasın;
+// eski /v1/ingestion/runs tetiği US4'e dek durur ama elle tetiklenmemeli (tasks bağımlılık notu).
+builder.Host.UseWolverine(opts =>
+{
+    // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali (repo konvansiyonu).
+    if (builder.Environment.IsDevelopment())
+        opts.Durability.Mode = DurabilityMode.Solo;
+
+    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
+        .AutoProvision();
+
+    // Inline tüketim: ack ancak handler başarısında → agent DB'siz de at-least-once korunur.
+    opts.ListenToRabbitQueue(RabbitMqConstants.SupplierProductSnapshot.Queues.Ingestion)
+        .ProcessInline();
+
+    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+});
+
 builder.Services.AddSingleton<IngestionRunService>();
-builder.Services.AddHostedService<IngestionScheduler>(); // 30 dk'da bir otomatik run
 
 var app = builder.Build();
 

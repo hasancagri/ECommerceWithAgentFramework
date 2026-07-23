@@ -120,15 +120,17 @@ builder.AddProject<Projects.Supplier_Gateway>("supplier-gateway")
     .WaitFor(supplierApi)
     .WaitFor(rabbit);
 
-// Ingestion: staging DB (ingestionDb) + MCP yazımı için domain servisleri.
+// Ingestion: staging DB (ingestionDb) + MCP yazımı için domain servisleri + kuyruk tüketimi (007).
 builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
     .WithReference(ingestionDb)
     .WithReference(supplierApi)
+    .WithReference(rabbit)
     .WithReference(catalogApi)
     .WithReference(stockApi)
     .WithReference(discountApi)
     .WaitFor(ingestionDb)
     .WaitFor(supplierApi)
+    .WaitFor(rabbit)
     .WaitFor(catalogApi)
     .WaitFor(stockApi)
     .WaitFor(discountApi);
