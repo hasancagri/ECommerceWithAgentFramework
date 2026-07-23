@@ -35,7 +35,8 @@ public static class UpdateProduct
 
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
-                product.Id, product.Name, product.ImageUrl, IsDeleted: false));
+                product.Id, product.Name, product.Description, product.Price,
+                product.Brand.ToString(), product.ImageUrl, IsDeleted: false));
 
             return FeatureObjectResultModel<UpdateProductResponse>.Ok(new UpdateProductResponse { Id = product.Id });
         }

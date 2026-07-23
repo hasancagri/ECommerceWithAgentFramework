@@ -22,7 +22,7 @@
         {
             <div class="col">
                 <div class="card h-100 shadow-lg border-0">
-                    <a asp-page="/Products/Detail" asp-route-id="@product.Id">
+                    <a asp-page="/Products/Detail" asp-route-id="@product.ProductId">
                         <img
                             src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/NoImage.jpeg" : product.ImageUrl)"
                             class="card-img-top" alt="@product.Name">
@@ -30,6 +30,22 @@
 
                     <div class="card-body">
                         <h5 class="card-title">@product.Name</h5>
+                        <p class="card-text">
+                            @* FR-009: stok null = bilinmiyor, rozet yok; 0 = stokta yok; >0 = stokta. *@
+                            @if (product.IsInStock == true)
+                            {
+                                <span class="badge bg-success">In Stock</span>
+                            }
+                            else if (product.IsInStock == false)
+                            {
+                                <span class="badge bg-secondary">Out of Stock</span>
+                            }
+                            @* DiscountRate 0-100 arası yüzdedir (Discount.DiscountRate VO) — çarpan yok. *@
+                            @if (product.DiscountRate is not null)
+                            {
+                                <span class="badge bg-danger">%@(product.DiscountRate.Value.ToString("0.#")) Off</span>
+                            }
+                        </p>
                         <p class="card-text">@product.TruncateDescription(100)</p>
                         <p class="card-text">
                             <small class="text-muted">Brand: <strong>@product.Brand</strong></small>
@@ -39,7 +55,7 @@
                         </p>
                     </div>
                     <div class="card-footer">
-                        <a asp-page="/Products/Detail" asp-route-id="@product.Id" class="btn btn-primary mt-2">Show
+                        <a asp-page="/Products/Detail" asp-route-id="@product.ProductId" class="btn btn-primary mt-2">Show
                             Detail</a>
                     </div>
                 </div>

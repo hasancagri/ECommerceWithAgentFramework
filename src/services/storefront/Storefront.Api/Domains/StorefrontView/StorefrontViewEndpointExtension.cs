@@ -7,6 +7,7 @@ public static class StorefrontViewEndpointExtension
         app.MapGroup("api/v{version:apiVersion}/storefront/products")
             .WithTags("storefront")
             .WithApiVersionSet(apiVersionSet)
-            .GetProductStorefrontViewGroupItemEndpoint();
+            .GetProductStorefrontViewGroupItemEndpoint()
+            .GetStorefrontProductListGroupItemEndpoint();
     }
 }

@@ -8,8 +8,8 @@ public sealed class RecordJob
 
     // StagingGate çıktısı:
     public StagingRecord? Staging { get; set; }
-    public bool Skipped { get; set; }         // hash kapısı: içerik değişmemiş, yazma yok
-    public bool AssumedNew { get; set; }      // staging'de CatalogProductId yoktu → create beklenir
+    public bool Skipped { get; set; } // hash kapısı: içerik değişmemiş, yazma yok
+    public bool AssumedNew { get; set; } // staging'de CatalogProductId yoktu → create beklenir
     public bool WriteStock { get; set; }
     public bool SetDiscount { get; set; }
     public bool RemoveDiscount { get; set; }

@@ -24,8 +24,9 @@ public static class SetStock
             var stock = await session.Query<ProductStock>()
                 .FirstOrDefaultAsync(x => x.ProductId == cmd.ProductId, ct);
 
-            if (stock is null)
-                return FeatureObjectResultModel<SetStockResponse>.NotFound();
+            // Upsert: kayıt yoksa açılır (ör. ProductCreatedEvent henüz işlenmedi/dead-letter'da).
+            // Sıfırla açılıp SetQuantity'den geçer ki negatif adet invariant'ı tek yerde kalsın.
+            stock ??= ProductStock.Create(cmd.ProductId, 0);
 
             var result = stock.SetQuantity(cmd.Quantity);
             if (!result.IsSuccess)

@@ -1,24 +1,32 @@
-using static Storefront.Api.Domains.StorefrontView.Features.Queries.GetProductStorefrontView;
+using static Storefront.Api.Domains.StorefrontView.Features.Queries.GetStorefrontProductList;
 
 namespace Storefront.Api.Tests;
 
-public class ProductStorefrontViewResponseTests
+public class StorefrontProductResponseTests
 {
+    private static StorefrontView FullCatalogView(Guid productId)
+    {
+        var view = StorefrontView.Create(productId);
+        view.ApplyCatalog("Ürün A", "Açıklama A", 49.90m, "Apple", "https://img/a.png", isDeleted: false);
+        return view;
+    }
+
     [Fact]
     public void From_AllSourcesPresent_MapsAllFields_DerivesInStock()
     {
         var productId = Guid.NewGuid();
-        var view = StorefrontView.Create(productId);
-        view.ApplyCatalog("Ürün A", "Açıklama A", 49.90m, "Apple", "https://img/a.png", isDeleted: false);
+        var view = FullCatalogView(productId);
         view.ApplyStock(7);
         view.ApplyDiscount(0.15m);
 
-        var response = ProductStorefrontViewResponse.From(view);
+        var response = StorefrontProductResponse.From(view);
 
         response.ProductId.ShouldBe(productId);
         response.Name.ShouldBe("Ürün A");
+        response.Description.ShouldBe("Açıklama A");
+        response.Brand.ShouldBe("Apple");
+        response.Price.ShouldBe(49.90m);
         response.ImageUrl.ShouldBe("https://img/a.png");
-        response.IsDeleted.ShouldBeFalse();
         response.StockQuantity.ShouldBe(7);
         response.IsInStock.ShouldBe(true);
         response.DiscountRate.ShouldBe(0.15m);
@@ -27,12 +35,8 @@ public class ProductStorefrontViewResponseTests
     [Fact]
     public void From_StockNotReported_LeavesStockFieldsNull()
     {
-        var view = StorefrontView.Create(Guid.NewGuid());
-        view.ApplyCatalog("Yeni Ürün", "Açıklama", 10m, "Sony", null, isDeleted: false);
+        var response = StorefrontProductResponse.From(FullCatalogView(Guid.NewGuid()));
 
-        var response = ProductStorefrontViewResponse.From(view);
-
-        response.Name.ShouldBe("Yeni Ürün");
         response.StockQuantity.ShouldBeNull();
         response.IsInStock.ShouldBeNull();
         response.DiscountRate.ShouldBeNull();
@@ -41,14 +45,12 @@ public class ProductStorefrontViewResponseTests
     [Fact]
     public void From_ZeroStock_DerivesInStockFalse()
     {
-        var view = StorefrontView.Create(Guid.NewGuid());
-        view.ApplyCatalog("Ürün", "Açıklama", 10m, "Sony", null, isDeleted: false);
+        var view = FullCatalogView(Guid.NewGuid());
         view.ApplyStock(0);
 
-        var response = ProductStorefrontViewResponse.From(view);
+        var response = StorefrontProductResponse.From(view);
 
         response.StockQuantity.ShouldBe(0);
         response.IsInStock.ShouldBe(false);
-        response.DiscountRate.ShouldBeNull();
     }
 }

@@ -60,6 +60,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StockService>();
+builder.Services.AddScoped<StorefrontService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<ClientAuthenticatedHttpClientHandler>();
@@ -103,6 +104,14 @@ builder.Services.AddRefitClient<IPaymentRefitService>().ConfigureHttpClient(conf
 builder.Services.AddRefitClient<IStockRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://stock-api");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
+    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+
+
+// 006: ana sayfa vitrin listesi; okuma anonim, handler zinciri diğer istemcilerle tutarlılık için.
+builder.Services.AddRefitClient<IStorefrontRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://storefront-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
 
