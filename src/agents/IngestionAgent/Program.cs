@@ -1,30 +1,50 @@
-using IngestionAgent.Workflows._02_DomainWrite.Agents;
+using System.Reflection;
+using IngestionAgent.Workflows._01_CatalogWrite;
+using IngestionAgent.Workflows._02_StockWrite;
+using IngestionAgent.Workflows._03_DiscountWrite;
+using Wolverine;
+using Wolverine.ErrorHandling;
+using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Staging deposu: ingestionDb / ingestionManagement (feature'ın tek yeni DB'si).
-// Wolverine YOK (plan kararı) → Marten doğrudan kullanılır; yazımlar LightweightSession ile.
-var ingestionDb = builder.Configuration.GetConnectionString("ingestionDb")!;
-builder.Services.AddMarten(opts =>
+// 007: agent DB'siz saf yönlendiricidir (FR-017): mesaj al → workflow → MCP. Kalıcı iz tutulmaz;
+// görünürlük kuyruk derinliği + DLQ + loglardır (run API'si öldü).
+builder.Host.UseWolverine(opts =>
+{
+    // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali (repo konvansiyonu).
+    if (builder.Environment.IsDevelopment())
+        opts.Durability.Mode = DurabilityMode.Solo;
+
+    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
+        .AutoProvision();
+
+    // Binding'i TÜKETİCİ kurar: kuyruğu DLQ argümanlarıyla deklare eden taraf da o. Yayıncı
+    // tarafı BindQueue yaparsa aynı kuyruğu farklı argümanla deklare eder → 406, binding kurulmaz.
+    rabbit.DeclareExchange(RabbitMqConstants.SupplierProductSnapshot.Exchange, e =>
     {
-        opts.DatabaseSchemaName = SchemaConstants.IngestionSchemaName;
-        opts.Connection(ingestionDb);
-        opts.UseNewtonsoftForSerialization(
-            nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
-            configure: s =>
-            {
-                s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
-            });
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.SupplierProductSnapshot.Queues.Ingestion);
+    });
 
-        opts.Schema.For<StagingRecord>();
-        opts.Schema.For<IngestionRun>();
-    })
-    .ApplyAllDatabaseChangesOnStartup();
+    // Inline tüketim: ack ancak handler başarısında → agent DB'siz de at-least-once korunur.
+    // DLQ adı RabbitMqConstants'tan: retry tükenince mesaj İÇERİĞİYLE buraya düşer (FR-019/020).
+    opts.ListenToRabbitQueue(RabbitMqConstants.SupplierProductSnapshot.Queues.Ingestion)
+        .ProcessInline()
+        .DeadLetterQueueing(new DeadLetterQueue(RabbitMqConstants.SupplierProductSnapshot.DeadLetter));
 
-// Feed client: standart resilience kalır (feed çekimi kısa ömürlü GET).
-builder.Services.AddHttpClient(HttpClients.Feeds);
+    // Kademeli sınırlı retry (R6): geçici hata (servis kapalı) pencere içinde kurtulur;
+    // ısrarcı hata 3 denemede tükenir → MoveToErrorQueue → DLQ. Sonsuz retry bilinçli yok.
+    opts.OnException<IngestionWriteException>()
+        .RetryWithCooldown(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60))
+        .Then.MoveToErrorQueue();
+
+    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif handler'ı atlayabiliyor (Storefront emsali); açık kayıt garantili yol.
+    opts.Discovery.IncludeType(typeof(SupplierSnapshotHandler));
+});
 
 // MCP client: tokensiz (yazma yolu anonim, R5). MCP'nin uzun ömürlü SSE bağlantısını standart
 // resilience handler'ı kesip keşfi çökertir → muaf tutulur (ChatAgent emsali).
@@ -47,12 +67,8 @@ builder.Services.AddSingleton<CatalogWriterAgent>(sp => new(Connection(sp, "cata
 builder.Services.AddSingleton<StockWriterAgent>(sp => new(Connection(sp, "stock", stockMcp)));
 builder.Services.AddSingleton<DiscountWriterAgent>(sp => new(Connection(sp, "discount", discountMcp)));
 
-builder.Services.AddSingleton<IngestionRunService>();
-builder.Services.AddHostedService<IngestionScheduler>(); // 30 dk'da bir otomatik run
-
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
-app.MapIngestionEndpoints();
+app.MapDefaultEndpoints(); // HTTP yüzeyi yalnız health (quickstart S7)
 
 await app.RunAsync();

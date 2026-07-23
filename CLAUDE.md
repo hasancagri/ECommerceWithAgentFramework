@@ -71,9 +71,24 @@ dotnet test --filter "FullyQualifiedName~BasketTests.AddItem_AddsItemToBasket"
 
 ## Mimari
 
-Mikroservisler `src/services/{basket,catalog,discount,file,order,payment,stock}` altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Shared`, `Identity.Server`), `src/aspire` (`AppHost`, `ServiceDefaults`), `src/agents` (`ChatAgent`) ve `src/ui` (`WebApp`). Fiziksel klasörler solution klasörleriyle birebir örtüşür.
+Mikroservisler `src/services/{basket,catalog,discount,file,order,payment,stock,storefront,supplier}`
+altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Shared`, `Identity.Server`),
+`src/aspire` (`AppHost`, `ServiceDefaults`), `src/agents` (`ChatAgent`, `IngestionAgent`) ve
+`src/ui` (`WebApp`). Fiziksel klasörler solution klasörleriyle birebir örtüşür.
 
 **Her servis kendi Postgres veritabanına sahiptir** (`catalogDb`, `basketDb`, …; `AppHost.cs`'te bağlanır) ve kendi Marten şemasına (`SchemaConstants`). Servisler asla veritabanı paylaşmaz.
+
+### Tedarikçi ingestion akışı (007)
+
+- `Supplier.Api` dış dünya maketidir (DB'siz feed ucu); `Supplier.Gateway` sınır bileşenidir:
+  feed'i çeker, kanonikleştirir, SON yayınlanan snapshot'la kıyaslar (`supplierGatewayDb`).
+- Yalnız yeni/değişen kayıt `SupplierProductSnapshotReceived` event'iyle yayınlanır; sıra
+  önce publish sonra save'dir (çökmede kayıp yerine tekrar; yazımlar idempotent).
+- `IngestionAgent` DB'siz, state'siz tüketicidir: mesaj başına MAF workflow
+  (CatalogWrite → StockWrite → DiscountWrite) koşar, MCP tool'larını LLM'siz doğrudan çağırır.
+- Hata yolu: başarısız yazım `IngestionWriteException`'a çevrilir → kademeli sınırlı retry,
+  tükenince mesaj içeriğiyle DLQ (`ingestion.supplier-product-snapshot.dlq`). Run API'si yok;
+  görünürlük kuyruk derinliği + DLQ + loglardır.
 
 ### DDD ve Bounded Context
 

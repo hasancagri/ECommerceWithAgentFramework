@@ -1,12 +1,6 @@
-global using IngestionAgent.Api;
 global using IngestionAgent.Infrastructure;
-global using IngestionAgent.Domains;
 global using IngestionAgent.Workflows;
-global using Marten;
-global using Marten.Newtonsoft;
 global using Microsoft.Agents.AI.Workflows;
 global using Newtonsoft.Json;
-global using Shared.Enums;
-global using Shared.Utils.Constants;
+global using Shared;
 global using System;
-global using Weasel.Core;

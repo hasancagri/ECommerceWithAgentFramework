@@ -8,11 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Marten" />
-        <PackageReference Include="Marten.Newtonsoft" />
         <PackageReference Include="Microsoft.Agents.AI.Workflows" />
         <PackageReference Include="ModelContextProtocol.Core" />
         <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="WolverineFx.RabbitMQ" />
+        <PackageReference Include="WolverineFx.RuntimeCompilation" />
     </ItemGroup>
 
     <ItemGroup>

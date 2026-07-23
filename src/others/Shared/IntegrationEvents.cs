@@ -18,4 +18,16 @@ public static class IntegrationEvents
         bool IsDeleted);
     public record StockChangedEvent(Guid ProductId, int Quantity);
     public record DiscountChangedEvent(Guid ProductId, decimal? Rate);
+
+    // 007-supplier-gateway: kaydın tedarikçideki GÜNCEL hali (snapshot, diff değil).
+    // Tedarikçi kimliği tip değil alandır (SupplierCode); DiscountPercent null = indirim yok → remove.
+    public record SupplierProductSnapshotReceived(
+        string SupplierCode,
+        string ExternalId,
+        string Name,
+        string Description,
+        string Brand,
+        decimal Price,
+        int StockQuantity,
+        decimal? DiscountPercent);
 }

@@ -22,7 +22,7 @@ var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
-var ingestionDb = postgres.AddDatabase("ingestionDb");
+var supplierGatewayDb = postgres.AddDatabase("supplierGatewayDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -110,15 +110,22 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
 // Tedarikçi simülatörü: DB'siz (dataset dosyalarını istek anında okur — 005/R12).
 var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
 
-// Ingestion: staging DB (ingestionDb) + MCP yazımı için domain servisleri.
-builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
-    .WithReference(ingestionDb)
+// Sınır bileşeni (007): feed'i çeker, değişiklik kapısından geçen kaydı kanonik event'le yayınlar.
+builder.AddProject<Projects.Supplier_Gateway>("supplier-gateway")
+    .WithReference(supplierGatewayDb)
     .WithReference(supplierApi)
+    .WithReference(rabbit)
+    .WaitFor(supplierGatewayDb)
+    .WaitFor(supplierApi)
+    .WaitFor(rabbit);
+
+// Ingestion (007): DB'siz saf tüketici — kuyruktan okur, MCP ile domain servislerine yazar.
+builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
+    .WithReference(rabbit)
     .WithReference(catalogApi)
     .WithReference(stockApi)
     .WithReference(discountApi)
-    .WaitFor(ingestionDb)
-    .WaitFor(supplierApi)
+    .WaitFor(rabbit)
     .WaitFor(catalogApi)
     .WaitFor(stockApi)
     .WaitFor(discountApi);

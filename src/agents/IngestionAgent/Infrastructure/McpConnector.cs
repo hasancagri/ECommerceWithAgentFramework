@@ -32,4 +32,9 @@ public sealed class McpConnection(IHttpClientFactory httpClientFactory, string s
             _lock.Release();
         }
     }
+
+    // Hata gören çağrı cache'i düşürür: ölü bağlantı (servis restart'ı) sonsuza dek dönmesin;
+    // bir SONRAKİ deneme temiz bağlantı kurar (S4 bulgusu). Yarışta kurulmuş yeni client korunur.
+    public void Invalidate(McpClient client)
+        => Interlocked.CompareExchange(ref _client, null, client);
 }
