@@ -18,8 +18,16 @@ builder.Host.UseWolverine(opts =>
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
 
-    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
+    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
+
+    // Binding'i TÜKETİCİ kurar: kuyruğu DLQ argümanlarıyla deklare eden taraf da o. Yayıncı
+    // tarafı BindQueue yaparsa aynı kuyruğu farklı argümanla deklare eder → 406, binding kurulmaz.
+    rabbit.DeclareExchange(RabbitMqConstants.SupplierProductSnapshot.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.SupplierProductSnapshot.Queues.Ingestion);
+    });
 
     // Inline tüketim: ack ancak handler başarısında → agent DB'siz de at-least-once korunur.
     // DLQ adı RabbitMqConstants'tan: retry tükenince mesaj İÇERİĞİYLE buraya düşer (FR-019/020).

@@ -29,11 +29,12 @@ builder.Host.UseWolverine(opts =>
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    // Exchange yayıncıda tanımlanır; tüketici kuyruğu da bağlanır ki agent geç açılsa bile birikir.
+    // Yayıncı yalnız exchange'i deklare eder. Kuyruk + binding TÜKETİCİDE kurulur (agent):
+    // kuyruğu özel DLQ argümanıyla deklare eden taraf o; burada BindQueue yapmak aynı kuyruğu
+    // farklı argümanla deklare edip 406'ya (binding'siz fanout = sessiz kayıp) yol açıyordu.
     rabbit.DeclareExchange(RabbitMqConstants.SupplierProductSnapshot.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.SupplierProductSnapshot.Queues.Ingestion);
     });
 
     opts.PublishMessage<IntegrationEvents.SupplierProductSnapshotReceived>()
