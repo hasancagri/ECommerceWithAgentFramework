@@ -22,7 +22,7 @@
         {
             <div class="col">
                 <div class="card h-100 shadow-lg border-0">
-                    <a asp-page="/Products/Detail" asp-route-id="@product.Id">
+                    <a asp-page="/Products/Detail" asp-route-id="@product.ProductId">
                         <img
                             src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/NoImage.jpeg" : product.ImageUrl)"
                             class="card-img-top" alt="@product.Name">
@@ -39,7 +39,7 @@
                         </p>
                     </div>
                     <div class="card-footer">
-                        <a asp-page="/Products/Detail" asp-route-id="@product.Id" class="btn btn-primary mt-2">Show
+                        <a asp-page="/Products/Detail" asp-route-id="@product.ProductId" class="btn btn-primary mt-2">Show
                             Detail</a>
                     </div>
                 </div>
