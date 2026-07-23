@@ -80,8 +80,8 @@
 
 **Independent Test**: discount-api kapalıyken mesaj → retry → servis dönünce işlenir; bozuk kayıt → DLQ (quickstart S4-S6).
 
-- [ ] T026 [US3] IngestionWriteException: kayıt kimliği + hata kodu bağlamı taşır — src/agents/IngestionAgent/Infrastructure/IngestionWriteException.cs
-- [ ] T027 [US3] Agent Program.cs: kademeli sınırlı retry (research R6) + MoveToErrorQueue + DLQ tanımı (RabbitMqConstants adlarıyla) — src/agents/IngestionAgent/Program.cs
+- [X] T026 [US3] IngestionWriteException: kayıt kimliği + hata kodu bağlamı taşır — src/agents/IngestionAgent/Infrastructure/IngestionWriteException.cs
+- [X] T027 [US3] Agent Program.cs: kademeli sınırlı retry (research R6) + MoveToErrorQueue + DLQ tanımı (RabbitMqConstants adlarıyla) — src/agents/IngestionAgent/Program.cs
 - [ ] T028 [US3] Canlı doğrulama: quickstart S4 (retry), S5 (DLQ inceleme), S6 (yeniden teslim zararsız)
 
 **Checkpoint**: Dayanıklılık senaryoları canlı doğrulandı.

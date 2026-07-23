@@ -1,6 +1,7 @@
 using System.Reflection;
 using IngestionAgent.Workflows._02_DomainWrite.Agents;
 using Wolverine;
+using Wolverine.ErrorHandling;
 using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,8 +63,16 @@ builder.Host.UseWolverine(opts =>
         .AutoProvision();
 
     // Inline tüketim: ack ancak handler başarısında → agent DB'siz de at-least-once korunur.
+    // DLQ adı RabbitMqConstants'tan: retry tükenince mesaj İÇERİĞİYLE buraya düşer (FR-019/020).
     opts.ListenToRabbitQueue(RabbitMqConstants.SupplierProductSnapshot.Queues.Ingestion)
-        .ProcessInline();
+        .ProcessInline()
+        .DeadLetterQueueing(new DeadLetterQueue(RabbitMqConstants.SupplierProductSnapshot.DeadLetter));
+
+    // Kademeli sınırlı retry (R6): geçici hata (servis kapalı) pencere içinde kurtulur;
+    // ısrarcı hata 3 denemede tükenir → MoveToErrorQueue → DLQ. Sonsuz retry bilinçli yok.
+    opts.OnException<IngestionWriteException>()
+        .RetryWithCooldown(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60))
+        .Then.MoveToErrorQueue();
 
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
