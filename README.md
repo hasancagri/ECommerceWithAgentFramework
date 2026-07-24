@@ -85,7 +85,7 @@ flowchart TB
     Catalog -.->|L2 cache| Redis[("Redis")]
 ```
 
-Each service is a self-contained bounded context. Synchronous read/write traffic goes **client → YARP gateway → service**, secured by JWT bearer tokens with OAuth scopes issued by Identity.Server. State changes are published as **integration events** over RabbitMQ fanout exchanges; the `storefront` read model is built entirely by consuming those events on a **single sequential queue** (structurally eliminating concurrent writes to the same composite row). The **ChatAgent** reaches the services' MCP endpoints through the gateway, injecting the calling user's token at invocation time so the agent acts *as that user*. The **Supplier.Gateway** periodically pulls the supplier feed (30-minute scheduler or `POST /v1/feeds/pull`), compares each record with the last published snapshot, and publishes only new/changed records as canonical events; the stateless **IngestionAgent** consumes them one message at a time and writes to Catalog/Stock/Discount through their MCP tools — fully deterministic, with bounded retries and a dead-letter queue.
+Each service is a self-contained bounded context. Synchronous read/write traffic goes **client → YARP gateway → service**, secured by JWT bearer tokens with OAuth scopes issued by Identity.Server. State changes are published as **integration events** over RabbitMQ fanout exchanges; the `storefront` read model is built entirely by consuming those events on a **single sequential queue** (structurally eliminating concurrent writes to the same composite row). The **ChatAgent** reaches the services' MCP endpoints through the gateway, injecting the calling user's token at invocation time so the agent acts *as that user*. The **Supplier.Gateway** periodically pulls the supplier feed (persistent **Hangfire** `feed-pull` recurring job — cron from config, storage in a separate `hangfire` schema of `supplierGatewayDb`, dev-only dashboard at `/hangfire`, failed pulls retried at most twice — or `POST /v1/feeds/pull`), compares each record with the last published snapshot, and publishes only new/changed records as canonical events; the stateless **IngestionAgent** consumes them one message at a time and writes to Catalog/Stock/Discount through their MCP tools — fully deterministic, with bounded retries and a dead-letter queue.
 
 ## Tech Stack
 
@@ -117,7 +117,7 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | `file-api` | Product image storage/serving (internal) |
 | `storefront-api` | Push-only composite read model (catalog + stock + discount) |
 | `supplier-api` | Supplier feed simulator — one typed JSON endpoint, no DB, no bus |
-| `supplier-gateway` | Supplier boundary — pulls the feed, normalizes to the canonical event, publishes only new/changed records (snapshots in `supplierGatewayDb`) |
+| `supplier-gateway` | Supplier boundary — Hangfire-scheduled feed pull, normalizes to the canonical event, publishes only new/changed records (snapshots in `supplierGatewayDb`) |
 | `gateway` | YARP reverse proxy / single entry point |
 | `identity-server` | Duende IdentityServer — OIDC/OAuth authority |
 | `chat-agent` | AI shopping assistant (MCP client over the gateway) |

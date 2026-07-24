@@ -42,6 +42,26 @@ public sealed class FeedPullService(
         return true;
     }
 
+    // Hangfire yolu (008): çekimi bekler — süre/başarı/hata job sonucuna yansır. Kilit doluysa
+    // çekim yapmadan "skipped" loglar ve normal biter; exception yutulmaz (retry job üstündedir).
+    public async Task RunAsync(CancellationToken ct)
+    {
+        if (!await _gate.WaitAsync(TimeSpan.Zero, ct))
+        {
+            logger.LogInformation("Çekim zaten sürüyor; bu koşu atlandı (skipped)");
+            return;
+        }
+
+        try
+        {
+            await PullAsync(ct);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private async Task PullAsync(CancellationToken ct)
     {
         var body = await FetchAsync(ct);
@@ -49,7 +69,7 @@ public sealed class FeedPullService(
 
         if (records.Count == 0)
         {
-            logger.LogInformation("Feed boş ya da erişilemedi; çekim mesajsız kapandı (FR-008)");
+            logger.LogInformation("Feed boş; çekim mesajsız kapandı");
             return;
         }
 
@@ -80,23 +100,16 @@ public sealed class FeedPullService(
         logger.LogInformation("Feed çekimi bitti: {Total} kayıt, {Published} yayın", records.Count, published);
     }
 
-    // Erişilemeyen feed hata üretmez (FR-008): null döner, sonraki periyotta yeniden denenir.
+    // 008: erişilemeyen feed artık exception'dır — Hangfire job'ı failed olur, sınırlı retry devreye
+    // girer. Boş feed hata değildir (0 kayıt → mesajsız kapanış). Manuel uçta exception loglanır (kontrat aynı).
     private async Task<string?> FetchAsync(CancellationToken ct)
     {
         var supplierBase = configuration["services:supplier-api:http:0"] ?? "http://localhost:5299";
 
-        try
-        {
-            var client = httpClientFactory.CreateClient(HttpClients.Feeds);
-            using var response = await client.GetAsync($"{supplierBase}/v1/feeds", ct);
-            if (!response.IsSuccessStatusCode)
-                return null;
+        var client = httpClientFactory.CreateClient(HttpClients.Feeds);
+        using var response = await client.GetAsync($"{supplierBase}/v1/feeds", ct);
+        response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadAsStringAsync(ct);
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        return await response.Content.ReadAsStringAsync(ct);
     }
 }
