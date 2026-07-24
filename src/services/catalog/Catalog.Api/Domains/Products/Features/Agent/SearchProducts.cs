@@ -17,7 +17,7 @@ public static class SearchProducts
             CancellationToken ct)
         {
             var row = await session.Query<Product>()
-                .Where(x => !x.IsDeleted && x.IsActive && x.IsComplete &&
+                .Where(x => !x.IsDeleted && x.IsActive &&
                             x.Name.Contains(query.Name, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.Name)
                 .Select(x => new { x.Id })

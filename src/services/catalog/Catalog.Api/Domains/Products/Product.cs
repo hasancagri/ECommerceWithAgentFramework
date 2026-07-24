@@ -9,12 +9,7 @@ public class Product : AggregateRoot
     public BrandType Brand { get; private set; }
     public string? ImageUrl { get; private set; }
 
-    // Tamlik: aciklama VE gorsel dolu mu. Kalici; yalnizca aggregate icinde yeniden hesaplanir.
-    public bool IsComplete { get; private set; }
-
-    // Satista = admin aktif (IsActive) VE bilgisi tam (IsComplete). Turetilir, saklanmaz.
-    [Newtonsoft.Json.JsonIgnore]
-    public bool IsOnSale => IsActive && IsComplete;
+    // 010: tamlik (IsComplete) kurali bilincli kaldirildi — gorselsiz urun de bulunur/satilir.
 
     private Product()
     {
@@ -32,7 +27,6 @@ public class Product : AggregateRoot
             Brand = brand,
             ImageUrl = imageUrl
         };
-        product.RecalculateCompleteness();
         return product;
     }
 
@@ -45,19 +39,11 @@ public class Product : AggregateRoot
         Sku = sku;
         Brand = brand;
         ImageUrl = imageUrl;
-        RecalculateCompleteness();
     }
 
     public void UpdateImageUrl(string imageUrl)
     {
         ImageUrl = imageUrl;
-        RecalculateCompleteness();
-    }
-
-    // Invariant: IsComplete daima aciklama+gorsel dolulugunu yansitir (FR-001, FR-004).
-    private void RecalculateCompleteness()
-    {
-        IsComplete = !string.IsNullOrWhiteSpace(Description) && !string.IsNullOrWhiteSpace(ImageUrl);
     }
 
     public void Activate()
