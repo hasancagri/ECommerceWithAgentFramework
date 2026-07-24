@@ -6,7 +6,7 @@
         <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId">
             <img
                 src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/NoImage.jpeg" : Model.ImageUrl)"
-                class="card-img-top" alt="@Model.Name">
+                class="card-img-top product-thumb" alt="@Model.Name">
         </a>
 
         <div class="card-body">

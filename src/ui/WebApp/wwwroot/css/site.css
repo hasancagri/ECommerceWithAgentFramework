@@ -29,3 +29,10 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* Ürün kartı görselleri sabit, ölçülü bir yükseklikte tutulur; contain ile ürün kırpılmaz. */
+.product-thumb {
+  height: 200px;
+  object-fit: contain;
+  background-color: #f8f9fa;
+}
