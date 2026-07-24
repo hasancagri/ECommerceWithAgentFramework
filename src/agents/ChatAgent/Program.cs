@@ -23,8 +23,12 @@ builder.Services.AddMarten(opts =>
                 s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
 
-        opts.Schema.For<ChatAgent.Conversations.ConversationDocument>();
+        // DocumentAlias şart: alias verilmezse tablo adı ÇALIŞMA ANI locale'iyle küçültülüyor —
+        // tr'de "ItemDocument" → "ıtemdocument" (noktasız ı) çıktı; locale değişirse tablo "kaybolur".
+        opts.Schema.For<ChatAgent.Conversations.ConversationDocument>()
+            .DocumentAlias("conversation");
         opts.Schema.For<ChatAgent.Conversations.ConversationItemDocument>()
+            .DocumentAlias("conversation_item")
             .Index(x => x.ConversationId);
     })
     .ApplyAllDatabaseChangesOnStartup();

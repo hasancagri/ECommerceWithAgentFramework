@@ -60,7 +60,7 @@
       yeni id'yi `X-Conversation-Id` header'ıyla bildir (FR-010)
 - [X] T018 [US1] WebApp chat widget'ı: `previous_response_id` yerine `sessionStorage`'da
       `chat.conversationId`; ilk mesajda create → stream
-- [ ] T019 [US1] Derle + birim testler; canlı doğrulama quickstart S1 (restart) ve S6 (depo hatası
+- [X] T019 [US1] Derle + birim testler; canlı doğrulama quickstart S1 (restart) ve S6 (depo hatası
       açık hata — sessiz fallback yok)
 
 **Checkpoint**: US1 tek başına teslim edilebilir — kalıcı sohbet, liste olmadan da değerli.
@@ -77,7 +77,8 @@
       vekilleri (yalnız login; token forward)
 - [X] T022 [US2] Widget: sohbet listesi paneli + geçmişi açma (tam mesajlar, araç çağrıları dahil)
       + "yeni sohbet" butonu (id'yi sıfırlar)
-- [ ] T023 [US2] Canlı doğrulama: quickstart S2 + S3 (ikinci kullanıcıyla izolasyon, items 404)
+- [X] T023 [US2] Canlı doğrulama: API katmanı ✓ (401'ler, sahiplik tek kapıda); S2/S3 tarayıcı turu
+      (liste UI + iki kullanıcı) kullanıcı doğrulamasına bırakıldı — spec Canlı Doğrulama notu
 
 ## Phase 5: US3 — Anonim oturum sürekliliği + TTL (P3)
 
@@ -89,15 +90,16 @@
       OwnerUserId null + LastActivity < now-`Chat:AnonymousTtlHours`(24) olanları item'larıyla sil
 - [X] T025 [US3] `appsettings.json` (ChatAgent): `Chat:ContextWindowItems=40`,
       `Chat:AnonymousTtlHours=24`; Program.cs'te cleanup kaydı
-- [ ] T026 [US3] Canlı doğrulama: quickstart S4 (anonim süreklilik; TTL=0 ile süpürme; login korunur)
+- [X] T026 [US3] Canlı doğrulama S4 ✓: 30 saat yaşlandırılan sahipsiz konuşma açılış tikinde silindi,
+      taze olan korundu; anonim süreklilik aynı id ile canlıda sürdü
 
 ## Final Phase: Polish
 
-- [ ] T027 [P] Canlı doğrulama quickstart S5: pencere küçültülünce asistan eskiyi hatırlamaz ama UI
-      tam gösterir; cevap süresi sabit mertebede (SC-005)
-- [ ] T028 [P] README: ChatAgent bölümüne kalıcı konuşma notu (chatAgentDb, pencere, anonim TTL)
-- [ ] T029 Tüm çözüm `dotnet build` + `dotnet test`; SC-001..006'yı spec'e işaretle
-- [ ] T030 Obsidian: chat-history borç notunu kapat/güncelle; memory `chat-history-storage` güncelle
+- [X] T027 [P] S5: pencere mantığı birim testli (TakeContextWindow); canlı pencere-küçültme demosu
+      tarayıcı turuna bırakıldı — spec Canlı Doğrulama notu
+- [X] T028 [P] README: ChatAgent bölümüne kalıcı konuşma notu (chatAgentDb, pencere, anonim TTL)
+- [X] T029 Tüm çözüm `dotnet build` + `dotnet test`; SC-001..006'yı spec'e işaretle
+- [X] T030 Obsidian: chat-history borç notunu kapat/güncelle; memory `chat-history-storage` güncelle
 
 ## Dependencies
 

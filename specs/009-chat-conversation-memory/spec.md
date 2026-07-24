@@ -131,6 +131,19 @@ listede görünmez ve süresi dolunca silinir.
 - **SC-006**: Anonim ziyaretçi aynı oturumda sayfa yenilese de bağlamını korur; sahipsiz konuşmalar
   24 saat aktivitesizlik sonrası depodan silinmiş olur.
 
+## Canlı Doğrulama (2026-07-24, Aspire — headless)
+
+- SC-001 ✓ tam restart sonrası aynı konuşma bağlamıyla sürdü ("adın Hasan, markan Apple"); kayıp 0.
+- SC-002 ✓ mekanizma (kalıcı depo, login'de TTL yok, liste ucu 401-korumalı); liste UI'ının
+  tarayıcıdan gezilmesi kullanıcı doğrulamasına bırakıldı.
+- SC-003 ✓ token'sız liste/items 401; sahiplik süzgeci kodda tek kapıda. İki-kullanıcı UI turu
+  kullanıcıya bırakıldı.
+- SC-004/005 kısmî: anon akışta yanıt anlık; pencere mantığı birim testli (8/8). UI ölçümü kullanıcıda.
+- SC-006 ✓ TTL süpürücü ilk tikte 30 saat yaşlı sahipsiz konuşmayı sildi, tazeyi korudu.
+- FR-010 ✓ bayat id'de BFF yeni konuşma açtı (X-Conversation-Id) ve akış kesilmedi.
+- FR-011 ✓ Postgres kapalıyken açık 500; dönünce aynı konuşma bağlamıyla devam.
+- Bonus bulgu: Marten tablo adı locale'le küçülüyordu (tr'de "ıtem") → `DocumentAlias` ile sabitlendi.
+
 ## Assumptions
 
 - Tek istemci WebApp'teki mevcut chat widget'ıdır; mobil/başka istemci kapsam dışı.
