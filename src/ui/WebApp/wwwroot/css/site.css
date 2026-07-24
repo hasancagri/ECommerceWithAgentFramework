@@ -32,7 +32,7 @@ body {
 
 /* Ürün kartı görselleri sabit, ölçülü bir yükseklikte tutulur; contain ile ürün kırpılmaz. */
 .product-thumb {
-  height: 200px;
+  height: 170px;
   object-fit: contain;
   background-color: #f8f9fa;
 }
