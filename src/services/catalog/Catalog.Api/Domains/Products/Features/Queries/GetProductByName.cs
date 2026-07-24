@@ -38,7 +38,7 @@ public static class GetProductByName
             // Isme gore (kismi, buyuk/kucuk harf duyarsiz) en iyi eslesen TEK urun.
             // Musteri aramasi: yalnizca satista (aktif VE tam) urunler gorunur.
             var product = await session.Query<Product>()
-                .Where(x => !x.IsDeleted && x.IsActive && x.IsComplete &&
+                .Where(x => !x.IsDeleted && x.IsActive &&
                             x.Name.Contains(query.Name, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.Name)
                 .FirstOrDefaultAsync(ct);

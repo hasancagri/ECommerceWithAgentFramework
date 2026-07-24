@@ -15,8 +15,6 @@ public static class GetAllProducts
         public BrandType Brand { get; set; }
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
-        public bool IsComplete { get; set; }
-        public bool IsOnSale { get; set; }
 
         public static ProductResponse From(Product p) => new()
         {
@@ -27,9 +25,7 @@ public static class GetAllProducts
             Sku = p.Sku,
             Brand = p.Brand,
             ImageUrl = p.ImageUrl,
-            IsActive = p.IsActive,
-            IsComplete = p.IsComplete,
-            IsOnSale = p.IsOnSale
+            IsActive = p.IsActive
         };
     }
     
