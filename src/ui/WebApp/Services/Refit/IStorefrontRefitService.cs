@@ -6,5 +6,5 @@ namespace WebApp.Services.Refit;
 public interface IStorefrontRefitService
 {
     [Get("/api/v1/storefront/products")]
-    Task<ApiResponse<List<StorefrontProductDto>>> GetProducts();
+    Task<ApiResponse<StorefrontProductPagedDto>> GetProducts(int page, int pageSize);
 }
