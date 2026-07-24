@@ -76,7 +76,7 @@ Development dışı ortamda uç map'li değildir.
 - [X] T016 [P] README'nin Supplier.Gateway bölümüne kısa not: zamanlama artık Hangfire ("feed-pull"),
       pano `/hangfire` (yalnız dev), storage `supplierGatewayDb`/`hangfire` şeması
 - [X] T017 Tüm çözümü derle + tüm testleri koş (`dotnet build`, `dotnet test`); SC-001..005'i spec'e göre işaretle
-- [ ] T018 Obsidian `todo-ingestion-hangfire-scheduler` notunu kapat (status: done, as-built özet)
+- [X] T018 Obsidian `todo-ingestion-hangfire-scheduler` notunu kapat (status: done, as-built özet)
 
 ## Dependencies
 
