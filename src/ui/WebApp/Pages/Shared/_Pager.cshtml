@@ -1,0 +1,24 @@
+@model WebApp.ViewModel.PagerViewModel
+
+@* 011 FR-003/004: numaralı pager + Önceki/Sonraki; tek sayfa varsa hiç çizilmez. *@
+@* asp-route-page kasıtlı olarak kullanılmaz: "page" adı asp-page tarafından ayrılmış
+   route-value anahtarıyla çakışır ve query string'i sessizce düşürür. *@
+@if (Model.PageCount > 1)
+{
+    <nav class="mt-4" aria-label="Product pages">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.HasPreviousPage ? null : "disabled")">
+                <a class="page-link" href="/Products?page=@(Model.PageNumber - 1)">Previous</a>
+            </li>
+            @for (var i = 1; i <= Model.PageCount; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : null)">
+                    <a class="page-link" href="/Products?page=@i">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? null : "disabled")">
+                <a class="page-link" href="/Products?page=@(Model.PageNumber + 1)">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

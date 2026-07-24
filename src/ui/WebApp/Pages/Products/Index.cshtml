@@ -1,0 +1,30 @@
+@page
+@using WebApp.ViewModel
+@model WebApp.Pages.Products.IndexModel
+@{
+    ViewData["Title"] = "All Products";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">All Products</h2>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @if (!Model.Products.Any())
+        {
+            <div class="col">
+                <div class="alert alert-warning" role="alert">
+                    No Products Found!
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var product in Model.Products)
+            {
+                <partial name="_ProductCard" model="product"/>
+            }
+        }
+    </div>
+
+    <partial name="_Pager" model="new PagerViewModel(Model.PageNumber, Model.PageCount)"/>
+</div>
