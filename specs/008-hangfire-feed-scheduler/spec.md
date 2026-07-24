@@ -110,6 +110,15 @@ en fazla 2 kez yeniden denenir; kalıcı hatada 2 denemeden sonra durur.
 - **SC-004**: Geçici feed hatası operatör müdahalesi olmadan en fazla 2 yeniden denemeyle telafi edilir.
 - **SC-005**: Uygulama yeniden başlatıldığında zamanlama tanımı ve koşu geçmişi kaybolmaz.
 
+## Canlı Doğrulama (2026-07-24, Aspire)
+
+- SC-001 ✓ ilk çekim +60sn'de koştu; tanım `*/30 * * * *` ile kuruldu (Postgres `hangfire.hash`'te görüldü).
+- SC-002 ✓ pano koşuları süre/sonuçla listeledi; Trigger now 204 döndü, koşu saniyeler içinde geçmişe düştü.
+- SC-003 ✓ kilit birim testle kanıtlı (`FeedPullRunTests`): süren çekim varken ikinci koşu fetch'e inmez.
+- SC-004 ✓ Supplier.Api kapalıyken: deneme + 2 retry (`TimeoutRejectedException`, 30sn resilience) → kalıcı failed;
+  feed dönünce sonraki koşu yeşile döndü.
+- SC-005 ✓ restart sonrası tanım + succeeded/failed geçmişi korundu (storage `supplierGatewayDb`/`hangfire`).
+
 ## Assumptions
 
 - Amaç öğrenme + kalıcı zamanlama/pano; kaçan tick'in geriye dönük telafisi (misfire catch-up) hedef değil.

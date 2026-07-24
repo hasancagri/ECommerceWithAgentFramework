@@ -59,6 +59,15 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapFeedEndpoints();
 
+// FR-008: pano yalnız dev'de var — auth'suz yüzey Development dışına açılmaz.
+if (app.Environment.IsDevelopment())
+{
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new Supplier.Gateway.HangfireDashboardAllowAllFilter()]
+    });
+}
+
 // 008: zamanlama açılışta idempotent kurulur (FR-002); ilk çekim gecikmeli job'dır (FR-003).
 // Expression'daki CancellationToken.None yer tutucudur — gerçek token'ı koşum anında Hangfire verir.
 var pullCron = builder.Configuration.GetValue("Feeds:PullCron", "*/30 * * * *")!;

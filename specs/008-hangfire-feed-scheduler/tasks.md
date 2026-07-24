@@ -56,9 +56,9 @@ restart sonrası job tanımı storage'da durur.
 **Independent Test**: Dev'de `/hangfire` açılır, koşular listelenir, Trigger now çekim koşturur;
 Development dışı ortamda uç map'li değildir.
 
-- [ ] T012 [US2] `Program.cs`: `app.UseHangfireDashboard("/hangfire", ...)` yalnız `IsDevelopment()` bloğunda;
+- [X] T012 [US2] `Program.cs`: `app.UseHangfireDashboard("/hangfire", ...)` yalnız `IsDevelopment()` bloğunda;
       dev-only anonim erişim filtresi (Aspire proxy'si arkasında local-only filtre yetmeyebilir)
-- [ ] T013 [US2] Canlı doğrulama (Aspire): panoda "feed-pull" görünür, Trigger now koşuyu başlatır ve geçmişe düşer;
+- [X] T013 [US2] Canlı doğrulama (Aspire): panoda "feed-pull" görünür, Trigger now koşuyu başlatır ve geçmişe düşer;
       kilit doluyken tetik "skipped" olarak başarılı biter
 
 ## Phase 5: US3 — Sınırlı otomatik telafi (P3)
@@ -67,15 +67,15 @@ Development dışı ortamda uç map'li değildir.
 
 **Independent Test**: Supplier.Api kapalıyken tetik → job failed + 2 retry planlanır; sonra durur.
 
-- [ ] T014 [US3] `FeedPullJob`'a `[AutomaticRetry(Attempts = 2)]` ekle; başarısızlığın job'a yansıması için
+- [X] T014 [US3] `FeedPullJob`'a `[AutomaticRetry(Attempts = 2)]` ekle; başarısızlığın job'a yansıması için
       `RunAsync`'in exception'ı fırlattığını (T007) doğrula
-- [ ] T015 [US3] Canlı doğrulama: feed erişilemezken tetikle → failed + en fazla 2 retry; feed dönünce koşu yeşile döner
+- [X] T015 [US3] Canlı doğrulama: feed erişilemezken tetikle → failed + en fazla 2 retry; feed dönünce koşu yeşile döner
 
 ## Final Phase: Polish
 
-- [ ] T016 [P] README'nin Supplier.Gateway bölümüne kısa not: zamanlama artık Hangfire ("feed-pull"),
+- [X] T016 [P] README'nin Supplier.Gateway bölümüne kısa not: zamanlama artık Hangfire ("feed-pull"),
       pano `/hangfire` (yalnız dev), storage `supplierGatewayDb`/`hangfire` şeması
-- [ ] T017 Tüm çözümü derle + tüm testleri koş (`dotnet build`, `dotnet test`); SC-001..005'i spec'e göre işaretle
+- [X] T017 Tüm çözümü derle + tüm testleri koş (`dotnet build`, `dotnet test`); SC-001..005'i spec'e göre işaretle
 - [ ] T018 Obsidian `todo-ingestion-hangfire-scheduler` notunu kapat (status: done, as-built özet)
 
 ## Dependencies
