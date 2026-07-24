@@ -45,10 +45,32 @@ builder.Host.UseWolverine(opts =>
 builder.Services.AddHttpClient(HttpClients.Feeds);
 
 builder.Services.AddSingleton<FeedPullService>();
-builder.Services.AddHostedService<FeedScheduler>(); // ilk çekim 1 dk sonra, sonra 30 dk'da bir (config)
+
+// 008: kalıcı zamanlayıcı Hangfire — storage aynı DB'de ayrı "hangfire" şeması (Marten şemasına dokunmaz).
+builder.Services.AddHangfire(cfg => cfg
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(pg => pg.UseNpgsqlConnection(supplierGatewayDb),
+        new PostgreSqlStorageOptions { SchemaName = "hangfire" }));
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapFeedEndpoints();
+
+// 008: zamanlama açılışta idempotent kurulur (FR-002); ilk çekim gecikmeli job'dır (FR-003).
+// Expression'daki CancellationToken.None yer tutucudur — gerçek token'ı koşum anında Hangfire verir.
+var pullCron = builder.Configuration.GetValue("Feeds:PullCron", "*/30 * * * *")!;
+var firstPullDelay = TimeSpan.FromSeconds(builder.Configuration.GetValue("Feeds:FirstPullDelaySeconds", 60));
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<IRecurringJobManager>()
+        .AddOrUpdate<FeedPullJob>("feed-pull", job => job.RunAsync(CancellationToken.None), pullCron);
+
+    scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>()
+        .Schedule<FeedPullJob>(job => job.RunAsync(CancellationToken.None), firstPullDelay);
+}
 
 await app.RunAsync();

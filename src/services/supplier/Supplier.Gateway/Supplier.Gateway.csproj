@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Hangfire.AspNetCore" />
+        <PackageReference Include="Hangfire.PostgreSql" />
         <PackageReference Include="Marten" />
         <PackageReference Include="Marten.Newtonsoft" />
         <PackageReference Include="WolverineFx.RabbitMQ" />

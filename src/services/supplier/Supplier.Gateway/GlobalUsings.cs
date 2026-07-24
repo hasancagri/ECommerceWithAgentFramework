@@ -1,3 +1,5 @@
+global using Hangfire;
+global using Hangfire.PostgreSql;
 global using Marten;
 global using Marten.Newtonsoft;
 global using Shared;
