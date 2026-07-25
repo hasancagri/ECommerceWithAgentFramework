@@ -20,6 +20,16 @@
         <PackageReference Include="Scrutor" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="ModelContextProtocol.AspNetCore" />
+        <PackageReference Include="Grpc.Net.ClientFactory" />
+        <PackageReference Include="Google.Protobuf" />
+        <PackageReference Include="Grpc.Tools">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <!-- 012: Stock rezervasyon gRPC istemcisi (paylaşılan proto). -->
+    <ItemGroup>
+        <Protobuf Include="..\..\..\others\Shared\Protos\stock_reservation.proto" GrpcServices="Client" />
     </ItemGroup>
 
     <ItemGroup>

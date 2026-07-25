@@ -25,3 +25,5 @@ global using Common.Utils.Constants;
 global using Shared.Utils.Constants;
 global using Common.Utils.Authorization;
 global using Common.Auths;
+global using Shared.Grpc.Stock;
+global using Order.Api.Grpc;

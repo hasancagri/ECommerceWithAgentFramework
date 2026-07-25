@@ -17,9 +17,13 @@ kendi Postgres veritabanı, kendi Marten şeması ve kendi domain modeli vardır
   sızdırılamaz.
 - Bir servis başka bir servisin veritabanına, tablosuna, DbContext'ine veya
   aggregate'ine **doğrudan erişemez**.
-- Context'ler arası iletişim yalnızca **integration event'leri** (RabbitMQ fanout)
-  ve **MCP** ile olur. Paylaşılabilen tek şey `Shared.IntegrationEvents`'teki
-  bilinçli sözleşmelerdir.
+- Context'ler arası iletişim **integration event'leri** (RabbitMQ fanout), **MCP** ve —
+  anlık evet/hayır gerektiren senkron kararlar için — **tipli senkron RPC (gRPC/HTTP)**
+  ile olur. Senkron RPC yalnız bilinçli bir kontrat üzerinden yapılır ve DB izolasyonunu
+  bozmaz (bir servis diğerinin DB/tablo/aggregate'ine yine doğrudan erişemez). Paylaşılabilen
+  tek şey `Shared.IntegrationEvents` / `Shared/Protos` gibi bilinçli sözleşmelerdir.
+  Örnek: stok rezervasyonu (012) Basket/Order→Stock gRPC (request/response zorunlu; async
+  event anlık karar veremez).
 
 ### II. Zengin Aggregate, İçeride Korunan Invariant'lar
 
@@ -148,4 +152,8 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.1.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-21
+**Version**: 1.2.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-24
+
+<!-- v1.2.0 (2026-07-24, MINOR): İlke I'e tipli senkron RPC (gRPC/HTTP) sanksiyonlu
+     servisler-arası kanal olarak eklendi (DB izolasyonu korunur). Gerekçe: stok
+     rezervasyonu (spec 012) anlık evet/hayır kararı gerektirir; async event/MCP yetmez. -->

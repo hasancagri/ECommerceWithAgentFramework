@@ -43,17 +43,22 @@ var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
     .WaitFor(stockDb)
     .WaitFor(rabbit);
 
+// 012: Basket & Order, Stock'a senkron gRPC (rezervasyon Reserve/Release/Commit) çağırır.
 var basketApi = builder.AddProject<Projects.Basket_Api>("basket-api")
     .WithReference(basketDb)
     .WithReference(rabbit)
+    .WithReference(stockApi)
     .WaitFor(basketDb)
-    .WaitFor(rabbit);
+    .WaitFor(rabbit)
+    .WaitFor(stockApi);
 
 var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
     .WithReference(orderDb)
     .WithReference(rabbit)
+    .WithReference(stockApi)
     .WaitFor(orderDb)
-    .WaitFor(rabbit);
+    .WaitFor(rabbit)
+    .WaitFor(stockApi);
 
 var discountApi = builder.AddProject<Projects.Discount_Api>("discount-api")
     .WithReference(discountDb)
@@ -114,17 +119,9 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
 // Tedarikçi simülatörü: DB'siz (dataset dosyalarını istek anında okur — 005/R12).
 var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
 
-// Sınır bileşeni (007): feed'i çeker, değişiklik kapısından geçen kaydı kanonik event'le yayınlar.
-builder.AddProject<Projects.Supplier_Gateway>("supplier-gateway")
-    .WithReference(supplierGatewayDb)
-    .WithReference(supplierApi)
-    .WithReference(rabbit)
-    .WaitFor(supplierGatewayDb)
-    .WaitFor(supplierApi)
-    .WaitFor(rabbit);
-
 // Ingestion (007): DB'siz saf tüketici — kuyruktan okur, MCP ile domain servislerine yazar.
-builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
+// Kuyruk + binding'i (DLQ argümanlı) provision eden TARAF budur; gateway bunu bekler (aşağıda).
+var ingestionAgent = builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
     .WithReference(rabbit)
     .WithReference(catalogApi)
     .WithReference(stockApi)
@@ -133,6 +130,18 @@ builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
     .WaitFor(catalogApi)
     .WaitFor(stockApi)
     .WaitFor(discountApi);
+
+// Sınır bileşeni (007): feed'i çeker, değişiklik kapısından geçen kaydı kanonik event'le yayınlar.
+// 012: WaitFor(ingestionAgent) — tüketici kuyruğu provision etmeden feed yayınlanmasın; yoksa
+// soğuk açılışta ilk publish bağlı-kuyruksuz fanout'a düşer (sessiz kayıp → snapshot dolu, Catalog boş).
+builder.AddProject<Projects.Supplier_Gateway>("supplier-gateway")
+    .WithReference(supplierGatewayDb)
+    .WithReference(supplierApi)
+    .WithReference(rabbit)
+    .WaitFor(supplierGatewayDb)
+    .WaitFor(supplierApi)
+    .WaitFor(rabbit)
+    .WaitFor(ingestionAgent);
 
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);

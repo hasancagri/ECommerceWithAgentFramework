@@ -5,6 +5,8 @@ public record BasketItemViewModel(
     string Name,
     string ImageUrl,
     decimal Price,
-    decimal? PriceByApplyDiscountRate)
+    decimal? PriceByApplyDiscountRate,
+    int Quantity,
+    DateTimeOffset? ReservationExpiresAt)
 {
 }

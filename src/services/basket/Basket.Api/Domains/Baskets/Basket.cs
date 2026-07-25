@@ -21,12 +21,12 @@ public class Basket : AggregateRoot
 
     public decimal GetTotalPrice()
     {
-        return _items.Sum(x => x.Price);
+        return _items.Sum(x => x.Price * x.Quantity);
     }
 
     public decimal? GetTotalPriceWithAppliedDiscount()
     {
-        return !IsApplyDiscount() ? null : _items.Sum(x => x.PriceByApplyDiscountRate);
+        return !IsApplyDiscount() ? null : _items.Sum(x => x.PriceByApplyDiscountRate * x.Quantity);
     }
 
     public void AddItem(BasketItem item)
@@ -38,6 +38,28 @@ public class Basket : AggregateRoot
         _items.Add(item);
         if (IsApplyDiscount())
             item.ApplyDiscount(AppliedDiscount!.Rate);
+    }
+
+    // 012: bir urunun sepetteki mevcut adedi (handler yeni rezervasyon adedini hesaplarken kullanir).
+    public int GetItemQuantity(Guid productId) =>
+        _items.FirstOrDefault(x => x.Id == productId)?.Quantity ?? 0;
+
+    // 012: urunu verilen mutlak adede getirir (upsert). Rezervasyon Stock'ta kararlastirildiktan sonra
+    // handler bunu cagirir; ayna model (sepet adedi = rezervasyon adedi). expiresAt UI geri sayimi icin.
+    public void SetItem(Guid id, string name, string? imageUrl, decimal price, int quantity,
+        DateTimeOffset? expiresAt)
+    {
+        var existing = _items.FirstOrDefault(x => x.Id == id);
+        if (existing is null)
+        {
+            existing = new BasketItem(id, name, imageUrl, price);
+            _items.Add(existing);
+        }
+
+        existing.SetQuantity(quantity);
+        existing.SetReservationExpiresAt(expiresAt);
+        if (IsApplyDiscount())
+            existing.ApplyDiscount(AppliedDiscount!.Rate);
     }
 
     public FeatureResultModel RemoveItem(Guid itemId)

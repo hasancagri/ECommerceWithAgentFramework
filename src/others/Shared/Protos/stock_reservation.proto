@@ -1,0 +1,53 @@
+// Stok Rezervasyonu — servisler-arası senkron kontrat (spec 012).
+// Sunucu: Stock.Api (GrpcServices=Server). İstemci: Basket.Api + Order.Api (GrpcServices=Client).
+// Her tüketici .csproj'u bu dosyayı uygun GrpcServices ile <Protobuf Include> eder.
+syntax = "proto3";
+
+option csharp_namespace = "Shared.Grpc.Stock";
+
+package stockreservation;
+
+service StockReservation {
+  // Sepete ekleme/artırma: kullanıcının bu ürün için rezervasyonunu mutlak adede getirir.
+  // Idempotent (ayna model). quantity=0 => release.
+  rpc SetReservedQuantity (SetReservedQuantityRequest) returns (ReservationReply);
+
+  // Rezervasyonu tamamen bırak (sepetten çıkarma).
+  rpc Release (ReleaseRequest) returns (ReservationReply);
+
+  // Sipariş: geçerli rezervasyonu kalıcı stok düşüşüne çevir.
+  rpc Commit (CommitRequest) returns (ReservationReply);
+}
+
+message SetReservedQuantityRequest {
+  string product_id = 1;   // Guid
+  string user_id = 2;      // Guid (sepet sahibi)
+  int32 quantity = 3;      // hedef adet; 0 => release
+}
+
+message ReleaseRequest {
+  string product_id = 1;
+  string user_id = 2;
+}
+
+message CommitRequest {
+  string product_id = 1;
+  string user_id = 2;
+  int32 quantity = 3;
+}
+
+message ReservationReply {
+  bool success = 1;
+  ReservationStatus status = 2;
+  int32 available = 3;             // işlem sonrası Available (UI "son N adet")
+  string expires_at = 4;          // ISO-8601; SetReservedQuantity için geri sayım kaynağı
+  string message_code = 5;        // hata resource sabiti (ör. STOCK_INSUFFICIENT)
+}
+
+enum ReservationStatus {
+  RESERVATION_STATUS_UNSPECIFIED = 0;
+  OK = 1;
+  INSUFFICIENT_STOCK = 2;
+  PRODUCT_NOT_FOUND = 3;
+  NO_ACTIVE_RESERVATION = 4;
+}

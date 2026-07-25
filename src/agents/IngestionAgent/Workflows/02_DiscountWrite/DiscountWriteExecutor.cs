@@ -1,4 +1,4 @@
-namespace IngestionAgent.Workflows._03_DiscountWrite;
+namespace IngestionAgent.Workflows._02_DiscountWrite;
 
 // Aşama 3 — indirim (FR-016): yüzde dolu → set (upsert); boş → remove. Remove, agent yüzünde
 // idempotenttir (FR-022): indirimsiz üründe etkisiz başarı — yeniden teslim zararsız kalır.
@@ -6,11 +6,10 @@ public sealed class DiscountWriteExecutor(DiscountWriterAgent discountAgent)
     : Executor<RecordJob, RecordJob>("discount-write")
 {
     private const string DiscountWriteFailed = "DISCOUNT_WRITE_FAILED";
-
     public static bool ShouldSet(decimal? discountPercent) => discountPercent.HasValue;
 
     public override async ValueTask<RecordJob> HandleAsync(
-        RecordJob job, IWorkflowContext context, CancellationToken cancellationToken)
+        RecordJob job, IWorkflowContext context, CancellationToken cancellationToken = default)
     {
         if (job.Failure is not null)
         {

@@ -150,4 +150,54 @@ public class BasketTests
         basket.AppliedDiscount.ShouldBeNull();
         basket.Items[0].PriceByApplyDiscountRate.ShouldBeNull();
     }
+
+    // --- 012-stock-reservation: Quantity ---
+
+    [Fact]
+    public void SetItem_AddsNewItem_WithQuantityAndExpiry()
+    {
+        var basket = BasketAggregate.Create(Guid.NewGuid());
+        var id = Guid.NewGuid();
+        var expiry = DateTimeOffset.UnixEpoch.AddMinutes(15);
+
+        basket.SetItem(id, "product", null, 100m, 3, expiry);
+
+        basket.Items.Count.ShouldBe(1);
+        basket.Items[0].Quantity.ShouldBe(3);
+        basket.Items[0].ReservationExpiresAt.ShouldBe(expiry);
+    }
+
+    [Fact]
+    public void SetItem_OnExistingItem_UpdatesQuantity_NoDuplicate()
+    {
+        var basket = BasketAggregate.Create(Guid.NewGuid());
+        var id = Guid.NewGuid();
+        basket.SetItem(id, "product", null, 100m, 1, null);
+
+        basket.SetItem(id, "product", null, 100m, 4, null);
+
+        basket.Items.Count.ShouldBe(1);
+        basket.Items[0].Quantity.ShouldBe(4);
+    }
+
+    [Fact]
+    public void GetItemQuantity_ReturnsQuantity_OrZeroWhenAbsent()
+    {
+        var basket = BasketAggregate.Create(Guid.NewGuid());
+        var id = Guid.NewGuid();
+        basket.SetItem(id, "product", null, 100m, 2, null);
+
+        basket.GetItemQuantity(id).ShouldBe(2);
+        basket.GetItemQuantity(Guid.NewGuid()).ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetTotalPrice_MultipliesByQuantity()
+    {
+        var basket = BasketAggregate.Create(Guid.NewGuid());
+        basket.SetItem(Guid.NewGuid(), "a", null, 100m, 2, null);
+        basket.SetItem(Guid.NewGuid(), "b", null, 50m, 3, null);
+
+        basket.GetTotalPrice().ShouldBe(100m * 2 + 50m * 3);
+    }
 }

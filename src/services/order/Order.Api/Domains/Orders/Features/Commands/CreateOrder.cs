@@ -9,12 +9,14 @@ public static class CreateOrder
         List<OrderItemDto> Items);
 
     public record AddressDto(string Province, string District, string Street, string ZipCode, string Line);
-    public record OrderItemDto(Guid ProductId, string ProductName, decimal UnitPrice);
+    // 012: Quantity varsayilan 1 (geriye-uyumlu; WebApp checkout adet gonderir).
+    public record OrderItemDto(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity = 1);
 
     [Transactional]
     public class CreateOrderCommandHandler(
         IDocumentSession session,
         IHttpContextAccessor httpContextAccessor,
+        StockCommitClientProxy stockCommit,
         IMessageBus bus)
     {
         public async Task<FeatureResultModel> Handle(CreateOrderCommand cmd, CancellationToken ct)
@@ -34,8 +36,18 @@ public static class CreateOrder
 
             foreach (var item in cmd.Items)
             {
-                var addResult = order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice);
+                var addResult = order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Quantity);
                 if (!addResult.IsSuccess) return addResult;
+            }
+
+            // 012 (US2/FR-008): stogu KALICI dusur (Commit). Gecerli rezervasyon yoksa/erisilemezse
+            // siparis OLUSTURULMAZ (oversell yasak). Odeme alinmis olabilir -> refund kapsam disi.
+            foreach (var item in cmd.Items)
+            {
+                var commit = await stockCommit.CommitAsync(item.ProductId, userId, item.Quantity, ct);
+                if (!commit.Success)
+                    return FeatureResultModel.Error(new MessageItem
+                        { Property = nameof(item.ProductId), Code = commit.Code });
             }
 
             order.SetPaidStatus(cmd.PaymentId);

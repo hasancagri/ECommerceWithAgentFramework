@@ -13,8 +13,8 @@ public record OrderHistoryViewModel(string DateTime, string TotalPrice)
     public ImmutableList<OrderItemViewModel> GetItems => OrderItems.ToImmutableList();
 
 
-    public void AddItem(Guid productId, string productName, decimal unitPrice)
+    public void AddItem(Guid productId, string productName, decimal unitPrice, int quantity)
     {
-        OrderItems.Add(new OrderItemViewModel(productId, productName, unitPrice));
+        OrderItems.Add(new OrderItemViewModel(productId, productName, unitPrice, quantity));
     }
 }

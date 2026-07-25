@@ -81,6 +81,17 @@ public static class RabbitMqConstants
         }
     }
 
+    // 012: TTL dolunca Stock yayınlar, Basket tüketip sepet satırını siler (fanout).
+    public static class ReservationExpired
+    {
+        public const string Exchange = "stock.reservation-expired";
+
+        public static class Queues
+        {
+            public const string Basket = "basket.reservation-expired";
+        }
+    }
+
     // 007: Supplier.Gateway yayınlar, IngestionAgent tüketir; retry tükenince DLQ'ya düşer.
     public static class SupplierProductSnapshot
     {

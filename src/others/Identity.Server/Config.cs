@@ -41,6 +41,8 @@ public static class Config
 
         // stock.api
         new ApiScope("stock.write", "Stock API - yazma (artir/azalt)"),
+        // 012: Basket/Order -> Stock gRPC rezervasyonu (SetReservedQuantity/Release/Commit).
+        new ApiScope("stock.reserve", "Stock API - rezervasyon (sepet/siparis)"),
 
         // file.api: gorsel upload MCP tool'unu korur.
         new ApiScope("file.write", "File API - yazma (gorsel upload)"),
@@ -83,7 +85,7 @@ public static class Config
         },
         new ApiResource("stock.api", "Stock API")
         {
-            Scopes = { "stock.write" },
+            Scopes = { "stock.write", "stock.reserve" },
             UserClaims = ApiUserClaims,
         },
         // file.api: MCP upload yuzeyi file.write scope'uyla korunur.
@@ -147,7 +149,7 @@ public static class Config
                 "order.read", "order.write",
                 "payment.read", "payment.write",
                 "discount.read", "discount.write",
-                "stock.write",
+                "stock.write", "stock.reserve",
                 "storefront.read",
             },
         },

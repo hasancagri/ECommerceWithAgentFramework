@@ -24,7 +24,7 @@ public class DetailModel(CatalogService catalogService, StockService stockServic
         if (productAsResult.IsFail) return ErrorPage(productAsResult);
 
         Product = productAsResult.Data!;
-        StockQuantity = await stockService.GetStockQuantityAsync(id);
+        StockQuantity = await stockService.GetAvailableQuantityAsync(id);
         return Page();
     }
 }

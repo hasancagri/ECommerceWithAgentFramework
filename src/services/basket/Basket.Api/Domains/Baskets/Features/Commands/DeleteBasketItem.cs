@@ -16,6 +16,7 @@ public static class DeleteBasketItem
         public async Task<FeatureObjectResultModel<DeleteBasketItemResponse>> Handle(
             DeleteBasketItemCommand cmd,
             IDocumentSession session,
+            StockReservationClientProxy reservation,
             CancellationToken ct)
         {
             var basket = await session.Query<Basket>()
@@ -27,6 +28,9 @@ public static class DeleteBasketItem
             var result = basket.RemoveItem(cmd.Id);
             if (!result.IsSuccess)
                 return FeatureObjectResultModel<DeleteBasketItemResponse>.Error(result.Messages);
+
+            // 012: sepetten cikinca rezervasyonu ANINDA birak (Available yukselir; OnHand sabit).
+            await reservation.ReleaseAsync(cmd.Id, cmd.UserId, ct);
 
             session.Store(basket);
             return FeatureObjectResultModel<DeleteBasketItemResponse>.Ok(new DeleteBasketItemResponse { Id = basket.Id });
