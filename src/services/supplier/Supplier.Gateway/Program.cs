@@ -18,6 +18,9 @@ builder.Services.AddMarten(opts =>
 
         opts.Schema.For<FeedSnapshot>();
     })
+    // 013: Wolverine transactional outbox — giden event ile snapshot AYNI Postgres tx'inde commit
+    // edilir; envelope tabloları supplierGatewayDb'de kalır (bounded-context izolasyonu korunur).
+    .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
 
 builder.Host.UseWolverine(opts =>
