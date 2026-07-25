@@ -29,6 +29,11 @@ builder.Host.UseWolverine(opts =>
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
 
+    // Giden mesajlar DURABLE outbox'tan geçsin: wolverine_outgoing_envelopes'a snapshot ile AYNI
+    // tx'te yazılır, relay ajanı crash sonrası da teslim eder. Buffered (varsayılan) olsaydı mesaj
+    // commit sonrası yalnız bellekte tutulur → process crash'te KAYIP (dual-write penceresi açık kalırdı).
+    opts.Policies.UseDurableOutboxOnAllSendingEndpoints();
+
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
