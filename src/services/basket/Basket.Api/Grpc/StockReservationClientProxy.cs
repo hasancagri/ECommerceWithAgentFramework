@@ -16,6 +16,10 @@ public sealed class StockReservationClientProxy(StockReservation.StockReservatio
 {
     public const string ReserveUnavailable = "STOCK_RESERVE_UNAVAILABLE";
 
+    // 012 robustluk: deadline'siz gRPC, hung Stock'ta (Aspire proxy arkasi) cagriyi askida birakir.
+    // Deadline -> DeadlineExceeded RpcException -> mevcut catch fail-closed'a duser (hizli reddetme).
+    private static readonly TimeSpan CallDeadline = TimeSpan.FromSeconds(5);
+
     public async Task<ReservationResult> SetReservedQuantityAsync(
         Guid productId, Guid userId, int quantity, CancellationToken ct)
     {
@@ -26,7 +30,7 @@ public sealed class StockReservationClientProxy(StockReservation.StockReservatio
                 ProductId = productId.ToString(),
                 UserId = userId.ToString(),
                 Quantity = quantity
-            }, cancellationToken: ct);
+            }, deadline: DateTime.UtcNow.Add(CallDeadline), cancellationToken: ct);
 
             return new ReservationResult
             {
@@ -50,7 +54,7 @@ public sealed class StockReservationClientProxy(StockReservation.StockReservatio
             {
                 ProductId = productId.ToString(),
                 UserId = userId.ToString()
-            }, cancellationToken: ct);
+            }, deadline: DateTime.UtcNow.Add(CallDeadline), cancellationToken: ct);
         }
         catch (RpcException)
         {
