@@ -8,6 +8,7 @@ public static class BasketEndpointExtension
             .WithTags("Baskets")
             .WithApiVersionSet(apiVersionSet)
             .AddBasketItemGroupItemEndpoint()
+            .SetBasketItemQuantityGroupItemEndpoint()
             .DeleteBasketItemGroupItemEndpoint()
             .GetBasketGroupItemEndpoint()
             .ApplyDiscountCouponGroupItemEndpoint()

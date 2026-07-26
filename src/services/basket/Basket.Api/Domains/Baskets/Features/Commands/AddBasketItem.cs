@@ -20,15 +20,23 @@ public static class AddBasketItem
         public async Task<FeatureObjectResultModel<AddBasketItemResponse>> Handle(
             AddBasketItemCommand cmd,
             IDocumentSession session,
+            StockReservationClientProxy reservation,
             CancellationToken ct)
         {
             var basket = await session.Query<Basket>()
                 .FirstOrDefaultAsync(x => x.UserId == cmd.UserId, ct);
 
-            var newItem = new BasketItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price);
-
             basket ??= Basket.Create(cmd.UserId);
-            basket.AddItem(newItem);
+
+            // 012: adet 1 artar; yeni toplam adet Stock'ta rezerve edilir (ayna). Yetersiz/erisilemez
+            // ise sepete YAZILMAZ (fail-closed, FR-018/US1).
+            var desiredQuantity = basket.GetItemQuantity(cmd.ProductId) + 1;
+            var reserve = await reservation.SetReservedQuantityAsync(cmd.ProductId, cmd.UserId, desiredQuantity, ct);
+            if (!reserve.Success)
+                return FeatureObjectResultModel<AddBasketItemResponse>.Error(
+                    new MessageItem { Property = nameof(cmd.ProductId), Code = reserve.Code });
+
+            basket.SetItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price, desiredQuantity, reserve.ExpiresAt);
 
             session.Store(basket);
             return FeatureObjectResultModel<AddBasketItemResponse>.Ok(new AddBasketItemResponse { Id = basket.Id });

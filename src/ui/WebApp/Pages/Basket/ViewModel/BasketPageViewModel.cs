@@ -33,4 +33,6 @@ public record BasketViewModelItem(
     string? PictureUrl,
     string Name,
     decimal Price,
-    decimal? PriceWithDiscountRate);
+    decimal? PriceWithDiscountRate,
+    int Quantity,
+    DateTimeOffset? ReservationExpiresAt);

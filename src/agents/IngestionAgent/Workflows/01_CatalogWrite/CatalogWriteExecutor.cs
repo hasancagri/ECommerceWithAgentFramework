@@ -17,7 +17,6 @@ public sealed class CatalogWriteExecutor(CatalogWriterAgent catalogAgent)
             if (outcome.Success && outcome.ProductId is not null)
             {
                 job.ProductId = outcome.ProductId;
-                job.CatalogAction = outcome.Action;
             }
             else
             {

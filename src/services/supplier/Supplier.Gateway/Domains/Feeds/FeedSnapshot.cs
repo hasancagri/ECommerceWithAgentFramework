@@ -11,11 +11,16 @@ public class FeedSnapshot
     private FeedSnapshot() { } // Marten/Newtonsoft
 
     // Yeni snapshot'ın içeriği boştur: ilk kıyas her zaman "değişti" der → ilk yayın (FR-005).
-    public static FeedSnapshot CreateFor(string externalId) => new() { Id = externalId };
+    public static FeedSnapshot CreateFor(string externalId)
+    {
+        return new FeedSnapshot { Id = externalId };
+    }
 
     // FR-005: kıyas record değer eşitliğiyle — ayrıca hash tutulmaz (R3).
     public bool IsUnchanged(IntegrationEvents.SupplierProductSnapshotReceived incoming)
-        => Content == incoming;
+    {
+        return Content == incoming;
+    }
 
     // Publish BAŞARISINDAN sonra çağrılır (FR-006: önce yayınla, sonra kaydet).
     public void Absorb(IntegrationEvents.SupplierProductSnapshotReceived incoming)

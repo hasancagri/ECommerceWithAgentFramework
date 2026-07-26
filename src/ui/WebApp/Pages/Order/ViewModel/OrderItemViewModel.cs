@@ -3,5 +3,6 @@
 public record OrderItemViewModel(
     Guid ProductId,
     string ProductName,
-    decimal UnitPrice
+    decimal UnitPrice,
+    int Quantity
 );

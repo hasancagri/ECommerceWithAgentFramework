@@ -23,6 +23,8 @@ public static class AuthorizationScopes
 
     // stock.api
     public const string StockWrite = "stock.write";
+    // 012: sepete ekleme/siparis aninda Basket/Order -> Stock gRPC rezervasyonu icin.
+    public const string StockReserve = "stock.reserve";
 
     // file.api
     public const string FileWrite = "file.write";

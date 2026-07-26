@@ -37,13 +37,18 @@
 
                     <h5 class="card-title">Stock</h5>
                     <p class="card-text">
-                        @if (Model.StockQuantity > 0)
+                        @* 012 (US5): Available'dan turetilmis stok rozeti — az kaldiginda "son N adet". *@
+                        @if (Model.StockQuantity <= 0)
                         {
-                            <span class="badge bg-success">In stock: @Model.StockQuantity</span>
+                            <span class="badge bg-danger">Out of stock</span>
+                        }
+                        else if (Model.StockQuantity <= 5)
+                        {
+                            <span class="badge bg-warning text-dark">Only @Model.StockQuantity left</span>
                         }
                         else
                         {
-                            <span class="badge bg-danger">Out of stock</span>
+                            <span class="badge bg-success">In stock</span>
                         }
                     </p>
                     <hr>

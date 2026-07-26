@@ -78,4 +78,173 @@ public class ProductStockTests
         result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_QUANTITY_CANNOT_BE_NEGATIVE);
         stock.Quantity.ShouldBe(10);
     }
+
+    // --- 012-stock-reservation ---
+
+    private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+
+    [Fact]
+    public void SetReservedQuantity_ReservesAndReducesAvailable()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+
+        var result = stock.SetReservedQuantity(user, 3, Ttl, now);
+
+        result.IsSuccess.ShouldBeTrue();
+        stock.AvailableAt(now).ShouldBe(2);
+        stock.OnHand.ShouldBe(5); // OnHand degismez
+    }
+
+    [Fact]
+    public void SetReservedQuantity_ExceedingAvailable_ReturnsInsufficient()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+
+        var result = stock.SetReservedQuantity(Guid.NewGuid(), 6, Ttl, now);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_INSUFFICIENT);
+        stock.AvailableAt(now).ShouldBe(5);
+    }
+
+    [Fact]
+    public void LastUnit_SecondUserCannotReserve()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 1);
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+
+        stock.SetReservedQuantity(a, 1, Ttl, now).IsSuccess.ShouldBeTrue();
+        stock.AvailableAt(now).ShouldBe(0);
+
+        var bResult = stock.SetReservedQuantity(b, 1, Ttl, now);
+        bResult.IsSuccess.ShouldBeFalse();
+        bResult.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_INSUFFICIENT);
+    }
+
+    [Fact]
+    public void SetReservedQuantity_IsIdempotent_AndDoesNotRenewExpiresAt()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+
+        stock.SetReservedQuantity(user, 2, Ttl, now);
+        var firstExpiry = stock.Reservations.Single().ExpiresAt;
+
+        // Sonraki set (farkli now): sabit TTL — ExpiresAt YENILENMEZ.
+        stock.SetReservedQuantity(user, 4, Ttl, now.AddMinutes(5));
+
+        var res = stock.Reservations.Single();
+        res.Quantity.ShouldBe(4);
+        res.ExpiresAt.ShouldBe(firstExpiry);
+        stock.AvailableAt(now).ShouldBe(1);
+    }
+
+    [Fact]
+    public void SetReservedQuantity_Zero_RemovesReservation()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+
+        stock.SetReservedQuantity(user, 3, Ttl, now);
+        stock.SetReservedQuantity(user, 0, Ttl, now);
+
+        stock.Reservations.ShouldBeEmpty();
+        stock.AvailableAt(now).ShouldBe(5);
+    }
+
+    [Fact]
+    public void Release_FreesReservation()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 3, Ttl, now);
+
+        stock.Release(user).IsSuccess.ShouldBeTrue();
+
+        stock.AvailableAt(now).ShouldBe(5);
+        stock.OnHand.ShouldBe(5);
+    }
+
+    [Fact]
+    public void Commit_ReducesOnHand_AndClosesReservation()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 2, Ttl, now);
+
+        var result = stock.Commit(user, 2, now);
+
+        result.IsSuccess.ShouldBeTrue();
+        stock.OnHand.ShouldBe(3);
+        stock.Reservations.ShouldBeEmpty();
+        stock.AvailableAt(now).ShouldBe(3);
+    }
+
+    [Fact]
+    public void Commit_WithoutActiveReservation_ReturnsError()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+
+        var result = stock.Commit(Guid.NewGuid(), 1, now);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_NO_ACTIVE_RESERVATION);
+        stock.OnHand.ShouldBe(5);
+    }
+
+    [Fact]
+    public void ExpiredReservation_NotCountedInAvailable_LazyFilter()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 1);
+        var user = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 1, Ttl, now);
+
+        var later = now.Add(Ttl).AddSeconds(1);
+        stock.AvailableAt(later).ShouldBe(1); // sure gecti — lazy filtre sayamaz
+    }
+
+    [Fact]
+    public void PurgeExpired_RemovesOnlyExpired_AndReturnsThem()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 10);
+        var expiredUser = Guid.NewGuid();
+        var activeUser = Guid.NewGuid();
+        stock.SetReservedQuantity(expiredUser, 2, TimeSpan.FromMinutes(1), now);
+        stock.SetReservedQuantity(activeUser, 3, TimeSpan.FromMinutes(30), now);
+
+        var later = now.AddMinutes(5);
+        var purged = stock.PurgeExpired(later);
+
+        purged.Count.ShouldBe(1);
+        purged.Single().UserId.ShouldBe(expiredUser);
+        stock.Reservations.Count.ShouldBe(1);
+        stock.Reservations.Single().UserId.ShouldBe(activeUser);
+    }
+
+    [Fact]
+    public void Oversell_SupplierBelowReserved_AvailableClampedToZero_AndFlagged()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 3);
+        var user = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 3, Ttl, now);
+
+        // Tedarikci OnHand'i 1'e dusurur (aktif rezervasyon 3 > 1 => oversell).
+        stock.SetQuantity(1);
+
+        stock.AvailableAt(now).ShouldBe(0);     // negatif olmaz (G1/FR-017)
+        stock.IsOversoldAt(now).ShouldBeTrue(); // handler bunu log'lar
+    }
 }

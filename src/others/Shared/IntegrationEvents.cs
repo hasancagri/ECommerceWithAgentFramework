@@ -19,6 +19,9 @@ public static class IntegrationEvents
     public record StockChangedEvent(Guid ProductId, int Quantity);
     public record DiscountChangedEvent(Guid ProductId, decimal? Rate);
 
+    // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
+    public record ReservationExpired(Guid ProductId, Guid UserId);
+
     // 007-supplier-gateway: kaydın tedarikçideki GÜNCEL hali (snapshot, diff değil).
     // Tedarikçi kimliği tip değil alandır (SupplierCode); DiscountPercent null = indirim yok → remove.
     public record SupplierProductSnapshotReceived(

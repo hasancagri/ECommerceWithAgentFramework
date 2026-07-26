@@ -36,7 +36,7 @@ public class Order : AggregateRoot
         };
     }
 
-    public FeatureResultModel AddOrderItem(Guid productId, string productName, decimal unitPrice)
+    public FeatureResultModel AddOrderItem(Guid productId, string productName, decimal unitPrice, int quantity = 1)
     {
         if (string.IsNullOrEmpty(productName))
         {
@@ -48,7 +48,12 @@ public class Order : AggregateRoot
             return FeatureResultModel.Error(new MessageItem { Code = "UnitPrice must be greater than zero" });
         }
 
-        OrderItems.Add(OrderItem.Create(productId, productName, unitPrice));
+        if (quantity <= 0)
+        {
+            return FeatureResultModel.Error(new MessageItem { Code = "Quantity must be greater than zero" });
+        }
+
+        OrderItems.Add(OrderItem.Create(productId, productName, unitPrice, quantity));
         RecalculateTotalPrice();
         return FeatureResultModel.Ok();
     }
@@ -61,7 +66,7 @@ public class Order : AggregateRoot
 
     private void RecalculateTotalPrice()
     {
-        TotalPrice = OrderItems.Sum(x => x.UnitPrice);
+        TotalPrice = OrderItems.Sum(x => x.UnitPrice * x.Quantity);
     }
 
     private static string GenerateCode()

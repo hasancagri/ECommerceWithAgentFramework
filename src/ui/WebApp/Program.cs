@@ -160,6 +160,8 @@ builder.Services.AddAuthentication(configureOption =>
         // payment
         options.Scope.Add("payment.read");
         options.Scope.Add("payment.write");
+        // 012: sepete ekleme/siparis Basket/Order -> Stock gRPC rezervasyonu icin.
+        options.Scope.Add("stock.reserve");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // role/email id_token'da geliyor (Config.cs: AlwaysIncludeUserClaimsInIdToken),
