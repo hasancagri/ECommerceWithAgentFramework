@@ -9,5 +9,4 @@ public record CreateProductRequest(
     decimal Price,
     string Sku,
     BrandType Brand,
-    string? ImageUrl,
-    int InitialStock);
+    string? ImageUrl);

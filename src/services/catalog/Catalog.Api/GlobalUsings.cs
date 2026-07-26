@@ -15,7 +15,6 @@ global using Wolverine.RabbitMQ;
 global using Wolverine;
 global using Catalog.Api.Domains.Products;
 global using Shared.Enums;
-global using Shared.Payloads;
 global using Wolverine.Marten.Publishing;
 global using Common.Utils.Authorization;
 global using Common.Utils.Caching;

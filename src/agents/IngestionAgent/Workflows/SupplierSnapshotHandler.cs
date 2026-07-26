@@ -1,25 +1,30 @@
 using IngestionAgent.Workflows._01_CatalogWrite;
 using IngestionAgent.Workflows._02_DiscountWrite;
+using IngestionAgent.Workflows._03_StockWrite;
 
 namespace IngestionAgent.Workflows;
 
-// Kanonik mesajın tüketicisi (FR-013): mesaj başına MAF workflow koşar (catalog → discount).
-// 012-stock-reservation (Model C): tedarikçi feed'i mevcut ürünün stok adedini EZMEZ. StockWrite
-// adımı workflow'dan çıkarıldı; ilk seed zaten ProductCreatedEvent → Stock tüketicisiyle yapılır.
+// Kanonik mesajın tüketicisi (FR-013): mesaj başına MAF workflow koşar (catalog → stock → discount).
+// 014 (feed = stoğun tek otoritesi): StockWrite adımı geri geldi ve feed OnHand'i mutlak ezer
+// (012 Model C "feed stoğu ezmez" duruşu tersine döndü). Stok yalnız bu adımdan yazılır.
 // Başarısız job, IngestionWriteException'a çevrilir → Wolverine retry/DLQ; başarıda sessiz (FR-018).
 public sealed class SupplierSnapshotHandler
 {
     public static async Task Handle(
         IntegrationEvents.SupplierProductSnapshotReceived message,
         CatalogWriterAgent catalogAgent,
+        StockWriterAgent stockAgent,
         DiscountWriterAgent discountAgent,
         CancellationToken ct)
     {
         var catalogWrite = new CatalogWriteExecutor(catalogAgent);
+        var stockWrite = new StockWriteExecutor(stockAgent);
         var discountWrite = new DiscountWriteExecutor(discountAgent);
 
+        // StockWrite ProductId'ye muhtaç (CatalogWrite doldurur); Discount da öyle → sonda kalır.
         var workflow = new WorkflowBuilder(catalogWrite)
-            .AddEdge(catalogWrite, discountWrite)
+            .AddEdge(catalogWrite, stockWrite)
+            .AddEdge(stockWrite, discountWrite)
             .WithOutputFrom(discountWrite)
             .Build();
 

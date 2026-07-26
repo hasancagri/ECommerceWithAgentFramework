@@ -1,6 +1,7 @@
 using System.Reflection;
 using IngestionAgent.Workflows._01_CatalogWrite;
 using IngestionAgent.Workflows._02_DiscountWrite;
+using IngestionAgent.Workflows._03_StockWrite;
 using Wolverine;
 using Wolverine.ErrorHandling;
 using Wolverine.RabbitMQ;
@@ -55,14 +56,16 @@ builder.Services.AddHttpClient(HttpClients.McpNoToken)
 // Yazıcı agent'lar Singleton (konvansiyon): her biri kendi MCP bağlantısını içinde taşır (FR-016).
 // Bağlantı TEMBEL — açılışta değil ilk tool çağrısında kurulur (startup, hedef servis hazır
 // değil diye ölmez). Tool'lar DOĞRUDAN çağrılır (LLM yok); adresler Aspire service discovery'den.
-// 012 (Model C): stock MCP yazıcısı kaldırıldı — feed artık stok adedine dokunmaz.
+// 014 (feed = stoğun tek otoritesi): stock MCP yazıcısı geri geldi — feed OnHand'i mutlak ezer.
 var catalogMcp = $"{builder.Configuration["services:catalog-api:http:0"]}/mcp";
+var stockMcp = $"{builder.Configuration["services:stock-api:http:0"]}/mcp";
 var discountMcp = $"{builder.Configuration["services:discount-api:http:0"]}/mcp";
 
 McpConnection Connection(IServiceProvider sp, string name, string url) =>
     new(sp.GetRequiredService<IHttpClientFactory>(), name, url);
 
 builder.Services.AddSingleton<CatalogWriterAgent>(sp => new(Connection(sp, "catalog", catalogMcp)));
+builder.Services.AddSingleton<StockWriterAgent>(sp => new(Connection(sp, "stock", stockMcp)));
 builder.Services.AddSingleton<DiscountWriterAgent>(sp => new(Connection(sp, "discount", discountMcp)));
 
 var app = builder.Build();

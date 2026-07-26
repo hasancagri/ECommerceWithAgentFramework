@@ -24,7 +24,7 @@ public static class SetStock
             var stock = await session.Query<ProductStock>()
                 .FirstOrDefaultAsync(x => x.ProductId == cmd.ProductId, ct);
 
-            // Upsert: kayıt yoksa açılır (ör. ProductCreatedEvent henüz işlenmedi/dead-letter'da).
+            // Upsert: kayıt yoksa açılır (014: StockWrite ilk yazandır — yeni üründe kayıt henüz yok).
             // Sıfırla açılıp SetQuantity'den geçer ki negatif adet invariant'ı tek yerde kalsın.
             stock ??= ProductStock.Create(cmd.ProductId, 0);
 
@@ -46,17 +46,5 @@ public static class SetStock
         }
     }
 }
-
-public static class SetStockCommandEndpoint
-{
-    public static RouteGroupBuilder SetStockGroupItemEndpoint(this RouteGroupBuilder group)
-    {
-        group.MapPut("/set", async ([FromBody] SetStock.SetStockCommand cmd, IMessageBus bus) =>
-            {
-                var result = await bus.InvokeAsync<FeatureObjectResultModel<SetStock.SetStockResponse>>(cmd);
-                return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
-            })
-            .WithName("SetStock");
-        return group;
-    }
-}
+// 014: manuel mutlak-stok REST ucu (SetStockCommandEndpoint /set) kaldırıldı — stok yalnız feed
+// StockWrite'tan (set_stock MCP tool → bu command) yazılır. Command + handler korunur.

@@ -21,8 +21,7 @@ public record CreateProductViewModel
 
     [Display(Name = "Image URL")] public string? ImageUrl { get; init; }
 
-    [Display(Name = "Initial Stock")] public int InitialStock { get; init; }
-
+    // 014: stok yalnız tedarikçi feed'inden (StockWrite) yazılır; manuel create stok taşımaz.
     public SelectList BrandDropdownList { get; set; } = null!;
 
     public void SetBrandDropdownList()

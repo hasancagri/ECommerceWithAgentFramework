@@ -13,8 +13,8 @@ public sealed class CatalogWriterAgent(McpConnection connection)
             ["description"] = message.Description,
             ["price"] = message.Price,
             ["sku"] = message.ExternalId, // R11: SKU = tedarikçi harici kimliği
-            ["brand"] = message.Brand,   // marka doğrulaması Catalog'un işi (kullanıcı kararı)
-            ["initialStock"] = message.StockQuantity
+            ["brand"] = message.Brand    // marka doğrulaması Catalog'un işi (kullanıcı kararı)
+            // 014: stok artık katalogtan taşınmaz; StockWrite feed adedini ayrı yazar
         }, ct);
     }
 }
