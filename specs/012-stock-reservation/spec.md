@@ -182,6 +182,11 @@ ekranında kalan-adet göstergesi görüntülendiği doğrulanır.
   hareketleri (adet artırma/azaltma) süreyi **yenilemez/uzatmaz**.
 - **FR-011**: Bir kullanıcının bir ürün için rezervasyonu tek girdi olarak tutulmalı ve
   sepetteki adetle eşlenmelidir (mükerrer hold açılmaz).
+> **[SUPERSEDED — 014-supplier-stock-authority]** Aşağıdaki FR-012/013/014 "Model C"
+> kararı (feed stoğu ezmez) 014 ile TERSİNE döndü: tedarikçi feed'i artık stoğun tek
+> otoritesidir ve OnHand'i mutlak değere eşitler (create+update). Güncel davranış için
+> 014 spec'ine bakın; bu üç madde tarihsel olarak korunur.
+
 - **FR-012**: Tedarikçi feed'i, mevcut bir ürünün stok adedini (OnHand) EZMEMELİDİR;
   feed yalnızca fiyat/açıklama/indirim gibi tedarikçiye ait alanları güncelleyebilir.
 - **FR-013**: Stok yalnızca ürün ilk oluşumunda tedarikçi verisinden seed edilmeli;

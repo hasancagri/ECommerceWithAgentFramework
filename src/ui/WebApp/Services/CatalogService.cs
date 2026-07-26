@@ -53,8 +53,7 @@ public class CatalogService(
             model.Price,
             model.Sku,
             model.Brand,
-            model.ImageUrl,
-            model.InitialStock);
+            model.ImageUrl);
 
         var response = await catalogRefitService.CreateProductAsync(request);
 

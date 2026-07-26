@@ -12,8 +12,7 @@ public static class UpsertProduct
         decimal Price,
         string Sku,
         string Brand,
-        string? ImageUrl,
-        int InitialStock);
+        string? ImageUrl);
 
     public class UpsertProductResponse
     {
@@ -44,7 +43,7 @@ public static class UpsertProduct
             {
                 var created = await bus.InvokeAsync<FeatureObjectResultModel<Commands.CreateProduct.CreateProductResponse>>(
                     new Commands.CreateProduct.CreateProductCommand(
-                        cmd.Name, cmd.Description, cmd.Price, cmd.Sku, brand, cmd.ImageUrl, cmd.InitialStock), ct);
+                        cmd.Name, cmd.Description, cmd.Price, cmd.Sku, brand, cmd.ImageUrl), ct);
 
                 if (!created.IsSuccess)
                     return FeatureObjectResultModel<UpsertProductResponse>.Error(created.Messages);

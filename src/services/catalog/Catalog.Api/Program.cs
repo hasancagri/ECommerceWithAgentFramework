@@ -38,15 +38,6 @@ builder.Host.UseWolverine(opts =>
         e.BindQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
     });
     
-    rabbit.DeclareExchange(RabbitMqConstants.ProductCreated.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ProductCreated.Queues.Stock);
-    });
-
-    opts.PublishMessage<Shared.IntegrationEvents.ProductCreatedEvent>()
-        .ToRabbitExchange(RabbitMqConstants.ProductCreated.Exchange);
-
     rabbit.DeclareExchange(RabbitMqConstants.ProductChanged.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;

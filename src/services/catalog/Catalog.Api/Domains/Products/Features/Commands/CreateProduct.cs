@@ -9,8 +9,7 @@ public static class CreateProduct
         decimal Price,
         string Sku,
         BrandType Brand,
-        string? ImageUrl,
-        int InitialStock);
+        string? ImageUrl);
 
     public class CreateProductResponse
     {
@@ -29,9 +28,8 @@ public static class CreateProduct
             var product = Product.Create(cmd.Name, cmd.Description, cmd.Price, cmd.Sku, cmd.Brand, cmd.ImageUrl);
             session.Store(product);
 
-            await bus.PublishAsync(new IntegrationEvents.ProductCreatedEvent(
-                [new ProductStockInfo(product.Id, cmd.InitialStock)]));
-
+            // 014 (feed = stoğun tek otoritesi): stok tohumlama kaldırıldı; stok yalnız ingestion
+            // StockWrite'tan yazılır. Catalog artık stok adedi taşımaz (ProductCreatedEvent öldü).
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
                 product.Id, product.Name, product.Description, product.Price,

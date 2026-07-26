@@ -25,14 +25,6 @@ builder.Host.UseWolverine(opts =>
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    rabbit.DeclareExchange(RabbitMqConstants.ProductCreated.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ProductCreated.Queues.Stock);
-    });
-
-    opts.ListenToRabbitQueue(RabbitMqConstants.ProductCreated.Queues.Stock);
-
     rabbit.DeclareExchange(RabbitMqConstants.StockChanged.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;

@@ -3,7 +3,6 @@ namespace Shared;
 public static class IntegrationEvents
 {
     public record OrderCreatedEvent(Guid OrderId, Guid UserId, decimal TotalPrice);
-    public record ProductCreatedEvent(IReadOnlyList<ProductStockInfo> Products);
 
     // 003-storefront-read-model: writer-publishes, fat event'ler (Storefront pull-back yapmaz).
     // 006-home-storefront-list: Description/Price/Brand eklendi; Brand enum adı string taşınır
