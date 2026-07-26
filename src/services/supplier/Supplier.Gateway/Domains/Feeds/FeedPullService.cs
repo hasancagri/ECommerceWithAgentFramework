@@ -5,10 +5,10 @@ public static class HttpClients
     public const string Feeds = "feeds";
 }
 
-// Çekim hattı: kilit → fetch → mükerrer eleme → kayıt başına kapı → ÖNCE publish SONRA save.
-// Save kayıt başına yapılır: çökmede mükerrer penceresi tek kayıttır (R3; kayıp yerine tekrar).
+// Çekim hattı: kilit → fetch → mükerrer eleme → kayıt başına ATOMİK commit (013: outbox).
+// Kayıt başına giden event + snapshot AYNI Postgres tx'inde commit edilir (ya ikisi ya hiçbiri);
+// Wolverine DurabilityAgent commit sonrası mesajı RabbitMQ'ya güvenilir iletir (at-least-once).
 public sealed class FeedPullService(
-    IDocumentStore store,
     IHttpClientFactory httpClientFactory,
     IServiceScopeFactory scopeFactory,
     IConfiguration configuration,
@@ -73,24 +73,27 @@ public sealed class FeedPullService(
             return;
         }
 
-        // IMessageBus scoped → çekim başına scope; Marten session'ı da çekim boyu tek.
-        using var scope = scopeFactory.CreateScope();
-        var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
-
         var published = 0;
-        await using var session = store.LightweightSession();
 
+        // Kayıt = tek iş birimi. Outbox iş-birimi başına kullanılır (Wolverine doc önerisi): her
+        // kayıt için taze scope → kendi session + outbox; save'ler arası mesaj birikmesi imkânsız.
         foreach (var wire in records)
         {
             var incoming = SupplierFeedAdapter.ToCanonical(wire);
+
+            using var scope = scopeFactory.CreateScope();
+            var session = scope.ServiceProvider.GetRequiredService<IDocumentSession>();
+
             var snapshot = await session.LoadAsync<FeedSnapshot>(incoming.ExternalId, ct)
                            ?? FeedSnapshot.CreateFor(incoming.ExternalId);
 
             if (snapshot.IsUnchanged(incoming))
                 continue;
 
-            // FR-006: önce yayınla, sonra kaydet — çökmede kayıp yerine tekrar tercih edilir.
-            await bus.PublishAsync(incoming);
+            // Atomik: outbox mesajı + snapshot ilerlemesi tek SaveChanges tx'inde commit edilir.
+            // 013: "önce publish sonra save" ikilemi kalktı — kayıp/tekrar penceresi yok.
+            var outbox = scope.ServiceProvider.GetRequiredService<IMartenOutbox>();
+            await outbox.PublishAsync(incoming);
             snapshot.Absorb(incoming);
             session.Store(snapshot);
             await session.SaveChangesAsync(ct);

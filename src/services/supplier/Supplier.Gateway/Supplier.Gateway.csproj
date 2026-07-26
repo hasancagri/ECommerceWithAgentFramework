@@ -11,6 +11,7 @@
         <PackageReference Include="Hangfire.PostgreSql" />
         <PackageReference Include="Marten" />
         <PackageReference Include="Marten.Newtonsoft" />
+        <PackageReference Include="WolverineFx.Marten" />
         <PackageReference Include="WolverineFx.RabbitMQ" />
         <PackageReference Include="WolverineFx.RuntimeCompilation" />
     </ItemGroup>

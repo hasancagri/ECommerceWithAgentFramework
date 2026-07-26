@@ -18,6 +18,9 @@ builder.Services.AddMarten(opts =>
 
         opts.Schema.For<FeedSnapshot>();
     })
+    // 013: Wolverine transactional outbox — giden event ile snapshot AYNI Postgres tx'inde commit
+    // edilir; envelope tabloları supplierGatewayDb'de kalır (bounded-context izolasyonu korunur).
+    .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
 
 builder.Host.UseWolverine(opts =>
@@ -25,6 +28,11 @@ builder.Host.UseWolverine(opts =>
     // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali (repo konvansiyonu).
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
+
+    // Giden mesajlar DURABLE outbox'tan geçsin: wolverine_outgoing_envelopes'a snapshot ile AYNI
+    // tx'te yazılır, relay ajanı crash sonrası da teslim eder. Buffered (varsayılan) olsaydı mesaj
+    // commit sonrası yalnız bellekte tutulur → process crash'te KAYIP (dual-write penceresi açık kalırdı).
+    opts.Policies.UseDurableOutboxOnAllSendingEndpoints();
 
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();

@@ -8,3 +8,4 @@ global using Supplier.Gateway.Domains.Feeds;
 global using System;
 global using Weasel.Core;
 global using Wolverine;
+global using Wolverine.Marten;

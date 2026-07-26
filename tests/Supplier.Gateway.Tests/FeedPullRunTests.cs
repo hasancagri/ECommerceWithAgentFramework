@@ -35,9 +35,8 @@ public class FeedPullRunTests
         public HttpClient CreateClient(string name) => new(handler, disposeHandler: false);
     }
 
-    // Boş gövde → 0 kayıt → store/scope hiç kullanılmaz; null bağımlılıklar bu yüzden güvenlidir.
+    // Boş gövde → 0 kayıt → scope hiç kullanılmaz; null bağımlılıklar bu yüzden güvenlidir.
     private static FeedPullService Service(HttpMessageHandler handler) => new(
-        store: null!,
         httpClientFactory: new SingleClientFactory(handler),
         scopeFactory: null!,
         configuration: new ConfigurationBuilder().Build(),
