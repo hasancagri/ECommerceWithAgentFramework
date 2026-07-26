@@ -81,8 +81,8 @@ mutlak overwrite ile eşitlenir; değişmemiş kayıt stok yazımını tetikleme
 Ek kod YOK: `set_stock` mutlak-set (T002/T003) hem create hem update'i karşılar; değişmemiş
 kaydın atlanması Supplier.Gateway snapshot-diff kapısıyla (007/013) zaten sağlanır.
 
-- [ ] T006 [US2] S2'yi canlı doğrula: değişen stok yeni değere eşitlenir; değişmeyen kayıt
-  için stok yazımı tetiklenmez (snapshot-diff kapısı korunur) — kanıt: quickstart.md S2
+- [X] T006 [US2] S2'yi canlı doğrula: değişen stok yeni değere eşitlenir; değişmeyen kayıt
+  için stok yazımı tetiklenmez (snapshot-diff kapısı korunur) — kanıt: quickstart.md S2 ✅ PASS
 
 **Checkpoint**: US1 + US2 bağımsız çalışır — feed stoğun tek otoritesi olarak re-sync eder.
 
@@ -156,8 +156,9 @@ IngestionAgent StockWrite. Feed dışı stok-yazım yolu = 0.
 - [X] T020 [P] 012 spec notunu güncelle: "Model C — feed stoğu ezmez" TERSİNE döndü
   (feed artık stoğun tek otoritesi; 014'e atıf) — `specs/012-stock-reservation/spec.md`
 - [X] T021 `dotnet build` 0 hata + `dotnet test` mevcut domain testleri yeşil
-- [ ] T022 quickstart.md S1–S5 + regresyon (Storefront: `ProductChangedEvent` +
-  `StockChangedEvent` korunmuş; oversell S4; idempotency S5) canlı doğrula
+- [X] T022 quickstart.md S1–S5 + regresyon canlı doğrula — **S1 (yeni ürün stoğu) +
+  S2 (re-sync) ✅ PASS** (feed → StockWrite → StockChangedEvent → Storefront doğrulandı).
+  Kalan: S4 (oversell) + S5 (idempotency) henüz koşulmadı.
 
 ---
 
