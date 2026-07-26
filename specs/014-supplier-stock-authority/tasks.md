@@ -160,9 +160,10 @@ IngestionAgent StockWrite. Feed dışı stok-yazım yolu = 0.
   S2 (re-sync) ✅ PASS** (feed → StockWrite → StockChangedEvent → Storefront doğrulandı).
   Tur 2: **rezervasyon → Available düşer (3→2, UI+DB) ✅**, **Commit → OnHand düşer
   (satın alma) ✅** — stok yaşam döngüsü sağlam (Available/Commit/Storefront korundu).
-  Kalan: S4 oversell **klip** (feed OnHand'i rezervasyon altına indirince Available→0)
-  tam-canlı koşulmadı — TTL ~2dk yarışlı; aggregate matematiği birim-test + değişmedi.
-  S5 idempotency koşulmadı; DLQ=0 teyitli.
+  S4 oversell **klip** + S5 idempotency: **bilinçli atlandı** (kullanıcı kararı) —
+  formal canlı koşuya gerek görülmedi. Gerekçe: 014 rezervasyon/commit/oversell
+  makinesine dokunmaz (yalnız yazım topolojisi); `AvailableAt` klip + `IsOversoldAt`
+  ve mutlak-set idempotency Stock birim testlerinde yeşil, DLQ=0 teyitli. Risk düşük.
 
 ---
 
