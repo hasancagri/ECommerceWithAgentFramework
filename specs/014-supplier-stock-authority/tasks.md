@@ -158,7 +158,11 @@ IngestionAgent StockWrite. Feed dışı stok-yazım yolu = 0.
 - [X] T021 `dotnet build` 0 hata + `dotnet test` mevcut domain testleri yeşil
 - [X] T022 quickstart.md S1–S5 + regresyon canlı doğrula — **S1 (yeni ürün stoğu) +
   S2 (re-sync) ✅ PASS** (feed → StockWrite → StockChangedEvent → Storefront doğrulandı).
-  Kalan: S4 (oversell) + S5 (idempotency) henüz koşulmadı.
+  Tur 2: **rezervasyon → Available düşer (3→2, UI+DB) ✅**, **Commit → OnHand düşer
+  (satın alma) ✅** — stok yaşam döngüsü sağlam (Available/Commit/Storefront korundu).
+  Kalan: S4 oversell **klip** (feed OnHand'i rezervasyon altına indirince Available→0)
+  tam-canlı koşulmadı — TTL ~2dk yarışlı; aggregate matematiği birim-test + değişmedi.
+  S5 idempotency koşulmadı; DLQ=0 teyitli.
 
 ---
 
