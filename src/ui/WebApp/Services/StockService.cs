@@ -8,14 +8,15 @@ public class StockService(
     IStockRefitService stockRefitService,
     ILogger<StockService> logger)
 {
-    // Urune ait stok adedini doner. Stok kaydi yoksa (404) 0 kabul edilir;
+    // 012: satin alinabilir (Available) adedi doner — aktif rezervasyonlar dusulmus haldedir,
+    // yani "son N adet" ve Add-To-Basket kapisi icin dogru deger. Stok kaydi yoksa (404) 0;
     // diger hatalar loglanir ve yine 0 donulur (detay sayfasi stok bilgisi olmadan da acilir).
-    public async Task<int> GetStockQuantityAsync(Guid productId)
+    public async Task<int> GetAvailableQuantityAsync(Guid productId)
     {
         var response = await stockRefitService.GetStockByProductId(productId);
 
         if (response.IsSuccessStatusCode)
-            return response.Content!.Quantity;
+            return response.Content!.Available;
 
         if (response.StatusCode != HttpStatusCode.NotFound)
             logger.LogProblemDetails(response.Error);

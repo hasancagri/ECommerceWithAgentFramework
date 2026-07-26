@@ -4,8 +4,6 @@ namespace IngestionAgent.Workflows._01_CatalogWrite;
 // Tool adı ve argüman eşlemesi burada — executor yalnız iş dilinde konuşur.
 public sealed class CatalogWriterAgent(McpConnection connection)
 {
-    public const string Created = "created";
-
     public async Task<ToolOutcome> UpsertProductAsync(
         IntegrationEvents.SupplierProductSnapshotReceived message, CancellationToken ct)
     {

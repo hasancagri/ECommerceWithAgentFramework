@@ -51,7 +51,9 @@ public class BasketService(
                 item.Id,
                 item.Name,
                 item.ImageUrl, item.Price,
-                item.PriceByApplyDiscountRate
+                item.PriceByApplyDiscountRate,
+                item.Quantity,
+                item.ReservationExpiresAt
             )).ToList()
         );
 
@@ -78,7 +80,8 @@ public class BasketService(
         foreach (var basketItem in basketsAsResult.Data!.Items)
             basketPageViewModel.Items.Add(new BasketViewModelItem(basketItem.Id, basketItem.ImageUrl,
                 basketItem.Name,
-                basketItem.Price, basketItem.PriceByApplyDiscountRate));
+                basketItem.Price, basketItem.PriceByApplyDiscountRate,
+                basketItem.Quantity, basketItem.ReservationExpiresAt));
 
 
         return ServiceResult<BasketPageViewModel>.Success(basketPageViewModel);

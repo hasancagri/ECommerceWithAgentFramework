@@ -25,6 +25,10 @@ builder.Host.UseWolverine(opts =>
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
 
+    // 012: gRPC tipli client (AddGrpcClient) opaque factory'dir; Wolverine handler codegen'i inline
+    // kuramaz ve service-location ister. StockCommitClientProxy CreateOrder handler'ina enjekte edilir.
+    opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
+
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
@@ -59,6 +63,19 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
+
+// 012 (US2): Stock Commit gRPC istemcisi; kullanici bearer token'i propagate edilir.
+builder.Services.AddTransient<BearerForwardingHandler>();
+// gRPC balancer'inin Aspire service-discovery cozumleyicisi YOK; 'stock-api' adini Aspire'in
+// enjekte ettigi cozumlenmis endpoint'ten alip somut adresi veriyoruz.
+var stockGrpcAddress = builder.Configuration["services:stock-api:https:0"]
+    ?? builder.Configuration["services:stock-api:http:0"]
+    ?? "https://stock-api";
+builder.Services
+    .AddGrpcClient<StockReservation.StockReservationClient>(o => o.Address = new Uri(stockGrpcAddress))
+    .AddHttpMessageHandler<BearerForwardingHandler>();
+// Proxy'yi somut tipiyle kaydet: CreateOrder handler onu concrete type ile ister.
+builder.Services.AddScoped<StockCommitClientProxy>();
 
 builder.Services
     .AddMcpServer()

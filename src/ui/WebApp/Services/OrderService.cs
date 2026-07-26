@@ -31,7 +31,7 @@ public class OrderService(
             viewModel.Address.Street, viewModel.Address.ZipCode, viewModel.Address.Line);
 
         var orderItems = viewModel.OrderItems
-            .Select(x => new OrderItemDto(x.ProductId, x.ProductName, x.UnitPrice))
+            .Select(x => new OrderItemDto(x.ProductId, x.ProductName, x.UnitPrice, x.Quantity))
             .ToList();
 
         var createOrderRequest = new CreateOrderRequest(
@@ -72,7 +72,7 @@ public class OrderService(
                     orderResponse.TotalPrice.ToString("C"));
 
             foreach (var orderItem in orderResponse.Items)
-                newOrderHistory.AddItem(orderItem.ProductId, orderItem.ProductName, orderItem.UnitPrice);
+                newOrderHistory.AddItem(orderItem.ProductId, orderItem.ProductName, orderItem.UnitPrice, orderItem.Quantity);
 
             orderHistoryList.Add(newOrderHistory);
         }

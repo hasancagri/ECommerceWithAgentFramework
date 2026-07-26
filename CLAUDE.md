@@ -170,6 +170,25 @@ Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar 
 
 Event kontratları `Shared.IntegrationEvents` içinde yaşar. Yayınlama/tüketme, Wolverine-üzerinden-RabbitMQ ile **fanout exchange**'ler kullanılarak yapılır; exchange/queue adları `RabbitMqConstants` içinde merkezileştirilmiştir. Her servis ihtiyaç duyduğu exchange/queue'ları kendi `Program.cs`'indeki `UseWolverine(...)` bloğunda tanımlar ve gelen event'leri `EventHandlers.cs`'te işler. Handler keşfi assembly taramasıyla olur; yani bir event handler'ın sadece keşfedilebilir bir `Handle`/`Consume` metodu olması yeterlidir.
 
+### Senkron RPC (gRPC) — sanksiyonlu servisler-arası kanal (012)
+
+Anlık tutarlılık gereken az sayıda akış için **senkron gRPC** kullanılır (constitution
+v1.2.0 İlke I amendment); DB izolasyonu korunur — çağıran, çağrılanın DB'sine değil
+API'sine erişir. Şu an tek kullanım **stok rezervasyonu**: `Basket`/`Order` → `Stock`.
+
+- Proto kontratı paylaşılan: `src/others/Shared/Protos/stock_reservation.proto`. Stock sunucu
+  (`GrpcServices=Server`), Basket/Order istemci (`Client`).
+- Stock `StockReservationGrpcService` MCP/REST gibi ince sarmalayıcıdır: iş mantığı yok,
+  Wolverine command'ini (`ReserveStock`/`ReleaseStock`/`CommitStock`) `IMessageBus` ile çağırır.
+- Yetki: gRPC ucu `stock.reserve` scope'u ister; istemci `BearerForwardingHandler` ile
+  kullanıcı token'ını iletir. WebApp BFF + Identity.Server `stock.reserve`'ü tanımlar/talep eder.
+- **Rezervasyon modeli (Model B):** sepete ekleme `SetReservedQuantity` (idempotent, sabit
+  TTL) ile rezervasyon tutar; sipariş `Commit` ile `OnHand`'i kalıcı düşürür; TTL dolunca
+  Hangfire sweep `PurgeExpired` + `ReservationExpired` event'iyle sepet satırını temizler.
+- **Model C:** tedarikçi feed'i stoğu **ezmez** (IngestionAgent StockWrite kaldırıldı);
+  `OnHand` yalnız Commit ve manuel `set_stock` ile değişir. Seed (ProductCreated) değişmez.
+- Fail-closed: Stock erişilemezse sepete **eklenmez** (oversell yasak).
+
 ### Önbellekleme (AOP, declarative — cross-cutting)
 
 Okuma sorguları **handler'a kod yazmadan** önbelleklenir. Aspect `Common.Utils.Caching`'te yaşar

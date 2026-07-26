@@ -33,13 +33,19 @@ public static class GetBasket
         public decimal Price { get; set; }
         public decimal? PriceByApplyDiscountRate { get; set; }
 
+        // 012: adet + rezervasyon bitis zamani (UI geri sayimi).
+        public int Quantity { get; set; }
+        public DateTimeOffset? ReservationExpiresAt { get; set; }
+
         public static GetBasketItemResponse From(BasketItem item) => new()
         {
             Id = item.Id,
             Name = item.Name,
             ImageUrl = item.ImageUrl,
             Price = item.Price,
-            PriceByApplyDiscountRate = item.PriceByApplyDiscountRate
+            PriceByApplyDiscountRate = item.PriceByApplyDiscountRate,
+            Quantity = item.Quantity,
+            ReservationExpiresAt = item.ReservationExpiresAt
         };
     }
 

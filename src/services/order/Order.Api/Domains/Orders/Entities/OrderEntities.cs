@@ -6,17 +6,21 @@ public class OrderItem : BaseModel
     public string ProductName { get; private set; } = null!;
     public decimal UnitPrice { get; private set; }
 
+    // 012: siparis kalemi adedi (varsayilan 1, geriye-uyumlu).
+    public int Quantity { get; private set; } = 1;
+
     private OrderItem()
     {
     }
 
-    public static OrderItem Create(Guid productId, string productName, decimal unitPrice)
+    public static OrderItem Create(Guid productId, string productName, decimal unitPrice, int quantity = 1)
     {
         return new OrderItem
         {
             ProductId = productId,
             ProductName = productName,
-            UnitPrice = unitPrice
+            UnitPrice = unitPrice,
+            Quantity = quantity
         };
     }
 }
