@@ -87,8 +87,10 @@ teslim edildiği downstream'de görülür.
 
 - [X] T009 [US2] Program.cs'teki `PublishMessage<SupplierProductSnapshotReceived>()
   .ToRabbitExchange(...)` yönlendirmesinin dayanıklı outbox yoluyla korunduğunu doğrula.
-- [ ] T010 [US2] Canlı doğrula: RabbitMQ'yu commit anında durdur, değişmiş kaydı işle, broker'ı
+- [X] T010 [US2] Canlı doğrula: RabbitMQ'yu commit anında durdur, değişmiş kaydı işle, broker'ı
   aç → mesaj operatör müdahalesi olmadan downstream'e iletilir (FR-002/FR-004).
+  DOĞRULANDI (2026-07-26): broker kapalıyken snapshot ilerledi + envelope durable tutuldu
+  (wolverine_outgoing_envelopes=1); broker açılınca relay 1→0, downstream otomatik güncellendi.
 
 **Checkpoint**: Yayıncı sürecinden bağımsız güvenilir teslim doğrulandı.
 
@@ -103,8 +105,10 @@ birebir aynı.
 
 - [X] T011 [US3] IngestionAgent'ın (tüketici) hiç değişmediğini teyit et: 0 kod/sözleşme
   değişikliği (FR-005/FR-006/SC-005).
-- [ ] T012 [US3] Canlı doğrula: bir event'in çift-teslimini tetikle; downstream'de ek ürün/
+- [X] T012 [US3] Canlı doğrula: bir event'in çift-teslimini tetikle; downstream'de ek ürün/
   indirim mutasyonu olmadığını, nihai durumun tek teslimle aynı olduğunu doğrula (SC-004).
+  DOĞRULANDI (2026-07-26): snapshot silip re-pull ile aynı event 2. kez teslim → catalog
+  toplamı sabit (201), aynı doküman Id, değerler aynı, mükerrer satır yok, dead_letters=0.
 
 **Checkpoint**: Tüm hikâyeler bağımsız doğrulandı.
 
@@ -117,8 +121,10 @@ birebir aynı.
 - [X] T013 [P] `FeedPullService` ve `Program.cs` yorumlarını güncelle: FR-006 "publish-first"
   gerekçesini kaldır, atomik-commit + dayanıklı relay notunu ekle.
 - [X] T014 `dotnet build` + `dotnet test` çalıştır; mevcut testlerde regresyon olmadığını doğrula.
-- [ ] T015 Aspire AppHost ile uçtan uca: feed çekimini tetikle; atomik snapshot+yayın ve
+- [X] T015 Aspire AppHost ile uçtan uca: feed çekimini tetikle; atomik snapshot+yayın ve
   downstream yazımını canlı gözlemle (SC-001/SC-003).
+  DOĞRULANDI (2026-07-26): tek kayıt değiştirilip pull → snapshot Content+PublishedAtUtc
+  birlikte ilerledi, outbox 0'a boşaldı, downstream Catalog güncellendi (update, insert değil).
 
 ---
 
