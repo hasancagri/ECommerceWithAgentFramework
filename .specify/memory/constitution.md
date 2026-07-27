@@ -1,3 +1,9 @@
+<!-- Sync Impact Report — v1.2.0 → v1.3.0 (2026-07-27, MINOR)
+     Modified: İlke II "Zengin Aggregate" — "her serviste tek aggregate root" kaldırıldı;
+     BC gerektiği kadar zengin aggregate içerebilir, anemik aggregate yasak, Id-referans kuralı eklendi.
+     Templates: plan/spec/tasks şablonları ilke adına bağımlı değil — değişiklik gerekmedi.
+     Runtime docs: CLAUDE.md aynı cümle hizalandı (✅). -->
+
 # ECommerceWithAgentFramework Constitution
 
 Bu anayasa, projenin pazarlık edilemez mimari ilkelerini tanımlar. Her spec, plan
@@ -27,10 +33,16 @@ kendi Postgres veritabanı, kendi Marten şeması ve kendi domain modeli vardır
 
 ### II. Zengin Aggregate, İçeride Korunan Invariant'lar
 
-Domain modeli anemik olamaz. Her serviste **tek bir aggregate root** vardır ve
-`AggregateRoot`'tan türer (`Basket`, `Product`, `Order`, `Payment`, `Discount`,
-`ProductStock`). Aggregate root tutarlılık sınırıdır; dış dünya durumu yalnızca kök
-üzerinden değiştirir.
+Domain modeli anemik olamaz. Her servis tek bir Bounded Context'tir; bir BC, domain'i
+gerektiriyorsa **birden fazla zengin aggregate root** içerebilir (ör. Catalog: `Product`,
+`Category`, `Brand`). Her aggregate root `AggregateRoot`'tan türer ve kendi tutarlılık
+sınırıdır; dış dünya durumu yalnızca kök üzerinden değiştirir.
+
+- Yeni bir aggregate ancak kendi kimliği, kendi invariant'ları ve kendi yaşam döngüsü
+  varsa açılır; **anemik (davranışsız) aggregate yasaktır** — davranışsız kavram value
+  object ya da entity olarak mevcut bir aggregate'in içinde modellenir.
+- Aynı BC içindeki aggregate'ler birbirine nesne referansıyla değil **Id ile** referans
+  verir (ör. `Product.BrandId`); bir aggregate diğerinin iç durumunu değiştiremez.
 
 - Koleksiyonlar private tutulur, yalnızca okunur expose edilir (`_items` →
   `IReadOnlyList<T> Items`); mutasyon sadece davranış metotlarından geçer.
@@ -152,7 +164,13 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.2.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-24
+**Version**: 1.3.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-27
+
+<!-- v1.3.0 (2026-07-27, MINOR): İlke II gevşetildi — "her serviste tek aggregate root"
+     yerine "BC gerektiği kadar zengin aggregate içerebilir; anemik aggregate yasak;
+     aggregate'ler arası referans Id ile". Gerekçe: 016-category-brand — Catalog BC'ye
+     Product yanına kimlikli Category ve Brand aggregate'leri (get-or-create, immutable ad)
+     ekleniyor; VO modeli teklik invariant'ını taşıyamadığı için reddedildi. -->
 
 <!-- v1.2.0 (2026-07-24, MINOR): İlke I'e tipli senkron RPC (gRPC/HTTP) sanksiyonlu
      servisler-arası kanal olarak eklendi (DB izolasyonu korunur). Gerekçe: stok
