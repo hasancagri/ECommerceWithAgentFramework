@@ -11,7 +11,7 @@ public record SupplierProductSnapshotReceived(
     string Name,
     string Description,
     string Brand,
-    string? Category,        // YENİ — feed'de boş/eksikse null taşınır
+    string? Category,        // YENİ — wire'da nullable (dış veri); boş/eksik kayıt ingestion'da kesilir (FR-010)
     decimal Price,
     int StockQuantity,
     decimal? DiscountPercent);
@@ -30,8 +30,8 @@ public record ProductChangedEvent(
     decimal Price,
     Guid BrandId,            // YENİ — stabil referans (opak değer; tüketici lookup yapmaz)
     string Brand,            // Brand.Name (artık enum ToString değil)
-    Guid? CategoryId,        // YENİ — kategorisiz üründe null
-    string? Category,        // YENİ — Category.Name
+    Guid CategoryId,         // YENİ — zorunlu (kategorisiz ürün yok; kullanıcı kararı 2026-07-27)
+    string Category,         // YENİ — Category.Name (zorunlu)
     string? ImageUrl,
     bool IsDeleted);
 ```

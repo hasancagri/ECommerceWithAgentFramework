@@ -5,7 +5,8 @@ namespace IngestionAgent.Workflows;
 public record WriterResult(bool IsSuccess, string? Error);
 
 // 016 R10: zincirin ilk iki adımı — kimlikler adımlar arasında tipli sonuçlarla akar.
-// Başarı BrandId'siz OLAMAZ (sahte-başarı emniyeti); kategori null olabilir (FR-010 toleransı).
+// Başarı BrandId'siz/CategoryId'siz OLAMAZ (sahte-başarı emniyeti); kategori ZORUNLUDUR
+// (kullanıcı kararı 2026-07-27): boş kategori adımda kesilir, null geçme yolu yoktur.
 public sealed record BrandWriterResult(bool IsSuccess, string? Error, Guid? BrandId)
     : WriterResult(IsSuccess, Error);
 

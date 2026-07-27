@@ -2,6 +2,8 @@ global using Common.Exceptions;
 global using IngestionAgent;
 global using IngestionAgent.Infrastructure;
 global using IngestionAgent.Workflows;
+global using IngestionAgent.Workflows._01_BrandWrite;
+global using IngestionAgent.Workflows._02_CategoryWrite;
 global using IngestionAgent.Workflows._03_CatalogWrite;
 global using IngestionAgent.Workflows._04_StockWrite;
 global using IngestionAgent.Workflows._05_DiscountWrite;

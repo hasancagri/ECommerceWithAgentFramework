@@ -31,9 +31,9 @@ Category ile aynı şekil: `Id`, `Name` (immutable), `NormalizedName` (unique). 
 |------|------|------|
 | Brand | `BrandType` enum | KALKAR |
 | BrandId | — | `Guid` (zorunlu; Brand aggregate referansı) |
-| CategoryId | — | `Guid?` (null = kategorisiz) |
+| CategoryId | — | `Guid` (zorunlu; Category aggregate referansı — kullanıcı kararı 2026-07-27) |
 
-- `Create`/`Update` imzaları `BrandType brand` yerine `Guid brandId, Guid? categoryId` alır.
+- `Create`/`Update` imzaları `BrandType brand` yerine `Guid brandId, Guid categoryId` alır.
 - Eski dokümanlardaki int `Brand` üyesi Marten/Newtonsoft tarafından yok sayılır (tolere edildi).
 
 ### Migrasyon (bir kerelik, idempotent — Catalog açılışı)
@@ -52,7 +52,7 @@ Category ile aynı şekil: `Id`, `Name` (immutable), `NormalizedName` (unique). 
 
 ### ProductChangedEvent (DEĞİŞİR)
 
-`+ Guid BrandId`, `+ Guid? CategoryId`, `+ string? Category`. `Brand` string kalır; değeri artık enum
+`+ Guid BrandId`, `+ Guid CategoryId`, `+ string Category` (kategori zorunlu). `Brand` string kalır; değeri artık enum
 `ToString()` değil Brand aggregate'inin `Name`'i. Kimlik + ad birlikte taşınır (R7); tüketici lookup yapmaz.
 
 ### BrandType enum (SİLİNİR)
@@ -63,7 +63,7 @@ Category ile aynı şekil: `Id`, `Name` (immutable), `NormalizedName` (unique). 
 
 - `SupplierProduct` (feed kaydı) ve `SupplierFeedRecord` (wire): `+ string? Category`; `ToCanonical` geçirir.
 - `Datasets/products.json`: 500 kayda genişletilir (mevcut 200 + yeni SUP-1201…SUP-1500); TÜM kayıtlar
-  kategorili (kategorisiz kayıt yok; FR-010 toleransı yalnız savunma kuralıdır).
+  kategorili (kategorisiz kayıt yok; FR-010: kategorisiz kayıt işlenmez, CategoryWrite'ta kesilir).
 - `FeedSnapshot.IsUnchanged` değişmez (record equality yeni alanı kapsar).
 
 ## Storefront BC (storefrontDb)
@@ -84,8 +84,8 @@ Category ile aynı şekil: `Id`, `Name` (immutable), `NormalizedName` (unique). 
 
 - Zincir 5 yazıcıya çıkar (R10): `BrandWrite → CategoryWrite → CatalogWrite → StockWrite → DiscountWrite → Finish`.
 - YENİ `BrandWriterAgent`: `upsert_brand(name)` çağırır → `BrandWriteResult { IsSuccess, BrandId, Error }`.
-- YENİ `CategoryWriterAgent`: `upsert_category(name)` çağırır → `CategoryWriteResult { IsSuccess, CategoryId?, Error }`;
-  kategori adı boşsa executor LLM/tool çağırmadan `CategoryId=null` geçirir (deterministik kod).
+- YENİ `CategoryWriterAgent`: `upsert_category(name)` çağırır → `CategoryUpsertOutcome { IsSuccess, CategoryId, Error }`;
+  kategori adı boşsa executor LLM/tool çağırmadan deterministik HATA döner (`CATEGORY_MISSING`, kategori zorunlu).
 - `CatalogWriterAgent` prompt'u `brandId`/`categoryId` taşır; `upsert_product` ad değil Id alır.
 - Yeni instruction sabitleri: `BrandWriterInstructions`, `CategoryWriterInstructions` (015 kalıbı: tool'u
   verilen değerle tam bir kez çağır, uydurma, başarıyı tool'suz bildirme).

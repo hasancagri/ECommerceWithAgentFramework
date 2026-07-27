@@ -19,7 +19,8 @@ Uç: `GET v1/feeds` (Supplier.Api, dış dünya maketi). Kaynak: `Supplier.Api/D
 }
 ```
 
-- `category` YENİ ve opsiyoneldir (`string?`); boş/eksik kayıt reddedilmez → ürün "kategorisiz" işlenir (FR-010).
+- `category` YENİ; wire'da `string?` (dış veri) ama işleme için ZORUNLU: boş/eksik kayıt ingestion
+  CategoryWrite'ta kesilir → retry/DLQ (FR-010, kullanıcı kararı 2026-07-27).
 - Diğer alanlar değişmez. `SupplierProduct` (Api) ve `SupplierFeedRecord` (Gateway wire) aynı alanı kazanır;
   `ToCanonical` alanı `SupplierProductSnapshotReceived.Category`'ye geçirir.
 - Dataset güncellemesi: 500 kaydın TÜMÜ kategorili; makul kategori/marka dağılımı (kategorisiz kayıt yok).

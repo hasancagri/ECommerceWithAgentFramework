@@ -10,7 +10,7 @@ public static class UpdateProduct
         decimal Price,
         string Sku,
         Guid BrandId,
-        Guid? CategoryId,
+        Guid CategoryId,
         string? ImageUrl);
 
     public class UpdateProductResponse
@@ -39,17 +39,13 @@ public static class UpdateProduct
                     Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
                 });
 
-            Category? category = null;
-            if (cmd.CategoryId is not null)
-            {
-                category = await session.LoadAsync<Category>(cmd.CategoryId.Value, ct);
-                if (category is null || category.IsDeleted)
-                    return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
-                    {
-                        Property = nameof(cmd.CategoryId),
-                        Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
-                    });
-            }
+            var category = await session.LoadAsync<Category>(cmd.CategoryId, ct);
+            if (category is null || category.IsDeleted)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
+                {
+                    Property = nameof(cmd.CategoryId),
+                    Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
+                });
 
             product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
                 cmd.BrandId, cmd.CategoryId, cmd.ImageUrl);
@@ -59,7 +55,7 @@ public static class UpdateProduct
             // 016: fat event kimlik + adı birlikte taşır (R7).
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
                 product.Id, product.Name, product.Description, product.Price,
-                brand.Id, brand.Name, category?.Id, category?.Name,
+                brand.Id, brand.Name, category.Id, category.Name,
                 product.ImageUrl, IsDeleted: false));
 
             return FeatureObjectResultModel<UpdateProductResponse>.Ok(new UpdateProductResponse { Id = product.Id });

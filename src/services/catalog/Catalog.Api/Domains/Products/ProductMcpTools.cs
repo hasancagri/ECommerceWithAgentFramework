@@ -45,9 +45,9 @@ public static class UpsertProductMcpTool
         [Description("Fiyat (nokta ondalik)")] decimal price,
         [Description("Stok tutma birimi (SKU) — tedarikci harici kimligi")] string sku,
         [Description("Marka kimligi (upsert_brand'in dondugu brandId, Guid)")] Guid brandId,
+        [Description("Kategori kimligi (upsert_category'nin dondugu categoryId, Guid) — ZORUNLU")] Guid categoryId,
         IMessageBus bus,
         CancellationToken ct,
-        [Description("Opsiyonel kategori kimligi (upsert_category'nin dondugu categoryId, Guid)")] Guid? categoryId = null,
         [Description("Opsiyonel gorsel URL'i")] string? imageUrl = null)
         => bus.InvokeAsync<FeatureObjectResultModel<Agent.UpsertProduct.UpsertProductResponse>>(
             new Agent.UpsertProduct.UpsertProductCommand(

@@ -38,8 +38,8 @@
 
 ### Ürün komut uçları (DEĞİŞİR)
 
-- `POST /` ve `PUT /`: `BrandType Brand` yerine `Guid BrandId` (zorunlu) + `Guid? CategoryId`.
-- Yanıt/query response'ları: `Brand` string ad + `BrandId`; `Category` string? + `CategoryId?`.
+- `POST /` ve `PUT /`: `BrandType Brand` yerine `Guid BrandId` + `Guid CategoryId` (ikisi de zorunlu).
+- Yanıt/query response'ları: `Brand` string ad + `BrandId`; `Category` string ad + `CategoryId` (zorunlu).
 
 ## MCP tool'ları (Catalog)
 
@@ -51,7 +51,7 @@
 
 ### upsert_product (DEĞİŞİR)
 
-- `brand` (string) parametresi yerine `brandId` (Guid, zorunlu) + `categoryId` (Guid?, opsiyonel) alır.
+- `brand` (string) parametresi yerine `brandId` + `categoryId` (Guid, ikisi de zorunlu) alır.
 - Id'ler zincirin önceki adımlarından gelir; LLM ad çözmez, verilen Id'leri aynen geçirir.
 
 ### search_products (DEĞİŞİR)

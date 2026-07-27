@@ -14,12 +14,12 @@ public static class GetProductById
         public string Sku { get; set; } = null!;
         public Guid BrandId { get; set; }
         public string Brand { get; set; } = null!;
-        public Guid? CategoryId { get; set; }
-        public string? Category { get; set; }
+        public Guid CategoryId { get; set; }
+        public string Category { get; set; } = null!;
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
 
-        public static ProductResponse From(Product p, string brand, string? category) => new()
+        public static ProductResponse From(Product p, string brand, string category) => new()
         {
             Id = p.Id,
             Name = p.Name,
@@ -47,12 +47,10 @@ public static class GetProductById
                 return FeatureObjectResultModel<ProductResponse>.NotFound();
 
             var brand = await session.LoadAsync<Brand>(product.BrandId, ct);
-            var category = product.CategoryId is null
-                ? null
-                : await session.LoadAsync<Category>(product.CategoryId.Value, ct);
+            var category = await session.LoadAsync<Category>(product.CategoryId, ct);
 
             return FeatureObjectResultModel<ProductResponse>.Ok(
-                ProductResponse.From(product, brand?.Name ?? string.Empty, category?.Name));
+                ProductResponse.From(product, brand?.Name ?? string.Empty, category?.Name ?? string.Empty));
         }
     }
 }

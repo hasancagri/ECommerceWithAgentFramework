@@ -29,7 +29,8 @@ public class ProductStorefrontViewResponseTests
     public void From_StockNotReported_LeavesStockFieldsNull()
     {
         var view = StorefrontView.Create(Guid.NewGuid());
-        view.ApplyCatalog("Yeni Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", null, null, null, isDeleted: false);
+        view.ApplyCatalog("Yeni Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", Guid.NewGuid(), "Elektronik",
+            null, isDeleted: false);
 
         var response = ProductStorefrontViewResponse.From(view);
 
@@ -43,7 +44,8 @@ public class ProductStorefrontViewResponseTests
     public void From_ZeroStock_DerivesInStockFalse()
     {
         var view = StorefrontView.Create(Guid.NewGuid());
-        view.ApplyCatalog("Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", null, null, null, isDeleted: false);
+        view.ApplyCatalog("Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", Guid.NewGuid(), "Elektronik",
+            null, isDeleted: false);
         view.ApplyStock(0);
 
         var response = ProductStorefrontViewResponse.From(view);

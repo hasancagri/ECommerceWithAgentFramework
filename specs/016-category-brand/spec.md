@@ -65,7 +65,7 @@ Değişiklik storefront listesine kendiliğinden yansır; elle bir adım gerekme
 
 1. **Given** feed'de kategorisi olan yeni bir ürün, **When** içeri alım çalışır, **Then** ürün katalogda kategori ve marka bilgisiyle yer alır.
 2. **Given** mevcut bir ürünün feed'de kategorisi değişti, **When** içeri alım çalışır, **Then** ürünün kategorisi güncellenir ve listeye yansır.
-3. **Given** feed'de kategorisi boş/eksik bir ürün, **When** içeri alım çalışır, **Then** ürün reddedilmez ve "kategorisiz" olarak ele alınır.
+3. **Given** feed'de kategorisi boş/eksik bir ürün, **When** içeri alım çalışır, **Then** kayıt işlenmez (hata → retry/DLQ); kategori zorunludur.
 
 ---
 
@@ -88,9 +88,9 @@ Değişiklik storefront listesine kendiliğinden yansır; elle bir adım gerekme
 
 - Feed'de kategori adı yazım farklarıyla gelirse ne olur (ör. "Elektronik" vs "elektronik ")? Normalizasyon kuralı gerekir.
 - Mevcut (enum döneminden) ürünlerin marka değerleri yeni dinamik modele nasıl taşınır? Veri kaybı olmamalı.
-- Kategorisi hiç olmayan ürünler listede ve filtrelerde nasıl davranır? Kategorisiz ürün "tümü" görünümünde kalmalı.
+- Kategorisiz ürün domain'de yoktur (FR-010): kategorisiz feed kaydı işlenmez; hata retry/DLQ'ya düşer, katalog kirlenmez.
 - Bir kategorinin son ürünü silinirse/pasifleşirse filtre seçeneklerinden düşmeli.
-- Feed'in tanımadığı ("kategorisiz") ürünlerle dolu bir sayfada filtre seçenekleri boş kalabilir; UI bunu bozulmadan göstermeli.
+- Catalog'un henüz raporlamadığı kısmi storefront satırları filtre seçeneklerine girmez; UI boş facet'i bozulmadan göstermeli.
 
 ## Requirements *(mandatory)*
 
@@ -105,7 +105,7 @@ Değişiklik storefront listesine kendiliğinden yansır; elle bir adım gerekme
 - **FR-007**: Ürün listesi kategori ve/veya markaya göre filtrelenebilir (kimlikle veya adla); filtre sayfalama ile birlikte çalışır.
 - **FR-008**: Filtre seçenekleri (mevcut kategori ve marka listeleri) gerçek verilerden kimlik+ad çifti olarak sorgulanabilir olmalıdır.
 - **FR-009**: Kategori/marka adı normalize edilerek eşleştirilir (kırpma, iç boşluk toplama, harf duyarsız); normalize ad teklik anahtarıdır.
-- **FR-010**: Kategorisi boş/eksik ürün reddedilmez; "kategorisiz" kabul edilir ve filtresiz listelerde görünmeye devam eder.
+- **FR-010**: Kategori zorunludur (kullanıcı kararı 2026-07-27): kategorisiz ürün var olamaz; kategorisiz feed kaydı işlenmez (içeri alım hatası → retry/DLQ).
 - **FR-011**: Mevcut ürünlerin marka verisi dinamik modele kayıpsız taşınır; geçiş sonrası eski ürünler markasıyla filtrelenebilir.
 - **FR-012**: Sohbet asistanına açık ürün arama yetenekleri kategori ve marka ile daraltmayı destekler.
 - **FR-013**: Kategori/marka adı kayıt doğduktan sonra değişmez (rename yok); yazım farkıyla gelen ad normalize eşleşmeyle mevcut kayda bağlanır.
@@ -114,7 +114,7 @@ Değişiklik storefront listesine kendiliğinden yansır; elle bir adım gerekme
 
 - **Kategori**: Kimlikli, düz (tek seviye) sınıflandırma kaydı; yalnız feed'den doğar, adı değişmez; filtre ve listelemede kullanılır.
 - **Marka**: Kimlikli marka kaydı; yalnız feed'den doğar, adı değişmez; filtrelemede kullanılır.
-- **Ürün (Katalog)**: Mevcut ürün kavramı; markasına (zorunlu) ve kategorisine (opsiyonel) kimlikle referans verir.
+- **Ürün (Katalog)**: Mevcut ürün kavramı; markasına ve kategorisine (ikisi de zorunlu) kimlikle referans verir.
 - **Storefront görünümü**: Mevcut birleşik liste kaydı; kategori ve marka alanları kazanır, filtre sorguları buradan çalışır.
 - **Tedarikçi ürün kaydı (feed/snapshot)**: Feed'deki ürün temsili; kategori alanı kazanır.
 

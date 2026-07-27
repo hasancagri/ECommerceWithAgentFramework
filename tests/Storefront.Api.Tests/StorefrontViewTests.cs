@@ -75,7 +75,7 @@ public class StorefrontViewTests
         var view = StorefrontView.Create(Guid.NewGuid());
 
         view.ApplyStock(5);
-        view.ApplyCatalog("Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", null, null, null, false);
+        view.ApplyCatalog("Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", Guid.NewGuid(), "Elektronik", null, false);
         view.ApplyDiscount(0.2m);
 
         view.Name.ShouldBe("Ürün");

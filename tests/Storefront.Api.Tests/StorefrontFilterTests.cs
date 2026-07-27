@@ -3,7 +3,8 @@ using static Storefront.Api.Domains.StorefrontView.Features.Queries.GetStorefron
 
 namespace Storefront.Api.Tests;
 
-// 016 US1/US2: filtre çekirdeği (Id öncelikli, AND) + facet (Distinct, null kategori dışarıda).
+// 016 US1/US2: filtre çekirdeği (Id öncelikli, AND) + facet (Distinct kimlik+ad).
+// Kategori event'te zorunlu; null yalnız Catalog'un hiç raporlamadığı kısmi satırda kalır.
 public class StorefrontFilterTests
 {
     private static readonly Guid ElektronikId = Guid.NewGuid();
@@ -11,7 +12,7 @@ public class StorefrontFilterTests
     private static readonly Guid AppleId = Guid.NewGuid();
     private static readonly Guid NikeId = Guid.NewGuid();
 
-    private static StorefrontView Row(string name, Guid? brandId, string brand, Guid? categoryId, string? category)
+    private static StorefrontView Row(string name, Guid brandId, string brand, Guid categoryId, string category)
     {
         var view = StorefrontView.Create(Guid.NewGuid());
         view.ApplyCatalog(name, "Açıklama", 10m, brandId, brand, categoryId, category, null, isDeleted: false);
@@ -23,7 +24,7 @@ public class StorefrontFilterTests
         Row("Telefon", AppleId, "Apple", ElektronikId, "Elektronik"),
         Row("Laptop", AppleId, "Apple", ElektronikId, "Elektronik"),
         Row("Ayakkabı", NikeId, "Nike", GiyimId, "Giyim"),
-        Row("Kategorisiz Ürün", NikeId, "Nike", null, null)
+        Row("Çanta", NikeId, "Nike", GiyimId, "Giyim")
     ];
 
     // --- ApplyFilters: kategori ---
@@ -42,8 +43,8 @@ public class StorefrontFilterTests
     {
         var result = ApplyFilters(SampleRows().AsQueryable(), null, "Giyim", null, null).ToList();
 
-        result.Count.ShouldBe(1);
-        result[0].Name.ShouldBe("Ayakkabı");
+        result.Count.ShouldBe(2);
+        result.ShouldAllBe(x => x.Category == "Giyim");
     }
 
     [Fact]
@@ -101,8 +102,8 @@ public class StorefrontFilterTests
     {
         var result = ApplyFilters(SampleRows().AsQueryable(), GiyimId, null, NikeId, null).ToList();
 
-        result.Count.ShouldBe(1);
-        result[0].Name.ShouldBe("Ayakkabı");
+        result.Count.ShouldBe(2);
+        result.ShouldAllBe(x => x.CategoryId == GiyimId && x.BrandId == NikeId);
     }
 
     // --- Facet (BuildOptions) ---
@@ -121,12 +122,16 @@ public class StorefrontFilterTests
     }
 
     [Fact]
-    public void BuildOptions_NullCategoryRows_NotListed()
+    public void BuildOptions_PartialRowsWithoutCatalogData_NotListed()
     {
-        var options = GetStorefrontFilterOptions.BuildOptions(SampleRows());
+        // Catalog henüz raporlamadıysa satır kimliksizdir (savunma): facet'e girmez.
+        var rows = SampleRows();
+        rows.Add(StorefrontView.Create(Guid.NewGuid()));
 
-        options.Categories.ShouldNotContain(x => x.Name == string.Empty);
-        options.Categories.Count.ShouldBe(2); // kategorisiz satır facet'e girmez
+        var options = GetStorefrontFilterOptions.BuildOptions(rows);
+
+        options.Categories.Count.ShouldBe(2);
+        options.Brands.Count.ShouldBe(2);
     }
 
     [Fact]

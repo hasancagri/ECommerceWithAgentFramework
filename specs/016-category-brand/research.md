@@ -52,8 +52,8 @@ Kesinleşen kararlar ve gerekçeleri. Keşif kaynakları: Catalog/Supplier/Store
 - **Rationale**: Gateway diff'i record value-equality'dir; yeni alan her snapshot'ı "değişti" yapar → 500 kayıt
   yayınlanır (200 güncel + 300 yeni) → katalog kendiliğinden dolar (doğal backfill, elle adım yok).
   Genişletme kullanıcı isteği (2026-07-27): daha zengin kategori/marka dağılımı ve daha gerçekçi liste.
-- **Not**: Kategorisi boş kayıt yine reddedilmez (`CategoryId=null` savunma toleransı, FR-010); ancak dataset
-  bilinçli olarak tam kategorili tutulur.
+- **Not (revize 2026-07-27)**: Kategori ZORUNLUDUR (FR-010 tersine döndü): kategorisiz kayıt işlenmez,
+  ingestion CategoryWrite'ta kesilir (retry/DLQ). Dataset tam kategorilidir.
 
 ## R7 — Sınırda zenginleştirme: fat event Id + AD birlikte taşır
 
@@ -90,7 +90,8 @@ Kesinleşen kararlar ve gerekçeleri. Keşif kaynakları: Catalog/Supplier/Store
   (015 deseni; retry/DLQ devralır).
 - **Rationale**: 015'in tipli zincir deseniyle tutarlı — her yazım kendi adımında, Id'ler zincirde akar;
   Catalog upsert handler'ında ad çözümü tekrarlanmaz (çift iş yok). Marka zorunlu olduğundan kesme doğal.
-- **Not**: Kategori adı boş gelirse CategoryWrite executor'ı LLM/tool çağırmadan deterministik olarak
-  `categoryId=null` geçirir (FR-010 savunma toleransı).
+- **Not (revize 2026-07-27)**: Kategori adı boş gelirse CategoryWrite executor'ı LLM/tool çağırmadan
+  deterministik HATA döner (`CATEGORY_MISSING` → short-circuit → retry/DLQ); kategori zorunludur.
 - **Alternatives considered**: Get-or-create'i `UpsertProduct` handler'ına gömmek (bu planın ilk hali) —
-  kullanıcı kararıyla ayrı executor'lara taşındı. Kategori hatasında null ile devam — REDDEDİLDİ (kesme tercih edildi).
+  kullanıcı kararıyla ayrı executor'lara taşındı. Kategori hatasında/boşluğunda null ile devam —
+  REDDEDİLDİ (kullanıcı kararı: CategoryId olmazsa olmaz; kesme tercih edildi).

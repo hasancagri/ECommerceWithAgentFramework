@@ -91,15 +91,17 @@
 **Independent Test**: Feed'e yeni marka/kategorili kayıt → pull sonrası storefront'ta doğru filtrelenir (elle adım yok).
 
 - [X] T033 [P] [US3] `src/services/supplier/Supplier.Api/Domains/Feeds/FeedEndpointExtension.cs`: SupplierProduct +Category?
-- [ ] T034 [P] [US3] `src/services/supplier/Supplier.Api/Datasets/products.json`: 500 kayıt — mevcut 200'e category;
-      SUP-1201…SUP-1500 yeni; TÜMÜ kategorili
+- [X] T034 [P] [US3] `src/services/supplier/Supplier.Api/Datasets/products.json`: 500 kayıt — mevcut 200'e category;
+      SUP-1201…SUP-1500 yeni; TÜMÜ kategorili (7 kategori, 18 marka; Nike/Samsung 2 kategoride)
 - [X] T035 [US3] `src/services/supplier/Supplier.Gateway/Domains/Feeds/SupplierFeedAdapter.cs`: wire +Category?; ToCanonical geçişi
-- [ ] T036 [US3] `src/agents/IngestionAgent/Workflows/`: BrandWriterAgent + executor (upsert_brand → BrandWriteResult)
-- [ ] T037 [P] [US3] `src/agents/IngestionAgent/Workflows/`: CategoryWriterAgent + executor (boş ad → LLM'siz CategoryId=null)
-- [ ] T038 [US3] `src/agents/IngestionAgent/ConstValues.cs`: BrandWriter/CategoryWriter instruction'ları (015 kalıbı);
+- [X] T036 [US3] `src/agents/IngestionAgent/Workflows/`: BrandWriterAgent + executor (upsert_brand → BrandWriterResult)
+- [X] T037 [P] [US3] `src/agents/IngestionAgent/Workflows/`: CategoryWriterAgent + executor.
+      REVİZE (kullanıcı kararı 2026-07-27, kategori ZORUNLU): boş ad → LLM'siz deterministik HATA (CATEGORY_MISSING);
+      CategoryId domain genelinde Guid (non-null) yapıldı (Product/event/komutlar/upsert_product/WebApp)
+- [X] T038 [US3] `src/agents/IngestionAgent/ConstValues.cs`: BrandWriter/CategoryWriter instruction'ları (015 kalıbı);
       CatalogWriter prompt'u brandId/categoryId taşır
-- [ ] T039 [US3] `src/agents/IngestionAgent/SupplierSnapshotHandler.cs`: zincir Brand→Category→Catalog→Stock→Discount;
-      her adım hatada short-circuit → Finish
+- [X] T039 [US3] `src/agents/IngestionAgent/SupplierSnapshotHandler.cs`: zincir Brand→Category→Catalog→Stock→Discount;
+      her adım hatada short-circuit → Finish; Wolverine mesaj bütçesi 6 dk (5×60s adım üstü)
 - [ ] T040 [US3] Canlı doğrulama (quickstart 2-4): pull → 500 yayın → catalog brands/categories dolu, BrandId %100, DLQ boş
 
 **Checkpoint**: SC-002/SC-003/SC-004 sağlanır.

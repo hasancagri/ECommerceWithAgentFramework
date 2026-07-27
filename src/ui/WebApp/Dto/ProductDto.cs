@@ -9,7 +9,7 @@ public record ProductDto(
     string Sku,
     Guid BrandId,
     string Brand,
-    Guid? CategoryId,
-    string? Category,
+    Guid CategoryId,
+    string Category,
     string? ImageUrl,
     bool IsActive);

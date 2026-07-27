@@ -14,6 +14,7 @@ public class StorefrontView
     // Catalog kaynagi — henuz gelmediyse null (kismi satir). Name null = "Catalog raporlamadi".
     // 006: Description/Price/Brand eklendi; Price null = fat veri gelmedi (dolu-satir filtresinin isareti).
     // 016: BrandId/CategoryId/Category eklendi — kimlik + ad birlikte tasinir (R7); Id'ler opak degerdir.
+    // Event'te kategori zorunludur; buradaki null YALNIZ "Catalog henuz raporlamadi" demektir.
     public string? Name { get; private set; }
     public string? Description { get; private set; }
     public decimal? Price { get; private set; }
@@ -37,7 +38,7 @@ public class StorefrontView
         new() { ProductId = productId };
 
     public void ApplyCatalog(string name, string description, decimal price,
-        Guid? brandId, string brand, Guid? categoryId, string? category,
+        Guid brandId, string brand, Guid categoryId, string category,
         string? imageUrl, bool isDeleted)
     {
         Name = name;

@@ -9,7 +9,7 @@ public static class CreateProduct
         decimal Price,
         string Sku,
         Guid BrandId,
-        Guid? CategoryId,
+        Guid CategoryId,
         string? ImageUrl);
 
     public class CreateProductResponse
@@ -26,7 +26,7 @@ public static class CreateProduct
             IMessageBus bus,
             CancellationToken ct)
         {
-            // 016: marka zorunlu ve var olmalı; kategori opsiyonel ama verilmişse var olmalı (doğum yalnız feed'den).
+            // 016: marka ve kategori zorunludur ve var olmalıdır (doğum yalnız feed'den).
             var brand = await session.LoadAsync<Brand>(cmd.BrandId, ct);
             if (brand is null || brand.IsDeleted)
                 return FeatureObjectResultModel<CreateProductResponse>.Error(new MessageItem
@@ -35,17 +35,13 @@ public static class CreateProduct
                     Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
                 });
 
-            Category? category = null;
-            if (cmd.CategoryId is not null)
-            {
-                category = await session.LoadAsync<Category>(cmd.CategoryId.Value, ct);
-                if (category is null || category.IsDeleted)
-                    return FeatureObjectResultModel<CreateProductResponse>.Error(new MessageItem
-                    {
-                        Property = nameof(cmd.CategoryId),
-                        Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
-                    });
-            }
+            var category = await session.LoadAsync<Category>(cmd.CategoryId, ct);
+            if (category is null || category.IsDeleted)
+                return FeatureObjectResultModel<CreateProductResponse>.Error(new MessageItem
+                {
+                    Property = nameof(cmd.CategoryId),
+                    Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
+                });
 
             var product = Product.Create(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
                 cmd.BrandId, cmd.CategoryId, cmd.ImageUrl);
@@ -57,7 +53,7 @@ public static class CreateProduct
             // 016: fat event kimlik + adı birlikte taşır (R7); tüketici Catalog'a lookup yapmaz.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
                 product.Id, product.Name, product.Description, product.Price,
-                brand.Id, brand.Name, category?.Id, category?.Name,
+                brand.Id, brand.Name, category.Id, category.Name,
                 product.ImageUrl, IsDeleted: false));
 
             return FeatureObjectResultModel<CreateProductResponse>.Ok(new CreateProductResponse { Id = product.Id });

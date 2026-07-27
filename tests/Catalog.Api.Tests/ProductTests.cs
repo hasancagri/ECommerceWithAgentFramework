@@ -4,7 +4,8 @@ using Xunit;
 
 namespace Catalog.Api.Tests;
 
-// 016 T007: Product artık BrandType değil BrandId (Guid) + CategoryId (Guid?) taşır.
+// 016 T007: Product artık BrandType değil BrandId (Guid) + CategoryId (Guid) taşır.
+// Kategori zorunludur (kullanıcı kararı 2026-07-27): imzada Guid, null yolu yoktur.
 public class ProductTests
 {
     [Fact]
@@ -22,17 +23,9 @@ public class ProductTests
     }
 
     [Fact]
-    public void Create_WithoutCategory_LeavesCategoryIdNull()
-    {
-        var product = Product.Create("Telefon", "Açıklama", 100m, "SKU-1", Guid.NewGuid(), null, null);
-
-        product.CategoryId.ShouldBeNull();
-    }
-
-    [Fact]
     public void Update_ReassignsBrandIdAndCategoryId()
     {
-        var product = Product.Create("Telefon", "Açıklama", 100m, "SKU-1", Guid.NewGuid(), null, null);
+        var product = Product.Create("Telefon", "Açıklama", 100m, "SKU-1", Guid.NewGuid(), Guid.NewGuid(), null);
         var newBrandId = Guid.NewGuid();
         var newCategoryId = Guid.NewGuid();
 

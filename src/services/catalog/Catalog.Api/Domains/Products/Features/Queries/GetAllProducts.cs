@@ -14,12 +14,12 @@ public static class GetAllProducts
         public string Sku { get; set; } = null!;
         public Guid BrandId { get; set; }
         public string Brand { get; set; } = null!;
-        public Guid? CategoryId { get; set; }
-        public string? Category { get; set; }
+        public Guid CategoryId { get; set; }
+        public string Category { get; set; } = null!;
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
 
-        public static ProductResponse From(Product p, string brand, string? category) => new()
+        public static ProductResponse From(Product p, string brand, string category) => new()
         {
             Id = p.Id,
             Name = p.Name,
@@ -53,7 +53,7 @@ public static class GetAllProducts
             var response = products.Select(p => GetAllProducts.ProductResponse.From(
                 p,
                 brandNames.GetValueOrDefault(p.BrandId, string.Empty),
-                p.CategoryId is null ? null : categoryNames.GetValueOrDefault(p.CategoryId.Value))).ToList();
+                categoryNames.GetValueOrDefault(p.CategoryId, string.Empty))).ToList();
             return FeatureObjectResultModel<List<GetAllProducts.ProductResponse>>.Ok(response);
         }
     }

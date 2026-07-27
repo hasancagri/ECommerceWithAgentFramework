@@ -9,8 +9,9 @@ public class Product : AggregateRoot
 
     // 016: BrandType enum kalktı; Brand/Category ayrı aggregate'lerdir, Id ile referans verilir.
     // Eski dokümanlardaki int 'Brand' üyesi Marten/Newtonsoft tarafından yok sayılır (R5).
+    // Kategori zorunludur (kullanıcı kararı 2026-07-27): kategorisiz ürün oluşturulamaz.
     public Guid BrandId { get; private set; }
-    public Guid? CategoryId { get; private set; }
+    public Guid CategoryId { get; private set; }
     public string? ImageUrl { get; private set; }
 
     // 010: tamlik (IsComplete) kurali bilincli kaldirildi — gorselsiz urun de bulunur/satilir.
@@ -20,7 +21,7 @@ public class Product : AggregateRoot
     }
 
     public static Product Create(string name, string description, decimal price, string sku,
-        Guid brandId, Guid? categoryId, string? imageUrl)
+        Guid brandId, Guid categoryId, string? imageUrl)
     {
         var product = new Product
         {
@@ -36,7 +37,7 @@ public class Product : AggregateRoot
     }
 
     public void Update(string name, string description, decimal price, string sku,
-        Guid brandId, Guid? categoryId, string? imageUrl)
+        Guid brandId, Guid categoryId, string? imageUrl)
     {
         Name = name;
         Description = description;
