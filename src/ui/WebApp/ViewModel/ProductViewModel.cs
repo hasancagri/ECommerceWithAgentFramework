@@ -1,15 +1,16 @@
-using Shared;
-using Shared.Enums;
-
 namespace WebApp.ViewModel;
 
+// 016: Brand/Category görünen addır (string); kimlikler form/filtre için taşınır.
 public record ProductViewModel(
     Guid Id,
     string Name,
     string Description,
     decimal Price,
     string Sku,
-    BrandType Brand,
+    Guid BrandId,
+    string Brand,
+    Guid? CategoryId,
+    string? Category,
     string? ImageUrl,
     bool IsActive)
 {

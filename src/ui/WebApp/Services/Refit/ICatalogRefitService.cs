@@ -3,6 +3,7 @@ using WebApp.Dto;
 
 namespace WebApp.Services.Refit;
 
+// 016: ürün yazma yolu WebApp'ten kaldırıldı (kullanıcı kararı) — ürünler yalnız feed'den doğar; UI salt okur.
 public interface ICatalogRefitService
 {
     [Get("/api/v1/products")]
@@ -10,13 +11,4 @@ public interface ICatalogRefitService
 
     [Get("/api/v1/products/{id}")]
     Task<ApiResponse<ProductDto>> GetProduct(Guid id);
-
-    [Post("/api/v1/products")]
-    Task<ApiResponse<object>> CreateProductAsync([Body] CreateProductRequest request);
-
-    [Put("/api/v1/products")]
-    Task<ApiResponse<object>> UpdateProductAsync([Body] UpdateProductRequest request);
-
-    [Delete("/api/v1/products/{id}")]
-    Task<ApiResponse<object>> DeleteProductAsync(Guid id);
 }

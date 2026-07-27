@@ -4,7 +4,7 @@ namespace Supplier.Gateway.Tests;
 public class FeedPullTests
 {
     private static SupplierFeedRecord Wire(string externalId, decimal price = 100m)
-        => new(externalId, "Ürün", "Açıklama", "Apple", price, 10, null, null);
+        => new(externalId, "Ürün", "Açıklama", "Apple", "Elektronik", price, 10, null, null);
 
     [Fact]
     public void Parse_NullOrEmptyBody_ReturnsEmpty()

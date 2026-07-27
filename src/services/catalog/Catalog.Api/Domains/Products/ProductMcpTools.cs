@@ -21,13 +21,15 @@ public static class GetProductMcpTool
 public static class GetProductByNameMcpTool
 {
     [McpServerTool(Name = "search_products")]
-    [Description("Urunu gostermek/aramak icin: isme gore en iyi eslesen urunun detay sayfasi linkini doner.")]
+    [Description("Urunu gostermek/aramak icin: isme gore en iyi eslesen urunun detay sayfasi linkini doner. Kategori ve/veya marka adiyla daraltilabilir.")]
     public static Task<FeatureObjectResultModel<Agent.SearchProducts.SearchProductResponse>> SearchProductsAsync(
         [Description("Aranacak urun adi (kismi eslesme yeterli)")] string name,
         IMessageBus bus,
-        CancellationToken ct)
+        CancellationToken ct,
+        [Description("Opsiyonel kategori adi (tam ad; buyuk/kucuk harf ve bosluk toleransli)")] string? category = null,
+        [Description("Opsiyonel marka adi (tam ad; buyuk/kucuk harf ve bosluk toleransli)")] string? brand = null)
         => bus.InvokeAsync<FeatureObjectResultModel<Agent.SearchProducts.SearchProductResponse>>(
-            new Agent.SearchProducts.SearchProductsQuery(name), ct);
+            new Agent.SearchProducts.SearchProductsQuery(name, category, brand), ct);
 }
 
 // 005-supplier-ingestion: ingestion katalog yazicisinin TEK yazma tool'u (FR-019).
@@ -42,11 +44,12 @@ public static class UpsertProductMcpTool
         [Description("Urun aciklamasi")] string description,
         [Description("Fiyat (nokta ondalik)")] decimal price,
         [Description("Stok tutma birimi (SKU) — tedarikci harici kimligi")] string sku,
-        [Description("Marka adi (BrandType enum adi, or. Apple)")] string brand,
+        [Description("Marka kimligi (upsert_brand'in dondugu brandId, Guid)")] Guid brandId,
         IMessageBus bus,
         CancellationToken ct,
+        [Description("Opsiyonel kategori kimligi (upsert_category'nin dondugu categoryId, Guid)")] Guid? categoryId = null,
         [Description("Opsiyonel gorsel URL'i")] string? imageUrl = null)
         => bus.InvokeAsync<FeatureObjectResultModel<Agent.UpsertProduct.UpsertProductResponse>>(
             new Agent.UpsertProduct.UpsertProductCommand(
-                name, description, price, sku, brand, imageUrl), ct);
+                name, description, price, sku, brandId, categoryId, imageUrl), ct);
 }

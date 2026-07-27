@@ -14,36 +14,36 @@
 
 ## Phase 1: Setup — paylaşılan kontratlar
 
-- [ ] T001 `src/others/Shared/IntegrationEvents.cs`: ProductChangedEvent +BrandId/+CategoryId?/+Category?;
+- [X] T001 `src/others/Shared/IntegrationEvents.cs`: ProductChangedEvent +BrandId/+CategoryId?/+Category?;
       SupplierProductSnapshotReceived +Category? (contracts/integration-events.md şekilleri)
 
 ---
 
 ## Phase 2: Foundational — Catalog domain + enum kaldırma (BLOKLAR)
 
-- [ ] T002 [P] `src/services/catalog/Catalog.Api/Domains/NameNormalization.cs`: trim + iç boşluk toplama + ToUpperInvariant
-- [ ] T003 [P] `src/services/catalog/Catalog.Api/Domains/Categories/Category.cs`: aggregate (Create fabrika, NormalizedName, immutable ad)
-- [ ] T004 [P] `src/services/catalog/Catalog.Api/Domains/Brands/Brand.cs`: aynı desen
-- [ ] T005 [P] `tests/Catalog.Api.Tests/CategoryBrandTests.cs`: Create normalizasyonu, boş ad hatası, teklik anahtarı, ad immutability
-- [ ] T006 `src/services/catalog/Catalog.Api/Domains/Products/Product.cs`: BrandType → BrandId Guid + CategoryId Guid?; Create/Update imzaları
-- [ ] T007 [P] `tests/Catalog.Api.Tests/ProductTests.cs`: yeni imzalar ve alan atamaları
-- [ ] T008 `.../Domains/Brands/Features/Agent/UpsertBrand.cs`: get-or-create (normalize sorgu; unique ihlalinde bir kez yeniden oku)
-- [ ] T009 [P] `.../Domains/Categories/Features/Agent/UpsertCategory.cs`: aynı desen
-- [ ] T010 [P] `.../Domains/Brands/Features/Queries/GetAllBrands.cs` + `BrandEndpointExtension.cs`: kimlik+ad listesi, [Cached("catalog-products",60)]
-- [ ] T011 [P] `.../Domains/Categories/Features/Queries/GetAllCategories.cs` + `CategoryEndpointExtension.cs`: aynı desen
-- [ ] T012 [P] `BrandMcpTools.cs` + `CategoryMcpTools.cs`: upsert_brand / upsert_category ince sarmalayıcıları (IMessageBus'a delege)
-- [ ] T013 `.../Products/Features/Commands/CreateProduct.cs` + `UpdateProduct.cs` + `DeleteProduct.cs`: BrandId/CategoryId?;
-      event yayını Brand/Category adlarını yükleyerek (kimlik+ad fat event)
-- [ ] T014 `.../Products/Features/Agent/UpsertProduct.cs` + `ProductMcpTools.cs`: upsert_product brandId (Guid) + categoryId (Guid?) alır
-- [ ] T015 [P] `.../Products/Features/Queries/GetAllProducts.cs|GetProductById.cs|GetProductByName.cs`: response +BrandId/Brand adı/+CategoryId/Category adı
-- [ ] T016 `.../Products/Features/Agent/SearchProducts.cs`: +category?/+brand? paramları (normalize ad → Id çözümü ile filtre)
-- [ ] T017 `src/services/catalog/Catalog.Api/Program.cs`: Category/Brand şema + UniqueIndex(Computed, NormalizedName); yeni endpoint map'leri
-- [ ] T018 Catalog açılış migrasyonu (Program.cs bootstrap): BrandId'siz dokümanlarda ham JSON legacy int → ad haritası
-      (1=Apple…10=Xiaomi) → Brand get-or-create → BrandId patch; idempotent
-- [ ] T019 [P] `tests/Catalog.Api.Tests/BrandMigrationTests.cs`: legacy harita + normalize çakışma davranışı
-- [ ] T020 WebApp DTO/form geçişi: `src/ui/WebApp/Dto/{CreateProductRequest,UpdateProductRequest,ProductDto}.cs` +
-      `ViewModel/{CreateProductViewModel,ProductViewModel}.cs` + ilgili sayfalar → BrandId/CategoryId?; dropdown'lar Catalog uçlarından
-- [ ] T021 `src/others/Shared/Enums/BrandType.cs` SİL; repo genelinde kalan referans taraması temiz
+- [X] T002 [P] `src/services/catalog/Catalog.Api/Domains/NameNormalization.cs`: trim + iç boşluk toplama + ToUpperInvariant
+- [X] T003 [P] `src/services/catalog/Catalog.Api/Domains/Categories/Category.cs`: aggregate (Create fabrika, NormalizedName, immutable ad)
+- [X] T004 [P] `src/services/catalog/Catalog.Api/Domains/Brands/Brand.cs`: aynı desen
+- [X] T005 [P] `tests/Catalog.Api.Tests/CategoryBrandTests.cs`: Create normalizasyonu, boş ad hatası, teklik anahtarı, ad immutability
+- [X] T006 `src/services/catalog/Catalog.Api/Domains/Products/Product.cs`: BrandType → BrandId Guid + CategoryId Guid?; Create/Update imzaları
+- [X] T007 [P] `tests/Catalog.Api.Tests/ProductTests.cs`: yeni imzalar ve alan atamaları
+- [X] T008 `.../Domains/Brands/Features/Agent/UpsertBrand.cs`: get-or-create (normalize sorgu; unique ihlalinde bir kez yeniden oku)
+- [X] T009 [P] `.../Domains/Categories/Features/Agent/UpsertCategory.cs`: aynı desen
+- [X] T010 [P] `.../Domains/Brands/Features/Queries/GetAllBrands.cs` + `BrandEndpointExtension.cs`: kimlik+ad listesi, [Cached("catalog-products",60)]
+- [X] T011 [P] `.../Domains/Categories/Features/Queries/GetAllCategories.cs` + `CategoryEndpointExtension.cs`: aynı desen
+- [X] T012 [P] `BrandMcpTools.cs` + `CategoryMcpTools.cs`: upsert_brand / upsert_category ince sarmalayıcıları (IMessageBus'a delege)
+- [X] T013 `.../Products/Features/Commands/CreateProduct.cs` + `UpdateProduct.cs`: BrandId/CategoryId?;
+      event yayını Brand/Category adlarını yükleyerek (kimlik+ad fat event).
+      NOT (kullanıcı kararı 2026-07-27): DeleteProduct slice/endpoint/WebApp yolu TAMAMEN SİLİNDİ — ürün silinemez
+- [X] T014 `.../Products/Features/Agent/UpsertProduct.cs` + `ProductMcpTools.cs`: upsert_product brandId (Guid) + categoryId (Guid?) alır
+- [X] T015 [P] `.../Products/Features/Queries/GetAllProducts.cs|GetProductById.cs|GetProductByName.cs`: response +BrandId/Brand adı/+CategoryId/Category adı
+- [X] T016 `.../Products/Features/Agent/SearchProducts.cs`: +category?/+brand? paramları (normalize ad → Id çözümü ile filtre)
+- [X] T017 `src/services/catalog/Catalog.Api/Program.cs`: Category/Brand şema + UniqueIndex(Computed, NormalizedName); yeni endpoint map'leri
+- [X] T018 İPTAL (kullanıcı kararı 2026-07-27): DB sıfırlanarak başlatılacak — legacy doküman yok, migrasyon gereksiz
+- [X] T019 İPTAL (T018 ile birlikte): migrasyon testi konusuz kaldı
+- [X] T020 WebApp geçişi (kullanıcı kararı 2026-07-27: WebApp'te ürün oluşturma/güncelleme YOK — yazma yolu silindi):
+      Create/Update DTO+ViewModel+Refit/servis metotları kaldırıldı; ProductDto/ProductViewModel kimlik+ad taşır
+- [X] T021 `src/others/Shared/Enums/BrandType.cs` SİL; repo genelinde kalan referans taraması temiz
 
 **Checkpoint**: `dotnet build` yeşil; Catalog testleri geçer; ürün REST create/update yeni kontratla çalışır.
 
@@ -90,10 +90,10 @@
 
 **Independent Test**: Feed'e yeni marka/kategorili kayıt → pull sonrası storefront'ta doğru filtrelenir (elle adım yok).
 
-- [ ] T033 [P] [US3] `src/services/supplier/Supplier.Api/Domains/Feeds/FeedEndpointExtension.cs`: SupplierProduct +Category?
+- [X] T033 [P] [US3] `src/services/supplier/Supplier.Api/Domains/Feeds/FeedEndpointExtension.cs`: SupplierProduct +Category?
 - [ ] T034 [P] [US3] `src/services/supplier/Supplier.Api/Datasets/products.json`: 500 kayıt — mevcut 200'e category;
       SUP-1201…SUP-1500 yeni; TÜMÜ kategorili
-- [ ] T035 [US3] `src/services/supplier/Supplier.Gateway/Domains/Feeds/SupplierFeedAdapter.cs`: wire +Category?; ToCanonical geçişi
+- [X] T035 [US3] `src/services/supplier/Supplier.Gateway/Domains/Feeds/SupplierFeedAdapter.cs`: wire +Category?; ToCanonical geçişi
 - [ ] T036 [US3] `src/agents/IngestionAgent/Workflows/`: BrandWriterAgent + executor (upsert_brand → BrandWriteResult)
 - [ ] T037 [P] [US3] `src/agents/IngestionAgent/Workflows/`: CategoryWriterAgent + executor (boş ad → LLM'siz CategoryId=null)
 - [ ] T038 [US3] `src/agents/IngestionAgent/ConstValues.cs`: BrandWriter/CategoryWriter instruction'ları (015 kalıbı);

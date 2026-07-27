@@ -9,7 +9,8 @@ public static class UpdateProduct
         string Description,
         decimal Price,
         string Sku,
-        BrandType Brand,
+        Guid BrandId,
+        Guid? CategoryId,
         string? ImageUrl);
 
     public class UpdateProductResponse
@@ -30,13 +31,36 @@ public static class UpdateProduct
             if (product is null || product.IsDeleted)
                 return FeatureObjectResultModel<UpdateProductResponse>.NotFound();
 
-            product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku, cmd.Brand, cmd.ImageUrl);
+            var brand = await session.LoadAsync<Brand>(cmd.BrandId, ct);
+            if (brand is null || brand.IsDeleted)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
+                {
+                    Property = nameof(cmd.BrandId),
+                    Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
+                });
+
+            Category? category = null;
+            if (cmd.CategoryId is not null)
+            {
+                category = await session.LoadAsync<Category>(cmd.CategoryId.Value, ct);
+                if (category is null || category.IsDeleted)
+                    return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
+                    {
+                        Property = nameof(cmd.CategoryId),
+                        Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
+                    });
+            }
+
+            product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
+                cmd.BrandId, cmd.CategoryId, cmd.ImageUrl);
             session.Store(product);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
+            // 016: fat event kimlik + adı birlikte taşır (R7).
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
                 product.Id, product.Name, product.Description, product.Price,
-                product.Brand.ToString(), product.ImageUrl, IsDeleted: false));
+                brand.Id, brand.Name, category?.Id, category?.Name,
+                product.ImageUrl, IsDeleted: false));
 
             return FeatureObjectResultModel<UpdateProductResponse>.Ok(new UpdateProductResponse { Id = product.Id });
         }

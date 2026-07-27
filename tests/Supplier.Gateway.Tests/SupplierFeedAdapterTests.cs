@@ -4,7 +4,7 @@ namespace Supplier.Gateway.Tests;
 public class SupplierFeedAdapterTests
 {
     private static SupplierFeedRecord Wire(string? code = "KUPON10", decimal? pct = 10m)
-        => new("SUP-1", "Ürün", "Açıklama", "Apple", 149.90m, 25, code, pct);
+        => new("SUP-1", "Ürün", "Açıklama", "Apple", "Elektronik", 149.90m, 25, code, pct);
 
     [Fact]
     public void ToCanonical_MapsAllContractFields()
@@ -16,6 +16,7 @@ public class SupplierFeedAdapterTests
         canonical.Name.ShouldBe("Ürün");
         canonical.Description.ShouldBe("Açıklama");
         canonical.Brand.ShouldBe("Apple");
+        canonical.Category.ShouldBe("Elektronik");
         canonical.Price.ShouldBe(149.90m);
         canonical.StockQuantity.ShouldBe(25);
         canonical.DiscountPercent.ShouldBe(10m);

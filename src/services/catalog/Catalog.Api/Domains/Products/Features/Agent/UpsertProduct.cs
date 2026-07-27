@@ -4,6 +4,7 @@ namespace Catalog.Api.Domains.Products.Features.Agent;
 // burada deterministik koddadır — SKU varsa güncelle, yoksa oluştur. Retry doğal yakınsar:
 // zarf kaybolsa bile ikinci deneme aynı SKU'yu bulur, kopya ürün oluşamaz.
 // İş mantığı kopyalanmaz; mevcut Create/Update command'larına delege edilir (yazma yolu tek).
+// 016: marka/kategori artık ad değil Id alır — Id'ler zincirin Brand/CategoryWrite adımlarından gelir (R10).
 public static class UpsertProduct
 {
     public record UpsertProductCommand(
@@ -11,7 +12,8 @@ public static class UpsertProduct
         string Description,
         decimal Price,
         string Sku,
-        string Brand,
+        Guid BrandId,
+        Guid? CategoryId,
         string? ImageUrl);
 
     public class UpsertProductResponse
@@ -28,14 +30,6 @@ public static class UpsertProduct
             IMessageBus bus,
             CancellationToken ct)
         {
-            if (!Enum.TryParse<BrandType>(cmd.Brand, ignoreCase: true, out var brand)
-                || !Enum.IsDefined(brand))
-                return FeatureObjectResultModel<UpsertProductResponse>.Error(new MessageItem
-                {
-                    Property = nameof(cmd.Brand),
-                    Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_ENUM_TYPE
-                });
-
             var existing = await session.Query<Product>()
                 .FirstOrDefaultAsync(x => x.Sku == cmd.Sku && !x.IsDeleted, ct);
 
@@ -43,7 +37,7 @@ public static class UpsertProduct
             {
                 var created = await bus.InvokeAsync<FeatureObjectResultModel<Commands.CreateProduct.CreateProductResponse>>(
                     new Commands.CreateProduct.CreateProductCommand(
-                        cmd.Name, cmd.Description, cmd.Price, cmd.Sku, brand, cmd.ImageUrl), ct);
+                        cmd.Name, cmd.Description, cmd.Price, cmd.Sku, cmd.BrandId, cmd.CategoryId, cmd.ImageUrl), ct);
 
                 if (!created.IsSuccess)
                     return FeatureObjectResultModel<UpsertProductResponse>.Error(created.Messages);
@@ -57,7 +51,7 @@ public static class UpsertProduct
 
             var updated = await bus.InvokeAsync<FeatureObjectResultModel<Commands.UpdateProduct.UpdateProductResponse>>(
                 new Commands.UpdateProduct.UpdateProductCommand(
-                    existing.Id, cmd.Name, cmd.Description, cmd.Price, cmd.Sku, brand, cmd.ImageUrl), ct);
+                    existing.Id, cmd.Name, cmd.Description, cmd.Price, cmd.Sku, cmd.BrandId, cmd.CategoryId, cmd.ImageUrl), ct);
 
             if (!updated.IsSuccess)
                 return FeatureObjectResultModel<UpsertProductResponse>.Error(updated.Messages);
