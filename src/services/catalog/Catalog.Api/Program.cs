@@ -59,6 +59,12 @@ builder.Host.UseWolverine(opts =>
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif nested handler'ı atlayabiliyor (Storefront/IngestionAgent emsali);
+    // canlıda GetAllCategories atlandı (T040 bulgusu) → 016 sorgu handler'ları açık kayıtla garanti.
+    opts.Discovery.IncludeType(
+        typeof(Catalog.Api.Domains.Categories.Features.Queries.GetAllCategories.GetAllCategoriesQueryHandler));
+    opts.Discovery.IncludeType(
+        typeof(Catalog.Api.Domains.Brands.Features.Queries.GetAllBrands.GetAllBrandsQueryHandler));
 });
 
 builder.Services.AddApiVersioning(options =>
