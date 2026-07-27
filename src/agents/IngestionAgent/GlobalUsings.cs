@@ -1,6 +1,16 @@
+global using Common.Exceptions;
+global using IngestionAgent;
 global using IngestionAgent.Infrastructure;
 global using IngestionAgent.Workflows;
+global using IngestionAgent.Workflows._01_CatalogWrite;
+global using IngestionAgent.Workflows._02_StockWrite;
+global using IngestionAgent.Workflows._03_DiscountWrite;
 global using Microsoft.Agents.AI.Workflows;
-global using Newtonsoft.Json;
+global using Microsoft.Extensions.AI;
+global using OpenAI;
 global using Shared;
 global using System;
+global using System.Reflection;
+global using Wolverine;
+global using Wolverine.ErrorHandling;
+global using Wolverine.RabbitMQ;

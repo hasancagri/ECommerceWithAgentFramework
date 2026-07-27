@@ -1,33 +1,31 @@
 namespace IngestionAgent.Workflows._01_CatalogWrite;
 
-// Aşama 1 — katalog upsert (FR-014): create/update kararı Catalog'un deterministik kodunda;
-// senkron cevaptaki ProductId + Action job'a yazılır, sonraki yazıcılar buna göre karar verir.
+// Aşama 1 — katalog upsert: LLM agent'ı upsert_product'ı çağırır, tipli CatalogWriterResult AKAR
+// (015: RecordJob kalktı). Başarı ProductId'siz OLAMAZ (sahte-başarı emniyeti, FR-006/SC-002);
+// başarısız sonuç conditional edge ile doğrudan terminale gider (sonraki LLM'ler koşmaz, FR-003).
 public sealed class CatalogWriteExecutor(CatalogWriterAgent catalogAgent)
-    : Executor<RecordJob, RecordJob>("catalog-write")
+    : Executor<IntegrationEvents.SupplierProductSnapshotReceived, CatalogWriterResult>("catalog-write")
 {
     private const string CatalogWriteFailed = "CATALOG_WRITE_FAILED";
 
-    public override async ValueTask<RecordJob> HandleAsync(
-        RecordJob job, IWorkflowContext context, CancellationToken cancellationToken)
+    public override async ValueTask<CatalogWriterResult> HandleAsync(
+        IntegrationEvents.SupplierProductSnapshotReceived message, IWorkflowContext context,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var outcome = await catalogAgent.UpsertProductAsync(job.Message, cancellationToken);
+            var result = await catalogAgent.UpsertAsync(message, cancellationToken);
 
-            if (outcome.Success && outcome.ProductId is not null)
-            {
-                job.ProductId = outcome.ProductId;
-            }
-            else
-            {
-                job.Failure = Failures.Describe(CatalogWriteFailed, outcome.Error);
-            }
+            if (result is { IsSuccess: true, ProductId: not null })
+                return result;
+
+            return new CatalogWriterResult(false,
+                Failures.Describe(CatalogWriteFailed, result.IsSuccess ? "PRODUCT_ID_MISSING" : result.Error),
+                null);
         }
         catch (Exception ex)
         {
-            job.Failure = Failures.Describe(CatalogWriteFailed, ex.Message);
+            return new CatalogWriterResult(false, Failures.Describe(CatalogWriteFailed, ex.Message), null);
         }
-
-        return job;
     }
 }
