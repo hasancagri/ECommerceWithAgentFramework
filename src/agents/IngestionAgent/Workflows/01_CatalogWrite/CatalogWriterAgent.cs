@@ -1,20 +1,70 @@
+using System.Globalization;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+
 namespace IngestionAgent.Workflows._01_CatalogWrite;
 
-// Katalog yazıcısı: yalnız catalog MCP'sine bağlı (FR-016/005), bağlantısını içinde taşır (tembel).
-// Tool adı ve argüman eşlemesi burada — executor yalnız iş dilinde konuşur.
-public sealed class CatalogWriterAgent(McpConnection connection)
+// Katalog yazıcısı (015): yalnız catalog MCP'sinin upsert_product tool'una scope'lu, KENDİ
+// ChatClientAgent'ını taşıyan LLM yazıcı (FR-009). Ortak LlmWriter katmanı kullanıcı tercihiyle
+// kaldırıldı: her yazıcı agent.RunAsync'i kendisi çağırır; tekdüzelik desen paylaşımıyla sağlanır.
+// Agent TEMBEL kurulur (tool keşfi ilk mesajda — hedef servis hazır değil diye açılışta ölmez).
+public sealed class CatalogWriterAgent(
+    IChatClient chatClient, McpToolCatalog toolCatalog, TimeSpan stepTimeout)
 {
-    public async Task<ToolOutcome> UpsertProductAsync(
-        IntegrationEvents.SupplierProductSnapshotReceived message, CancellationToken ct)
+    public static readonly string[] AllowedTools = [CatalogTools.UpsertProduct];
+
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private ChatClientAgent? _agent;
+
+    public async Task<CatalogWriterResult> UpsertAsync(
+        IntegrationEvents.SupplierProductSnapshotReceived m, CancellationToken ct)
     {
-        return await connection.CallAsync("upsert_product", new Dictionary<string, object?>
+        // Adım bütçesi (R5): keşif + LLM döngüsü + tool çağrılarının tamamını sarar; taşma adım hatası.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        cts.CancelAfter(stepTimeout);
+
+        try
         {
-            ["name"] = message.Name,
-            ["description"] = message.Description,
-            ["price"] = message.Price,
-            ["sku"] = message.ExternalId, // R11: SKU = tedarikçi harici kimliği
-            ["brand"] = message.Brand    // marka doğrulaması Catalog'un işi (kullanıcı kararı)
-            // 014: stok artık katalogtan taşınmaz; StockWrite feed adedini ayrı yazar
-        }, ct);
+            var agent = await GetAgentAsync(cts.Token);
+            var response = await agent.RunAsync<CatalogWriterResult>(
+                // Invariant kültür: ondalık ayracı LLM'e her zaman nokta olarak gösterilir.
+                string.Create(CultureInfo.InvariantCulture,
+                    $"Ürünü kataloğa yaz. sku: {m.ExternalId} | name: {m.Name} | description: {m.Description} | price: {m.Price} | brand: {m.Brand}"),
+                cancellationToken: cts.Token);
+            return response.Result;
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new TimeoutException($"{Writers.Catalog} {stepTimeout.TotalSeconds:0}s adım bütçesinde tamamlanamadı");
+        }
+    }
+
+    private async Task<ChatClientAgent> GetAgentAsync(CancellationToken ct)
+    {
+        if (_agent is not null)
+            return _agent;
+
+        await _lock.WaitAsync(ct);
+        try
+        {
+            if (_agent is not null)
+                return _agent;
+
+            var tools = await toolCatalog.GetAsync(ct);
+            return _agent = new ChatClientAgent(chatClient, new ChatClientAgentOptions
+            {
+                Name = Writers.Catalog,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = Prompts.CatalogWriterInstructions,
+                    Tools = [.. tools],
+                    Temperature = 0 // yazma yolunda varyans istenmez (R6)
+                }
+            });
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 }

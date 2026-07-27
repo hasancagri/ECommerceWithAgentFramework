@@ -23,7 +23,6 @@ public static class CatalogTools
 {
     public const string GetProduct = "get_product";
     public const string SearchProducts = "search_products";
-    public const string DeleteProduct = "delete_product";
 }
 
 public static class BasketTools

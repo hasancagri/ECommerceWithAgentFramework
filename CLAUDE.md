@@ -85,7 +85,10 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Yalnız yeni/değişen kayıt `SupplierProductSnapshotReceived` event'iyle yayınlanır; sıra
   önce publish sonra save'dir (çökmede kayıp yerine tekrar; yazımlar idempotent).
 - `IngestionAgent` DB'siz, state'siz tüketicidir: mesaj başına MAF workflow
-  (CatalogWrite → StockWrite → DiscountWrite) koşar, MCP tool'larını LLM'siz doğrudan çağırır.
+  (CatalogWrite → StockWrite → DiscountWrite) koşar; her adım kendi servisine scope'lu bir
+  LLM agent'ıyla (ChatClientAgent) MCP tool'larını çağırır (015). Short-circuit conditional
+  edge'lerdedir; her yol terminal collector'dan geçer. Model config'i (`OpenAI:ApiKey`+`Model`)
+  zorunludur, açılışta fail-fast.
 - Hata yolu: başarısız yazım `IngestionWriteException`'a çevrilir → kademeli sınırlı retry,
   tükenince mesaj içeriğiyle DLQ (`ingestion.supplier-product-snapshot.dlq`). Run API'si yok;
   görünürlük kuyruk derinliği + DLQ + loglardır.
@@ -185,8 +188,8 @@ API'sine erişir. Şu an tek kullanım **stok rezervasyonu**: `Basket`/`Order` �
 - **Rezervasyon modeli (Model B):** sepete ekleme `SetReservedQuantity` (idempotent, sabit
   TTL) ile rezervasyon tutar; sipariş `Commit` ile `OnHand`'i kalıcı düşürür; TTL dolunca
   Hangfire sweep `PurgeExpired` + `ReservationExpired` event'iyle sepet satırını temizler.
-- **Model C:** tedarikçi feed'i stoğu **ezmez** (IngestionAgent StockWrite kaldırıldı);
-  `OnHand` yalnız Commit ve manuel `set_stock` ile değişir. Seed (ProductCreated) değişmez.
+- **014 (Model C tersine döndü):** tedarikçi feed'i stoğun **tek otoritesidir**; IngestionAgent
+  StockWrite geri geldi ve `OnHand`'i mutlak ezer. `OnHand` ayrıca sipariş Commit'iyle düşer.
 - Fail-closed: Stock erişilemezse sepete **eklenmez** (oversell yasak).
 
 ### Önbellekleme (AOP, declarative — cross-cutting)
