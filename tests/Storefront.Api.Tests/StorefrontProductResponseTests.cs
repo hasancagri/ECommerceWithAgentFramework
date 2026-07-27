@@ -4,10 +4,14 @@ namespace Storefront.Api.Tests;
 
 public class StorefrontProductResponseTests
 {
+    private static readonly Guid BrandId = Guid.NewGuid();
+    private static readonly Guid CategoryId = Guid.NewGuid();
+
     private static StorefrontView FullCatalogView(Guid productId)
     {
         var view = StorefrontView.Create(productId);
-        view.ApplyCatalog("Ürün A", "Açıklama A", 49.90m, "Apple", "https://img/a.png", isDeleted: false);
+        view.ApplyCatalog("Ürün A", "Açıklama A", 49.90m, BrandId, "Apple", CategoryId, "Elektronik",
+            "https://img/a.png", isDeleted: false);
         return view;
     }
 
@@ -24,7 +28,10 @@ public class StorefrontProductResponseTests
         response.ProductId.ShouldBe(productId);
         response.Name.ShouldBe("Ürün A");
         response.Description.ShouldBe("Açıklama A");
+        response.BrandId.ShouldBe(BrandId);
         response.Brand.ShouldBe("Apple");
+        response.CategoryId.ShouldBe(CategoryId);
+        response.Category.ShouldBe("Elektronik");
         response.Price.ShouldBe(49.90m);
         response.ImageUrl.ShouldBe("https://img/a.png");
         response.StockQuantity.ShouldBe(7);

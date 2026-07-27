@@ -9,9 +9,10 @@ public class StorefrontService(
     IStorefrontRefitService storefrontRefitService,
     ILogger<StorefrontService> logger)
 {
-    public async Task<ServiceResult<PagedProductListViewModel>> GetProductsAsync(int pageNumber = 1, int pageSize = 12)
+    public async Task<ServiceResult<PagedProductListViewModel>> GetProductsAsync(
+        int pageNumber = 1, int pageSize = 12, Guid? categoryId = null, Guid? brandId = null)
     {
-        var productsAsResult = await storefrontRefitService.GetProducts(pageNumber, pageSize);
+        var productsAsResult = await storefrontRefitService.GetProducts(pageNumber, pageSize, categoryId, brandId);
 
         // 011 FR-006: boş vitrin / aralık dışı sayfa API'de NotFound(400) döner; UI boş durum gösterir.
         if (productsAsResult.StatusCode == HttpStatusCode.BadRequest)
@@ -32,5 +33,22 @@ public class StorefrontService(
 
         return ServiceResult<PagedProductListViewModel>.Success(new PagedProductListViewModel(
             products, content.PageNumber, content.PageCount, content.TotalItemCount));
+    }
+
+    // 016: filtre seçenekleri (facet) — hata durumunda boş seçenekle devam edilir (liste yine çizilir).
+    public async Task<FilterOptionsViewModel> GetFilterOptionsAsync()
+    {
+        var response = await storefrontRefitService.GetFilterOptions();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            logger.LogProblemDetails(response.Error);
+            return FilterOptionsViewModel.Empty;
+        }
+
+        var content = response.Content!;
+        return new FilterOptionsViewModel(
+            content.Categories.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
+            content.Brands.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList());
     }
 }

@@ -26,12 +26,18 @@ public class StorefrontViewTests
     {
         var view = StorefrontView.Create(Guid.NewGuid());
 
-        view.ApplyCatalog("Ürün A", "Açıklama A", 99.90m, "Apple", "https://img/a.png", isDeleted: true);
+        var brandId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
+        view.ApplyCatalog("Ürün A", "Açıklama A", 99.90m, brandId, "Apple", categoryId, "Elektronik",
+            "https://img/a.png", isDeleted: true);
 
         view.Name.ShouldBe("Ürün A");
         view.Description.ShouldBe("Açıklama A");
         view.Price.ShouldBe(99.90m);
+        view.BrandId.ShouldBe(brandId);
         view.Brand.ShouldBe("Apple");
+        view.CategoryId.ShouldBe(categoryId);
+        view.Category.ShouldBe("Elektronik");
         view.ImageUrl.ShouldBe("https://img/a.png");
         view.IsDeleted.ShouldBeTrue();
         view.StockQuantity.ShouldBeNull();
@@ -69,7 +75,7 @@ public class StorefrontViewTests
         var view = StorefrontView.Create(Guid.NewGuid());
 
         view.ApplyStock(5);
-        view.ApplyCatalog("Ürün", "Açıklama", 10m, "Sony", null, false);
+        view.ApplyCatalog("Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", null, null, null, false);
         view.ApplyDiscount(0.2m);
 
         view.Name.ShouldBe("Ürün");

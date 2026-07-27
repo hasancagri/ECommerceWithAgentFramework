@@ -12,7 +12,8 @@ public record PagedProductListViewModel(
 }
 
 // 011 FR-003/004: numaralı pager; tek sayfada hiç çizilmez (partial içinde kontrol edilir).
-public record PagerViewModel(int PageNumber, int PageCount)
+// 016: FilterQuery — sayfa linklerine eklenen hazır query eki ("&categoryId=...") ; filtre sayfalamada korunur.
+public record PagerViewModel(int PageNumber, int PageCount, string? FilterQuery = null)
 {
     public bool HasPreviousPage => PageNumber > 1;
     public bool HasNextPage => PageNumber < PageCount;

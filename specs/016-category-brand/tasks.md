@@ -55,16 +55,16 @@
 
 **Independent Test**: Farklı kategorili ürünler (REST ile oluşturulabilir) → kategori filtresi yalnız eşleşenleri döner.
 
-- [ ] T022 [P] [US1] `src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontView.cs`:
+- [X] T022 [P] [US1] `src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontView.cs`:
       +BrandId?/+CategoryId?/+Category?; ApplyCatalog yeni imza
-- [ ] T023 [US1] `src/services/storefront/Storefront.Api/StorefrontEventHandlers.cs`: yeni event alanlarını ApplyCatalog'a geçir
-- [ ] T024 [P] [US1] `tests/Storefront.Api.Tests/StorefrontViewTests.cs`: ApplyCatalog kimlik+ad eşlemesi
-- [ ] T025 [US1] `.../Features/Queries/GetStorefrontProductList.cs`: +categoryId?/+category? (Id öncelikli); sayfa sayısı filtreli sonuca göre
-- [ ] T026 [P] [US1] `.../Features/Queries/GetStorefrontFilterOptions.cs` (YENİ) + endpoint map: kategori+marka kimlik+ad Distinct;
+- [X] T023 [US1] `src/services/storefront/Storefront.Api/StorefrontEventHandlers.cs`: yeni event alanlarını ApplyCatalog'a geçir
+- [X] T024 [P] [US1] `tests/Storefront.Api.Tests/StorefrontViewTests.cs`: ApplyCatalog kimlik+ad eşlemesi
+- [X] T025 [US1] `.../Features/Queries/GetStorefrontProductList.cs`: +categoryId?/+category? (Id öncelikli); sayfa sayısı filtreli sonuca göre
+- [X] T026 [P] [US1] `.../Features/Queries/GetStorefrontFilterOptions.cs` (YENİ) + endpoint map: kategori+marka kimlik+ad Distinct;
       null kategori listelenmez
-- [ ] T027 [P] [US1] `tests/Storefront.Api.Tests/StorefrontFilterTests.cs`: filtre + facet + sayfalama davranışı
-- [ ] T028 [US1] `src/ui/WebApp/Services/Refit/IStorefrontRefitService.cs` + `Services/StorefrontService.cs`: filtre paramları + facet çağrısı
-- [ ] T029 [US1] `src/ui/WebApp/Pages/Products/Index.cshtml(.cs)`: kategori filtre UI; sayfalamada filtre korunur ("page" workaround bozulmaz)
+- [X] T027 [P] [US1] `tests/Storefront.Api.Tests/StorefrontFilterTests.cs`: filtre + facet + sayfalama davranışı
+- [X] T028 [US1] `src/ui/WebApp/Services/Refit/IStorefrontRefitService.cs` + `Services/StorefrontService.cs`: filtre paramları + facet çağrısı
+- [X] T029 [US1] `src/ui/WebApp/Pages/Products/Index.cshtml(.cs)`: kategori filtre UI; sayfalamada filtre korunur ("page" workaround bozulmaz)
 
 **Checkpoint**: Kategori filtresi UI + API'de çalışır; SC-001 sağlanır.
 
@@ -76,8 +76,8 @@
 
 **Independent Test**: Farklı markalı ürünler → marka filtresi ve kategori+marka kombinasyonu doğru sonuç döner.
 
-- [ ] T030 [US2] `.../Features/Queries/GetStorefrontProductList.cs`: +brandId?/+brand? (kategoriyle AND)
-- [ ] T031 [P] [US2] `tests/Storefront.Api.Tests/StorefrontFilterTests.cs`: marka + kombinasyon senaryoları ekle
+- [X] T030 [US2] `.../Features/Queries/GetStorefrontProductList.cs`: +brandId?/+brand? (kategoriyle AND)
+- [X] T031 [P] [US2] `tests/Storefront.Api.Tests/StorefrontFilterTests.cs`: marka + kombinasyon senaryoları ekle
 - [ ] T032 [US2] `src/ui/WebApp/Pages/Products/Index.cshtml(.cs)`: marka filtre UI + kombine seçim
 
 **Checkpoint**: SC-005 (kombinasyonda tutarlı sonuç/sayfa sayısı) sağlanır.
