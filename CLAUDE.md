@@ -85,8 +85,10 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Yalnız yeni/değişen kayıt `SupplierProductSnapshotReceived` event'iyle yayınlanır; sıra
   önce publish sonra save'dir (çökmede kayıp yerine tekrar; yazımlar idempotent).
 - `IngestionAgent` DB'siz, state'siz tüketicidir: mesaj başına MAF workflow
-  (CatalogWrite → StockWrite → DiscountWrite) koşar; her adım kendi servisine scope'lu bir
-  LLM agent'ıyla (ChatClientAgent) MCP tool'larını çağırır (015). Short-circuit conditional
+  (BrandWrite → CategoryWrite → CatalogWrite → StockWrite → DiscountWrite, 016) koşar; her adım
+  kendi servisine scope'lu bir LLM agent'ıyla (ChatClientAgent) MCP tool'larını çağırır (015).
+  Kimlikler (BrandId/CategoryId/ProductId) tipli sonuçlarla adımlar arasında KOD ile taşınır;
+  kategori zorunludur (boş kategori CategoryWrite'ta kesilir). Short-circuit conditional
   edge'lerdedir; her yol terminal collector'dan geçer. Model config'i (`OpenAI:ApiKey`+`Model`)
   zorunludur, açılışta fail-fast.
 - Hata yolu: başarısız yazım `IngestionWriteException`'a çevrilir → kademeli sınırlı retry,

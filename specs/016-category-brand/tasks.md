@@ -114,10 +114,10 @@
 
 **Independent Test**: Asistana "X kategorisindeki ürünleri göster" → yalnız o kategori döner; detay sayfası ikisini gösterir.
 
-- [ ] T041 [P] [US4] `.../Features/Queries/GetProductStorefrontView.cs`: +Brand/BrandId/Category/CategoryId;
-      `tests/Storefront.Api.Tests/StorefrontProductResponseTests.cs` güncelle
-- [ ] T042 [US4] `src/ui/WebApp/Pages/Products/Detail*`: kategori/marka gösterimi
-- [ ] T043 [US4] `src/agents/ChatAgent/ConstValues.cs`: Public/Assistant talimatlarına kategori/marka daraltması (search_products paramları)
+- [X] T041 [P] [US4] `.../Features/Queries/GetProductStorefrontView.cs`: +Brand/BrandId/Category/CategoryId;
+      `tests/Storefront.Api.Tests/ProductStorefrontViewResponseTests.cs` güncellendi
+- [X] T042 [US4] `src/ui/WebApp/Pages/Products/Detail*`: kategori/marka gösterimi
+- [X] T043 [US4] `src/agents/ChatAgent/ConstValues.cs`: Public/Assistant talimatlarına kategori/marka daraltması (search_products paramları)
 - [ ] T044 [US4] Canlı doğrulama (quickstart 7): asistanla kategori bazlı arama
 
 **Checkpoint**: Tüm story'ler bağımsız doğrulanmış olur.
@@ -126,7 +126,7 @@
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T045 [P] `CLAUDE.md`: ingestion bölümünü 5 yazıcılı zincire güncelle; `README.md` 016 satırı
+- [X] T045 [P] `CLAUDE.md`: ingestion bölümünü 5 yazıcılı zincire güncelle; `README.md` 016 satırı
 - [ ] T046 Tam geçiş: `dotnet build` + `dotnet test`; `quickstart.md` uçtan uca (SC-001…SC-005)
 
 ---
