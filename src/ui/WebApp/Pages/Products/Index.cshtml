@@ -8,7 +8,7 @@
 <div class="container mt-5">
     <h2 class="mb-4">All Products</h2>
 
-    @* 016 US1: kategori filtresi — seçenekler gerçek veriden; seçim yeni GET ile 1. sayfadan başlar. *@
+    @* 016 US1/US2: kategori+marka filtreleri (AND) — seçenekler gerçek veriden; seçim yeni GET ile 1. sayfadan başlar. *@
     <form method="get" class="row g-2 mb-4">
         <div class="col-auto">
             <select name="categoryId" class="form-select" onchange="this.form.submit()">
@@ -21,7 +21,18 @@
                 }
             </select>
         </div>
-        @if (Model.SelectedCategoryId is not null)
+        <div class="col-auto">
+            <select name="brandId" class="form-select" onchange="this.form.submit()">
+                <option value="">All Brands</option>
+                @foreach (var brand in Model.FilterOptions.Brands)
+                {
+                    <option value="@brand.Id" selected="@(brand.Id == Model.SelectedBrandId)">
+                        @brand.Name
+                    </option>
+                }
+            </select>
+        </div>
+        @if (Model.SelectedCategoryId is not null || Model.SelectedBrandId is not null)
         {
             <div class="col-auto">
                 <a class="btn btn-outline-secondary" href="/Products">Clear</a>

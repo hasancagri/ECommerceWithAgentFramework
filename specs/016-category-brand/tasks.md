@@ -78,7 +78,7 @@
 
 - [X] T030 [US2] `.../Features/Queries/GetStorefrontProductList.cs`: +brandId?/+brand? (kategoriyle AND)
 - [X] T031 [P] [US2] `tests/Storefront.Api.Tests/StorefrontFilterTests.cs`: marka + kombinasyon senaryoları ekle
-- [ ] T032 [US2] `src/ui/WebApp/Pages/Products/Index.cshtml(.cs)`: marka filtre UI + kombine seçim
+- [X] T032 [US2] `src/ui/WebApp/Pages/Products/Index.cshtml(.cs)`: marka filtre UI + kombine seçim
 
 **Checkpoint**: SC-005 (kombinasyonda tutarlı sonuç/sayfa sayısı) sağlanır.
 
