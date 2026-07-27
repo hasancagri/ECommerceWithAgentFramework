@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace IngestionAgent.Workflows._01_CatalogWrite;
+namespace IngestionAgent.Workflows._03_CatalogWrite;
 
 // Katalog yazıcısı (015): yalnız catalog MCP'sinin upsert_product tool'una scope'lu, KENDİ
 // ChatClientAgent'ını taşıyan LLM yazıcı (FR-009). Ortak LlmWriter katmanı kullanıcı tercihiyle

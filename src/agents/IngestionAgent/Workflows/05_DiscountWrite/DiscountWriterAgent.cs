@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace IngestionAgent.Workflows._03_DiscountWrite;
+namespace IngestionAgent.Workflows._05_DiscountWrite;
 
 // İndirim yazıcısı (015): discount MCP'sinin set/remove tool'larına scope'lu, KENDİ
 // ChatClientAgent'ını taşıyan LLM yazıcı (FR-009). set-mi-remove-mu kararı PROMPT kuralıyla

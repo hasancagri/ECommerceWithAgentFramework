@@ -1,4 +1,4 @@
-namespace IngestionAgent.Workflows._01_CatalogWrite;
+namespace IngestionAgent.Workflows._03_CatalogWrite;
 
 // Aşama 1 — katalog upsert: LLM agent'ı upsert_product'ı çağırır, tipli CatalogWriterResult AKAR
 // (015: RecordJob kalktı). Başarı ProductId'siz OLAMAZ (sahte-başarı emniyeti, FR-006/SC-002);
