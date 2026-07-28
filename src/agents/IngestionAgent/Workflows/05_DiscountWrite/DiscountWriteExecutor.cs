@@ -1,4 +1,4 @@
-namespace IngestionAgent.Workflows._03_DiscountWrite;
+namespace IngestionAgent.Workflows._05_DiscountWrite;
 
 // Aşama 3 — indirim: set/remove seçimi LLM prompt kuralında (DiscountWriterAgent). Girdisi stok
 // adımının tipli sonucu; yüzde ctor'daki mesajdan, ProductId akan sonuçtan gelir.

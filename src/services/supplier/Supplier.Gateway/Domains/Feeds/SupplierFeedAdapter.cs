@@ -9,6 +9,7 @@ public sealed record SupplierFeedRecord(
     string Name,
     string Description,
     string Brand,
+    string? Category,
     decimal Price,
     int StockQuantity,
     string? DiscountCode,
@@ -22,7 +23,7 @@ public static class SupplierFeedAdapter
 
     public static IntegrationEvents.SupplierProductSnapshotReceived ToCanonical(SupplierFeedRecord wire)
         => new(SupplierCode, wire.ExternalId, wire.Name, wire.Description, wire.Brand,
-            wire.Price, wire.StockQuantity, wire.DiscountPercent);
+            wire.Category, wire.Price, wire.StockQuantity, wire.DiscountPercent);
 
     // Boş ya da çözülemeyen gövde hata değildir (FR-008): boş liste döner, çekim sessiz kapanır.
     public static IReadOnlyList<SupplierFeedRecord> Parse(string? body)

@@ -52,9 +52,10 @@ public class BasketService(
                 item.Name,
                 item.ImageUrl, item.Price,
                 item.PriceByApplyDiscountRate,
-                item.Quantity,
-                item.ReservationExpiresAt
-            )).ToList()
+                item.Quantity
+            )).ToList(),
+            responseAsResult.Content.ReservationExpiresAt,
+            responseAsResult.Content.IsReservationExpired
         );
 
         return ServiceResult<BasketViewModel>.Success(basketViewModel);
@@ -75,13 +76,15 @@ public class BasketService(
             basketsAsResult.Data.TotalPriceWithAppliedDiscount);
         basketPageViewModel.DiscountRate = basketsAsResult.Data.DiscountRate;
         basketPageViewModel.Coupon = basketsAsResult.Data.Coupon;
+        basketPageViewModel.ReservationExpiresAt = basketsAsResult.Data.ReservationExpiresAt;
+        basketPageViewModel.IsReservationExpired = basketsAsResult.Data.IsReservationExpired;
 
 
         foreach (var basketItem in basketsAsResult.Data!.Items)
             basketPageViewModel.Items.Add(new BasketViewModelItem(basketItem.Id, basketItem.ImageUrl,
                 basketItem.Name,
                 basketItem.Price, basketItem.PriceByApplyDiscountRate,
-                basketItem.Quantity, basketItem.ReservationExpiresAt));
+                basketItem.Quantity));
 
 
         return ServiceResult<BasketPageViewModel>.Success(basketPageViewModel);

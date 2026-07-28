@@ -4,8 +4,8 @@ namespace Supplier.Gateway.Tests;
 public class FeedSnapshotTests
 {
     private static IntegrationEvents.SupplierProductSnapshotReceived Snap(
-        decimal price = 100m, int stock = 10, decimal? pct = null)
-        => new("supplier", "SUP-1", "Ürün", "Açıklama", "Apple", price, stock, pct);
+        decimal price = 100m, int stock = 10, decimal? pct = null, string? category = "Elektronik")
+        => new("supplier", "SUP-1", "Ürün", "Açıklama", "Apple", category, price, stock, pct);
 
     private static FeedSnapshot Published(IntegrationEvents.SupplierProductSnapshotReceived content)
     {

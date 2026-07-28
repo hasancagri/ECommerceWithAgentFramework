@@ -14,6 +14,7 @@ global using Marten;
 global using Marten.Newtonsoft;
 global using Weasel.Core;
 global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.Extensions.Options;
 global using Newtonsoft.Json;
 global using Shared;
 global using System.Reflection;

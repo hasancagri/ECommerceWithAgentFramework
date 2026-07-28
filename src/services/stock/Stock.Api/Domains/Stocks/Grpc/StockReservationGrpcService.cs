@@ -12,9 +12,13 @@ public class StockReservationGrpcService(IMessageBus bus)
     public override async Task<ReservationReply> SetReservedQuantity(
         SetReservedQuantityRequest request, ServerCallContext context)
     {
+        // 017: bos/parse edilemeyen expires_at yok sayilir (sabit TTL'e duser) — savunmaci, yeni hata kodu yok.
+        DateTimeOffset? expiresAt =
+            DateTimeOffset.TryParse(request.ExpiresAt, out var parsed) ? parsed : null;
+
         var result = await bus.InvokeAsync<FeatureObjectResultModel<ReserveStock.ReserveStockResponse>>(
             new ReserveStock.ReserveStockCommand(
-                Guid.Parse(request.ProductId), Guid.Parse(request.UserId), request.Quantity),
+                Guid.Parse(request.ProductId), Guid.Parse(request.UserId), request.Quantity, expiresAt),
             context.CancellationToken);
 
         if (!result.IsSuccess)

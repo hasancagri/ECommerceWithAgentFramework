@@ -7,7 +7,6 @@ public static class ProductEndpointExtension
         app.MapGroup("api/v{version:apiVersion}/products").WithTags("Products").WithApiVersionSet(apiVersionSet)
             .CreateProductGroupItemEndpoint()
             .UpdateProductGroupItemEndpoint()
-            .DeleteProductGroupItemEndpoint()
             .GetAllProductsGroupItemEndpoint()
             .GetProductByIdGroupItemEndpoint()
             .GetProductByNameGroupItemEndpoint();

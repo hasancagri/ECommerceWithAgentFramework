@@ -10,7 +10,7 @@
         <div class="col-md-6">
             <div class="card shadow-lg border-0">
 
-                <img class="card-img-top img-fluid" alt="@Model.Product!.Name"
+                <img class="card-img-top product-detail-img" alt="@Model.Product!.Name"
                      src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/NoImage.jpeg" : Model.Product.ImageUrl)">
                 <div class="card-body">
                     <h2 class="mb-4">@Model.Product.Name</h2>
@@ -28,7 +28,11 @@
                     <h5 class="card-title">Brand</h5>
                     <p class="card-text">@Model.Product.Brand</p>
                     <hr>
-                    
+
+                    <h5 class="card-title">Category</h5>
+                    <p class="card-text">@Model.Product.Category</p>
+                    <hr>
+
                     <h5 class="card-title">Price</h5>
                     <p class="card-text">
                         <strong>@Model.Product.Price.ToString("C")</strong>
@@ -48,7 +52,7 @@
                         }
                         else
                         {
-                            <span class="badge bg-success">In stock</span>
+                            <span class="badge bg-success">In stock: @Model.StockQuantity</span>
                         }
                     </p>
                     <hr>

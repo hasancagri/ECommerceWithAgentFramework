@@ -14,6 +14,11 @@ builder.Services.AddMarten(opts =>
             });
         
         opts.Schema.For<Product>();
+
+        // 016: NormalizedName teklik anahtarıdır (R4) — computed unique index son güvence.
+        // Legacy Brand migrasyonu YOK (kullanıcı kararı): DB sıfırlanarak başlatılır, katalog feed'den dolar.
+        opts.Schema.For<Category>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+        opts.Schema.For<Brand>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -54,6 +59,12 @@ builder.Host.UseWolverine(opts =>
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif nested handler'ı atlayabiliyor (Storefront/IngestionAgent emsali);
+    // canlıda GetAllCategories atlandı (T040 bulgusu) → 016 sorgu handler'ları açık kayıtla garanti.
+    opts.Discovery.IncludeType(
+        typeof(Catalog.Api.Domains.Categories.Features.Queries.GetAllCategories.GetAllCategoriesQueryHandler));
+    opts.Discovery.IncludeType(
+        typeof(Catalog.Api.Domains.Brands.Features.Queries.GetAllBrands.GetAllBrandsQueryHandler));
 });
 
 builder.Services.AddApiVersioning(options =>
@@ -100,6 +111,8 @@ app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 app.AddProductGroupEndpointExtension(apiVersionSet);
+app.AddBrandGroupEndpointExtension(apiVersionSet);
+app.AddCategoryGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
 

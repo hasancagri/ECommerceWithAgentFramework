@@ -15,7 +15,7 @@ public class WorkflowSemanticsSpikeTests
     private static readonly Guid KnownProductId = Guid.Parse("7c9e6679-7425-40de-944b-e07fc1f90ae7");
 
     private static IntegrationEvents.SupplierProductSnapshotReceived NewMessage() =>
-        new("sup-1", "sku-1", "Ürün", "Açıklama", "Apple", 10m, 5, null);
+        new("sup-1", "sku-1", "Ürün", "Açıklama", "Apple", "Elektronik", 10m, 5, null);
 
     private sealed class FakeCatalog(bool fail, List<string> visits)
         : Executor<IntegrationEvents.SupplierProductSnapshotReceived, CatalogWriterResult>("catalog")

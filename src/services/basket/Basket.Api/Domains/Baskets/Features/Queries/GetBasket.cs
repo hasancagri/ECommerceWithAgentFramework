@@ -14,6 +14,10 @@ public static class GetBasket
         public decimal TotalPrice { get; set; }
         public decimal? TotalPriceWithAppliedDiscount { get; set; }
 
+        // 017: sepet capasi + turetilmis dolma durumu (FR-009/010). Null capa => UI banner gostermez.
+        public DateTimeOffset? ReservationExpiresAt { get; set; }
+        public bool IsReservationExpired { get; set; }
+
         public static GetBasketResponse From(Basket basket) => new()
         {
             UserId = basket.UserId,
@@ -21,7 +25,9 @@ public static class GetBasket
             DiscountRate = basket.AppliedDiscount?.Rate,
             Coupon = basket.AppliedDiscount?.Coupon,
             TotalPrice = basket.GetTotalPrice(),
-            TotalPriceWithAppliedDiscount = basket.GetTotalPriceWithAppliedDiscount()
+            TotalPriceWithAppliedDiscount = basket.GetTotalPriceWithAppliedDiscount(),
+            ReservationExpiresAt = basket.ReservationExpiresAt,
+            IsReservationExpired = basket.IsExpiredAt(DateTimeOffset.UtcNow)
         };
     }
 
@@ -33,9 +39,8 @@ public static class GetBasket
         public decimal Price { get; set; }
         public decimal? PriceByApplyDiscountRate { get; set; }
 
-        // 012: adet + rezervasyon bitis zamani (UI geri sayimi).
+        // 012: adet. Rezervasyon bitisi artik sepet duzeyinde (017).
         public int Quantity { get; set; }
-        public DateTimeOffset? ReservationExpiresAt { get; set; }
 
         public static GetBasketItemResponse From(BasketItem item) => new()
         {
@@ -44,8 +49,7 @@ public static class GetBasket
             ImageUrl = item.ImageUrl,
             Price = item.Price,
             PriceByApplyDiscountRate = item.PriceByApplyDiscountRate,
-            Quantity = item.Quantity,
-            ReservationExpiresAt = item.ReservationExpiresAt
+            Quantity = item.Quantity
         };
     }
 

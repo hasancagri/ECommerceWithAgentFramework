@@ -8,8 +8,11 @@ public class ProductStorefrontViewResponseTests
     public void From_AllSourcesPresent_MapsAllFields_DerivesInStock()
     {
         var productId = Guid.NewGuid();
+        var brandId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
         var view = StorefrontView.Create(productId);
-        view.ApplyCatalog("Ürün A", "Açıklama A", 49.90m, "Apple", "https://img/a.png", isDeleted: false);
+        view.ApplyCatalog("Ürün A", "Açıklama A", 49.90m, brandId, "Apple", categoryId, "Elektronik",
+            "https://img/a.png", isDeleted: false);
         view.ApplyStock(7);
         view.ApplyDiscount(0.15m);
 
@@ -19,6 +22,10 @@ public class ProductStorefrontViewResponseTests
         response.Name.ShouldBe("Ürün A");
         response.ImageUrl.ShouldBe("https://img/a.png");
         response.IsDeleted.ShouldBeFalse();
+        response.BrandId.ShouldBe(brandId);
+        response.Brand.ShouldBe("Apple");
+        response.CategoryId.ShouldBe(categoryId);
+        response.Category.ShouldBe("Elektronik");
         response.StockQuantity.ShouldBe(7);
         response.IsInStock.ShouldBe(true);
         response.DiscountRate.ShouldBe(0.15m);
@@ -28,7 +35,8 @@ public class ProductStorefrontViewResponseTests
     public void From_StockNotReported_LeavesStockFieldsNull()
     {
         var view = StorefrontView.Create(Guid.NewGuid());
-        view.ApplyCatalog("Yeni Ürün", "Açıklama", 10m, "Sony", null, isDeleted: false);
+        view.ApplyCatalog("Yeni Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", Guid.NewGuid(), "Elektronik",
+            null, isDeleted: false);
 
         var response = ProductStorefrontViewResponse.From(view);
 
@@ -42,7 +50,8 @@ public class ProductStorefrontViewResponseTests
     public void From_ZeroStock_DerivesInStockFalse()
     {
         var view = StorefrontView.Create(Guid.NewGuid());
-        view.ApplyCatalog("Ürün", "Açıklama", 10m, "Sony", null, isDeleted: false);
+        view.ApplyCatalog("Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", Guid.NewGuid(), "Elektronik",
+            null, isDeleted: false);
         view.ApplyStock(0);
 
         var response = ProductStorefrontViewResponse.From(view);

@@ -6,7 +6,12 @@ public class Product : AggregateRoot
     public string Description { get; private set; }
     public decimal Price { get; private set; }
     public string Sku { get; private set; }
-    public BrandType Brand { get; private set; }
+
+    // 016: BrandType enum kalktı; Brand/Category ayrı aggregate'lerdir, Id ile referans verilir.
+    // Eski dokümanlardaki int 'Brand' üyesi Marten/Newtonsoft tarafından yok sayılır (R5).
+    // Kategori zorunludur (kullanıcı kararı 2026-07-27): kategorisiz ürün oluşturulamaz.
+    public Guid BrandId { get; private set; }
+    public Guid CategoryId { get; private set; }
     public string? ImageUrl { get; private set; }
 
     // 010: tamlik (IsComplete) kurali bilincli kaldirildi — gorselsiz urun de bulunur/satilir.
@@ -16,7 +21,7 @@ public class Product : AggregateRoot
     }
 
     public static Product Create(string name, string description, decimal price, string sku,
-        BrandType brand, string? imageUrl)
+        Guid brandId, Guid categoryId, string? imageUrl)
     {
         var product = new Product
         {
@@ -24,20 +29,22 @@ public class Product : AggregateRoot
             Description = description,
             Price = price,
             Sku = sku,
-            Brand = brand,
+            BrandId = brandId,
+            CategoryId = categoryId,
             ImageUrl = imageUrl
         };
         return product;
     }
 
     public void Update(string name, string description, decimal price, string sku,
-        BrandType brand, string? imageUrl)
+        Guid brandId, Guid categoryId, string? imageUrl)
     {
         Name = name;
         Description = description;
         Price = price;
         Sku = sku;
-        Brand = brand;
+        BrandId = brandId;
+        CategoryId = categoryId;
         ImageUrl = imageUrl;
     }
 
@@ -56,8 +63,6 @@ public class Product : AggregateRoot
         IsActive = false;
     }
 
-    public void Delete()
-    {
-        IsDeleted = true;
-    }
+    // 016 (kullanıcı kararı): ürün silme yolu tamamen kaldırıldı — eklenen ürün silinemez.
+    // IsDeleted alanı/filtreleri ve event'teki IsDeleted kontrat gereği durur; Catalog artık true yayınlamaz.
 }

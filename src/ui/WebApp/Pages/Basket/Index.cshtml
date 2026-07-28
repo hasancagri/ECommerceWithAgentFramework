@@ -4,6 +4,24 @@
     var index = 1;
 }
 
+@* 017 (FR-011/012): sepet duzeyi TEK rezervasyon banner'i — satir sayaci yok. *@
+@if (Model.Basket.HasItem && Model.Basket.ReservationExpiresAt is { } reservationExpiresAt)
+{
+    <div id="reservation-banner"
+         class="alert @(Model.Basket.IsReservationExpired ? "alert-secondary" : "alert-info")"
+         role="alert"
+         data-expires="@reservationExpiresAt.UtcDateTime.ToString("O")">
+        @if (Model.Basket.IsReservationExpired)
+        {
+            <span>Reservation <strong>expired</strong> — items may be removed from your basket.</span>
+        }
+        else
+        {
+            <span>Items reserved for <strong id="reservation-countdown">…</strong></span>
+        }
+    </div>
+}
+
 <table class="table table-striped">
     <thead class="table-dark">
     <tr>
@@ -12,7 +30,6 @@
         <th scope="col">Product Name</th>
         <th scope="col">Product Price</th>
         <th scope="col">Qty</th>
-        <th scope="col">Reservation</th>
         <th>Action</th>
     </tr>
     </thead>
@@ -21,7 +38,7 @@
     @if (!Model.Basket.HasItem)
     {
         <tr>
-            <td colspan="7" class="text-center">No items in the basket.</td>
+            <td colspan="6" class="text-center">No items in the basket.</td>
         </tr>
     }
 
@@ -60,19 +77,6 @@
             <td>@basketItem.Quantity</td>
 
             <td>
-                @* 012 (US5): rezervasyon geri sayimi — istemci tarafinda sunucu bitis zamanina gore tiklar. *@
-                @if (basketItem.ReservationExpiresAt is { } expiresAt)
-                {
-                    <span class="reservation-countdown badge bg-info text-dark"
-                          data-expires="@expiresAt.UtcDateTime.ToString("O")">…</span>
-                }
-                else
-                {
-                    <span class="text-muted">—</span>
-                }
-            </td>
-
-            <td>
 
                 <a asp-page-handler="Delete" asp-route-productId="@basketItem.Id" class="btn btn-danger">Remove</a>
             </td>
@@ -80,7 +84,7 @@
         index++;
     }
     <tr class="table-active">
-        <td colspan="6" class="text-end fw-bold">Total Price:</td>
+        <td colspan="5" class="text-end fw-bold">Total Price:</td>
         <td>@Model.Basket.GetTotalPrice().ToString("C")</td>
     </tr>
 
@@ -115,33 +119,33 @@
 
 @section Scripts {
     <script>
-        // 012 (US5): her sepet satirinin rezervasyon bitisine gore geri sayimi 1sn'de bir gunceller.
+        // 017 (FR-012): sepet duzeyi TEK geri sayim — sunucu mutlak bitisine gore 1sn'de bir tiklar.
         (function () {
-            const els = document.querySelectorAll('.reservation-countdown');
-            if (!els.length) return;
+            const banner = document.getElementById('reservation-banner');
+            const el = document.getElementById('reservation-countdown');
+            if (!banner || !el) return;
+
+            const expires = Date.parse(banner.dataset.expires);
+            if (isNaN(expires)) return;
 
             function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
             function tick() {
-                const now = Date.now();
-                els.forEach(el => {
-                    const expires = Date.parse(el.dataset.expires);
-                    let remaining = Math.floor((expires - now) / 1000);
-                    if (isNaN(expires)) { el.textContent = '—'; return; }
-                    if (remaining <= 0) {
-                        el.textContent = 'Expired';
-                        el.classList.remove('bg-info');
-                        el.classList.add('bg-secondary', 'text-white');
-                        return;
-                    }
-                    const m = Math.floor(remaining / 60);
-                    const s = remaining % 60;
-                    el.textContent = pad(m) + ':' + pad(s);
-                });
+                const remaining = Math.floor((expires - Date.now()) / 1000);
+                if (remaining <= 0) {
+                    banner.classList.remove('alert-info');
+                    banner.classList.add('alert-secondary');
+                    banner.innerHTML = '<span>Reservation <strong>expired</strong> — items may be removed from your basket.</span>';
+                    clearInterval(timer);
+                    return;
+                }
+                const m = Math.floor(remaining / 60);
+                const s = remaining % 60;
+                el.textContent = pad(m) + ':' + pad(s);
             }
 
             tick();
-            setInterval(tick, 1000);
+            const timer = setInterval(tick, 1000);
         })();
     </script>
 }

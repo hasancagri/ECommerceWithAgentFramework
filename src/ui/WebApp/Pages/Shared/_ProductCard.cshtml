@@ -26,10 +26,34 @@
                 {
                     <span class="badge bg-danger">%@(Model.DiscountRate.Value.ToString("0.#")) Off</span>
                 }
+                @* 016: kategori rozeti; null/boş = Catalog raporlamadı, çizilmez. *@
+                @* Id varsa rozet o kategoriye filtreli /Products'a link olur (tek facet). *@
+                @if (!string.IsNullOrEmpty(Model.Category))
+                {
+                    @if (Model.CategoryId is not null)
+                    {
+                        <a asp-page="/Products/Index" asp-route-categoryId="@Model.CategoryId"
+                           class="badge bg-info text-decoration-none">@Model.Category</a>
+                    }
+                    else
+                    {
+                        <span class="badge bg-info">@Model.Category</span>
+                    }
+                }
             </p>
             <p class="card-text">@Model.TruncateDescription(100)</p>
             <p class="card-text">
-                <small class="text-muted">Brand: <strong>@Model.Brand</strong></small>
+                @* Id varsa marka o markaya filtreli /Products'a link olur (tek facet). *@
+                <small class="text-muted">Brand:
+                    @if (Model.BrandId is not null)
+                    {
+                        <a asp-page="/Products/Index" asp-route-brandId="@Model.BrandId"><strong>@Model.Brand</strong></a>
+                    }
+                    else
+                    {
+                        <strong>@Model.Brand</strong>
+                    }
+                </small>
             </p>
             <p class="card-text">
                 <strong>@Model.Price.ToString("C")</strong>

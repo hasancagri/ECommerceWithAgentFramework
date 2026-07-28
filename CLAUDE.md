@@ -85,8 +85,10 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Yalnız yeni/değişen kayıt `SupplierProductSnapshotReceived` event'iyle yayınlanır; sıra
   önce publish sonra save'dir (çökmede kayıp yerine tekrar; yazımlar idempotent).
 - `IngestionAgent` DB'siz, state'siz tüketicidir: mesaj başına MAF workflow
-  (CatalogWrite → StockWrite → DiscountWrite) koşar; her adım kendi servisine scope'lu bir
-  LLM agent'ıyla (ChatClientAgent) MCP tool'larını çağırır (015). Short-circuit conditional
+  (BrandWrite → CategoryWrite → CatalogWrite → StockWrite → DiscountWrite, 016) koşar; her adım
+  kendi servisine scope'lu bir LLM agent'ıyla (ChatClientAgent) MCP tool'larını çağırır (015).
+  Kimlikler (BrandId/CategoryId/ProductId) tipli sonuçlarla adımlar arasında KOD ile taşınır;
+  kategori zorunludur (boş kategori CategoryWrite'ta kesilir). Short-circuit conditional
   edge'lerdedir; her yol terminal collector'dan geçer. Model config'i (`OpenAI:ApiKey`+`Model`)
   zorunludur, açılışta fail-fast.
 - Hata yolu: başarısız yazım `IngestionWriteException`'a çevrilir → kademeli sınırlı retry,
@@ -102,7 +104,7 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 
 **Domain yapı taşları** (`Common.Domains` içindeki ortak temeller):
 
-- **Aggregate Root** — `AggregateRoot` (→ `BaseUserTrackModel` → `BaseModel`) sınıfından türer; `Id`, denetim alanları (`CreatedTime`/`UpdatedTime`, soft-delete için `IsDeleted`, kullanıcı izleri `CreatedUserId`...) hazır gelir. **Her serviste tek bir aggregate root vardır ve `AggregateRoot`'tan türer:** `Basket`, `Product`, `Order`, `Payment`, `Discount`, `ProductStock`. Aggregate root **tutarlılık sınırıdır** — dış dünya aggregate'i yalnızca kök üzerinden değiştirir.
+- **Aggregate Root** — `AggregateRoot` (→ `BaseUserTrackModel` → `BaseModel`) sınıfından türer; `Id`, denetim alanları (`CreatedTime`/`UpdatedTime`, soft-delete için `IsDeleted`, kullanıcı izleri `CreatedUserId`...) hazır gelir. **Her servis tek BC'dir; bir BC gerektiği kadar zengin aggregate root içerebilir, hepsi `AggregateRoot`'tan türer** (ör. `Basket`, `Order`, `Payment`, `Discount`, `ProductStock`; Catalog: `Product`+`Category`+`Brand`). Anemik (davranışsız) aggregate yasaktır; aynı BC içindeki aggregate'ler birbirine Id ile referans verir. Aggregate root **tutarlılık sınırıdır** — dış dünya aggregate'i yalnızca kök üzerinden değiştirir.
 - **Entity** — aggregate içinde kimliği (`Id`) olan, ama bağımsız yaşamayan nesne. İki türlüdür: kimlik + denetim alanlarına ihtiyaç duyan entity `BaseModel`'den türer (ör. `OrderItem`); ihtiyaç duymayan sade entity ise base sınıf almaz (ör. `BasketItem`). Her iki durumda da private setter + davranış metotları kullanılır ve entity aggregate'e aittir. **`BaseModel`, aggregate root olmayan ama `Id`/denetim alanları gereken sınıflar için temeldir; `AggregateRoot`'u yalnızca aggregate kökleri için kullan.**
 - **Value Object** — kimliği olmayan, değeriyle tanımlanan nesne; `record` olarak, private ctor + statik `Create` fabrikasıyla yazılır (`Discount`, `DiscountCode`, `DiscountRate`, `Address`).
 - **Enumeration** — tip-güvenli enum'lar için `Enumeration` temel sınıfı (int enum yerine).

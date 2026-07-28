@@ -4,7 +4,8 @@ namespace Stock.Api.Domains.Stocks.Features.Commands;
 // Idempotent (ayna model). gRPC StockReservationGrpcService bunu IMessageBus ile cagirir; endpoint yok.
 public static class ReserveStock
 {
-    public record ReserveStockCommand(Guid ProductId, Guid UserId, int Quantity);
+    // 017: ExpiresAt (sepet capasi, mutlak) opsiyonel; null => sabit TTL (geriye uyumlu, Order yolu).
+    public record ReserveStockCommand(Guid ProductId, Guid UserId, int Quantity, DateTimeOffset? ExpiresAt = null);
 
     public class ReserveStockResponse
     {
@@ -30,7 +31,7 @@ public static class ReserveStock
                     new MessageItem { Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND });
 
             var now = DateTimeOffset.UtcNow;
-            var result = stock.SetReservedQuantity(cmd.UserId, cmd.Quantity, options.Value.Ttl, now);
+            var result = stock.SetReservedQuantity(cmd.UserId, cmd.Quantity, options.Value.Ttl, now, cmd.ExpiresAt);
             if (!result.IsSuccess)
                 return FeatureObjectResultModel<ReserveStockResponse>.Error(result.Messages);
 

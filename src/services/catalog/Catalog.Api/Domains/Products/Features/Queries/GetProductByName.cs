@@ -3,7 +3,7 @@ namespace Catalog.Api.Domains.Products.Features.Queries;
 public static class GetProductByName
 {
     public record GetProductByNameQuery(string Name);
-    
+
     public class ProductResponse
     {
         public Guid Id { get; set; }
@@ -11,18 +11,24 @@ public static class GetProductByName
         public string Description { get; set; } = null!;
         public decimal Price { get; set; }
         public string Sku { get; set; } = null!;
-        public BrandType Brand { get; set; }
+        public Guid BrandId { get; set; }
+        public string Brand { get; set; } = null!;
+        public Guid CategoryId { get; set; }
+        public string Category { get; set; } = null!;
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
 
-        public static ProductResponse From(Product p) => new()
+        public static ProductResponse From(Product p, string brand, string category) => new()
         {
             Id = p.Id,
             Name = p.Name,
             Description = p.Description,
             Price = p.Price,
             Sku = p.Sku,
-            Brand = p.Brand,
+            BrandId = p.BrandId,
+            Brand = brand,
+            CategoryId = p.CategoryId,
+            Category = category,
             ImageUrl = p.ImageUrl,
             IsActive = p.IsActive
         };
@@ -43,9 +49,14 @@ public static class GetProductByName
                 .OrderBy(x => x.Name)
                 .FirstOrDefaultAsync(ct);
 
-            // Ok(null) -> FeatureObjectResultModel otomatik NotFound doner.
+            if (product is null)
+                return FeatureObjectResultModel<GetProductByName.ProductResponse>.Ok(null);
+
+            var brand = await session.LoadAsync<Brand>(product.BrandId, ct);
+            var category = await session.LoadAsync<Category>(product.CategoryId, ct);
+
             return FeatureObjectResultModel<GetProductByName.ProductResponse>.Ok(
-                product is null ? null : ProductResponse.From(product));
+                ProductResponse.From(product, brand?.Name ?? string.Empty, category?.Name ?? string.Empty));
         }
     }
 }

@@ -74,6 +74,10 @@ builder.Services.AddApiKeyAuthentication(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// 017: sepet capasi suresi (Basket:ReservationDuration, varsayilan 5 dk).
+builder.Services.Configure<Basket.Api.Domains.Baskets.BasketReservationOptions>(
+    builder.Configuration.GetSection(Basket.Api.Domains.Baskets.BasketReservationOptions.SectionName));
+
 builder.Services.AddHttpContextAccessor();
 
 // 012: Stock rezervasyon gRPC istemcisi (senkron Reserve/Release). Adres Aspire service discovery;

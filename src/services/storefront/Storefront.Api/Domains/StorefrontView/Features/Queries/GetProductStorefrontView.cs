@@ -11,6 +11,12 @@ public static class GetProductStorefrontView
         public string? ImageUrl { get; set; }
         public bool IsDeleted { get; set; }
 
+        // 016 US4: kimlik + ad birlikte (R7). null = Catalog henuz raporlamadi (kismi satir).
+        public Guid? BrandId { get; set; }
+        public string? Brand { get; set; }
+        public Guid? CategoryId { get; set; }
+        public string? Category { get; set; }
+
         // null = kaynak henuz raporlamadi (kismi satir, FR-008) — "bilinmiyor" anlamina gelir.
         public int? StockQuantity { get; set; }
         public bool? IsInStock { get; set; }
@@ -22,6 +28,10 @@ public static class GetProductStorefrontView
             Name = view.Name,
             ImageUrl = view.ImageUrl,
             IsDeleted = view.IsDeleted,
+            BrandId = view.BrandId,
+            Brand = view.Brand,
+            CategoryId = view.CategoryId,
+            Category = view.Category,
             StockQuantity = view.StockQuantity,
             IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null,
             DiscountRate = view.DiscountRate

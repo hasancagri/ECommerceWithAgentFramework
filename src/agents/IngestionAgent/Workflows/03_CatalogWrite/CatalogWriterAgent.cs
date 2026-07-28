@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace IngestionAgent.Workflows._01_CatalogWrite;
+namespace IngestionAgent.Workflows._03_CatalogWrite;
 
 // Katalog yazıcısı (015): yalnız catalog MCP'sinin upsert_product tool'una scope'lu, KENDİ
 // ChatClientAgent'ını taşıyan LLM yazıcı (FR-009). Ortak LlmWriter katmanı kullanıcı tercihiyle
@@ -17,7 +17,8 @@ public sealed class CatalogWriterAgent(
     private ChatClientAgent? _agent;
 
     public async Task<CatalogWriterResult> UpsertAsync(
-        IntegrationEvents.SupplierProductSnapshotReceived m, CancellationToken ct)
+        IntegrationEvents.SupplierProductSnapshotReceived m, Guid brandId, Guid categoryId,
+        CancellationToken ct)
     {
         // Adım bütçesi (R5): keşif + LLM döngüsü + tool çağrılarının tamamını sarar; taşma adım hatası.
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -28,8 +29,9 @@ public sealed class CatalogWriterAgent(
             var agent = await GetAgentAsync(cts.Token);
             var response = await agent.RunAsync<CatalogWriterResult>(
                 // Invariant kültür: ondalık ayracı LLM'e her zaman nokta olarak gösterilir.
+                // 016 R10: marka/kategori ad değil kimliktir — zincirin önceki adımlarından gelir.
                 string.Create(CultureInfo.InvariantCulture,
-                    $"Ürünü kataloğa yaz. sku: {m.ExternalId} | name: {m.Name} | description: {m.Description} | price: {m.Price} | brand: {m.Brand}"),
+                    $"Ürünü kataloğa yaz. sku: {m.ExternalId} | name: {m.Name} | description: {m.Description} | price: {m.Price} | brandId: {brandId} | categoryId: {categoryId}"),
                 cancellationToken: cts.Token);
             return response.Result;
         }

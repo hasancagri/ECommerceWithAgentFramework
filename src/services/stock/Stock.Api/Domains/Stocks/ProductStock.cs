@@ -72,7 +72,10 @@ public class ProductStock : AggregateRoot
 
     // Sepete ekleme/artirma: kullanicinin bu urun icin rezervasyonunu mutlak adede getirir.
     // Idempotent (ayna model, FR-011). Sabit TTL: ExpiresAt yalniz ilk olusumda atanir (FR-010a).
-    public ResultDomain SetReservedQuantity(Guid userId, int quantity, TimeSpan ttl, DateTimeOffset now)
+    // 017: expiresAt (sepet capasi) verilmisse HER durumda uygulanir — yeni rezervasyon onunla dogar,
+    // mevcut rezervasyonun bitisi ona esitlenir (cagiran sabit capayi gecirir; rolling-TTL riski yok).
+    public ResultDomain SetReservedQuantity(Guid userId, int quantity, TimeSpan ttl, DateTimeOffset now,
+        DateTimeOffset? expiresAt = null)
     {
         if (quantity < 0)
             return ResultDomain.Error(new MessageItem
@@ -92,9 +95,15 @@ public class ProductStock : AggregateRoot
                 { Property = nameof(quantity), Code = StockResourceConstants.STOCK_INSUFFICIENT });
 
         if (existing is null)
-            _reservations.Add(new StockReservation(userId, quantity, now.Add(ttl)));
+        {
+            _reservations.Add(new StockReservation(userId, quantity, expiresAt ?? now.Add(ttl)));
+        }
         else
-            existing.SetQuantity(quantity); // ExpiresAt yenilenmez
+        {
+            existing.SetQuantity(quantity); // ExpiresAt yenilenmez (sabit TTL yolu)
+            if (expiresAt is not null)
+                existing.SetExpiresAt(expiresAt.Value); // 017: capa esitlenir (idempotent)
+        }
 
         return ResultDomain.Ok();
     }

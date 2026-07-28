@@ -1,4 +1,4 @@
-namespace IngestionAgent.Workflows._02_StockWrite;
+namespace IngestionAgent.Workflows._04_StockWrite;
 
 // Aşama 2 — stok (014: feed tek otorite, mutlak set). Girdisi catalog'un tipli sonucu; buraya
 // yalnız BAŞARILI sonuç yönlenir (conditional edge). ProductId'yi KOD taşır (Seçenek A): stok

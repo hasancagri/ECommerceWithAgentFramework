@@ -16,6 +16,25 @@ public class Basket : AggregateRoot
     [JsonProperty("Items")] private List<BasketItem> _items = new();
 
     [JsonIgnore] public IReadOnlyList<BasketItem> Items => _items.AsReadOnly();
+
+    // 017: sepet capasi — tek mutlak rezervasyon bitisi (UTC). Null = capa yok (bos/eski sepet).
+    // Ilk basarili ekleme kurar (handler basarida cagirir); sepet bosalinca sifirlanir.
+    public DateTimeOffset? ReservationExpiresAt { get; private set; }
+
+    // 017 (FR-010): sure gecti mi? Bos sepette / capasiz sepette false.
+    public bool IsExpiredAt(DateTimeOffset now) =>
+        _items.Count > 0 && ReservationExpiresAt is not null && ReservationExpiresAt <= now;
+
+    // 017 (FR-002): capayi kurar. Yalniz capa yokken cagrilir; ekleme/adet/silme capaya DOKUNMAZ (FR-003).
+    public void StartReservation(DateTimeOffset expiresAt) => ReservationExpiresAt = expiresAt;
+
+    // 017 (FR-008): sure dolmussa TUM satirlari dusur + capayi sifirla (tembel temizlik); aksi halde no-op.
+    public void PurgeExpiredItems(DateTimeOffset now)
+    {
+        if (!IsExpiredAt(now)) return;
+        _items.Clear();
+        ReservationExpiresAt = null;
+    }
     public Discount? AppliedDiscount { get; private set; }
     private bool IsApplyDiscount() => AppliedDiscount is not null;
 
@@ -45,9 +64,8 @@ public class Basket : AggregateRoot
         _items.FirstOrDefault(x => x.Id == productId)?.Quantity ?? 0;
 
     // 012: urunu verilen mutlak adede getirir (upsert). Rezervasyon Stock'ta kararlastirildiktan sonra
-    // handler bunu cagirir; ayna model (sepet adedi = rezervasyon adedi). expiresAt UI geri sayimi icin.
-    public void SetItem(Guid id, string name, string? imageUrl, decimal price, int quantity,
-        DateTimeOffset? expiresAt)
+    // handler bunu cagirir; ayna model (sepet adedi = rezervasyon adedi). Bitis artik sepet capasinda (017).
+    public void SetItem(Guid id, string name, string? imageUrl, decimal price, int quantity)
     {
         var existing = _items.FirstOrDefault(x => x.Id == id);
         if (existing is null)
@@ -57,7 +75,6 @@ public class Basket : AggregateRoot
         }
 
         existing.SetQuantity(quantity);
-        existing.SetReservationExpiresAt(expiresAt);
         if (IsApplyDiscount())
             existing.ApplyDiscount(AppliedDiscount!.Rate);
     }
@@ -67,6 +84,9 @@ public class Basket : AggregateRoot
         var item = _items.FirstOrDefault(x => x.Id == itemId);
         if (item is null) return FeatureResultModel.NotFound();
         _items.Remove(item);
+        // 017 (FR-004): son satir da gittiyse capa sifirlanir (elle silme / ReservationExpired yolu dahil).
+        if (_items.Count == 0)
+            ReservationExpiresAt = null;
         return FeatureResultModel.Ok();
     }
 

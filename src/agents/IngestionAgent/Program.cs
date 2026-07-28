@@ -10,10 +10,11 @@ builder.Host.UseWolverine(opts =>
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
 
-    // 015/R5: mesaj bütçesi 3 LLM adımının toplam üst sınırının (3×60s) ÜSTÜNDE olmalı; yoksa
-    // Wolverine'in varsayılan 60s'i adım ortasında dış iptal üretir → S4'ün kapattığı belirsiz
-    // yol geri gelir. Adım-içi timeout'lar (StepTimeoutSeconds) asıl bekçidir; bu, son emniyettir.
-    opts.DefaultExecutionTimeout = TimeSpan.FromMinutes(4);
+    // 015/R5 (016: zincir 5 adıma çıktı): mesaj bütçesi 5 LLM adımının toplam üst sınırının
+    // (5×60s) ÜSTÜNDE olmalı; yoksa Wolverine'in varsayılan 60s'i adım ortasında dış iptal üretir
+    // → S4'ün kapattığı belirsiz yol geri gelir. Adım-içi timeout'lar (StepTimeoutSeconds) asıl
+    // bekçidir; bu, son emniyettir.
+    opts.DefaultExecutionTimeout = TimeSpan.FromMinutes(6);
 
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
@@ -50,7 +51,7 @@ string openAiKey = builder.Configuration["OpenAI:ApiKey"]
 string openAiModel = builder.Configuration["OpenAI:Model"]
     ?? throw new InvalidOperationException("OpenAI:Model yapılandırılmamış (user-secrets/appsettings)");
 
-// Tek paylaşılan chat istemcisi (FR-010): üç yazıcı agent da aynı modeli kullanır.
+// Tek paylaşılan chat istemcisi (FR-010): beş yazıcı agent da aynı modeli kullanır.
 IChatClient chatClient = new OpenAIClient(openAiKey)
     .GetChatClient(openAiModel)
     .AsIChatClient()
@@ -79,6 +80,11 @@ McpToolCatalog Catalog(IServiceProvider sp, string name, string url, string[] al
     new(sp.GetRequiredService<IHttpClientFactory>(), name, url, allowedTools,
         sp.GetRequiredService<ILogger<McpToolCatalog>>());
 
+// 016 R10: marka/kategori yazıcıları da catalog MCP'sine bağlanır; her biri yalnız kendi tool'unu görür.
+builder.Services.AddSingleton<BrandWriterAgent>(sp => new(
+    chatClient, Catalog(sp, Writers.Brand, catalogMcp, BrandWriterAgent.AllowedTools), stepTimeout));
+builder.Services.AddSingleton<CategoryWriterAgent>(sp => new(
+    chatClient, Catalog(sp, Writers.Category, catalogMcp, CategoryWriterAgent.AllowedTools), stepTimeout));
 builder.Services.AddSingleton<CatalogWriterAgent>(sp => new(
     chatClient, Catalog(sp, Writers.Catalog, catalogMcp, CatalogWriterAgent.AllowedTools), stepTimeout));
 builder.Services.AddSingleton<StockWriterAgent>(sp => new(

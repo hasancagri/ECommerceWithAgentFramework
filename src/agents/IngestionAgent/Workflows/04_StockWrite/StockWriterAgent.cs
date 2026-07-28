@@ -1,7 +1,7 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace IngestionAgent.Workflows._02_StockWrite;
+namespace IngestionAgent.Workflows._04_StockWrite;
 
 // Stok yazıcısı (015): yalnız stock MCP'sinin set_stock tool'una scope'lu, KENDİ ChatClientAgent'ını
 // taşıyan LLM yazıcı (FR-009). LLM'in vereceği gerçek karar yok (adet hazır) — üç adımın da

@@ -12,23 +12,29 @@ public static class GetAllProducts
         public string Description { get; set; } = null!;
         public decimal Price { get; set; }
         public string Sku { get; set; } = null!;
-        public BrandType Brand { get; set; }
+        public Guid BrandId { get; set; }
+        public string Brand { get; set; } = null!;
+        public Guid CategoryId { get; set; }
+        public string Category { get; set; } = null!;
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
 
-        public static ProductResponse From(Product p) => new()
+        public static ProductResponse From(Product p, string brand, string category) => new()
         {
             Id = p.Id,
             Name = p.Name,
             Description = p.Description,
             Price = p.Price,
             Sku = p.Sku,
-            Brand = p.Brand,
+            BrandId = p.BrandId,
+            Brand = brand,
+            CategoryId = p.CategoryId,
+            Category = category,
             ImageUrl = p.ImageUrl,
             IsActive = p.IsActive
         };
     }
-    
+
     public class GetAllProductsQueryHandler
     {
         public async Task<FeatureObjectResultModel<List<GetAllProducts.ProductResponse>>> Handle(
@@ -40,7 +46,14 @@ public static class GetAllProducts
                 .Where(x => !x.IsDeleted)
                 .ToListAsync(ct);
 
-            var response = products.Select(GetAllProducts.ProductResponse.From).ToList();
+            // 016: adlar tek sorguyla toplanır (marka/kategori sayısı küçük); response kimlik + ad taşır.
+            var brandNames = (await session.Query<Brand>().ToListAsync(ct)).ToDictionary(x => x.Id, x => x.Name);
+            var categoryNames = (await session.Query<Category>().ToListAsync(ct)).ToDictionary(x => x.Id, x => x.Name);
+
+            var response = products.Select(p => GetAllProducts.ProductResponse.From(
+                p,
+                brandNames.GetValueOrDefault(p.BrandId, string.Empty),
+                categoryNames.GetValueOrDefault(p.CategoryId, string.Empty))).ToList();
             return FeatureObjectResultModel<List<GetAllProducts.ProductResponse>>.Ok(response);
         }
     }

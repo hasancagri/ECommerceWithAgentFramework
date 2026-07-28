@@ -36,3 +36,11 @@ body {
   object-fit: contain;
   background-color: #f8f9fa;
 }
+
+/* Detay sayfası görseli ölçülü tutulur; contain ile ürün kırpılmaz, ortalanır. */
+.product-detail-img {
+  max-height: 380px;
+  object-fit: contain;
+  background-color: #f8f9fa;
+  padding: 1rem;
+}

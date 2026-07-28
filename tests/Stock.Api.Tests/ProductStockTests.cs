@@ -233,6 +233,70 @@ public class ProductStockTests
         stock.Reservations.Single().UserId.ShouldBe(activeUser);
     }
 
+    // --- 017-basket-reservation-anchor: mutlak expiresAt ---
+
+    [Fact]
+    public void SetReservedQuantity_WithExplicitExpiresAt_NewReservationUsesAnchor()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var anchor = now.AddMinutes(5);
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+
+        stock.SetReservedQuantity(user, 2, Ttl, now, anchor).IsSuccess.ShouldBeTrue();
+
+        stock.Reservations.Single().ExpiresAt.ShouldBe(anchor);
+    }
+
+    [Fact]
+    public void SetReservedQuantity_WithExplicitExpiresAt_ExistingReservationAlignedToAnchor()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var anchor = now.AddMinutes(5);
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 2, Ttl, now); // eski yol: now + Ttl
+
+        stock.SetReservedQuantity(user, 3, Ttl, now.AddMinutes(1), anchor);
+
+        var res = stock.Reservations.Single();
+        res.Quantity.ShouldBe(3);
+        res.ExpiresAt.ShouldBe(anchor); // capaya esitlendi
+    }
+
+    [Fact]
+    public void SetReservedQuantity_WithExplicitExpiresAt_ExpiredUnsweptReservation_RebornWithAnchor()
+    {
+        // R2 kritik bug: dolmus ama supurulmemis rezervasyon; eski davranis aninda-dolmus rezervasyon uretirdi.
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 2, TimeSpan.FromMinutes(1), now);
+
+        var later = now.AddMinutes(10); // rezervasyon dolmus, sweep henuz kosmamis
+        var anchor = later.AddMinutes(5);
+        stock.SetReservedQuantity(user, 1, Ttl, later, anchor).IsSuccess.ShouldBeTrue();
+
+        var res = stock.Reservations.Single();
+        res.ExpiresAt.ShouldBe(anchor);
+        res.IsActiveAt(later).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SetReservedQuantity_NullExpiresAt_KeepsLegacyFixedTtlBehavior()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+
+        stock.SetReservedQuantity(user, 2, Ttl, now);
+        var firstExpiry = stock.Reservations.Single().ExpiresAt;
+        firstExpiry.ShouldBe(now.Add(Ttl));
+
+        stock.SetReservedQuantity(user, 4, Ttl, now.AddMinutes(5)); // null => yenileme yok
+        stock.Reservations.Single().ExpiresAt.ShouldBe(firstExpiry);
+    }
+
     [Fact]
     public void Oversell_SupplierBelowReserved_AvailableClampedToZero_AndFlagged()
     {
