@@ -20,7 +20,6 @@ public static class GetProductStorefrontView
         // null = kaynak henuz raporlamadi (kismi satir, FR-008) — "bilinmiyor" anlamina gelir.
         public int? StockQuantity { get; set; }
         public bool? IsInStock { get; set; }
-        public decimal? DiscountRate { get; set; }
 
         public static ProductStorefrontViewResponse From(StorefrontView view) => new()
         {
@@ -33,8 +32,7 @@ public static class GetProductStorefrontView
             CategoryId = view.CategoryId,
             Category = view.Category,
             StockQuantity = view.StockQuantity,
-            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null,
-            DiscountRate = view.DiscountRate
+            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null
         };
     }
 

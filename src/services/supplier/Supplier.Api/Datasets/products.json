@@ -6,9 +6,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 59.9,
-    "stockQuantity": 7,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 7
   },
   {
     "externalId": "SUP-1002",
@@ -17,9 +15,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 69.9,
-    "stockQuantity": 14,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 14
   },
   {
     "externalId": "SUP-1003",
@@ -28,9 +24,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 79.9,
-    "stockQuantity": 21,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 21
   },
   {
     "externalId": "SUP-1004",
@@ -39,9 +33,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 89.9,
-    "stockQuantity": 28,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 28
   },
   {
     "externalId": "SUP-1005",
@@ -50,9 +42,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 99.9,
-    "stockQuantity": 35,
-    "discountCode": "SUMMER25",
-    "discountPercent": 14
+    "stockQuantity": 35
   },
   {
     "externalId": "SUP-1006",
@@ -61,9 +51,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 109.9,
-    "stockQuantity": 42,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 42
   },
   {
     "externalId": "SUP-1007",
@@ -72,9 +60,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 119.9,
-    "stockQuantity": 49,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 49
   },
   {
     "externalId": "SUP-1008",
@@ -83,9 +69,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 129.9,
-    "stockQuantity": 6,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 6
   },
   {
     "externalId": "SUP-1009",
@@ -94,9 +78,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 139.9,
-    "stockQuantity": 13,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 13
   },
   {
     "externalId": "SUP-1010",
@@ -105,9 +87,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 154.9,
-    "stockQuantity": 20,
-    "discountCode": "SUMMER25",
-    "discountPercent": 25
+    "stockQuantity": 20
   },
   {
     "externalId": "SUP-1011",
@@ -116,9 +96,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 159.9,
-    "stockQuantity": 27,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 27
   },
   {
     "externalId": "SUP-1012",
@@ -127,9 +105,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 169.9,
-    "stockQuantity": 34,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 34
   },
   {
     "externalId": "SUP-1013",
@@ -138,9 +114,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 179.9,
-    "stockQuantity": 41,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 41
   },
   {
     "externalId": "SUP-1014",
@@ -149,9 +123,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 189.9,
-    "stockQuantity": 48,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 48
   },
   {
     "externalId": "SUP-1015",
@@ -160,9 +132,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 199.9,
-    "stockQuantity": 5,
-    "discountCode": "SUMMER25",
-    "discountPercent": 20
+    "stockQuantity": 5
   },
   {
     "externalId": "SUP-1016",
@@ -171,9 +141,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 209.9,
-    "stockQuantity": 12,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 12
   },
   {
     "externalId": "SUP-1017",
@@ -182,9 +150,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 219.9,
-    "stockQuantity": 19,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 19
   },
   {
     "externalId": "SUP-1018",
@@ -193,9 +159,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 229.9,
-    "stockQuantity": 26,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 26
   },
   {
     "externalId": "SUP-1019",
@@ -204,9 +168,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 239.9,
-    "stockQuantity": 33,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 33
   },
   {
     "externalId": "SUP-1020",
@@ -215,9 +177,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 249.9,
-    "stockQuantity": 40,
-    "discountCode": "SUMMER25",
-    "discountPercent": 5
+    "stockQuantity": 40
   },
   {
     "externalId": "SUP-1021",
@@ -226,9 +186,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 259.9,
-    "stockQuantity": 47,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 47
   },
   {
     "externalId": "SUP-1022",
@@ -237,9 +195,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 269.9,
-    "stockQuantity": 4,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 4
   },
   {
     "externalId": "SUP-1023",
@@ -248,9 +204,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 279.9,
-    "stockQuantity": 11,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 11
   },
   {
     "externalId": "SUP-1024",
@@ -259,9 +213,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 289.9,
-    "stockQuantity": 18,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 18
   },
   {
     "externalId": "SUP-1025",
@@ -270,9 +222,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 299.9,
-    "stockQuantity": 25,
-    "discountCode": "SUMMER25",
-    "discountPercent": 10
+    "stockQuantity": 25
   },
   {
     "externalId": "SUP-1026",
@@ -281,9 +231,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 309.9,
-    "stockQuantity": 32,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 32
   },
   {
     "externalId": "SUP-1027",
@@ -292,9 +240,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 319.9,
-    "stockQuantity": 39,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 39
   },
   {
     "externalId": "SUP-1028",
@@ -303,9 +249,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 329.9,
-    "stockQuantity": 46,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 46
   },
   {
     "externalId": "SUP-1029",
@@ -314,9 +258,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 339.9,
-    "stockQuantity": 3,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 3
   },
   {
     "externalId": "SUP-1030",
@@ -325,9 +267,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 349.9,
-    "stockQuantity": 10,
-    "discountCode": "SUMMER25",
-    "discountPercent": 15
+    "stockQuantity": 10
   },
   {
     "externalId": "SUP-1031",
@@ -336,9 +276,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 359.9,
-    "stockQuantity": 17,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 17
   },
   {
     "externalId": "SUP-1032",
@@ -347,9 +285,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 369.9,
-    "stockQuantity": 24,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 24
   },
   {
     "externalId": "SUP-1033",
@@ -358,9 +294,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 379.9,
-    "stockQuantity": 31,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 31
   },
   {
     "externalId": "SUP-1034",
@@ -369,9 +303,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 389.9,
-    "stockQuantity": 38,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 38
   },
   {
     "externalId": "SUP-1035",
@@ -380,9 +312,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 399.9,
-    "stockQuantity": 45,
-    "discountCode": "SUMMER25",
-    "discountPercent": 20
+    "stockQuantity": 45
   },
   {
     "externalId": "SUP-1036",
@@ -391,9 +321,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 409.9,
-    "stockQuantity": 2,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 2
   },
   {
     "externalId": "SUP-1037",
@@ -402,9 +330,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 419.9,
-    "stockQuantity": 9,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 9
   },
   {
     "externalId": "SUP-1038",
@@ -413,9 +339,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 429.9,
-    "stockQuantity": 16,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 16
   },
   {
     "externalId": "SUP-1039",
@@ -424,9 +348,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 439.9,
-    "stockQuantity": 23,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 23
   },
   {
     "externalId": "SUP-1040",
@@ -435,9 +357,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 449.9,
-    "stockQuantity": 30,
-    "discountCode": "SUMMER25",
-    "discountPercent": 5
+    "stockQuantity": 30
   },
   {
     "externalId": "SUP-1041",
@@ -446,9 +366,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 459.9,
-    "stockQuantity": 37,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 37
   },
   {
     "externalId": "SUP-1042",
@@ -457,9 +375,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 469.9,
-    "stockQuantity": 44,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 44
   },
   {
     "externalId": "SUP-1043",
@@ -468,9 +384,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 479.9,
-    "stockQuantity": 1,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 1
   },
   {
     "externalId": "SUP-1044",
@@ -479,9 +393,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 489.9,
-    "stockQuantity": 8,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 8
   },
   {
     "externalId": "SUP-1045",
@@ -490,9 +402,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 499.9,
-    "stockQuantity": 15,
-    "discountCode": "SUMMER25",
-    "discountPercent": 10
+    "stockQuantity": 15
   },
   {
     "externalId": "SUP-1046",
@@ -501,9 +411,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 509.9,
-    "stockQuantity": 22,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 22
   },
   {
     "externalId": "SUP-1047",
@@ -512,9 +420,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 519.9,
-    "stockQuantity": 29,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 29
   },
   {
     "externalId": "SUP-1048",
@@ -523,9 +429,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 529.9,
-    "stockQuantity": 36,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 36
   },
   {
     "externalId": "SUP-1049",
@@ -534,9 +438,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 539.9,
-    "stockQuantity": 43,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 43
   },
   {
     "externalId": "SUP-1050",
@@ -545,9 +447,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 549.9,
-    "stockQuantity": 0,
-    "discountCode": "SUMMER25",
-    "discountPercent": 15
+    "stockQuantity": 0
   },
   {
     "externalId": "SUP-1051",
@@ -556,9 +456,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 559.9,
-    "stockQuantity": 7,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 7
   },
   {
     "externalId": "SUP-1052",
@@ -567,9 +465,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 569.9,
-    "stockQuantity": 14,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 14
   },
   {
     "externalId": "SUP-1053",
@@ -578,9 +474,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 579.9,
-    "stockQuantity": 21,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 21
   },
   {
     "externalId": "SUP-1054",
@@ -589,9 +483,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 589.9,
-    "stockQuantity": 28,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 28
   },
   {
     "externalId": "SUP-1055",
@@ -600,9 +492,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 599.9,
-    "stockQuantity": 35,
-    "discountCode": "SUMMER25",
-    "discountPercent": 20
+    "stockQuantity": 35
   },
   {
     "externalId": "SUP-1056",
@@ -611,9 +501,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 609.9,
-    "stockQuantity": 42,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 42
   },
   {
     "externalId": "SUP-1057",
@@ -622,9 +510,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 619.9,
-    "stockQuantity": 49,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 49
   },
   {
     "externalId": "SUP-1058",
@@ -633,9 +519,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 629.9,
-    "stockQuantity": 6,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 6
   },
   {
     "externalId": "SUP-1059",
@@ -644,9 +528,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 639.9,
-    "stockQuantity": 13,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 13
   },
   {
     "externalId": "SUP-1060",
@@ -655,9 +537,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 649.9,
-    "stockQuantity": 20,
-    "discountCode": "SUMMER25",
-    "discountPercent": 5
+    "stockQuantity": 20
   },
   {
     "externalId": "SUP-1061",
@@ -666,9 +546,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 659.9,
-    "stockQuantity": 27,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 27
   },
   {
     "externalId": "SUP-1062",
@@ -677,9 +555,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 669.9,
-    "stockQuantity": 34,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 34
   },
   {
     "externalId": "SUP-1063",
@@ -688,9 +564,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 679.9,
-    "stockQuantity": 41,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 41
   },
   {
     "externalId": "SUP-1064",
@@ -699,9 +573,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 689.9,
-    "stockQuantity": 48,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 48
   },
   {
     "externalId": "SUP-1065",
@@ -710,9 +582,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 699.9,
-    "stockQuantity": 5,
-    "discountCode": "SUMMER25",
-    "discountPercent": 10
+    "stockQuantity": 5
   },
   {
     "externalId": "SUP-1066",
@@ -721,9 +591,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 709.9,
-    "stockQuantity": 12,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 12
   },
   {
     "externalId": "SUP-1067",
@@ -732,9 +600,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 719.9,
-    "stockQuantity": 19,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 19
   },
   {
     "externalId": "SUP-1068",
@@ -743,9 +609,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 729.9,
-    "stockQuantity": 26,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 26
   },
   {
     "externalId": "SUP-1069",
@@ -754,9 +618,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 739.9,
-    "stockQuantity": 33,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 33
   },
   {
     "externalId": "SUP-1070",
@@ -765,9 +627,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 749.9,
-    "stockQuantity": 40,
-    "discountCode": "SUMMER25",
-    "discountPercent": 15
+    "stockQuantity": 40
   },
   {
     "externalId": "SUP-1071",
@@ -776,9 +636,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 759.9,
-    "stockQuantity": 47,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 47
   },
   {
     "externalId": "SUP-1072",
@@ -787,9 +645,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 769.9,
-    "stockQuantity": 4,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 4
   },
   {
     "externalId": "SUP-1073",
@@ -798,9 +654,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 779.9,
-    "stockQuantity": 11,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 11
   },
   {
     "externalId": "SUP-1074",
@@ -809,9 +663,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 789.9,
-    "stockQuantity": 18,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 18
   },
   {
     "externalId": "SUP-1075",
@@ -820,9 +672,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 799.9,
-    "stockQuantity": 25,
-    "discountCode": "SUMMER25",
-    "discountPercent": 20
+    "stockQuantity": 25
   },
   {
     "externalId": "SUP-1076",
@@ -831,9 +681,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 809.9,
-    "stockQuantity": 32,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 32
   },
   {
     "externalId": "SUP-1077",
@@ -842,9 +690,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 819.9,
-    "stockQuantity": 39,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 39
   },
   {
     "externalId": "SUP-1078",
@@ -853,9 +699,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 829.9,
-    "stockQuantity": 46,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 46
   },
   {
     "externalId": "SUP-1079",
@@ -864,9 +708,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 839.9,
-    "stockQuantity": 3,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 3
   },
   {
     "externalId": "SUP-1080",
@@ -875,9 +717,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 849.9,
-    "stockQuantity": 10,
-    "discountCode": "SUMMER25",
-    "discountPercent": 5
+    "stockQuantity": 10
   },
   {
     "externalId": "SUP-1081",
@@ -886,9 +726,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 859.9,
-    "stockQuantity": 17,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 17
   },
   {
     "externalId": "SUP-1082",
@@ -897,9 +735,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 869.9,
-    "stockQuantity": 24,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 24
   },
   {
     "externalId": "SUP-1083",
@@ -908,9 +744,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 879.9,
-    "stockQuantity": 31,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 31
   },
   {
     "externalId": "SUP-1084",
@@ -919,9 +753,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 889.9,
-    "stockQuantity": 38,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 38
   },
   {
     "externalId": "SUP-1085",
@@ -930,9 +762,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 899.9,
-    "stockQuantity": 45,
-    "discountCode": "SUMMER25",
-    "discountPercent": 10
+    "stockQuantity": 45
   },
   {
     "externalId": "SUP-1086",
@@ -941,9 +771,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 909.9,
-    "stockQuantity": 2,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 2
   },
   {
     "externalId": "SUP-1087",
@@ -952,9 +780,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 919.9,
-    "stockQuantity": 9,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 9
   },
   {
     "externalId": "SUP-1088",
@@ -963,9 +789,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 929.9,
-    "stockQuantity": 16,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 16
   },
   {
     "externalId": "SUP-1089",
@@ -974,9 +798,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 939.9,
-    "stockQuantity": 23,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 23
   },
   {
     "externalId": "SUP-1090",
@@ -985,9 +807,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 949.9,
-    "stockQuantity": 30,
-    "discountCode": "SUMMER25",
-    "discountPercent": 15
+    "stockQuantity": 30
   },
   {
     "externalId": "SUP-1091",
@@ -996,9 +816,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 959.9,
-    "stockQuantity": 37,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 37
   },
   {
     "externalId": "SUP-1092",
@@ -1007,9 +825,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 969.9,
-    "stockQuantity": 44,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 44
   },
   {
     "externalId": "SUP-1093",
@@ -1018,9 +834,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 979.9,
-    "stockQuantity": 1,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 1
   },
   {
     "externalId": "SUP-1094",
@@ -1029,9 +843,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 989.9,
-    "stockQuantity": 8,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 8
   },
   {
     "externalId": "SUP-1095",
@@ -1040,9 +852,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 999.9,
-    "stockQuantity": 15,
-    "discountCode": "SUMMER25",
-    "discountPercent": 20
+    "stockQuantity": 15
   },
   {
     "externalId": "SUP-1096",
@@ -1051,9 +861,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 1009.9,
-    "stockQuantity": 22,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 22
   },
   {
     "externalId": "SUP-1097",
@@ -1062,9 +870,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 1019.9,
-    "stockQuantity": 29,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 29
   },
   {
     "externalId": "SUP-1098",
@@ -1073,9 +879,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 1029.9,
-    "stockQuantity": 36,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 36
   },
   {
     "externalId": "SUP-1099",
@@ -1084,9 +888,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 1039.9,
-    "stockQuantity": 43,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 43
   },
   {
     "externalId": "SUP-1100",
@@ -1095,9 +897,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 1049.9,
-    "stockQuantity": 0,
-    "discountCode": "SUMMER25",
-    "discountPercent": 5
+    "stockQuantity": 0
   },
   {
     "externalId": "SUP-1101",
@@ -1106,9 +906,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 1059.9,
-    "stockQuantity": 7,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 7
   },
   {
     "externalId": "SUP-1102",
@@ -1117,9 +915,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 1069.9,
-    "stockQuantity": 14,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 14
   },
   {
     "externalId": "SUP-1103",
@@ -1128,9 +924,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 1079.9,
-    "stockQuantity": 21,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 21
   },
   {
     "externalId": "SUP-1104",
@@ -1139,9 +933,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 1089.9,
-    "stockQuantity": 28,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 28
   },
   {
     "externalId": "SUP-1105",
@@ -1150,9 +942,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 1099.9,
-    "stockQuantity": 35,
-    "discountCode": "SUMMER25",
-    "discountPercent": 10
+    "stockQuantity": 35
   },
   {
     "externalId": "SUP-1106",
@@ -1161,9 +951,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 1109.9,
-    "stockQuantity": 42,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 42
   },
   {
     "externalId": "SUP-1107",
@@ -1172,9 +960,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 1119.9,
-    "stockQuantity": 49,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 49
   },
   {
     "externalId": "SUP-1108",
@@ -1183,9 +969,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 1129.9,
-    "stockQuantity": 6,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 6
   },
   {
     "externalId": "SUP-1109",
@@ -1194,9 +978,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 1139.9,
-    "stockQuantity": 13,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 13
   },
   {
     "externalId": "SUP-1110",
@@ -1205,9 +987,7 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 1149.9,
-    "stockQuantity": 20,
-    "discountCode": "SUMMER25",
-    "discountPercent": 15
+    "stockQuantity": 20
   },
   {
     "externalId": "SUP-1111",
@@ -1216,9 +996,7 @@
     "brand": "Samsung",
     "category": "Elektronik",
     "price": 1159.9,
-    "stockQuantity": 27,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 27
   },
   {
     "externalId": "SUP-1112",
@@ -1227,9 +1005,7 @@
     "brand": "Sony",
     "category": "Elektronik",
     "price": 1169.9,
-    "stockQuantity": 34,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 34
   },
   {
     "externalId": "SUP-1113",
@@ -1238,9 +1014,7 @@
     "brand": "Lenovo",
     "category": "Bilgisayar",
     "price": 1179.9,
-    "stockQuantity": 41,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 41
   },
   {
     "externalId": "SUP-1114",
@@ -1249,9 +1023,7 @@
     "brand": "Dell",
     "category": "Bilgisayar",
     "price": 1189.9,
-    "stockQuantity": 48,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 48
   },
   {
     "externalId": "SUP-1115",
@@ -1260,9 +1032,7 @@
     "brand": "Hp",
     "category": "Bilgisayar",
     "price": 1199.9,
-    "stockQuantity": 5,
-    "discountCode": "SUMMER25",
-    "discountPercent": 20
+    "stockQuantity": 5
   },
   {
     "externalId": "SUP-1116",
@@ -1271,9 +1041,7 @@
     "brand": "Asus",
     "category": "Bilgisayar",
     "price": 1209.9,
-    "stockQuantity": 12,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 12
   },
   {
     "externalId": "SUP-1117",
@@ -1282,9 +1050,7 @@
     "brand": "Xiaomi",
     "category": "Elektronik",
     "price": 1219.9,
-    "stockQuantity": 19,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 19
   },
   {
     "externalId": "SUP-1118",
@@ -1293,9 +1059,7 @@
     "brand": "Nike",
     "category": "Spor Giyim",
     "price": 1229.9,
-    "stockQuantity": 26,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 26
   },
   {
     "externalId": "SUP-1119",
@@ -1304,9 +1068,7 @@
     "brand": "Adidas",
     "category": "Spor Giyim",
     "price": 1239.9,
-    "stockQuantity": 33,
-    "discountCode": null,
-    "discountPercent": null
+    "stockQuantity": 33
   },
   {
     "externalId": "SUP-1120",
@@ -1315,8 +1077,6 @@
     "brand": "Apple",
     "category": "Elektronik",
     "price": 1249.9,
-    "stockQuantity": 40,
-    "discountCode": "SUMMER25",
-    "discountPercent": 5
+    "stockQuantity": 40
   }
 ]

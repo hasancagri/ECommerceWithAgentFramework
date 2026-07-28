@@ -3,7 +3,6 @@ namespace Order.Api.Domains.Orders.Features.Commands;
 public static class CreateOrder
 {
     public record CreateOrderCommand(
-        float? DiscountRate,
         AddressDto Address,
         Guid PaymentId,
         List<OrderItemDto> Items);
@@ -32,7 +31,7 @@ public static class CreateOrder
 
             var address = new Address(cmd.Address.Province, cmd.Address.District, cmd.Address.Street,
                 cmd.Address.ZipCode, cmd.Address.Line);
-            var order = Order.Create(userId, cmd.DiscountRate, address);
+            var order = Order.Create(userId, address);
 
             foreach (var item in cmd.Items)
             {

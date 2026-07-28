@@ -6,12 +6,6 @@ public record BasketPageViewModel
 
     private decimal TotalPrice { get; set; }
 
-    private decimal? TotalPriceByDiscountRate { get; set; }
-    public string? Coupon { get; set; }
-    public float? DiscountRate { get; set; }
-
-    public bool IsApplyDiscountCoupon => DiscountRate is > 0 && !string.IsNullOrEmpty(Coupon);
-
     public bool HasItem => Items.Count > 0;
 
     // 017: sepet capasi + dolma durumu — tablo ustu tek geri sayim banner'i.
@@ -21,14 +15,13 @@ public record BasketPageViewModel
 
     public decimal GetTotalPrice()
     {
-        return IsApplyDiscountCoupon ? TotalPriceByDiscountRate!.Value : TotalPrice;
+        return TotalPrice;
     }
 
 
-    public void SetPrice(decimal totalPrice, decimal? totalPriceByDiscountRate)
+    public void SetPrice(decimal totalPrice)
     {
         TotalPrice = totalPrice;
-        TotalPriceByDiscountRate = totalPriceByDiscountRate;
     }
 }
 
@@ -37,5 +30,4 @@ public record BasketViewModelItem(
     string? PictureUrl,
     string Name,
     decimal Price,
-    decimal? PriceWithDiscountRate,
     int Quantity);

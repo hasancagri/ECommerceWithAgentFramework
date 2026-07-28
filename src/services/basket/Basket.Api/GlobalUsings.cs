@@ -4,7 +4,6 @@ global using Basket.Api.Dependencies;
 global using Basket.Api.Domains.Baskets.Entities;
 global using Basket.Api.Domains.Baskets.Features.Commands;
 global using Basket.Api.Domains.Baskets.Features.Queries;
-global using Basket.Api.Domains.Baskets.ValueObjects;
 global using Basket.Api.Domains.Baskets;
 global using Common.Domains;
 global using Common.Exceptions;

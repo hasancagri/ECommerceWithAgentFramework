@@ -1,10 +1,10 @@
 namespace Supplier.Gateway.Tests;
 
-// Adapter alan eşlemesi (FR-002): tel şekli → kanonik model; DiscountCode kontrata taşınmaz (R2).
+// Adapter alan eşlemesi (FR-002): tel şekli → kanonik model.
 public class SupplierFeedAdapterTests
 {
-    private static SupplierFeedRecord Wire(string? code = "KUPON10", decimal? pct = 10m)
-        => new("SUP-1", "Ürün", "Açıklama", "Apple", "Elektronik", 149.90m, 25, code, pct);
+    private static SupplierFeedRecord Wire()
+        => new("SUP-1", "Ürün", "Açıklama", "Apple", "Elektronik", 149.90m, 25);
 
     [Fact]
     public void ToCanonical_MapsAllContractFields()
@@ -19,24 +19,15 @@ public class SupplierFeedAdapterTests
         canonical.Category.ShouldBe("Elektronik");
         canonical.Price.ShouldBe(149.90m);
         canonical.StockQuantity.ShouldBe(25);
-        canonical.DiscountPercent.ShouldBe(10m);
     }
 
     [Fact]
-    public void ToCanonical_DropsDiscountCode_CodeDiffDoesNotRepublish()
+    public void ToCanonical_SameWire_ProducesEqualCanonical()
     {
-        // Kanonik model DiscountCode taşımaz: yalnız kod değişen kayıt kapıda "aynı" sayılır.
-        var canonicalA = SupplierFeedAdapter.ToCanonical(Wire(code: "KUPON10"));
-        var canonicalB = SupplierFeedAdapter.ToCanonical(Wire(code: "KUPON20"));
+        // Kanonik model record eşitliğiyle kıyaslanır: aynı tel içerik kapıda "aynı" sayılır.
+        var canonicalA = SupplierFeedAdapter.ToCanonical(Wire());
+        var canonicalB = SupplierFeedAdapter.ToCanonical(Wire());
 
         canonicalA.ShouldBe(canonicalB);
-    }
-
-    [Fact]
-    public void ToCanonical_KeepsMissingDiscountAsNull()
-    {
-        var canonical = SupplierFeedAdapter.ToCanonical(Wire(code: null, pct: null));
-
-        canonical.DiscountPercent.ShouldBeNull();
     }
 }

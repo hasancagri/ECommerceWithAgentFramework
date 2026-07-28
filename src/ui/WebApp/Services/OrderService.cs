@@ -35,7 +35,7 @@ public class OrderService(
             .ToList();
 
         var createOrderRequest = new CreateOrderRequest(
-            viewModel.DiscountRate, address, paymentResult.Data, orderItems);
+            address, paymentResult.Data, orderItems);
 
         var response = await orderService.CreateOrder(createOrderRequest);
 

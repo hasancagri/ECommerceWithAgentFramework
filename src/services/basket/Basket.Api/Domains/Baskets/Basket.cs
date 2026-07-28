@@ -35,17 +35,9 @@ public class Basket : AggregateRoot
         _items.Clear();
         ReservationExpiresAt = null;
     }
-    public Discount? AppliedDiscount { get; private set; }
-    private bool IsApplyDiscount() => AppliedDiscount is not null;
-
     public decimal GetTotalPrice()
     {
         return _items.Sum(x => x.Price * x.Quantity);
-    }
-
-    public decimal? GetTotalPriceWithAppliedDiscount()
-    {
-        return !IsApplyDiscount() ? null : _items.Sum(x => x.PriceByApplyDiscountRate * x.Quantity);
     }
 
     public void AddItem(BasketItem item)
@@ -55,8 +47,6 @@ public class Basket : AggregateRoot
             _items.Remove(existing);
 
         _items.Add(item);
-        if (IsApplyDiscount())
-            item.ApplyDiscount(AppliedDiscount!.Rate);
     }
 
     // 012: bir urunun sepetteki mevcut adedi (handler yeni rezervasyon adedini hesaplarken kullanir).
@@ -75,8 +65,6 @@ public class Basket : AggregateRoot
         }
 
         existing.SetQuantity(quantity);
-        if (IsApplyDiscount())
-            existing.ApplyDiscount(AppliedDiscount!.Rate);
     }
 
     public FeatureResultModel RemoveItem(Guid itemId)
@@ -88,31 +76,5 @@ public class Basket : AggregateRoot
         if (_items.Count == 0)
             ReservationExpiresAt = null;
         return FeatureResultModel.Ok();
-    }
-
-    public FeatureResultModel ApplyNewDiscount(string coupon, float discountRate)
-    {
-        if (_items.Count == 0)
-            return FeatureResultModel.Error(new MessageItem { Code = "BASKET_IS_EMPTY" });
-        
-        AppliedDiscount = Discount.Create(coupon, discountRate);
-        foreach (var item in _items)
-            item.ApplyDiscount(discountRate);
-        
-        return FeatureResultModel.Ok();
-    }
-
-    public void ApplyAvailableDiscount()
-    {
-        if (!IsApplyDiscount()) return;
-        foreach (var item in _items)
-            item.ApplyDiscount(AppliedDiscount!.Rate);
-    }
-
-    public void ClearDiscount()
-    {
-        AppliedDiscount = null;
-        foreach (var item in _items)
-            item.ClearDiscount();
     }
 }

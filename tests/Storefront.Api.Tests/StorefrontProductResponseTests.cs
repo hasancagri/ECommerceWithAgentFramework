@@ -21,7 +21,6 @@ public class StorefrontProductResponseTests
         var productId = Guid.NewGuid();
         var view = FullCatalogView(productId);
         view.ApplyStock(7);
-        view.ApplyDiscount(0.15m);
 
         var response = StorefrontProductResponse.From(view);
 
@@ -36,7 +35,6 @@ public class StorefrontProductResponseTests
         response.ImageUrl.ShouldBe("https://img/a.png");
         response.StockQuantity.ShouldBe(7);
         response.IsInStock.ShouldBe(true);
-        response.DiscountRate.ShouldBe(0.15m);
     }
 
     [Fact]
@@ -46,7 +44,6 @@ public class StorefrontProductResponseTests
 
         response.StockQuantity.ShouldBeNull();
         response.IsInStock.ShouldBeNull();
-        response.DiscountRate.ShouldBeNull();
     }
 
     [Fact]

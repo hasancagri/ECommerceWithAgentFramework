@@ -9,7 +9,6 @@ public static class RabbitMqConstants
         public static class Queues
         {
             public const string Basket = "basket.order-created";
-            public const string Discount = "discount.order-created";
         }
     }
 
@@ -54,16 +53,6 @@ public static class RabbitMqConstants
     public static class StockChanged
     {
         public const string Exchange = "stock.changed";
-
-        public static class Queues
-        {
-            public const string Storefront = StorefrontEvents.Queue;
-        }
-    }
-
-    public static class DiscountChanged
-    {
-        public const string Exchange = "discount.changed";
 
         public static class Queues
         {

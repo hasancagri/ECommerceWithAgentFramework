@@ -71,7 +71,6 @@ builder.Services.AddHttpClient(McpClients.NoToken)
 // değil diye ölmez). Adresler Aspire service discovery'den.
 var catalogMcp = $"{builder.Configuration["services:catalog-api:http:0"]}/mcp";
 var stockMcp = $"{builder.Configuration["services:stock-api:http:0"]}/mcp";
-var discountMcp = $"{builder.Configuration["services:discount-api:http:0"]}/mcp";
 
 // R5: adım bütçesi (keşif + LLM döngüsü + tool çağrıları); taşma adım hatası → retry/DLQ.
 var stepTimeout = TimeSpan.FromSeconds(builder.Configuration.GetValue("Ingestion:StepTimeoutSeconds", 60));
@@ -89,8 +88,6 @@ builder.Services.AddSingleton<CatalogWriterAgent>(sp => new(
     chatClient, Catalog(sp, Writers.Catalog, catalogMcp, CatalogWriterAgent.AllowedTools), stepTimeout));
 builder.Services.AddSingleton<StockWriterAgent>(sp => new(
     chatClient, Catalog(sp, Writers.Stock, stockMcp, StockWriterAgent.AllowedTools), stepTimeout));
-builder.Services.AddSingleton<DiscountWriterAgent>(sp => new(
-    chatClient, Catalog(sp, Writers.Discount, discountMcp, DiscountWriterAgent.AllowedTools), stepTimeout));
 
 var app = builder.Build();
 

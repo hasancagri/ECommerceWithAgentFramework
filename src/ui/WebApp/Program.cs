@@ -80,13 +80,6 @@ builder.Services.AddRefitClient<IBasketRefitService>().ConfigureHttpClient(confi
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
 
 
-builder.Services.AddRefitClient<IDiscountRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://discount-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
-
-
 builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://order-api");
@@ -154,9 +147,6 @@ builder.Services.AddAuthentication(configureOption =>
         // order
         options.Scope.Add("order.read");
         options.Scope.Add("order.write");
-        // discount
-        options.Scope.Add("discount.read");
-        options.Scope.Add("discount.write");
         // payment
         options.Scope.Add("payment.read");
         options.Scope.Add("payment.write");

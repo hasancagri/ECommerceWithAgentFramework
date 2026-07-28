@@ -23,9 +23,6 @@ public sealed record CatalogWriterResult(bool IsSuccess, string? Error, Guid? Pr
     
 public sealed record StockWriterResult(bool IsSuccess, string? Error, Guid? ProductId)
     : WriterResult(IsSuccess, Error);
-    
-public sealed record DiscountWriterResult(bool IsSuccess, string? Error, Guid? ProductId)
-    : WriterResult(IsSuccess, Error);
 
 public static class Failures
 {

@@ -54,7 +54,6 @@ public static class GetStorefrontProductList
         // null = kaynak henüz raporlamadı ("bilinmiyor") — rozet çizilmez (FR-009).
         public int? StockQuantity { get; set; }
         public bool? IsInStock { get; set; }
-        public decimal? DiscountRate { get; set; }
 
         public static StorefrontProductResponse From(StorefrontView view) => new()
         {
@@ -68,8 +67,7 @@ public static class GetStorefrontProductList
             Price = view.Price!.Value,
             ImageUrl = view.ImageUrl,
             StockQuantity = view.StockQuantity,
-            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null,
-            DiscountRate = view.DiscountRate
+            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null
         };
     }
 

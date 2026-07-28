@@ -5,7 +5,6 @@ public record BasketItemDto(
     string Name,
     string ImageUrl,
     decimal Price,
-    decimal? PriceByApplyDiscountRate,
     // 012: adet. Rezervasyon bitisi artik sepet duzeyinde (017, BasketResponse).
     int Quantity)
 {

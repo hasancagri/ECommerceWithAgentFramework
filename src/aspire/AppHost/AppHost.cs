@@ -16,7 +16,6 @@ var redis = builder.AddRedis("redis")
 var catalogDb = postgres.AddDatabase("catalogDb");
 var basketDb = postgres.AddDatabase("basketDb");
 var orderDb = postgres.AddDatabase("orderDb");
-var discountDb = postgres.AddDatabase("discountDb");
 var fileDb = postgres.AddDatabase("fileDb");
 var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
@@ -59,12 +58,6 @@ var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
     .WaitFor(rabbit)
     .WaitFor(stockApi);
 
-var discountApi = builder.AddProject<Projects.Discount_Api>("discount-api")
-    .WithReference(discountDb)
-    .WithReference(rabbit)
-    .WaitFor(discountDb)
-    .WaitFor(rabbit);
-
 var fileApi = builder.AddProject<Projects.File_Api>("file-api")
     .WithReference(fileDb)
     .WithReference(rabbit)
@@ -86,7 +79,6 @@ var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)
-    .WithReference(discountApi)
     .WithReference(orderApi)
     .WithReference(paymentApi)
     .WithReference(stockApi)
@@ -99,7 +91,6 @@ var web = builder.AddProject<Projects.WebApp>("ecommerce-web");
 web.WithReference(basketApi)
     .WithReference(catalogApi)
     .WithReference(stockApi)
-    .WithReference(discountApi)
     .WithReference(orderApi)
     .WithReference(fileApi)
     .WithReference(paymentApi)
@@ -121,11 +112,9 @@ var ingestionAgent = builder.AddProject<Projects.IngestionAgent>("ingestion-agen
     .WithReference(rabbit)
     .WithReference(catalogApi)
     .WithReference(stockApi)
-    .WithReference(discountApi)
     .WaitFor(rabbit)
     .WaitFor(catalogApi)
-    .WaitFor(stockApi)
-    .WaitFor(discountApi);
+    .WaitFor(stockApi);
 
 // Sınır bileşeni (007): feed'i çeker, değişiklik kapısından geçen kaydı kanonik event'le yayınlar.
 // 012: WaitFor(ingestionAgent) — tüketici kuyruğu provision etmeden feed yayınlanmasın; yoksa

@@ -14,7 +14,6 @@ public class ProductStorefrontViewResponseTests
         view.ApplyCatalog("Ürün A", "Açıklama A", 49.90m, brandId, "Apple", categoryId, "Elektronik",
             "https://img/a.png", isDeleted: false);
         view.ApplyStock(7);
-        view.ApplyDiscount(0.15m);
 
         var response = ProductStorefrontViewResponse.From(view);
 
@@ -28,7 +27,6 @@ public class ProductStorefrontViewResponseTests
         response.Category.ShouldBe("Elektronik");
         response.StockQuantity.ShouldBe(7);
         response.IsInStock.ShouldBe(true);
-        response.DiscountRate.ShouldBe(0.15m);
     }
 
     [Fact]
@@ -43,7 +41,6 @@ public class ProductStorefrontViewResponseTests
         response.Name.ShouldBe("Yeni Ürün");
         response.StockQuantity.ShouldBeNull();
         response.IsInStock.ShouldBeNull();
-        response.DiscountRate.ShouldBeNull();
     }
 
     [Fact]
@@ -58,6 +55,5 @@ public class ProductStorefrontViewResponseTests
 
         response.StockQuantity.ShouldBe(0);
         response.IsInStock.ShouldBe(false);
-        response.DiscountRate.ShouldBeNull();
     }
 }

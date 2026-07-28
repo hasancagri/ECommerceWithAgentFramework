@@ -3,23 +3,26 @@ namespace Basket.Api.Tests;
 public class BasketItemTests
 {
     [Fact]
-    public void ApplyDiscount_SetsDiscountedPrice()
+    public void Constructor_SetsFields_WithDefaultQuantityOne()
     {
-        var item = new BasketItem(Guid.NewGuid(), "product", null, 100m);
+        var id = Guid.NewGuid();
 
-        item.ApplyDiscount(0.25f);
+        var item = new BasketItem(id, "product", "img.png", 100m);
 
-        item.PriceByApplyDiscountRate.ShouldBe(100m * (decimal)(1 - 0.25f));
+        item.Id.ShouldBe(id);
+        item.Name.ShouldBe("product");
+        item.ImageUrl.ShouldBe("img.png");
+        item.Price.ShouldBe(100m);
+        item.Quantity.ShouldBe(1);
     }
 
     [Fact]
-    public void ClearDiscount_ResetsDiscountedPriceToNull()
+    public void SetQuantity_UpdatesQuantity()
     {
         var item = new BasketItem(Guid.NewGuid(), "product", null, 100m);
-        item.ApplyDiscount(0.25f);
 
-        item.ClearDiscount();
+        item.SetQuantity(5);
 
-        item.PriceByApplyDiscountRate.ShouldBeNull();
+        item.Quantity.ShouldBe(5);
     }
 }

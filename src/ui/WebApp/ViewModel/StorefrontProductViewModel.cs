@@ -1,6 +1,6 @@
 namespace WebApp.ViewModel;
 
-// 006: ana sayfa kartı vitrin satırından çizilir; stok/indirim null ise rozet yok (FR-009).
+// 006: ana sayfa kartı vitrin satırından çizilir; stok null ise rozet yok (FR-009).
 public record StorefrontProductViewModel(
     Guid ProductId,
     string Name,
@@ -10,7 +10,6 @@ public record StorefrontProductViewModel(
     string? ImageUrl,
     int? StockQuantity,
     bool? IsInStock,
-    decimal? DiscountRate,
     string? Category,
     Guid? CategoryId,
     Guid? BrandId)

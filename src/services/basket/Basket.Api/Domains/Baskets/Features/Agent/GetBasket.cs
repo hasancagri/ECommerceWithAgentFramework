@@ -8,10 +8,7 @@ public static class GetBasket
     {
         public Guid UserId { get; set; }
         public List<GetBasketItemResponse> Items { get; set; } = new();
-        public float? DiscountRate { get; set; }
-        public string? Coupon { get; set; }
         public decimal TotalPrice { get; set; }
-        public decimal? TotalPriceWithAppliedDiscount { get; set; }
 
         // 017 (R9): sepet capasi + dolma durumu — REST GetBasket ile ayni sepet duzeyi alanlar.
         public DateTimeOffset? ReservationExpiresAt { get; set; }
@@ -21,10 +18,7 @@ public static class GetBasket
         {
             UserId = basket.UserId,
             Items = basket.Items.Select(GetBasketItemResponse.From).ToList(),
-            DiscountRate = basket.AppliedDiscount?.Rate,
-            Coupon = basket.AppliedDiscount?.Coupon,
             TotalPrice = basket.GetTotalPrice(),
-            TotalPriceWithAppliedDiscount = basket.GetTotalPriceWithAppliedDiscount(),
             ReservationExpiresAt = basket.ReservationExpiresAt,
             IsReservationExpired = basket.IsExpiredAt(DateTimeOffset.UtcNow)
         };
@@ -36,15 +30,13 @@ public static class GetBasket
         public string Name { get; set; } = default!;
         public string? ImageUrl { get; set; }
         public decimal Price { get; set; }
-        public decimal? PriceByApplyDiscountRate { get; set; }
 
         public static GetBasketItemResponse From(BasketItem item) => new()
         {
             Id = item.Id,
             Name = item.Name,
             ImageUrl = item.ImageUrl,
-            Price = item.Price,
-            PriceByApplyDiscountRate = item.PriceByApplyDiscountRate
+            Price = item.Price
         };
     }
 

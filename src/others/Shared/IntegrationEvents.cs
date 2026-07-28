@@ -20,13 +20,12 @@ public static class IntegrationEvents
         string? ImageUrl,
         bool IsDeleted);
     public record StockChangedEvent(Guid ProductId, int Quantity);
-    public record DiscountChangedEvent(Guid ProductId, decimal? Rate);
 
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
     public record ReservationExpired(Guid ProductId, Guid UserId);
 
     // 007-supplier-gateway: kaydın tedarikçideki GÜNCEL hali (snapshot, diff değil).
-    // Tedarikçi kimliği tip değil alandır (SupplierCode); DiscountPercent null = indirim yok → remove.
+    // Tedarikçi kimliği tip değil alandır (SupplierCode).
     // 016: Category dış veri olduğundan nullable taşınır; ancak kategori ZORUNLUDUR — boş/eksik
     // gelen kayıt ingestion CategoryWrite adımında kesilir (retry/DLQ), kataloğa yazılmaz.
     public record SupplierProductSnapshotReceived(
@@ -37,6 +36,5 @@ public static class IntegrationEvents
         string Brand,
         string? Category,
         decimal Price,
-        int StockQuantity,
-        decimal? DiscountPercent);
+        int StockQuantity);
 }

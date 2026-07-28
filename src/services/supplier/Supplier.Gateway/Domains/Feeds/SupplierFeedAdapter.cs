@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace Supplier.Gateway.Domains.Feeds;
 
 // Tedarikçinin tel biçimi (Supplier.Api şeması). SINIRDA kalır (FR-002); iç akış yalnız kanonik
-// event'i tanır. DiscountCode bilinçli olarak kontrata taşınmaz (R2: yazım yolu yalnız rate kullanır).
+// event'i tanır.
 public sealed record SupplierFeedRecord(
     string ExternalId,
     string Name,
@@ -11,9 +11,7 @@ public sealed record SupplierFeedRecord(
     string Brand,
     string? Category,
     decimal Price,
-    int StockQuantity,
-    string? DiscountCode,
-    decimal? DiscountPercent);
+    int StockQuantity);
 
 // Tek tedarikçi adapter'ı: tel şekli → kanonik model; tedarikçi kimliği alan olarak sabitlenir (FR-010).
 public static class SupplierFeedAdapter
@@ -23,7 +21,7 @@ public static class SupplierFeedAdapter
 
     public static IntegrationEvents.SupplierProductSnapshotReceived ToCanonical(SupplierFeedRecord wire)
         => new(SupplierCode, wire.ExternalId, wire.Name, wire.Description, wire.Brand,
-            wire.Category, wire.Price, wire.StockQuantity, wire.DiscountPercent);
+            wire.Category, wire.Price, wire.StockQuantity);
 
     // Boş ya da çözülemeyen gövde hata değildir (FR-008): boş liste döner, çekim sessiz kapanır.
     public static IReadOnlyList<SupplierFeedRecord> Parse(string? body)

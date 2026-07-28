@@ -5,7 +5,7 @@ using Shared;
 namespace IngestionAgent.Tests;
 
 // SPIKE (FR-015, S4 emsali): MAF semantiği LLM'siz sahte executor'larla kanıtlanır. Tipli zincir
-// (015 refactor: RecordJob yok) için doğrulananlar:
+// (015 refactor: RecordJob yok; 018: zincir stok adımıyla biter) için doğrulananlar:
 // - Conditional edge başarısız sonucu terminale yönlendirir; sonraki executor HİÇ tetiklenmez.
 // - Türetilmiş sonuç (CatalogWriterResult...) taban tipli terminale (Executor<WriterResult,...>)
 //   dispatch edilir; WithOutputFrom çıktısı WorkflowOutputEvent'ten tipli okunur.
@@ -15,7 +15,7 @@ public class WorkflowSemanticsSpikeTests
     private static readonly Guid KnownProductId = Guid.Parse("7c9e6679-7425-40de-944b-e07fc1f90ae7");
 
     private static IntegrationEvents.SupplierProductSnapshotReceived NewMessage() =>
-        new("sup-1", "sku-1", "Ürün", "Açıklama", "Apple", "Elektronik", 10m, 5, null);
+        new("sup-1", "sku-1", "Ürün", "Açıklama", "Apple", "Elektronik", 10m, 5);
 
     private sealed class FakeCatalog(bool fail, List<string> visits)
         : Executor<IntegrationEvents.SupplierProductSnapshotReceived, CatalogWriterResult>("catalog")
@@ -45,36 +45,20 @@ public class WorkflowSemanticsSpikeTests
         }
     }
 
-    private sealed class FakeDiscount(bool fail, List<string> visits)
-        : Executor<StockWriterResult, DiscountWriterResult>("discount")
-    {
-        public override ValueTask<DiscountWriterResult> HandleAsync(
-            StockWriterResult stockResult, IWorkflowContext context,
-            CancellationToken cancellationToken = default)
-        {
-            visits.Add(Id);
-            return ValueTask.FromResult(fail
-                ? new DiscountWriterResult(false, "discount_FAILED", stockResult.ProductId)
-                : new DiscountWriterResult(true, null, stockResult.ProductId));
-        }
-    }
-
     private static async Task<(WriterResult? Outcome, List<string> Visits)> RunAsync(
-        bool catalogFails = false, bool stockFails = false, bool discountFails = false)
+        bool catalogFails = false, bool stockFails = false)
     {
         var visits = new List<string>();
         var catalog = new FakeCatalog(catalogFails, visits);
         var stock = new FakeStock(stockFails, visits);
-        var discount = new FakeDiscount(discountFails, visits);
         var finish = new FinishExecutor(); // ÜRETİMDEKİ terminal — taban-tip dispatch'i asıl kanıt
 
-        // Üretimdeki şekil (SupplierSnapshotHandler ile birebir aynı edge kurgusu).
+        // Üretimdeki şekil (SupplierSnapshotHandler ile birebir aynı edge kurgusu):
+        // son adımın (stock) her iki sonucu da doğrudan terminale akar.
         var workflow = new WorkflowBuilder(catalog)
             .AddEdge<CatalogWriterResult>(catalog, stock, r => r is { IsSuccess: true })
             .AddEdge<CatalogWriterResult>(catalog, finish, r => r is { IsSuccess: false })
-            .AddEdge<StockWriterResult>(stock, discount, r => r is { IsSuccess: true })
-            .AddEdge<StockWriterResult>(stock, finish, r => r is { IsSuccess: false })
-            .AddEdge(discount, finish)
+            .AddEdge(stock, finish)
             .WithOutputFrom(finish)
             .Build();
 
@@ -90,14 +74,14 @@ public class WorkflowSemanticsSpikeTests
     }
 
     [Fact]
-    public async Task SuccessPath_VisitsAllStepsInOrder_OutputIsSuccessfulDiscountResult()
+    public async Task SuccessPath_VisitsAllStepsInOrder_OutputIsSuccessfulStockResult()
     {
         var (outcome, visits) = await RunAsync();
 
-        visits.ShouldBe(["catalog", "stock", "discount"]);
-        outcome.ShouldBeOfType<DiscountWriterResult>();
+        visits.ShouldBe(["catalog", "stock"]);
+        outcome.ShouldBeOfType<StockWriterResult>();
         outcome.IsSuccess.ShouldBeTrue();
-        ((DiscountWriterResult)outcome!).ProductId.ShouldBe(KnownProductId);
+        ((StockWriterResult)outcome!).ProductId.ShouldBe(KnownProductId);
     }
 
     [Fact]
@@ -105,14 +89,14 @@ public class WorkflowSemanticsSpikeTests
     {
         var (outcome, visits) = await RunAsync(catalogFails: true);
 
-        visits.ShouldBe(["catalog"]); // stock/discount HİÇ tetiklenmedi (FR-003)
+        visits.ShouldBe(["catalog"]); // stock HİÇ tetiklenmedi (FR-003)
         outcome.ShouldBeOfType<CatalogWriterResult>();
         outcome!.IsSuccess.ShouldBeFalse();
         outcome.Error.ShouldBe("catalog_FAILED");
     }
 
     [Fact]
-    public async Task StockFailure_SkipsDiscount_OutputIsFailedStockResult()
+    public async Task StockFailure_StillProducesOutput_WithFailureRecorded()
     {
         var (outcome, visits) = await RunAsync(stockFails: true);
 
@@ -120,16 +104,5 @@ public class WorkflowSemanticsSpikeTests
         outcome.ShouldBeOfType<StockWriterResult>();
         outcome!.IsSuccess.ShouldBeFalse();
         outcome.Error.ShouldBe("stock_FAILED");
-    }
-
-    [Fact]
-    public async Task DiscountFailure_StillProducesOutput_WithFailureRecorded()
-    {
-        var (outcome, visits) = await RunAsync(discountFails: true);
-
-        visits.ShouldBe(["catalog", "stock", "discount"]);
-        outcome.ShouldBeOfType<DiscountWriterResult>();
-        outcome!.IsSuccess.ShouldBeFalse();
-        outcome.Error.ShouldBe("discount_FAILED");
     }
 }

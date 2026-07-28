@@ -17,10 +17,6 @@ public static class AuthorizationScopes
     public const string PaymentRead = "payment.read";
     public const string PaymentWrite = "payment.write";
 
-    // discount.api
-    public const string DiscountRead = "discount.read";
-    public const string DiscountWrite = "discount.write";
-
     // stock.api
     public const string StockWrite = "stock.write";
     // 012: sepete ekleme/siparis aninda Basket/Order -> Stock gRPC rezervasyonu icin.
