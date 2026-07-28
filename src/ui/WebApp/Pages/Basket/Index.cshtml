@@ -127,10 +127,12 @@
             function tick() {
                 const remaining = Math.floor((expires - Date.now()) / 1000);
                 if (remaining <= 0) {
+                    // 020: sure doldu — sepeti sunucuda bosalt + sayfayi yenile (bos sepet gosterilir).
+                    clearInterval(timer);
                     banner.classList.remove('alert-info');
                     banner.classList.add('alert-secondary');
-                    banner.innerHTML = '<span>Reservation <strong>expired</strong> — items may be removed from your basket.</span>';
-                    clearInterval(timer);
+                    banner.innerHTML = '<span>Reservation <strong>expired</strong> — clearing your basket…</span>';
+                    window.location.href = '?handler=PurgeExpired';
                     return;
                 }
                 const m = Math.floor(remaining / 60);

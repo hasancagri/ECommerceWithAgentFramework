@@ -17,4 +17,7 @@ public interface IBasketRefitService
 
     [Put("/api/v1/baskets/item/{productId}/quantity")]
     Task<ApiResponse<object>> SetQuantityAsync(Guid productId, SetQuantityRequest body);
+
+    [Post("/api/v1/baskets/purge-expired")]
+    Task<ApiResponse<object>> PurgeExpiredAsync();
 }

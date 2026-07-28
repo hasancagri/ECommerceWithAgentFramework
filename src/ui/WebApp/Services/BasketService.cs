@@ -111,4 +111,18 @@ public class BasketService(
 
         return ServiceResult.Success();
     }
+
+    // 020: rezervasyon suresi dolunca sepeti sunucuda bosaltir (idempotent; sure dolmamissa no-op).
+    public async Task<ServiceResult> PurgeExpiredBasketAsync()
+    {
+        var responseAsResult = await basketRefitService.PurgeExpiredAsync();
+
+        if (!responseAsResult.IsSuccessStatusCode)
+        {
+            logger.LogProblemDetails(responseAsResult.Error);
+            return ServiceResult.Error("An error occurred while purging the expired basket");
+        }
+
+        return ServiceResult.Success();
+    }
 }
