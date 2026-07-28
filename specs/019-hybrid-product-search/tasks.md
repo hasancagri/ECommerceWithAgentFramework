@@ -124,7 +124,7 @@
 
 - [X] T027 Tüm çözüm: `dotnet build` + `dotnet test` yeşil; yeni kod uyarısız derlenir
 - [X] T028 [P] `README.md`: Storefront hibrit arama + pgvector notu (mimari bölümüne kısa ekleme)
-- [ ] T029 `quickstart.md` canlı doğrulama: senaryo 1-7 Aspire üzerinde koşulur; benzerlik eşiği gerekirse kalibre edilir (R6)
+- [X] T029 `quickstart.md` canlı doğrulama: senaryo 1-7 Aspire üzerinde koşulur; benzerlik eşiği gerekirse kalibre edilir (R6)
 
 ---
 
