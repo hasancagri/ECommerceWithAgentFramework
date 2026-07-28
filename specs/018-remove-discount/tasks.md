@@ -144,7 +144,7 @@ US2/US3 tüketici temizlikleri onu güvenli kılar. Her faz sonunda çözüm der
 
 - [X] T041 Süpürme (SC-001): `grep -ril "discount" src/ tests/` (bin/obj hariç, .cs/.json/.cshtml) boş dönmeli; kalıntı varsa temizle
 - [X] T042 [P] Opsiyonel PATCH (K8): .specify/memory/constitution.md İlke I'deki Discount örneğini yaşayan bir BC ile değiştir
-- [ ] T043 quickstart.md canlı doğrulama: AppHost ayağa kalkar (SC-002), uçtan uca alışveriş + ingestion + login akışları (SC-003)
+- [X] T043 quickstart.md canlı doğrulama: AppHost ayağa kalkar (SC-002), uçtan uca alışveriş + ingestion + login akışları (SC-003)
 - [X] T044 Son koşu (SC-004): `dotnet test` — silinen Discount testleri dışında test sayısı azalmadı doğrula
 
 ---
