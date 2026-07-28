@@ -4,8 +4,8 @@ namespace Supplier.Gateway.Tests;
 public class FeedSnapshotTests
 {
     private static IntegrationEvents.SupplierProductSnapshotReceived Snap(
-        decimal price = 100m, int stock = 10, decimal? pct = null, string? category = "Elektronik")
-        => new("supplier", "SUP-1", "Ürün", "Açıklama", "Apple", category, price, stock, pct);
+        decimal price = 100m, int stock = 10, string? category = "Elektronik")
+        => new("supplier", "SUP-1", "Ürün", "Açıklama", "Apple", category, price, stock);
 
     private static FeedSnapshot Published(IntegrationEvents.SupplierProductSnapshotReceived content)
     {
@@ -39,11 +39,11 @@ public class FeedSnapshotTests
     }
 
     [Fact]
-    public void DiscountRemoved_CountsAsChange()
+    public void StockChanged_CountsAsChange()
     {
-        var snapshot = Published(Snap(pct: 15m));
+        var snapshot = Published(Snap(stock: 10));
 
-        snapshot.IsUnchanged(Snap(pct: null)).ShouldBeFalse();
+        snapshot.IsUnchanged(Snap(stock: 5)).ShouldBeFalse();
     }
 
     [Fact]

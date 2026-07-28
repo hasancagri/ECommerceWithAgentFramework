@@ -1,7 +1,7 @@
 namespace IngestionAgent;
 
-// Kanonik mesajın tüketicisi: mesaj başına MAF workflow koşar; 016 R10 ile zincir 5 yazıcıdır
-// (brand → category → catalog → stock → discount), hepsi LLM-sürücülüdür (015). Adımlar arasında
+// Kanonik mesajın tüketicisi: mesaj başına MAF workflow koşar; zincir 4 yazıcıdır (018)
+// (brand → category → catalog → stock), hepsi LLM-sürücülüdür (015). Adımlar arasında
 // TİPLİ yazıcı sonuçları akar; kimlikler (BrandId/CategoryId/ProductId) sonuçların içinde KOD ile
 // taşınır. Short-circuit conditional edge'lerdedir (FR-003): her adımın hata edge'i sonucu doğrudan
 // terminale (finish) taşır, sonraki adımların LLM'i hiç çağrılmaz. finish tek çıkış kapısıdır
@@ -15,14 +15,12 @@ public sealed class SupplierSnapshotHandler
         CategoryWriterAgent categoryAgent,
         CatalogWriterAgent catalogAgent,
         StockWriterAgent stockAgent,
-        DiscountWriterAgent discountAgent,
         CancellationToken ct)
     {
         var brandWrite = new BrandWriteExecutor(brandAgent);
         var categoryWrite = new CategoryWriteExecutor(categoryAgent, message);
         var catalogWrite = new CatalogWriteExecutor(catalogAgent, message);
         var stockWrite = new StockWriteExecutor(stockAgent, message);
-        var discountWrite = new DiscountWriteExecutor(discountAgent, message);
         var finish = new FinishExecutor();
 
         // Her adımdan ya sonraki adıma (başarı) ya doğrudan terminale (hata) gidilir; semantik
@@ -35,9 +33,7 @@ public sealed class SupplierSnapshotHandler
             .AddEdge<CategoryWriterResult>(categoryWrite, finish, r => r is { IsSuccess: false })
             .AddEdge<CatalogWriterResult>(catalogWrite, stockWrite, r => r is { IsSuccess: true })
             .AddEdge<CatalogWriterResult>(catalogWrite, finish, r => r is { IsSuccess: false })
-            .AddEdge<StockWriterResult>(stockWrite, discountWrite, r => r is { IsSuccess: true })
-            .AddEdge<StockWriterResult>(stockWrite, finish, r => r is { IsSuccess: false })
-            .AddEdge(discountWrite, finish)
+            .AddEdge(stockWrite, finish)
             .WithOutputFrom(finish)
             .Build();
 

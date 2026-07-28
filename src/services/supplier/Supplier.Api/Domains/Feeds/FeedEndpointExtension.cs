@@ -36,6 +36,4 @@ public record SupplierProduct(
     string Brand,
     string? Category,
     decimal Price,
-    int StockQuantity,
-    string? DiscountCode,
-    decimal? DiscountPercent);
+    int StockQuantity);

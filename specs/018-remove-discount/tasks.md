@@ -95,21 +95,21 @@ US2/US3 tüketici temizlikleri onu güvenli kılar. Her faz sonunda çözüm der
 
 **Independent Test**: Feed tetiklenir, zincir Brand→Category→Catalog→Stock→Finish biter; ChatAgent araç listesinde indirim yok.
 
-- [ ] T023 [P] [US3] Sil: src/agents/IngestionAgent/Workflows/05_DiscountWrite/ (klasörün tamamı)
-- [ ] T024 [US3] src/agents/IngestionAgent/SupplierSnapshotHandler.cs: DiscountWrite düğümü/edge'leri kaldır;
+- [X] T023 [P] [US3] Sil: src/agents/IngestionAgent/Workflows/05_DiscountWrite/ (klasörün tamamı)
+- [X] T024 [US3] src/agents/IngestionAgent/SupplierSnapshotHandler.cs: DiscountWrite düğümü/edge'leri kaldır;
       StockWrite success-edge'ini doğrudan finish collector'a bağla (T023'e bağlı)
-- [ ] T025 [US3] src/agents/IngestionAgent/{Program.cs,ConstValues.cs,Workflows/WriterResult.cs,GlobalUsings.cs}:
+- [X] T025 [US3] src/agents/IngestionAgent/{Program.cs,ConstValues.cs,Workflows/WriterResult.cs,GlobalUsings.cs}:
       DiscountWriterAgent kaydı, talimat/araç sabitleri, DiscountWriterResult ve using temizliği (T023'e bağlı)
-- [ ] T026 [P] [US3] src/agents/ChatAgent/{Program.cs,ConstValues.cs}: Discount MCP kaydı, indirim araç adları,
+- [X] T026 [P] [US3] src/agents/ChatAgent/{Program.cs,ConstValues.cs}: Discount MCP kaydı, indirim araç adları,
       agent talimatlarındaki indirim izleri ve varsa scope talepleri kaldır
-- [ ] T027 [US3] src/others/Shared/IntegrationEvents.cs: SupplierProductSnapshotReceived.DiscountPercent alanını kaldır
-- [ ] T028 [US3] src/services/supplier/Supplier.Gateway/Domains/Feeds/SupplierFeedAdapter.cs: wire + kanonik modelden
+- [X] T027 [US3] src/others/Shared/IntegrationEvents.cs: SupplierProductSnapshotReceived.DiscountPercent alanını kaldır
+- [X] T028 [US3] src/services/supplier/Supplier.Gateway/Domains/Feeds/SupplierFeedAdapter.cs: wire + kanonik modelden
       DiscountPercent/DiscountCode eşlemelerini kaldır (T027 ile birlikte)
-- [ ] T029 [US3] src/services/supplier/Supplier.Api/Domains/Feeds/FeedEndpointExtension.cs wire modeli +
+- [X] T029 [US3] src/services/supplier/Supplier.Api/Domains/Feeds/FeedEndpointExtension.cs wire modeli +
       Datasets/products.json: indirim alanlarını kaldır
-- [ ] T030 [P] [US3] tests/Supplier.Gateway.Tests/{SupplierFeedAdapterTests,FeedSnapshotTests,FeedPullTests}.cs: indirim alan izleri temizle
-- [ ] T031 [P] [US3] tests/IngestionAgent.Tests/WorkflowSemanticsSpikeTests.cs: DiscountWrite adım izlerini temizle
-- [ ] T032 [US3] Checkpoint: `dotnet build` + `dotnet test` yeşil; zincir topolojisi 4 yazıcı + finish
+- [X] T030 [P] [US3] tests/Supplier.Gateway.Tests/{SupplierFeedAdapterTests,FeedSnapshotTests,FeedPullTests}.cs: indirim alan izleri temizle
+- [X] T031 [P] [US3] tests/IngestionAgent.Tests/WorkflowSemanticsSpikeTests.cs: DiscountWrite adım izlerini temizle
+- [X] T032 [US3] Checkpoint: `dotnet build` + `dotnet test` yeşil; zincir topolojisi 4 yazıcı + finish
 
 **Checkpoint**: US3 bağımsız doğrulanabilir — ingestion indirim adımı olmadan biter, agent'larda indirim aracı yok.
 

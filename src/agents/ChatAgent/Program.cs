@@ -32,7 +32,6 @@ builder.AddOpenAIConversations();
 var gatewayUrl = builder.Configuration["services:gateway:http:0"] ?? "http://localhost:5178";
 var basketUrl = $"{gatewayUrl}/mcp/{McpServers.Basket}";
 var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
-var discountUrl = $"{gatewayUrl}/mcp/{McpServers.Discount}";
 var orderUrl = $"{gatewayUrl}/mcp/{McpServers.Order}";
 var paymentUrl = $"{gatewayUrl}/mcp/{McpServers.Payment}";
 var stockUrl = $"{gatewayUrl}/mcp/{McpServers.Stock}";
@@ -45,14 +44,12 @@ var stockUrl = $"{gatewayUrl}/mcp/{McpServers.Stock}";
 [
     (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts])
 ];
-// assistant: catalog okuma + tum basket tool'lari + servis-basi okuma tool'lari (stok, siparis, odeme, indirim).
+// assistant: catalog okuma + tum basket tool'lari + servis-basi okuma tool'lari (stok, siparis, odeme).
 (string Name, string Url, string ClientName, string[] allowedTools)[] assistantAgentTools =
 [
     (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
     (McpServers.Basket, basketUrl, McpClients.WithToken,
-        [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem,
-            BasketTools.ApplyDiscountCoupon, BasketTools.RemoveDiscountCoupon]),
-    (McpServers.Discount, discountUrl, McpClients.WithToken, [DiscountTools.GetDiscount]),
+        [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem]),
     (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders]),
     (McpServers.Payment, paymentUrl, McpClients.WithToken, [PaymentTools.GetMyPayments]),
     (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock])

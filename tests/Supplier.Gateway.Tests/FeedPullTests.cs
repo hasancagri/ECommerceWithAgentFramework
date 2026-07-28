@@ -4,7 +4,7 @@ namespace Supplier.Gateway.Tests;
 public class FeedPullTests
 {
     private static SupplierFeedRecord Wire(string externalId, decimal price = 100m)
-        => new(externalId, "Ürün", "Açıklama", "Apple", "Elektronik", price, 10, null, null);
+        => new(externalId, "Ürün", "Açıklama", "Apple", "Elektronik", price, 10);
 
     [Fact]
     public void Parse_NullOrEmptyBody_ReturnsEmpty()
@@ -26,14 +26,14 @@ public class FeedPullTests
     {
         const string body = """
             [{ "externalId": "SUP-1", "name": "Ürün", "description": "Açıklama", "brand": "Apple",
-               "price": 149.90, "stockQuantity": 25, "discountCode": null, "discountPercent": 10 }]
+               "price": 149.90, "stockQuantity": 25 }]
             """;
 
         var records = SupplierFeedAdapter.Parse(body);
 
         records.Count.ShouldBe(1);
         records[0].ExternalId.ShouldBe("SUP-1");
-        records[0].DiscountPercent.ShouldBe(10m);
+        records[0].StockQuantity.ShouldBe(25);
     }
 
     [Fact]

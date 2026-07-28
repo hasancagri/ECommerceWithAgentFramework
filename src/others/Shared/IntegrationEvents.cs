@@ -26,7 +26,7 @@ public static class IntegrationEvents
     public record ReservationExpired(Guid ProductId, Guid UserId);
 
     // 007-supplier-gateway: kaydın tedarikçideki GÜNCEL hali (snapshot, diff değil).
-    // Tedarikçi kimliği tip değil alandır (SupplierCode); DiscountPercent null = indirim yok → remove.
+    // Tedarikçi kimliği tip değil alandır (SupplierCode).
     // 016: Category dış veri olduğundan nullable taşınır; ancak kategori ZORUNLUDUR — boş/eksik
     // gelen kayıt ingestion CategoryWrite adımında kesilir (retry/DLQ), kataloğa yazılmaz.
     public record SupplierProductSnapshotReceived(
@@ -37,6 +37,5 @@ public static class IntegrationEvents
         string Brand,
         string? Category,
         decimal Price,
-        int StockQuantity,
-        decimal? DiscountPercent);
+        int StockQuantity);
 }
