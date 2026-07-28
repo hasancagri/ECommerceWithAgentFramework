@@ -11,7 +11,9 @@ public record StorefrontProductViewModel(
     int? StockQuantity,
     bool? IsInStock,
     decimal? DiscountRate,
-    string? Category)
+    string? Category,
+    Guid? CategoryId,
+    Guid? BrandId)
 {
     public string TruncateDescription(int maxLength)
     {
