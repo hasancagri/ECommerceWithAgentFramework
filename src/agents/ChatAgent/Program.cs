@@ -35,18 +35,20 @@ var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
 var orderUrl = $"{gatewayUrl}/mcp/{McpServers.Order}";
 var paymentUrl = $"{gatewayUrl}/mcp/{McpServers.Payment}";
 var stockUrl = $"{gatewayUrl}/mcp/{McpServers.Stock}";
+var storefrontUrl = $"{gatewayUrl}/mcp/{McpServers.Storefront}";
 
 // Her agent'in toplayacagi MCP tool'lari: (server, url, baglanacagi named-client, izin verilen tool'lar).
 // Tek kaynak; delete_product hicbir listede yok. ClientName = MCP'ye ozel handler/baglanti; kendi
 // server'larimiz Identity token forward eder. Yeni bir dis MCP kendi ClientName'iyle eklenir.
-// public: yalnizca arama (add_to_cart olmadigi icin get_product'a gerek yok).
+// public: yalnizca vitrin aramasi (019 FR-018: Catalog search_products anonim agent'tan cikti).
 (string Name, string Url, string ClientName, string[] allowedTools)[] publicAgentTools =
 [
-    (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts])
+    (McpServers.Storefront, storefrontUrl, McpClients.WithToken, [StorefrontTools.SearchStorefrontProducts])
 ];
-// assistant: catalog okuma + tum basket tool'lari + servis-basi okuma tool'lari (stok, siparis, odeme).
+// assistant: vitrin aramasi + catalog okuma (sepet akisi icin) + basket + servis-basi okuma tool'lari.
 (string Name, string Url, string ClientName, string[] allowedTools)[] assistantAgentTools =
 [
+    (McpServers.Storefront, storefrontUrl, McpClients.WithToken, [StorefrontTools.SearchStorefrontProducts]),
     (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
     (McpServers.Basket, basketUrl, McpClients.WithToken,
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem]),
@@ -73,7 +75,7 @@ builder.Services.AddHttpClient(McpClients.NoToken)
 
 builder.Services.AddSingleton<IMcpToolProvider, McpToolProvider>();
 
-// PUBLIC agent (anonim): yalnizca catalog.
+// PUBLIC agent (anonim): yalnizca storefront aramasi.
 var publicAgent = builder.AddAIAgent("public", (sp, name) =>
 {
     var tools = sp.GetRequiredService<IMcpToolProvider>()

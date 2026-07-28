@@ -24,10 +24,10 @@
 
 **Purpose**: Yeni bağımlılıklar ve pgvector'lı Postgres imajı
 
-- [ ] T001 `Directory.Packages.props`: CPM'e `Marten.PgVector` 9.5.0 ve `Pgvector` 0.3.2 sürümlerini ekle (research R1)
-- [ ] T002 `src/services/storefront/Storefront.Api/Storefront.Api.csproj`: sürümsüz referanslar — Marten.PgVector, Pgvector, Microsoft.Extensions.AI.OpenAI
-- [ ] T003 [P] `src/aspire/AppHost/AppHost.cs`: Postgres'e `WithImage("pgvector/pgvector", "pg17")` — `WithDataVolume` çağrısından ÖNCE (research R4)
-- [ ] T004 [P] `src/services/storefront/Storefront.Api/GlobalUsings.cs`: yeni paket namespace'leri (Pgvector, Microsoft.Extensions.AI, ...)
+- [X] T001 `Directory.Packages.props`: CPM'e `Marten.PgVector` 9.5.0 ve `Pgvector` 0.3.2 sürümlerini ekle (research R1)
+- [X] T002 `src/services/storefront/Storefront.Api/Storefront.Api.csproj`: sürümsüz referanslar — Marten.PgVector, Pgvector, Microsoft.Extensions.AI.OpenAI
+- [X] T003 [P] `src/aspire/AppHost/AppHost.cs`: Postgres'e `WithImage("pgvector/pgvector", "pg17")` — `WithDataVolume` çağrısından ÖNCE (research R4)
+- [X] T004 [P] `src/services/storefront/Storefront.Api/GlobalUsings.cs`: yeni paket namespace'leri (Pgvector, Microsoft.Extensions.AI, ...)
 
 ---
 
@@ -37,9 +37,9 @@
 
 **⚠️ CRITICAL**: US2/US3/US4 bu faz bitmeden başlayamaz; US1 yalnız T005 sonrası derlenebilirlikten etkilenir
 
-- [ ] T005 Storefront `Program.cs`: `AddMarten`'a `UsePgVector()` — vector uzantısı mevcut startup migration'ıyla kurulur (research R1)
-- [ ] T006 Storefront `Program.cs`: OpenAI embedding generator Singleton DI; `OpenAI:ApiKey`+`EmbeddingModel` yoksa açılışta fail-fast (FR-019, R5)
-- [ ] T007 Storefront `appsettings.json`: `OpenAI:EmbeddingModel` = `text-embedding-3-small` anahtarı (ApiKey user-secrets ile verilir)
+- [X] T005 Storefront `Program.cs`: `AddMarten`'a `UsePgVector()` — vector uzantısı mevcut startup migration'ıyla kurulur (research R1)
+- [X] T006 Storefront `Program.cs`: OpenAI embedding generator Singleton DI; `OpenAI:ApiKey`+`EmbeddingModel` yoksa açılışta fail-fast (FR-019, R5)
+- [X] T007 Storefront `appsettings.json`: `OpenAI:EmbeddingModel` = `text-embedding-3-small` anahtarı (ApiKey user-secrets ile verilir)
 
 **Checkpoint**: Servis pgvector'lı ayağa kalkar; user story implementasyonu başlayabilir
 
@@ -53,18 +53,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] `tests/Storefront.Api.Tests/SearchStorefrontProductsTests.cs`: kriter-yok, MinPrice>MaxPrice, MaxResults 1..20 kırpma (önce FAIL)
+- [X] T008 [P] [US1] `tests/Storefront.Api.Tests/SearchStorefrontProductsTests.cs`: kriter-yok, MinPrice>MaxPrice, MaxResults 1..20 kırpma (önce FAIL)
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] `Domains/StorefrontView/Features/Agent/SearchStorefrontProducts.cs`: query record + Response + doğrulama kuralları (FR-002/003, data-model)
-- [ ] T010 [US1] Aynı dosyada handler LINQ yolu: satılabilirlik + Brands OR (case-insensitive) + fiyat/stok filtreleri, Name ASC, MaxResults (FR-004/005/008)
-- [ ] T011 [US1] Gerekliyse yeni mesaj kodları: `src/others/Common/Utils/Constants/CommonResourceConstants.cs` (kriter-yok, tutarsız aralık, embedding hatası)
-- [ ] T012 [US1] `Domains/StorefrontView/StorefrontViewEndpointExtension.cs`: `GET products/search` endpoint'i, `AllowAnonymous`, IsSuccess→200/400 (R8)
-- [ ] T013 [US1] `Domains/StorefrontView/StorefrontMcpTools.cs`: `search_storefront_products` ince sarmalayıcı — `IMessageBus` + `[Description]`'lar (kontrat)
-- [ ] T014 [P] [US1] `src/agents/ChatAgent/ConstValues.cs`: `McpServers.Storefront` + `StorefrontTools.SearchStorefrontProducts` sabitleri
-- [ ] T015 [US1] ChatAgent `Program.cs` + `appsettings.json`: storefront MCP istemcisi (gateway `/mcp/storefront`); tool iki agent allowlist'ine (FR-017)
-- [ ] T016 [US1] `ConstValues.cs` prompt'ları: public agent'tan Catalog `search_products` ÇIKAR (FR-018); ürün keşfi talimatı storefront tool'una yönlensin
+- [X] T009 [US1] `Domains/StorefrontView/Features/Agent/SearchStorefrontProducts.cs`: query record + Response + doğrulama kuralları (FR-002/003, data-model)
+- [X] T010 [US1] Aynı dosyada handler LINQ yolu: satılabilirlik + Brands OR (case-insensitive) + fiyat/stok filtreleri, Name ASC, MaxResults (FR-004/005/008)
+- [X] T011 [US1] Gerekliyse yeni mesaj kodları: `src/others/Common/Utils/Constants/CommonResourceConstants.cs` (kriter-yok, tutarsız aralık, embedding hatası)
+- [X] T012 [US1] `Domains/StorefrontView/StorefrontViewEndpointExtension.cs`: `GET products/search` endpoint'i, `AllowAnonymous`, IsSuccess→200/400 (R8)
+- [X] T013 [US1] `Domains/StorefrontView/StorefrontMcpTools.cs`: `search_storefront_products` ince sarmalayıcı — `IMessageBus` + `[Description]`'lar (kontrat)
+- [X] T014 [P] [US1] `src/agents/ChatAgent/ConstValues.cs`: `McpServers.Storefront` + `StorefrontTools.SearchStorefrontProducts` sabitleri
+- [X] T015 [US1] ChatAgent `Program.cs` + `appsettings.json`: storefront MCP istemcisi (gateway `/mcp/storefront`); tool iki agent allowlist'ine (FR-017)
+- [X] T016 [US1] `ConstValues.cs` prompt'ları: public agent'tan Catalog `search_products` ÇIKAR (FR-018); ürün keşfi talimatı storefront tool'una yönlensin
 
 **Checkpoint**: Filtreli arama REST + sohbetten uçtan uca çalışır; anlamsal altyapı olmadan da yeşil
 
@@ -78,14 +78,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T017 [P] [US2] `tests/Storefront.Api.Tests/ProductEmbeddingTests.cs`: arama metni kurma (null alan atlama) + TextHash üretimi (önce FAIL)
+- [X] T017 [P] [US2] `tests/Storefront.Api.Tests/ProductEmbeddingTests.cs`: arama metni kurma (null alan atlama) + TextHash üretimi (önce FAIL)
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] `Domains/StorefrontView/ProductEmbedding.cs`: Marten dokümanı (Id=ProductId, TextHash, Embedding, UpdatedTime) + metin/SHA-256 kurucular
-- [ ] T019 [US2] `StorefrontEventHandlers.cs`: ProductChangedEvent'te view save sonrası embedding üret (`GenerateVectorAsync`) + upsert (FR-012, data-model)
-- [ ] T020 [US2] Handler SQL yolu: sorgu embed + `mt_doc_storefrontview` ⋈ `mt_doc_productembedding`, `<=>` cosine ORDER BY, eşik 0.7, LIMIT (R3/R6, FR-006)
-- [ ] T021 [US2] Arama anı embedding servis hatası → resource sabitli hata Result'ı; filtre-yalnız yol etkilenmez (edge case, SC-005, FR-016)
+- [X] T018 [US2] `Domains/StorefrontView/ProductEmbedding.cs`: Marten dokümanı (Id=ProductId, TextHash, Embedding, UpdatedTime) + metin/SHA-256 kurucular
+- [X] T019 [US2] `StorefrontEventHandlers.cs`: ProductChangedEvent'te view save sonrası embedding üret (`GenerateVectorAsync`) + upsert (FR-012, data-model)
+- [X] T020 [US2] Handler SQL yolu: sorgu embed + `mt_doc_storefrontview` ⋈ `mt_doc_productembedding`, `<=>` cosine ORDER BY, eşik 0.7, LIMIT (R3/R6, FR-006)
+- [X] T021 [US2] Arama anı embedding servis hatası → resource sabitli hata Result'ı; filtre-yalnız yol etkilenmez (edge case, SC-005, FR-016)
 
 **Checkpoint**: `?searchText=...` anlamsal sonuç döner; embedding'i olmayan ürün sıralamaya girmez (US2-S3)
 
@@ -99,8 +99,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] SQL yoluna hard filtre WHERE'leri: Brands OR, MinPrice/MaxPrice, MinStock cast'leri; anlamsal sıralama korunur (FR-007)
-- [ ] T023 [P] [US3] `SearchStorefrontProductsTests.cs`: filtre + SearchText birlikte verilen isteklerin doğrulama/birleşim kuralları
+- [X] T022 [US3] SQL yoluna hard filtre WHERE'leri: Brands OR, MinPrice/MaxPrice, MinStock cast'leri; anlamsal sıralama korunur (FR-007)
+- [X] T023 [P] [US3] `SearchStorefrontProductsTests.cs`: filtre + SearchText birlikte verilen isteklerin doğrulama/birleşim kuralları
 
 **Checkpoint**: Üç arama modu (filtre / anlamsal / hibrit) tek slice'tan tutarlı çalışır
 
@@ -112,9 +112,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T024 [US4] `StorefrontEventHandlers.cs`: TextHash aynıysa üretimi atla (FR-013); StockChangedEvent embedding'e dokunmaz (SC-004)
-- [ ] T025 [US4] Üretim hatası try/catch + log; view kaydı etkilenmez (FR-014); kayıt eksik kalır → sonraki event'te hash farkıyla retry (FR-015)
-- [ ] T026 [P] [US4] `ProductEmbeddingTests.cs`: aynı metin → hash eşit (üretim gerekmez); alan değişimi → hash farklı senaryoları
+- [X] T024 [US4] `StorefrontEventHandlers.cs`: TextHash aynıysa üretimi atla (FR-013); StockChangedEvent embedding'e dokunmaz (SC-004)
+- [X] T025 [US4] Üretim hatası try/catch + log; view kaydı etkilenmez (FR-014); kayıt eksik kalır → sonraki event'te hash farkıyla retry (FR-015)
+- [X] T026 [P] [US4] `ProductEmbeddingTests.cs`: aynı metin → hash eşit (üretim gerekmez); alan değişimi → hash farklı senaryoları
 
 **Checkpoint**: Aynı feed tekrar beslendiğinde üretim sayısı değişmez; hata anında vitrin bozulmaz
 
@@ -122,8 +122,8 @@
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T027 Tüm çözüm: `dotnet build` + `dotnet test` yeşil; yeni kod uyarısız derlenir
-- [ ] T028 [P] `README.md`: Storefront hibrit arama + pgvector notu (mimari bölümüne kısa ekleme)
+- [X] T027 Tüm çözüm: `dotnet build` + `dotnet test` yeşil; yeni kod uyarısız derlenir
+- [X] T028 [P] `README.md`: Storefront hibrit arama + pgvector notu (mimari bölümüne kısa ekleme)
 - [ ] T029 `quickstart.md` canlı doğrulama: senaryo 1-7 Aspire üzerinde koşulur; benzerlik eşiği gerekirse kalibre edilir (R6)
 
 ---

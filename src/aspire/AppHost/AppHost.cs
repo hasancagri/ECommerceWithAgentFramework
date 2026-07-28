@@ -1,6 +1,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+// 019: pgvector'lu resmi imaj. pg17 = Aspire default'u (postgres:17.x) ile ayni veri yolu; mevcut
+// volume uyumlu. pg18 tag'i KULLANMA (WithDataVolume tag'i parse edemez, 17-yolunu mount eder).
+// WithImage, WithDataVolume'dan ONCE: veri yolu o andaki imaj annotation'indan cozulur.
 var postgres = builder.AddPostgres("postgres")
+    .WithImage("pgvector/pgvector", "pg17")
     .WithPgAdmin()
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);

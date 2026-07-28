@@ -15,6 +15,11 @@ builder.Services.AddMarten(opts =>
         // Optimistic concurrency: farkli kaynaklarin ayni satira eszamanli yazmasinda lost-update
         // olmaz — cakisan handler ConcurrencyException alir, Wolverine retry'da taze yukleyip uygular.
         opts.Schema.For<StorefrontView>().Identity(x => x.ProductId).UseOptimisticConcurrency(true);
+
+        // 019: vector uzantisini startup migration'i kurar (R1); anlamsal yan-kayit (concurrency
+        // gerekmez — tek yazici, Sequential kuyruk).
+        opts.UsePgVector();
+        opts.Schema.For<ProductEmbedding>().Identity(x => x.ProductId);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -45,6 +50,16 @@ builder.Host.UseWolverine(opts =>
     // Konvansiyonel keşif bu sınıfı atlıyor (nedeni araştırılacak); açık kayıt garantili yol.
     opts.Discovery.IncludeType(typeof(Storefront.Api.StorefrontEventHandlers));
 });
+
+// 019 FR-019 fail-fast: embedding config'i ZORUNLU; eksikse servis ACILMAZ (IngestionAgent deseni).
+string openAiKey = builder.Configuration["OpenAI:ApiKey"]
+    ?? throw new InvalidOperationException("OpenAI:ApiKey yapılandırılmamış (user-secrets/appsettings)");
+string embeddingModel = builder.Configuration["OpenAI:EmbeddingModel"]
+    ?? throw new InvalidOperationException("OpenAI:EmbeddingModel yapılandırılmamış (appsettings)");
+
+// Singleton: agent/AI istemci tipleri baslangicta yakalanir (repo konvansiyonu).
+builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(
+    new OpenAI.OpenAIClient(openAiKey).GetEmbeddingClient(embeddingModel).AsIEmbeddingGenerator());
 
 builder.Services.AddApiVersioning(options =>
 {
