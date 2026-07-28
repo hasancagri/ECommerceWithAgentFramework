@@ -28,7 +28,7 @@ public class StorefrontService(
         var content = productsAsResult.Content!;
         var products = content.Data
             .Select(p => new StorefrontProductViewModel(p.ProductId, p.Name, p.Description, p.Brand,
-                p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.DiscountRate))
+                p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.DiscountRate, p.Category))
             .ToList();
 
         return ServiceResult<PagedProductListViewModel>.Success(new PagedProductListViewModel(

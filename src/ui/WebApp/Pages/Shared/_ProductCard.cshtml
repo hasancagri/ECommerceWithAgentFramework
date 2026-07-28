@@ -26,6 +26,11 @@
                 {
                     <span class="badge bg-danger">%@(Model.DiscountRate.Value.ToString("0.#")) Off</span>
                 }
+                @* 016: kategori rozeti; null/boş = Catalog raporlamadı, çizilmez. *@
+                @if (!string.IsNullOrEmpty(Model.Category))
+                {
+                    <span class="badge bg-info">@Model.Category</span>
+                }
             </p>
             <p class="card-text">@Model.TruncateDescription(100)</p>
             <p class="card-text">

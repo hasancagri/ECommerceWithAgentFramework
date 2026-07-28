@@ -10,7 +10,8 @@ public record StorefrontProductViewModel(
     string? ImageUrl,
     int? StockQuantity,
     bool? IsInStock,
-    decimal? DiscountRate)
+    decimal? DiscountRate,
+    string? Category)
 {
     public string TruncateDescription(int maxLength)
     {
