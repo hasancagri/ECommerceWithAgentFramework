@@ -14,4 +14,7 @@ public interface IBasketRefitService
 
     [Delete("/api/v1/baskets/item/{itemId}")]
     Task<ApiResponse<object>> DeleteItemAsync(Guid itemId);
+
+    [Post("/api/v1/baskets/purge-expired")]
+    Task<ApiResponse<object>> PurgeExpiredAsync();
 }
