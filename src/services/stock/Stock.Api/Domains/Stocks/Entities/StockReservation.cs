@@ -24,4 +24,7 @@ public class StockReservation
 
     // Adedi degistirir; ExpiresAt'e DOKUNMAZ (yenileme yok).
     public void SetQuantity(int quantity) => Quantity = quantity;
+
+    // 017: yalniz aggregate acik mutlak bitis (sepet capasi) aldiginda cagirir; sabit-TTL yolunda kullanilmaz.
+    public void SetExpiresAt(DateTimeOffset expiresAt) => ExpiresAt = expiresAt;
 }

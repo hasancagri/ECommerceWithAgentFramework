@@ -23,6 +23,9 @@ message SetReservedQuantityRequest {
   string product_id = 1;   // Guid
   string user_id = 2;      // Guid (sepet sahibi)
   int32 quantity = 3;      // hedef adet; 0 => release
+  // 017: opsiyonel mutlak bitis (ISO-8601 "O", UTC). Bos/verilmemis => sunucu sabit TTL uygular.
+  // Verilmisse rezervasyon bu mutlak zamanla yaratilir; mevcut rezervasyonun bitisi buna esitlenir.
+  string expires_at = 4;
 }
 
 message ReleaseRequest {

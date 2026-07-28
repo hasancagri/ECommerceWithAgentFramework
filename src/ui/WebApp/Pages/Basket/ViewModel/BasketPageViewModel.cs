@@ -14,6 +14,10 @@ public record BasketPageViewModel
 
     public bool HasItem => Items.Count > 0;
 
+    // 017: sepet capasi + dolma durumu — tablo ustu tek geri sayim banner'i.
+    public DateTimeOffset? ReservationExpiresAt { get; set; }
+    public bool IsReservationExpired { get; set; }
+
 
     public decimal GetTotalPrice()
     {
@@ -34,5 +38,4 @@ public record BasketViewModelItem(
     string Name,
     decimal Price,
     decimal? PriceWithDiscountRate,
-    int Quantity,
-    DateTimeOffset? ReservationExpiresAt);
+    int Quantity);

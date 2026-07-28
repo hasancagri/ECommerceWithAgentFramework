@@ -1,4 +1,4 @@
-﻿namespace WebApp.Pages.Basket.Dto;
+namespace WebApp.Pages.Basket.Dto;
 
 public record BasketItemDto(
     Guid Id,
@@ -6,8 +6,7 @@ public record BasketItemDto(
     string ImageUrl,
     decimal Price,
     decimal? PriceByApplyDiscountRate,
-    // 012: adet + rezervasyon bitis zamani (UI geri sayimi).
-    int Quantity,
-    DateTimeOffset? ReservationExpiresAt)
+    // 012: adet. Rezervasyon bitisi artik sepet duzeyinde (017, BasketResponse).
+    int Quantity)
 {
 }

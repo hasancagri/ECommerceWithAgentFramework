@@ -41,12 +41,14 @@ public static class SetBasketItemQuantity
                     new SetBasketItemQuantityResponse { Id = basket.Id, Quantity = 0, Available = 0 });
             }
 
-            var reserve = await reservation.SetReservedQuantityAsync(cmd.ProductId, cmd.UserId, cmd.Quantity, ct);
+            // 017 (FR-003): mevcut capa gecirilir — rezervasyon capayla hizalanir, capa DEGISMEZ.
+            var reserve = await reservation.SetReservedQuantityAsync(
+                cmd.ProductId, cmd.UserId, cmd.Quantity, basket.ReservationExpiresAt, ct);
             if (!reserve.Success)
                 return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(
                     new MessageItem { Property = nameof(cmd.Quantity), Code = reserve.Code });
 
-            basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity, reserve.ExpiresAt);
+            basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity);
             session.Store(basket);
 
             return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Ok(new SetBasketItemQuantityResponse

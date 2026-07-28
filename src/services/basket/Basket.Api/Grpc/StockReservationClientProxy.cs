@@ -20,8 +20,9 @@ public sealed class StockReservationClientProxy(StockReservation.StockReservatio
     // Deadline -> DeadlineExceeded RpcException -> mevcut catch fail-closed'a duser (hizli reddetme).
     private static readonly TimeSpan CallDeadline = TimeSpan.FromSeconds(5);
 
+    // 017: expiresAt = sepet capasi (mutlak). Her cagrida gecirilir; rezervasyon bu bitisle hizalanir.
     public async Task<ReservationResult> SetReservedQuantityAsync(
-        Guid productId, Guid userId, int quantity, CancellationToken ct)
+        Guid productId, Guid userId, int quantity, DateTimeOffset? expiresAt, CancellationToken ct)
     {
         try
         {
@@ -29,7 +30,8 @@ public sealed class StockReservationClientProxy(StockReservation.StockReservatio
             {
                 ProductId = productId.ToString(),
                 UserId = userId.ToString(),
-                Quantity = quantity
+                Quantity = quantity,
+                ExpiresAt = expiresAt?.ToString("O") ?? string.Empty
             }, deadline: DateTime.UtcNow.Add(CallDeadline), cancellationToken: ct);
 
             return new ReservationResult
