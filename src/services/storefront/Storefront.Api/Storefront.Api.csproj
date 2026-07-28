@@ -4,11 +4,16 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <!-- 019: OpenAI:ApiKey user-secrets ile verilir (quickstart); model adi appsettings'te. -->
+        <UserSecretsId>b7c2f4a9-3d1e-4f6b-8a2c-019e0e0e0e0e</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Marten" />
         <PackageReference Include="Marten.Newtonsoft" />
+        <PackageReference Include="Marten.PgVector" />
+        <PackageReference Include="Pgvector" />
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="WolverineFx" />
         <PackageReference Include="WolverineFx.RuntimeCompilation" />
