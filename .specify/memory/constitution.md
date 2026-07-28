@@ -1,8 +1,7 @@
-<!-- Sync Impact Report — v1.2.0 → v1.3.0 (2026-07-27, MINOR)
-     Modified: İlke II "Zengin Aggregate" — "her serviste tek aggregate root" kaldırıldı;
-     BC gerektiği kadar zengin aggregate içerebilir, anemik aggregate yasak, Id-referans kuralı eklendi.
-     Templates: plan/spec/tasks şablonları ilke adına bağımlı değil — değişiklik gerekmedi.
-     Runtime docs: CLAUDE.md aynı cümle hizalandı (✅). -->
+<!-- Sync Impact Report — v1.3.0 → v1.3.1 (2026-07-28, PATCH)
+     Modified: İlke I'deki açıklayıcı örnek — Discount BC'si sistemden kaldırıldı (018);
+     örnek yaşayan bir kavramla ("Ürün": Catalog aggregate / Basket entity / Storefront satırı) değiştirildi.
+     İlke içeriği değişmedi. Runtime docs: CLAUDE.md aynı örnekle hizalandı (✅). -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -18,9 +17,9 @@ Her mikroservis bir Bounded Context'tir ve sınırı fiziksel/serttir. Her conte
 kendi Postgres veritabanı, kendi Marten şeması ve kendi domain modeli vardır;
 **ortak (paylaşılan) bir domain modeli yoktur**.
 
-- Aynı kavram farklı context'te farklı modeldir (ör. "Discount" Basket'te bir value
-  object, Discount servisinde bir aggregate'tir). Bir context'in modeli diğerine
-  sızdırılamaz.
+- Aynı kavram farklı context'te farklı modeldir (ör. "Ürün" Catalog'da zengin bir
+  aggregate, Basket'te sade bir BasketItem entity'si, Storefront'ta bir read-model
+  satırıdır). Bir context'in modeli diğerine sızdırılamaz.
 - Bir servis başka bir servisin veritabanına, tablosuna, DbContext'ine veya
   aggregate'ine **doğrudan erişemez**.
 - Context'ler arası iletişim **integration event'leri** (RabbitMQ fanout), **MCP** ve —
@@ -164,7 +163,11 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.3.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-27
+**Version**: 1.3.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-28
+
+<!-- v1.3.1 (2026-07-28, PATCH): İlke I örneği güncellendi — Discount BC'si 018 ile
+     kaldırıldığından örnek "Ürün" (Catalog aggregate / Basket entity / Storefront read-model
+     satırı) olarak değiştirildi; ilke içeriği değişmedi. -->
 
 <!-- v1.3.0 (2026-07-27, MINOR): İlke II gevşetildi — "her serviste tek aggregate root"
      yerine "BC gerektiği kadar zengin aggregate içerebilir; anemik aggregate yasak;

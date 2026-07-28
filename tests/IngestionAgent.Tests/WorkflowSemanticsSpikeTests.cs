@@ -5,7 +5,7 @@ using Shared;
 namespace IngestionAgent.Tests;
 
 // SPIKE (FR-015, S4 emsali): MAF semantiği LLM'siz sahte executor'larla kanıtlanır. Tipli zincir
-// (015 refactor: RecordJob yok; 018: DiscountWrite kalktı, son adım stock) için doğrulananlar:
+// (015 refactor: RecordJob yok; 018: zincir stok adımıyla biter) için doğrulananlar:
 // - Conditional edge başarısız sonucu terminale yönlendirir; sonraki executor HİÇ tetiklenmez.
 // - Türetilmiş sonuç (CatalogWriterResult...) taban tipli terminale (Executor<WriterResult,...>)
 //   dispatch edilir; WithOutputFrom çıktısı WorkflowOutputEvent'ten tipli okunur.

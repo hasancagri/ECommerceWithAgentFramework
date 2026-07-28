@@ -71,7 +71,7 @@ dotnet test --filter "FullyQualifiedName~BasketTests.AddItem_AddsItemToBasket"
 
 ## Mimari
 
-Mikroservisler `src/services/{basket,catalog,discount,file,order,payment,stock,storefront,supplier}`
+Mikroservisler `src/services/{basket,catalog,file,order,payment,stock,storefront,supplier}`
 altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Shared`, `Identity.Server`),
 `src/aspire` (`AppHost`, `ServiceDefaults`), `src/agents` (`ChatAgent`, `IngestionAgent`) ve
 `src/ui` (`WebApp`). Fiziksel klasörler solution klasörleriyle birebir örtüşür.
@@ -85,7 +85,7 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Yalnız yeni/değişen kayıt `SupplierProductSnapshotReceived` event'iyle yayınlanır; sıra
   önce publish sonra save'dir (çökmede kayıp yerine tekrar; yazımlar idempotent).
 - `IngestionAgent` DB'siz, state'siz tüketicidir: mesaj başına MAF workflow
-  (BrandWrite → CategoryWrite → CatalogWrite → StockWrite → DiscountWrite, 016) koşar; her adım
+  (BrandWrite → CategoryWrite → CatalogWrite → StockWrite, 016/018) koşar; her adım
   kendi servisine scope'lu bir LLM agent'ıyla (ChatClientAgent) MCP tool'larını çağırır (015).
   Kimlikler (BrandId/CategoryId/ProductId) tipli sonuçlarla adımlar arasında KOD ile taşınır;
   kategori zorunludur (boş kategori CategoryWrite'ta kesilir). Short-circuit conditional
@@ -99,17 +99,17 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 
 **Her mikroservis bir Bounded Context'tir.** Sınır fiziksel ve serttir: her context'in kendi veritabanı, kendi şeması ve kendi domain modeli vardır; ortak (paylaşılan) bir domain modeli **yoktur**.
 
-- **Aynı kavram, farklı context'te farklı modeldir.** Örnek: "İndirim" hem `Basket` hem `Discount` context'inde geçer ama aynı şey değildir. Basket içinde `Discount` sadece sepete uygulanmış bir kupon+oranı temsil eden bir **value object**'tir (`Domains/Baskets/ValueObjects/Discount.cs`); Discount servisinde ise kendi `DiscountCode` / `DiscountRate` value object'leriyle yönetilen tam bir **aggregate**'tir. Bir context'in modelini diğerine sızdırma.
+- **Aynı kavram, farklı context'te farklı modeldir.** Örnek: "Ürün" hem `Catalog` hem `Basket` hem `Storefront` context'inde geçer ama aynı şey değildir. Catalog'da `Product` zengin bir **aggregate**'tir; Basket'te ürün, sepete alınmış ad+fiyat+adet taşıyan sade bir `BasketItem` **entity**'sidir; Storefront'ta ise ProductId-anahtarlı bir **read-model satırı**dır (`StorefrontView`). Bir context'in modelini diğerine sızdırma.
 - **Context'ler arası iletişim sadece integration event'leri ve MCP ile olur** (bkz. aşağıdaki ilgili bölümler). Bir servisin başka bir servisin aggregate'ine, DbContext'ine veya tablosuna doğrudan erişmesi yasaktır. Paylaşılabilen tek şey, `Shared.IntegrationEvents`'teki event kontratları gibi bilinçli olarak paylaşılan sözleşmelerdir.
 
 **Domain yapı taşları** (`Common.Domains` içindeki ortak temeller):
 
-- **Aggregate Root** — `AggregateRoot` (→ `BaseUserTrackModel` → `BaseModel`) sınıfından türer; `Id`, denetim alanları (`CreatedTime`/`UpdatedTime`, soft-delete için `IsDeleted`, kullanıcı izleri `CreatedUserId`...) hazır gelir. **Her servis tek BC'dir; bir BC gerektiği kadar zengin aggregate root içerebilir, hepsi `AggregateRoot`'tan türer** (ör. `Basket`, `Order`, `Payment`, `Discount`, `ProductStock`; Catalog: `Product`+`Category`+`Brand`). Anemik (davranışsız) aggregate yasaktır; aynı BC içindeki aggregate'ler birbirine Id ile referans verir. Aggregate root **tutarlılık sınırıdır** — dış dünya aggregate'i yalnızca kök üzerinden değiştirir.
+- **Aggregate Root** — `AggregateRoot` (→ `BaseUserTrackModel` → `BaseModel`) sınıfından türer; `Id`, denetim alanları (`CreatedTime`/`UpdatedTime`, soft-delete için `IsDeleted`, kullanıcı izleri `CreatedUserId`...) hazır gelir. **Her servis tek BC'dir; bir BC gerektiği kadar zengin aggregate root içerebilir, hepsi `AggregateRoot`'tan türer** (ör. `Basket`, `Order`, `Payment`, `ProductStock`; Catalog: `Product`+`Category`+`Brand`). Anemik (davranışsız) aggregate yasaktır; aynı BC içindeki aggregate'ler birbirine Id ile referans verir. Aggregate root **tutarlılık sınırıdır** — dış dünya aggregate'i yalnızca kök üzerinden değiştirir.
 - **Entity** — aggregate içinde kimliği (`Id`) olan, ama bağımsız yaşamayan nesne. İki türlüdür: kimlik + denetim alanlarına ihtiyaç duyan entity `BaseModel`'den türer (ör. `OrderItem`); ihtiyaç duymayan sade entity ise base sınıf almaz (ör. `BasketItem`). Her iki durumda da private setter + davranış metotları kullanılır ve entity aggregate'e aittir. **`BaseModel`, aggregate root olmayan ama `Id`/denetim alanları gereken sınıflar için temeldir; `AggregateRoot`'u yalnızca aggregate kökleri için kullan.**
-- **Value Object** — kimliği olmayan, değeriyle tanımlanan nesne; `record` olarak, private ctor + statik `Create` fabrikasıyla yazılır (`Discount`, `DiscountCode`, `DiscountRate`, `Address`).
+- **Value Object** — kimliği olmayan, değeriyle tanımlanan nesne; `record` olarak, private ctor + statik `Create` fabrikasıyla yazılır (`Address`).
 - **Enumeration** — tip-güvenli enum'lar için `Enumeration` temel sınıfı (int enum yerine).
 
-**Invariant'lar (değişmezler) aggregate'in içinde korunur.** Koleksiyonlar private tutulur ve yalnızca okunur olarak expose edilir (`_items` → `IReadOnlyList<BasketItem> Items`); mutasyon yalnızca aggregate metotlarından geçer (`AddItem`, `ApplyNewDiscount`...). Kural ihlali handler'da değil, aggregate'te yakalanır — ör. `ApplyNewDiscount` boş sepette `BASKET_IS_EMPTY` döner. **Yeni bir kural eklerken önce aggregate metoduna bak; iş mantığını handler'a değil aggregate'e koy.**
+**Invariant'lar (değişmezler) aggregate'in içinde korunur.** Koleksiyonlar private tutulur ve yalnızca okunur olarak expose edilir (`_items` → `IReadOnlyList<BasketItem> Items`); mutasyon yalnızca aggregate metotlarından geçer (`AddItem`, `SetItem`...). Kural ihlali handler'da değil, aggregate'te yakalanır — ör. `Order.AddOrderItem` boş ürün adında hata Result'ı döner. **Yeni bir kural eklerken önce aggregate metoduna bak; iş mantığını handler'a değil aggregate'e koy.**
 
 ### Vertical Slice + DDD
 
