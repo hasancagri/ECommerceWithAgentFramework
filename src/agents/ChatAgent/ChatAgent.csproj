@@ -8,10 +8,7 @@
   </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Marten" />
-        <PackageReference Include="Marten.Newtonsoft" />
         <PackageReference Include="Microsoft.Agents.AI.Hosting.OpenAI" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="Microsoft.Extensions.AI" />
         <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
         <PackageReference Include="ModelContextProtocol.Core" />
@@ -19,7 +16,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
-        <ProjectReference Include="..\..\others\Shared\Shared.csproj" />
     </ItemGroup>
 
 </Project>

@@ -11,5 +11,4 @@ public abstract class SchemaConstants
     public const string BasketSchemaName = "basketManagement";
     public const string StorefrontSchemaName = "storefrontManagement";
     public const string SupplierGatewaySchemaName = "supplierGatewayManagement";
-    public const string ChatAgentSchemaName = "chatAgentManagement";
 }

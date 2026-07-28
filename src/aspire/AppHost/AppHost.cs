@@ -23,7 +23,6 @@ var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
 var supplierGatewayDb = postgres.AddDatabase("supplierGatewayDb");
-var chatAgentDb = postgres.AddDatabase("chatAgentDb"); // 009: kalıcı konuşma deposu — yalnız chat-agent
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -111,10 +110,7 @@ web.WithReference(basketApi)
 
 var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(gateway)
-    .WithReference(chatAgentDb)
-    .WithReference(identityServer) // JWT doğrulama (009): Authority adresi service discovery'den
-    .WaitFor(gateway)
-    .WaitFor(chatAgentDb);
+    .WaitFor(gateway);
 
 // Tedarikçi simülatörü: DB'siz (dataset dosyalarını istek anında okur — 005/R12).
 var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
