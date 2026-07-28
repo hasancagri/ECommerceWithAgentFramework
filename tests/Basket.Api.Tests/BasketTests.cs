@@ -101,6 +101,25 @@ public class BasketTests
         basket.Items[0].Quantity.ShouldBe(4);
     }
 
+    // 021: SetItem kalan serbest stogu satirda saklar (efektif max hesabi icin).
+    [Fact]
+    public void SetItem_StoresAvailableStock()
+    {
+        var basket = BasketAggregate.Create(Guid.NewGuid());
+        var id = Guid.NewGuid();
+
+        basket.SetItem(id, "product", null, 100m, 2, availableStock: 3);
+
+        basket.Items[0].AvailableStock.ShouldBe(3);
+    }
+
+    // 021: sabit ust sinir 5'tir (tek otorite; hem yazma reddi hem UI-siniri buradan turer).
+    [Fact]
+    public void MaxItemQuantity_Is5()
+    {
+        BasketAggregate.MaxItemQuantity.ShouldBe(5);
+    }
+
     [Fact]
     public void GetItemQuantity_ReturnsQuantity_OrZeroWhenAbsent()
     {

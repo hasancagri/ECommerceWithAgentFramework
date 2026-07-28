@@ -5,6 +5,8 @@ public record BasketItemViewModel(
     string Name,
     string ImageUrl,
     decimal Price,
-    int Quantity)
+    int Quantity,
+    // 021: efektif ust sinir = min(5, kalan stok).
+    int MaxQuantity)
 {
 }

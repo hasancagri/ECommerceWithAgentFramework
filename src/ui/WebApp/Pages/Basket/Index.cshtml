@@ -61,7 +61,30 @@
                 @basketItem.Price.ToString("C")
             </td>
 
-            <td>@basketItem.Quantity</td>
+            <td>
+                @* 021: adet stepper — hedef adet (mevcut ± 1) view'dan tasinir; min 1'de − devre disi. *@
+                <div class="d-flex align-items-center gap-2">
+                    @if (basketItem.Quantity <= 1)
+                    {
+                        <button class="btn btn-outline-secondary btn-sm" disabled>&minus;</button>
+                    }
+                    else
+                    {
+                        <a class="btn btn-outline-secondary btn-sm" asp-page-handler="SetQuantity"
+                           asp-route-productId="@basketItem.Id" asp-route-quantity="@(basketItem.Quantity - 1)">&minus;</a>
+                    }
+                    <span class="fw-bold" style="min-width:2ch;text-align:center">@basketItem.Quantity</span>
+                    @if (basketItem.Quantity >= basketItem.MaxQuantity)
+                    {
+                        <button class="btn btn-outline-secondary btn-sm" disabled title="En fazla @basketItem.MaxQuantity adet">+</button>
+                    }
+                    else
+                    {
+                        <a class="btn btn-outline-secondary btn-sm" asp-page-handler="SetQuantity"
+                           asp-route-productId="@basketItem.Id" asp-route-quantity="@(basketItem.Quantity + 1)">+</a>
+                    }
+                </div>
+            </td>
 
             <td>
 

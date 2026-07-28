@@ -35,13 +35,18 @@ public static class GetBasket
         // 012: adet. Rezervasyon bitisi artik sepet duzeyinde (017).
         public int Quantity { get; set; }
 
+        // 021 (FR-007): satirin efektif ust siniri = min(5, adet + son bilinen kalan stok).
+        // UI + butonunu bu deger'e ulasinca devre disi birakir.
+        public int MaxQuantity { get; set; }
+
         public static GetBasketItemResponse From(BasketItem item) => new()
         {
             Id = item.Id,
             Name = item.Name,
             ImageUrl = item.ImageUrl,
             Price = item.Price,
-            Quantity = item.Quantity
+            Quantity = item.Quantity,
+            MaxQuantity = Math.Min(Basket.MaxItemQuantity, item.Quantity + item.AvailableStock)
         };
     }
 

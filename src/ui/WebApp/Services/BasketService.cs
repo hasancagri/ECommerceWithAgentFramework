@@ -47,7 +47,8 @@ public class BasketService(
                 item.Id,
                 item.Name,
                 item.ImageUrl, item.Price,
-                item.Quantity
+                item.Quantity,
+                item.MaxQuantity
             )).ToList(),
             responseAsResult.Content.ReservationExpiresAt,
             responseAsResult.Content.IsReservationExpired
@@ -76,7 +77,8 @@ public class BasketService(
             basketPageViewModel.Items.Add(new BasketViewModelItem(basketItem.Id, basketItem.ImageUrl,
                 basketItem.Name,
                 basketItem.Price,
-                basketItem.Quantity));
+                basketItem.Quantity,
+                basketItem.MaxQuantity));
 
 
         return ServiceResult<BasketPageViewModel>.Success(basketPageViewModel);
@@ -91,6 +93,20 @@ public class BasketService(
         {
             logger.LogProblemDetails(responseAsResult.Error);
             return ServiceResult.Error("An error occurred while deleting the basket");
+        }
+
+        return ServiceResult.Success();
+    }
+
+    // 021: sepet satiri adedini mutlak degere getirir. Stok yetmezse backend fail-closed doner.
+    public async Task<ServiceResult> SetQuantityAsync(Guid productId, int quantity)
+    {
+        var responseAsResult = await basketRefitService.SetQuantityAsync(productId, new SetQuantityRequest(quantity));
+
+        if (!responseAsResult.IsSuccessStatusCode)
+        {
+            logger.LogProblemDetails(responseAsResult.Error);
+            return ServiceResult.Error("An error occurred while updating the quantity");
         }
 
         return ServiceResult.Success();

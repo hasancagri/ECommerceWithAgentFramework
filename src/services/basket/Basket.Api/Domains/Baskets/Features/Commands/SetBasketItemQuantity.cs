@@ -41,6 +41,11 @@ public static class SetBasketItemQuantity
                     new SetBasketItemQuantityResponse { Id = basket.Id, Quantity = 0, Available = 0 });
             }
 
+            // 021 (FR-005): sabit ust sinir otoriter — 5 ustune cikilamaz.
+            if (cmd.Quantity > Basket.MaxItemQuantity)
+                return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(
+                    new MessageItem { Property = nameof(cmd.Quantity), Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_RANGE });
+
             // 017 (FR-003): mevcut capa gecirilir — rezervasyon capayla hizalanir, capa DEGISMEZ.
             var reserve = await reservation.SetReservedQuantityAsync(
                 cmd.ProductId, cmd.UserId, cmd.Quantity, basket.ReservationExpiresAt, ct);
@@ -48,7 +53,8 @@ public static class SetBasketItemQuantity
                 return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(
                     new MessageItem { Property = nameof(cmd.Quantity), Code = reserve.Code });
 
-            basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity);
+            // 021: kalan serbest stok saklanir (efektif max = min(5, adet+available)).
+            basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity, reserve.Available);
             session.Store(basket);
 
             return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Ok(new SetBasketItemQuantityResponse

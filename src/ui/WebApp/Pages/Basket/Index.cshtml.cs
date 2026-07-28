@@ -49,4 +49,13 @@ public class IndexModel(CatalogService catalogService, BasketService basketServi
 
         return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("product deleted from basket", "Index");
     }
+
+    // 021: sepet satiri adedini hedef degere getirir (mevcut ± 1, view'dan gelir).
+    // Basari -> guncel sepetle reload; hata (stok yetmez, fail-closed) -> toast + reload, adet degismez.
+    public async Task<IActionResult> OnGetSetQuantityAsync(Guid productId, int quantity)
+    {
+        var result = await basketService.SetQuantityAsync(productId, quantity);
+
+        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("basket updated", "Index");
+    }
 }

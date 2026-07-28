@@ -14,4 +14,7 @@ public interface IBasketRefitService
 
     [Delete("/api/v1/baskets/item/{itemId}")]
     Task<ApiResponse<object>> DeleteItemAsync(Guid itemId);
+
+    [Put("/api/v1/baskets/item/{productId}/quantity")]
+    Task<ApiResponse<object>> SetQuantityAsync(Guid productId, SetQuantityRequest body);
 }
