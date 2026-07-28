@@ -49,4 +49,13 @@ public class IndexModel(CatalogService catalogService, BasketService basketServi
 
         return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("product deleted from basket", "Index");
     }
+
+    // 020: sayac sifira ulasinca istemci buraya gelir; sepeti sunucuda bosaltir (idempotent),
+    // sonra temiz reload ile bos sepeti gosterir. Basarisiz olsa bile sayfa yenilenir.
+    public async Task<IActionResult> OnGetPurgeExpiredAsync()
+    {
+        await basketService.PurgeExpiredBasketAsync();
+
+        return RedirectToPage("Index");
+    }
 }
