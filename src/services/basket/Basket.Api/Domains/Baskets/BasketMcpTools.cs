@@ -30,7 +30,7 @@ public static class AddToCartMcpTool
 public static class GetBasketMcpTool
 {
     [McpServerTool(Name = "get_basket")]
-    [Description("Giris yapmis kullanicinin sepetini (urunler, toplam fiyat, indirim) doner.")]
+    [Description("Giris yapmis kullanicinin sepetini (urunler, toplam fiyat) doner.")]
     public static Task<FeatureObjectResultModel<Agent.GetBasket.GetBasketResponse>> GetBasketAsync(
         IMessageBus bus,
         IHttpContextAccessor http,
@@ -56,39 +56,5 @@ public static class RemoveBasketItemMcpTool
         var userId = CurrentUser.Load(http.HttpContext!.User).Id;
         return bus.InvokeAsync<FeatureObjectResultModel<Agent.DeleteBasketItem.DeleteBasketItemResponse>>(
             new Agent.DeleteBasketItem.DeleteBasketItemCommand(userId, itemId), ct);
-    }
-}
-
-[McpServerToolType]
-public static class ApplyDiscountCouponMcpTool
-{
-    [McpServerTool(Name = "apply_discount_coupon")]
-    [Description("Sepete bir indirim kuponu uygular.")]
-    public static Task<FeatureObjectResultModel<Agent.ApplyDiscountCoupon.ApplyDiscountCouponResponse>> ApplyDiscountCouponAsync(
-        [Description("Kupon kodu")] string coupon,
-        [Description("Indirim orani (0-1 arasi, orn. 0.15 = %15)")] float discountRate,
-        IMessageBus bus,
-        IHttpContextAccessor http,
-        CancellationToken ct)
-    {
-        var userId = CurrentUser.Load(http.HttpContext!.User).Id;
-        return bus.InvokeAsync<FeatureObjectResultModel<Agent.ApplyDiscountCoupon.ApplyDiscountCouponResponse>>(
-            new Agent.ApplyDiscountCoupon.ApplyDiscountCouponCommand(userId, coupon, discountRate), ct);
-    }
-}
-
-[McpServerToolType]
-public static class RemoveDiscountCouponMcpTool
-{
-    [McpServerTool(Name = "remove_discount_coupon")]
-    [Description("Sepete uygulanmis indirim kuponunu kaldirir.")]
-    public static Task<FeatureObjectResultModel<Agent.RemoveDiscountCoupon.RemoveDiscountCouponResponse>> RemoveDiscountCouponAsync(
-        IMessageBus bus,
-        IHttpContextAccessor http,
-        CancellationToken ct)
-    {
-        var userId = CurrentUser.Load(http.HttpContext!.User).Id;
-        return bus.InvokeAsync<FeatureObjectResultModel<Agent.RemoveDiscountCoupon.RemoveDiscountCouponResponse>>(
-            new Agent.RemoveDiscountCoupon.RemoveDiscountCouponCommand(userId), ct);
     }
 }

@@ -17,7 +17,6 @@ public class StorefrontViewTests
         view.ImageUrl.ShouldBeNull();
         view.IsDeleted.ShouldBeFalse();
         view.StockQuantity.ShouldBeNull();
-        view.DiscountRate.ShouldBeNull();
         view.IsAvailableForSale.ShouldBeFalse();
     }
 
@@ -41,7 +40,6 @@ public class StorefrontViewTests
         view.ImageUrl.ShouldBe("https://img/a.png");
         view.IsDeleted.ShouldBeTrue();
         view.StockQuantity.ShouldBeNull();
-        view.DiscountRate.ShouldBeNull();
     }
 
     [Fact]
@@ -54,19 +52,6 @@ public class StorefrontViewTests
         view.StockQuantity.ShouldBe(42);
         view.Name.ShouldBeNull();
         view.Price.ShouldBeNull();
-        view.DiscountRate.ShouldBeNull();
-    }
-
-    [Fact]
-    public void ApplyDiscount_SetsRate_NullClearsDiscount()
-    {
-        var view = StorefrontView.Create(Guid.NewGuid());
-
-        view.ApplyDiscount(0.15m);
-        view.DiscountRate.ShouldBe(0.15m);
-
-        view.ApplyDiscount(null);
-        view.DiscountRate.ShouldBeNull();
     }
 
     [Fact]
@@ -76,13 +61,11 @@ public class StorefrontViewTests
 
         view.ApplyStock(5);
         view.ApplyCatalog("Ürün", "Açıklama", 10m, Guid.NewGuid(), "Sony", Guid.NewGuid(), "Elektronik", null, false);
-        view.ApplyDiscount(0.2m);
 
         view.Name.ShouldBe("Ürün");
         view.Description.ShouldBe("Açıklama");
         view.Price.ShouldBe(10m);
         view.Brand.ShouldBe("Sony");
         view.StockQuantity.ShouldBe(5);
-        view.DiscountRate.ShouldBe(0.2m);
     }
 }

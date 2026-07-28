@@ -5,7 +5,6 @@ public record BasketItemViewModel(
     string Name,
     string ImageUrl,
     decimal Price,
-    decimal? PriceByApplyDiscountRate,
     int Quantity)
 {
 }

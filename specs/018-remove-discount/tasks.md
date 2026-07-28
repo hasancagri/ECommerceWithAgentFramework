@@ -20,7 +20,7 @@ US2/US3 tüketici temizlikleri onu güvenli kılar. Her faz sonunda çözüm der
 
 **Purpose**: Kaldırma öncesi taban çizgisi.
 
-- [ ] T001 Taban çizgisi doğrula: repo kökünde `dotnet build` + `dotnet test` yeşil (kaldırma öncesi durum kayıt altına alınır)
+- [X] T001 Taban çizgisi doğrula: repo kökünde `dotnet build` + `dotnet test` yeşil (kaldırma öncesi durum kayıt altına alınır)
 
 ---
 
@@ -40,50 +40,50 @@ US2/US3 tüketici temizlikleri onu güvenli kılar. Her faz sonunda çözüm der
 
 ### Basket BC
 
-- [ ] T002 [P] [US2] Sil: src/services/basket/Basket.Api/Domains/Baskets/Features/Commands/ApplyDiscountCoupon.cs ve RemoveDiscountCoupon.cs
-- [ ] T003 [P] [US2] Sil: src/services/basket/Basket.Api/Domains/Baskets/Features/Agent/ApplyDiscountCoupon.cs ve RemoveDiscountCoupon.cs
-- [ ] T004 [P] [US2] Sil: src/services/basket/Basket.Api/Domains/Baskets/ValueObjects/Discount.cs
-- [ ] T005 [US2] src/services/basket/Basket.Api/Domains/Baskets/Basket.cs: AppliedDiscount, IsApplyDiscount, GetTotalPriceWithAppliedDiscount,
+- [X] T002 [P] [US2] Sil: src/services/basket/Basket.Api/Domains/Baskets/Features/Commands/ApplyDiscountCoupon.cs ve RemoveDiscountCoupon.cs
+- [X] T003 [P] [US2] Sil: src/services/basket/Basket.Api/Domains/Baskets/Features/Agent/ApplyDiscountCoupon.cs ve RemoveDiscountCoupon.cs
+- [X] T004 [P] [US2] Sil: src/services/basket/Basket.Api/Domains/Baskets/ValueObjects/Discount.cs
+- [X] T005 [US2] src/services/basket/Basket.Api/Domains/Baskets/Basket.cs: AppliedDiscount, IsApplyDiscount, GetTotalPriceWithAppliedDiscount,
       ApplyNewDiscount, ApplyAvailableDiscount, ClearDiscount kaldır; GetTotalPrice tek fiyattan kalır
-- [ ] T006 [US2] src/services/basket/Basket.Api/Domains/Baskets/Entities/BasketEntities.cs: BasketItem.PriceByApplyDiscountRate ve
+- [X] T006 [US2] src/services/basket/Basket.Api/Domains/Baskets/Entities/BasketEntities.cs: BasketItem.PriceByApplyDiscountRate ve
       ApplyDiscount/ClearDiscount metotları kaldır
-- [ ] T007 [US2] BasketEndpointExtension.cs kupon endpoint'leri + BasketMcpTools.cs apply/remove_discount_coupon tool'ları kaldır
+- [X] T007 [US2] BasketEndpointExtension.cs kupon endpoint'leri + BasketMcpTools.cs apply/remove_discount_coupon tool'ları kaldır
       (src/services/basket/Basket.Api/Domains/Baskets/)
-- [ ] T008 [US2] Features/Queries/GetBasket.cs ve Features/Agent/GetBasket.cs yanıtlarından DiscountRate, Coupon,
+- [X] T008 [US2] Features/Queries/GetBasket.cs ve Features/Agent/GetBasket.cs yanıtlarından DiscountRate, Coupon,
       TotalPriceWithAppliedDiscount ve satır PriceByApplyDiscountRate alanlarını kaldır
 
 ### Order BC
 
-- [ ] T009 [P] [US2] src/services/order/Order.Api/Domains/Orders/Order.cs: DiscountRate alanı ve Create imzasındaki discountRate kaldır
-- [ ] T010 [US2] src/services/order/Order.Api/Domains/Orders/Features/Commands/CreateOrder.cs: command/response'tan DiscountRate kaldır
+- [X] T009 [P] [US2] src/services/order/Order.Api/Domains/Orders/Order.cs: DiscountRate alanı ve Create imzasındaki discountRate kaldır
+- [X] T010 [US2] src/services/order/Order.Api/Domains/Orders/Features/Commands/CreateOrder.cs: command/response'tan DiscountRate kaldır
 
 ### Storefront BC
 
-- [ ] T011 [P] [US2] src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontView.cs: DiscountRate + ApplyDiscount kaldır
-- [ ] T012 [US2] src/services/storefront/Storefront.Api/StorefrontEventHandlers.cs: DiscountChangedEvent handler'ını kaldır
-- [ ] T013 [US2] Features/Queries/GetProductStorefrontView.cs ve GetStorefrontProductList.cs yanıtlarından DiscountRate kaldır
+- [X] T011 [P] [US2] src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontView.cs: DiscountRate + ApplyDiscount kaldır
+- [X] T012 [US2] src/services/storefront/Storefront.Api/StorefrontEventHandlers.cs: DiscountChangedEvent handler'ını kaldır
+- [X] T013 [US2] Features/Queries/GetProductStorefrontView.cs ve GetStorefrontProductList.cs yanıtlarından DiscountRate kaldır
       (src/services/storefront/Storefront.Api/Domains/StorefrontView/)
 
 ### WebApp
 
-- [ ] T014 [P] [US2] Sil: src/ui/WebApp/Services/Refit/IDiscountRefitService.cs, Pages/Basket/Dto/GetDiscountByCouponResponse.cs ve
+- [X] T014 [P] [US2] Sil: src/ui/WebApp/Services/Refit/IDiscountRefitService.cs, Pages/Basket/Dto/GetDiscountByCouponResponse.cs ve
       ApplyDiscountRateRequest.cs; src/ui/WebApp/Program.cs'teki Refit istemci kaydını kaldır
-- [ ] T015 [US2] src/ui/WebApp/Services/BasketService.cs + Services/Refit/IBasketRefitService.cs kupon metotları;
+- [X] T015 [US2] src/ui/WebApp/Services/BasketService.cs + Services/Refit/IBasketRefitService.cs kupon metotları;
       Pages/Basket/Dto/BasketResponse.cs ve BasketItemDto.cs indirim alanları kaldır
-- [ ] T016 [US2] src/ui/WebApp/Pages/Basket/Index.cshtml(.cs) + ViewModel/{BasketViewModel,BasketItemViewModel,BasketPageViewModel}.cs:
+- [X] T016 [US2] src/ui/WebApp/Pages/Basket/Index.cshtml(.cs) + ViewModel/{BasketViewModel,BasketItemViewModel,BasketPageViewModel}.cs:
       kupon alanı, indirimli toplam ve satır indirim gösterimi kaldır
-- [ ] T017 [US2] src/ui/WebApp/Services/OrderService.cs + Pages/Order/Create.cshtml.cs + Dto/CreateOrderRequest.cs +
+- [X] T017 [US2] src/ui/WebApp/Services/OrderService.cs + Pages/Order/Create.cshtml.cs + Dto/CreateOrderRequest.cs +
       ViewModel/CreateOrderViewModel.cs: DiscountRate taşıma kaldır
-- [ ] T018 [US2] src/ui/WebApp/Services/StorefrontService.cs + Dto/StorefrontProductDto.cs + ViewModel/StorefrontProductViewModel.cs +
+- [X] T018 [US2] src/ui/WebApp/Services/StorefrontService.cs + Dto/StorefrontProductDto.cs + ViewModel/StorefrontProductViewModel.cs +
       Pages/Shared/_ProductCard.cshtml: indirim rozeti/üstü çizili fiyat kaldır
 
 ### Testler (US2)
 
-- [ ] T019 [P] [US2] tests/Basket.Api.Tests/BasketTests.cs ve BasketItemTests.cs: indirim/kupon testlerini sil, kalanları hizala
-- [ ] T020 [P] [US2] tests/Order.Api.Tests/OrderTests.cs: DiscountRate izlerini temizle
-- [ ] T021 [P] [US2] tests/Storefront.Api.Tests/{StorefrontViewTests,ProductStorefrontViewResponseTests,StorefrontProductResponseTests}.cs:
+- [X] T019 [P] [US2] tests/Basket.Api.Tests/BasketTests.cs ve BasketItemTests.cs: indirim/kupon testlerini sil, kalanları hizala
+- [X] T020 [P] [US2] tests/Order.Api.Tests/OrderTests.cs: DiscountRate izlerini temizle
+- [X] T021 [P] [US2] tests/Storefront.Api.Tests/{StorefrontViewTests,ProductStorefrontViewResponseTests,StorefrontProductResponseTests}.cs:
       indirim izlerini temizle
-- [ ] T022 [US2] Checkpoint: `dotnet build` + `dotnet test` yeşil; sepet toplamı yalnız birim fiyat × adet
+- [X] T022 [US2] Checkpoint: `dotnet build` + `dotnet test` yeşil; sepet toplamı yalnız birim fiyat × adet
 
 **Checkpoint**: US2 bağımsız doğrulanabilir — alışveriş yüzeyinde indirim izi yok, sistem derlenir ve testler geçer.
 
@@ -121,11 +121,11 @@ US2/US3 tüketici temizlikleri onu güvenli kılar. Her faz sonunda çözüm der
 
 **Independent Test**: AppHost ayağa kalkar; resource listesinde discount-api/discountDb yok; uçtan uca alışveriş tamamlanır.
 
-- [ ] T033 [US1] ECommerceWithAgentFramework.slnx: Discount.Api ve Discount.Api.Tests proje kayıtlarını sil
-- [ ] T034 [US1] src/aspire/AppHost/AppHost.cs + AppHost.csproj: discountDb, discount-api resource'u, WithReference(discountApi)
+- [X] T033 [US1] ECommerceWithAgentFramework.slnx: Discount.Api ve Discount.Api.Tests proje kayıtlarını sil
+- [X] T034 [US1] src/aspire/AppHost/AppHost.cs + AppHost.csproj: discountDb, discount-api resource'u, WithReference(discountApi)
       (webapp/chat-agent/ingestion), WaitFor ve proje referansını sil
 - [ ] T035 [P] [US1] src/services/gateway/Gateway/appsettings.Development.json: discount-route, discount-mcp-route ve discount.cluster sil
-- [ ] T036 [US1] Sil: src/services/discount/ ve tests/Discount.Api.Tests/ (klasörlerin tamamı; T033-T034'e bağlı)
+- [X] T036 [US1] Sil: src/services/discount/ ve tests/Discount.Api.Tests/ (klasörlerin tamamı; T033-T034'e bağlı)
 - [ ] T037 [US1] src/others/Shared/IntegrationEvents.cs: DiscountChangedEvent sil; RabbitMqConstants.cs: DiscountChanged +
       OrderCreated.Queues.Discount sil; Utils/Constants/SchemaConstants.cs: DiscountSchemaName sil (T036'ya bağlı)
 - [ ] T038 [US1] src/others/Identity.Server/Config.cs: discount.read/write ApiScope'ları, discount.api ApiResource'u ve

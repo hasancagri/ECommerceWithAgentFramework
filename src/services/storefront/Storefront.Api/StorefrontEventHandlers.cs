@@ -2,17 +2,6 @@ namespace Storefront.Api;
 
 public static class StorefrontEventHandlers
 {
-    public static async Task Handle(IntegrationEvents.DiscountChangedEvent evt, IDocumentSession session, CancellationToken ct)
-    {
-        var view = await session.LoadAsync<StorefrontView>(evt.ProductId, ct)
-                   ?? StorefrontView.Create(evt.ProductId);
-
-        view.ApplyDiscount(evt.Rate);
-
-        session.Store(view);
-        await session.SaveChangesAsync(ct);
-    }
-    
     public static async Task Handle(IntegrationEvents.ProductChangedEvent evt, IDocumentSession session, CancellationToken ct)
     {
         var view = await session.LoadAsync<StorefrontView>(evt.ProductId, ct)

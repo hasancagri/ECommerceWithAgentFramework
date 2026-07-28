@@ -16,9 +16,6 @@ public record CreateOrderViewModel
     [ValidateNever] public List<OrderItemViewModel> OrderItems { get; set; } = [];
 
 
-    [ValidateNever] public float? DiscountRate { get; set; }
-
-
     public decimal TotalPrice { get; set; }
 
     public static CreateOrderViewModel Empty => new()
@@ -31,6 +28,6 @@ public record CreateOrderViewModel
     public void AddOrderItem(BasketItemViewModel basketItem)
     {
         OrderItems.Add(new OrderItemViewModel(basketItem.Id, basketItem.Name,
-            basketItem.PriceByApplyDiscountRate ?? basketItem.Price, basketItem.Quantity));
+            basketItem.Price, basketItem.Quantity));
     }
 }

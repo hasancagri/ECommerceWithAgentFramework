@@ -58,20 +58,7 @@
                 @basketItem.Name
             </td>
             <td>
-
-
-                @if (Model.Basket.IsApplyDiscountCoupon)
-                {
-                    <span class="fw-bold">@basketItem.PriceWithDiscountRate!.Value.ToString("C")</span>
-                    <span style="text-decoration: line-through;">
-                        <text>(@basketItem.Price.ToString("C"))</text>
-                    </span>
-                }
-                else
-                {
-                    @basketItem.Price.ToString("C")
-                }
-
+                @basketItem.Price.ToString("C")
             </td>
 
             <td>@basketItem.Quantity</td>
@@ -96,22 +83,6 @@
 {
     return;
 }
-
-@if (Model.Basket.IsApplyDiscountCoupon)
-{
-    <div class="alert alert-success d-flex justify-content-between" role="alert">
-        <span>Discount coupon applied successfully.</span>
-        <a asp-page-handler="RemoveDiscount" class="btn btn-warning btn-sm">Remove Coupon (@Model.Basket.Coupon)</a>
-    </div>
-}
-
-
-<form method="post" asp-page-handler="ApplyDiscount">
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" id="couponCode" name="CouponCode" placeholder="Coupon Code" required>
-        <button type="submit" class="btn btn-primary">Apply Coupon</button>
-    </div>
-</form>
 
 <a asp-page="/order/Create" class="btn btn-success w-100 mt-3 text-center">
     <i class="fa-solid fa-credit-card"></i> Proceed to Payment Step

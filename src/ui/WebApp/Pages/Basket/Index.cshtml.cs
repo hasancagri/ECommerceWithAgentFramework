@@ -49,18 +49,4 @@ public class IndexModel(CatalogService catalogService, BasketService basketServi
 
         return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("product deleted from basket", "Index");
     }
-
-    public async Task<IActionResult> OnPostApplyDiscountAsync(string couponCode)
-    {
-        var response = await basketService.ApplyDiscountAsync(couponCode);
-
-        return response.IsFail ? ErrorPage(response, "Index") : SuccessPage("discount coupon applied", "Index");
-    }
-
-    public async Task<IActionResult> OnGetRemoveDiscountAsync()
-    {
-        var response = await basketService.RemoveDiscountAsync();
-
-        return response.IsFail ? ErrorPage(response, "Index") : SuccessPage("discount coupon removed", "Index");
-    }
 }

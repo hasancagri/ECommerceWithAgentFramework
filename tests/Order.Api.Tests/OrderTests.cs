@@ -5,20 +5,19 @@ public class OrderTests
     private static Address SampleAddress() =>
         new("Istanbul", "Kadikoy", "Bagdat", "34000", "No 1");
 
-    private static OrderAggregate NewOrder(float? discountRate = null) =>
-        OrderAggregate.Create(Guid.NewGuid(), discountRate, SampleAddress());
+    private static OrderAggregate NewOrder() =>
+        OrderAggregate.Create(Guid.NewGuid(), SampleAddress());
 
     [Fact]
     public void Create_StartsWaitingForPayment_WithZeroTotalAndTenDigitCode()
     {
         var buyerId = Guid.NewGuid();
 
-        var order = OrderAggregate.Create(buyerId, 0.1f, SampleAddress());
+        var order = OrderAggregate.Create(buyerId, SampleAddress());
 
         order.BuyerId.ShouldBe(buyerId);
         order.Status.ShouldBe(OrderStatus.WaitingForPayment);
         order.TotalPrice.ShouldBe(0m);
-        order.DiscountRate.ShouldBe(0.1f);
         order.OrderItems.ShouldBeEmpty();
         order.Code.Length.ShouldBe(10);
         order.Code.ShouldAllBe(c => char.IsDigit(c));

@@ -9,7 +9,6 @@ namespace WebApp.Services;
 
 public class BasketService(
     IBasketRefitService basketRefitService,
-    IDiscountRefitService discountRefitService,
     ILogger<BasketService> logger)
 {
     public async Task<ServiceResult> CreateOrUpdateBasketAsync(AddBasketRequest request)
@@ -43,15 +42,11 @@ public class BasketService(
 
 
         var basketViewModel = new BasketViewModel(
-            responseAsResult.Content!.DiscountRate,
-            responseAsResult.Content.Coupon,
-            responseAsResult.Content.TotalPrice,
-            responseAsResult.Content.TotalPriceWithAppliedDiscount,
+            responseAsResult.Content!.TotalPrice,
             responseAsResult.Content.Items.Select(item => new BasketItemViewModel(
                 item.Id,
                 item.Name,
                 item.ImageUrl, item.Price,
-                item.PriceByApplyDiscountRate,
                 item.Quantity
             )).ToList(),
             responseAsResult.Content.ReservationExpiresAt,
@@ -72,10 +67,7 @@ public class BasketService(
         var basketPageViewModel = new BasketPageViewModel();
 
 
-        basketPageViewModel.SetPrice(basketsAsResult.Data!.TotalPrice,
-            basketsAsResult.Data.TotalPriceWithAppliedDiscount);
-        basketPageViewModel.DiscountRate = basketsAsResult.Data.DiscountRate;
-        basketPageViewModel.Coupon = basketsAsResult.Data.Coupon;
+        basketPageViewModel.SetPrice(basketsAsResult.Data!.TotalPrice);
         basketPageViewModel.ReservationExpiresAt = basketsAsResult.Data.ReservationExpiresAt;
         basketPageViewModel.IsReservationExpired = basketsAsResult.Data.IsReservationExpired;
 
@@ -83,7 +75,7 @@ public class BasketService(
         foreach (var basketItem in basketsAsResult.Data!.Items)
             basketPageViewModel.Items.Add(new BasketViewModelItem(basketItem.Id, basketItem.ImageUrl,
                 basketItem.Name,
-                basketItem.Price, basketItem.PriceByApplyDiscountRate,
+                basketItem.Price,
                 basketItem.Quantity));
 
 
@@ -99,41 +91,6 @@ public class BasketService(
         {
             logger.LogProblemDetails(responseAsResult.Error);
             return ServiceResult.Error("An error occurred while deleting the basket");
-        }
-
-        return ServiceResult.Success();
-    }
-
-    public async Task<ServiceResult> ApplyDiscountAsync(string coupon)
-    {
-        var responseAsResult = await discountRefitService.GetDiscountByCoupon(coupon);
-
-        if (!responseAsResult.IsSuccessStatusCode) return ServiceResult.FailFromProblemDetails(responseAsResult.Error);
-
-
-        var discount = responseAsResult.Content;
-
-        var response =
-            await basketRefitService.ApplyDiscountRateAsync(new ApplyDiscountRateRequest(coupon,
-                responseAsResult.Content!.Rate));
-        if (!responseAsResult.IsSuccessStatusCode)
-        {
-            logger.LogProblemDetails(responseAsResult.Error);
-            return ServiceResult.Error("An error occurred while applying the discount");
-        }
-
-
-        return ServiceResult.Success();
-    }
-
-
-    public async Task<ServiceResult> RemoveDiscountAsync()
-    {
-        var response = await basketRefitService.RemoveDiscountRateAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            logger.LogProblemDetails(response.Error);
-            return ServiceResult.Error("An error occurred while removing the discount");
         }
 
         return ServiceResult.Success();

@@ -16,20 +16,9 @@ public class BasketItem
     public string Name { get; private set; } = default!;
     public string? ImageUrl { get; private set; }
     public decimal Price { get; private set; }
-    public decimal? PriceByApplyDiscountRate { get; private set; }
 
     // 012: sepette adet. Varsayilan 1 (eski dokumanlarla ve mevcut testlerle geriye-uyumlu).
     public int Quantity { get; private set; } = 1;
 
     public void SetQuantity(int quantity) => Quantity = quantity;
-
-    public void ApplyDiscount(float rate)
-    {
-        PriceByApplyDiscountRate = Price * (decimal)(1 - rate);
-    }
-
-    public void ClearDiscount()
-    {
-        PriceByApplyDiscountRate = null;
-    }
 }

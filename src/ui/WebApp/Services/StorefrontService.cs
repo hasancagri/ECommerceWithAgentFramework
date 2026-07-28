@@ -28,7 +28,7 @@ public class StorefrontService(
         var content = productsAsResult.Content!;
         var products = content.Data
             .Select(p => new StorefrontProductViewModel(p.ProductId, p.Name, p.Description, p.Brand,
-                p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.DiscountRate, p.Category,
+                p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
                 p.CategoryId, p.BrandId))
             .ToList();
 

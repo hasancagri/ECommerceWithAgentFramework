@@ -16,7 +16,6 @@
   <Folder Name="/src/services/">
     <Project Path="src/services/basket/Basket.Api/Basket.Api.csproj" />
     <Project Path="src/services/catalog/Catalog.Api/Catalog.Api.csproj" />
-    <Project Path="src/services/discount/Discount.Api/Discount.Api.csproj" />
     <Project Path="src/services/file/File.Api/File.Api.csproj" />
     <Project Path="src/services/gateway/Gateway/Gateway.csproj" />
     <Project Path="src/services/order/Order.Api/Order.Api.csproj" />
@@ -33,7 +32,6 @@
     <Project Path="tests/Basket.Api.Tests/Basket.Api.Tests.csproj" />
     <Project Path="tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj" />
     <Project Path="tests/Common.Tests/Common.Tests.csproj" />
-    <Project Path="tests/Discount.Api.Tests/Discount.Api.Tests.csproj" />
     <Project Path="tests/Identity.Server.Tests/Identity.Server.Tests.csproj" />
     <Project Path="tests/IngestionAgent.Tests/IngestionAgent.Tests.csproj" />
     <Project Path="tests/Order.Api.Tests/Order.Api.Tests.csproj" />

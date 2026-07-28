@@ -13,7 +13,6 @@ public class Order : AggregateRoot
     public Guid BuyerId { get; private set; }
     public OrderStatus Status { get; private set; }
     public decimal TotalPrice { get; private set; }
-    public float? DiscountRate { get; private set; }
     public Guid? PaymentId { get; private set; }
     public Address Address { get; private set; } = null!;
     public List<OrderItem> OrderItems { get; private set; } = [];
@@ -22,14 +21,13 @@ public class Order : AggregateRoot
     {
     }
 
-    public static Order Create(Guid buyerId, float? discountRate, Address address)
+    public static Order Create(Guid buyerId, Address address)
     {
         return new Order
         {
             Code = GenerateCode(),
             BuyerId = buyerId,
             Status = OrderStatus.WaitingForPayment,
-            DiscountRate = discountRate,
             TotalPrice = 0,
             Address = address,
             OrderItems = []
