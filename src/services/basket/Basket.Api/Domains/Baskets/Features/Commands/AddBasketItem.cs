@@ -41,12 +41,19 @@ public static class AddBasketItem
             // 012: adet 1 artar; yeni toplam adet Stock'ta rezerve edilir (ayna). Yetersiz/erisilemez
             // ise sepete YAZILMAZ (fail-closed, FR-018/US1).
             var desiredQuantity = basket.GetItemQuantity(cmd.ProductId) + 1;
+
+            // 021 (FR-005): sabit ust sinir otoriter — 5 ustune cikilamaz (UI/API/agent farketmez).
+            if (desiredQuantity > Basket.MaxItemQuantity)
+                return FeatureObjectResultModel<AddBasketItemResponse>.Error(
+                    new MessageItem { Property = nameof(cmd.ProductId), Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_RANGE });
+
             var reserve = await reservation.SetReservedQuantityAsync(cmd.ProductId, cmd.UserId, desiredQuantity, anchor, ct);
             if (!reserve.Success)
                 return FeatureObjectResultModel<AddBasketItemResponse>.Error(
                     new MessageItem { Property = nameof(cmd.ProductId), Code = reserve.Code });
 
-            basket.SetItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price, desiredQuantity);
+            // 021: kalan serbest stok saklanir (efektif max = min(5, adet+available)).
+            basket.SetItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price, desiredQuantity, reserve.Available);
             if (basket.ReservationExpiresAt is null)
                 basket.StartReservation(anchor);
 

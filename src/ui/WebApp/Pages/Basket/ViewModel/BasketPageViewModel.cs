@@ -30,4 +30,6 @@ public record BasketViewModelItem(
     string? PictureUrl,
     string Name,
     decimal Price,
-    int Quantity);
+    int Quantity,
+    // 021: efektif ust sinir = min(5, kalan stok). Stepper + butonu bunu kullanir.
+    int MaxQuantity);

@@ -11,6 +11,10 @@ public class Basket : AggregateRoot
         return new Basket { UserId = userId };
     }
 
+    // 021: bir sepet satirinin sabit ust siniri. Efektif max = min(MaxItemQuantity, adet+kalan stok).
+    // Tek otorite: hem yazma reddi (handler) hem arayuz-siniri (GetBasket) bu sabitten turer.
+    public const int MaxItemQuantity = 5;
+
     public Guid UserId { get; private set; }
 
     [JsonProperty("Items")] private List<BasketItem> _items = new();
@@ -55,7 +59,7 @@ public class Basket : AggregateRoot
 
     // 012: urunu verilen mutlak adede getirir (upsert). Rezervasyon Stock'ta kararlastirildiktan sonra
     // handler bunu cagirir; ayna model (sepet adedi = rezervasyon adedi). Bitis artik sepet capasinda (017).
-    public void SetItem(Guid id, string name, string? imageUrl, decimal price, int quantity)
+    public void SetItem(Guid id, string name, string? imageUrl, decimal price, int quantity, int availableStock = 0)
     {
         var existing = _items.FirstOrDefault(x => x.Id == id);
         if (existing is null)
@@ -65,6 +69,8 @@ public class Basket : AggregateRoot
         }
 
         existing.SetQuantity(quantity);
+        // 021: son bilinen kalan serbest stok — efektif max hesabi icin saklanir.
+        existing.SetAvailableStock(availableStock);
     }
 
     public FeatureResultModel RemoveItem(Guid itemId)
