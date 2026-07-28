@@ -17,21 +17,21 @@
 
 ## Overview
 
-This is a full **microservices e-commerce backend** where every service is an isolated **bounded context** with its own database, and cross-context communication happens only through **integration events**, the **Model Context Protocol (MCP)**, and — for decisions that need an immediate yes/no — a single sanctioned **typed gRPC channel** (stock reservation). On top of it sit two agent applications: **ChatAgent**, an AI assistant built on the **Microsoft Agent Framework** that acts as an MCP client — it can browse the catalog, manage a basket, and place orders on behalf of a user by calling each service's MCP tools with that user's token — and **IngestionAgent**, a **stateless** supplier-ingestion consumer built on **Agent Framework Workflows**: the **Supplier.Gateway** boundary service pulls the supplier feed and publishes only new/changed records as canonical events, and the agent processes each message with five **LLM-driven writer agents** (brand → category → catalog → stock → discount), each scoped to its own service's MCP tools and fenced in by deterministic guardrails.
+This is a full **microservices e-commerce backend** where every service is an isolated **bounded context** with its own database, and cross-context communication happens only through **integration events**, the **Model Context Protocol (MCP)**, and — for decisions that need an immediate yes/no — a single sanctioned **typed gRPC channel** (stock reservation). On top of it sit two agent applications: **ChatAgent**, an AI assistant built on the **Microsoft Agent Framework** that acts as an MCP client — it can browse the catalog, manage a basket, and place orders on behalf of a user by calling each service's MCP tools with that user's token — and **IngestionAgent**, a **stateless** supplier-ingestion consumer built on **Agent Framework Workflows**: the **Supplier.Gateway** boundary service pulls the supplier feed and publishes only new/changed records as canonical events, and the agent processes each message with four **LLM-driven writer agents** (brand → category → catalog → stock), each scoped to its own service's MCP tools and fenced in by deterministic guardrails.
 
 It's a portfolio / learning project built to demonstrate how far you can push **DDD, CQRS, and event-driven design** in real .NET code — and how a modern LLM agent plugs into that architecture cleanly, without leaking business logic into the agent layer.
 
 ## What this project demonstrates
 
-- **Bounded-context isolation** — 9 services, each with its own PostgreSQL database and Marten schema. No shared domain model; the same concept (e.g. *Discount*) is modeled differently in each context.
+- **Bounded-context isolation** — 8 services, each with its own PostgreSQL database and Marten schema. No shared domain model; the same concept (e.g. *Product*) is modeled differently in each context — a rich aggregate in Catalog, a plain basket-item entity in Basket, a read-model row in Storefront.
 - **Rich aggregates & enforced invariants** — business rules live inside aggregates (private collections, behavior methods), not in handlers. Illegal states are unrepresentable.
 - **Vertical Slice + CQRS** — code is organized by feature, not by technical layer. Writes and reads are separate slices; no repositories — handlers use Marten's `IDocumentSession` directly.
 - **Result pattern over exceptions** — expected failures (not-found, validation, rule violations) flow through typed `Result` objects; exceptions are reserved for the truly unexpected.
 - **Scope-based authorization** — identity issued by Duende IdentityServer; services authorize on OAuth **scopes** (no roles), enforced on HTTP endpoints *and* on Wolverine message handlers.
-- **Push-only read model** — the `storefront` service maintains a product-centric composite view (catalog + stock + discount) fed purely by integration events — no outbound calls, no backfill. The web home page is served entirely from this view (fat `ProductChangedEvent` carries name, description, brand & category ids+names, price) — one anonymous read call renders every card with stock & discount badges. The product list filters by dynamic **category & brand** (AND-combinable; facet options derive from the same view, so empty categories never appear — 016).
+- **Push-only read model** — the `storefront` service maintains a product-centric composite view (catalog + stock) fed purely by integration events — no outbound calls, no backfill. The web home page is served entirely from this view (fat `ProductChangedEvent` carries name, description, brand & category ids+names, price) — one anonymous read call renders every card with stock badges. The product list filters by dynamic **category & brand** (AND-combinable; facet options derive from the same view, so empty categories never appear — 016).
 - **Declarative, cross-cutting caching** — read queries are cached with a single `[Cached(...)]` attribute via an `IMessageBus` decorator over HybridCache (L1 in-memory + optional Redis L2). Handlers stay untouched.
 - **AI agent as a first-class client** — each service exposes its Wolverine commands/queries as MCP tools; ChatAgent consumes them per-user. MCP tools are thin wrappers — zero business logic duplication.
-- **LLM-driven writers with deterministic guardrails** — supplier ingestion is split at the boundary: `supplier-gateway` pulls the feed, normalizes it to a canonical `SupplierProductSnapshotReceived` event, and publishes **only new/changed records** (change gate via record value equality, transactional outbox). The stateless `ingestion-agent` consumes each message with a per-message **Agent Framework Workflow**: five writer agents (brand → category → catalog → stock → discount), each a `ChatClientAgent` **scoped by allowlist** to its own service's MCP tools (`upsert_brand` / `upsert_category` / `upsert_product` / `set_stock` / `set_product_discount`|`remove_product_discount`), temperature 0, returning **typed structured-output results** — no hand-written envelope parsing. Steps hand off via typed results over **conditional workflow edges**: a failed step routes straight to the terminal, so later LLMs are never even invoked. `BrandId`/`CategoryId`/`ProductId` are minted by Catalog and carried by *code*, never by the model; a "success" without a tool call is treated as failure. Each step runs under its **own 60s budget** beneath a 6-minute bus execution timeout, so a hung call (e.g. a downed service behind a proxy that queues instead of refusing) surfaces as a visible failure that triggers backoff retries (10/30/60s) and a DLQ with full record content — never a **silent false ack**. Recovery is operational by design: requeue the DLQ message from the RabbitMQ management UI and the idempotent writes converge.
+- **LLM-driven writers with deterministic guardrails** — supplier ingestion is split at the boundary: `supplier-gateway` pulls the feed, normalizes it to a canonical `SupplierProductSnapshotReceived` event, and publishes **only new/changed records** (change gate via record value equality, transactional outbox). The stateless `ingestion-agent` consumes each message with a per-message **Agent Framework Workflow**: four writer agents (brand → category → catalog → stock), each a `ChatClientAgent` **scoped by allowlist** to its own service's MCP tools (`upsert_brand` / `upsert_category` / `upsert_product` / `set_stock`), temperature 0, returning **typed structured-output results** — no hand-written envelope parsing. Steps hand off via typed results over **conditional workflow edges**: a failed step routes straight to the terminal, so later LLMs are never even invoked. `BrandId`/`CategoryId`/`ProductId` are minted by Catalog and carried by *code*, never by the model; a "success" without a tool call is treated as failure. Each step runs under its **own 60s budget** beneath a 6-minute bus execution timeout, so a hung call (e.g. a downed service behind a proxy that queues instead of refusing) surfaces as a visible failure that triggers backoff retries (10/30/60s) and a DLQ with full record content — never a **silent false ack**. Recovery is operational by design: requeue the DLQ message from the RabbitMQ management UI and the idempotent writes converge.
 - **One-command orchestration** — .NET Aspire spins up every service, gateway, Postgres, RabbitMQ, and Redis with service discovery and connection-string injection.
 - **Spec-driven development** — non-trivial features go through a GitHub spec-kit flow (spec → plan → tasks → implement) governed by a project constitution.
 
@@ -51,7 +51,6 @@ flowchart TB
     GW --> Catalog["catalog-api"]
     GW --> Basket["basket-api"]
     GW --> Order["order-api"]
-    GW --> Discount["discount-api"]
     GW --> Stock["stock-api"]
     GW --> Payment["payment-api"]
     GW --> File["file-api"]
@@ -63,20 +62,19 @@ flowchart TB
 
     Supplier["supplier-api<br/>(feed simulator)"]
     SupplierGW["supplier-gateway<br/>(boundary: pull, normalize,<br/>change gate)"]
-    Ingestion["ingestion-agent<br/>(stateless consumer,<br/>5 LLM writer agents via MCP)"]
+    Ingestion["ingestion-agent<br/>(stateless consumer,<br/>4 LLM writer agents via MCP)"]
     SupplierGW -->|GET /v1/feeds| Supplier
     SupplierGW --> DB10[("supplierGatewayDb<br/>(last published snapshots)")]
     SupplierGW -->|SupplierProductSnapshotReceived| MQ
     MQ -->|queue + retry + DLQ| Ingestion
-    Ingestion -->|MCP tools: upsert_brand/category/product,<br/>set_stock, set/remove_discount| Catalog & Stock & Discount
+    Ingestion -->|MCP tools: upsert_brand/category/product,<br/>set_stock| Catalog & Stock
 
-    Catalog & Basket & Order & Discount & Stock & Payment & File & Storefront -->|integration events| MQ["RabbitMQ (fanout exchanges)"]
+    Catalog & Basket & Order & Stock & Payment & File & Storefront -->|integration events| MQ["RabbitMQ (fanout exchanges)"]
     MQ -->|single sequential queue| Storefront
 
     Catalog --> DB1[("catalogDb")]
     Basket --> DB2[("basketDb")]
     Order --> DB3[("orderDb")]
-    Discount --> DB4[("discountDb")]
     Stock --> DB5[("stockDb")]
     Payment --> DB6[("paymentDb")]
     File --> DB7[("fileDb")]
@@ -85,7 +83,7 @@ flowchart TB
     Catalog -.->|L2 cache| Redis[("Redis")]
 ```
 
-Each service is a self-contained bounded context. Synchronous read/write traffic goes **client → YARP gateway → service**, secured by JWT bearer tokens with OAuth scopes issued by Identity.Server. State changes are published as **integration events** over RabbitMQ fanout exchanges; the `storefront` read model is built entirely by consuming those events on a **single sequential queue** (structurally eliminating concurrent writes to the same composite row). The **ChatAgent** reaches the services' MCP endpoints through the gateway, injecting the calling user's token at invocation time so the agent acts *as that user*. The **Supplier.Gateway** periodically pulls the supplier feed (persistent **Hangfire** `feed-pull` recurring job — cron from config, storage in a separate `hangfire` schema of `supplierGatewayDb`, dev-only dashboard at `/hangfire`, failed pulls retried at most twice — or `POST /v1/feeds/pull`), compares each record with the last published snapshot, and publishes only new/changed records as canonical events; the stateless **IngestionAgent** consumes them one message at a time and writes to Catalog/Stock/Discount through five **LLM-driven writer agents** calling their MCP tools — typed structured-output results, bounded retries, and a dead-letter queue. For instant-consistency decisions, **stock reservation** runs over a typed **gRPC** contract (`Shared/Protos`): basket/order call Stock synchronously (fail-closed — no reservation, no add-to-cart), TTL holds are swept by Hangfire, and the supplier feed is the **sole authority** for on-hand stock, which only order commits decrement.
+Each service is a self-contained bounded context. Synchronous read/write traffic goes **client → YARP gateway → service**, secured by JWT bearer tokens with OAuth scopes issued by Identity.Server. State changes are published as **integration events** over RabbitMQ fanout exchanges; the `storefront` read model is built entirely by consuming those events on a **single sequential queue** (structurally eliminating concurrent writes to the same composite row). The **ChatAgent** reaches the services' MCP endpoints through the gateway, injecting the calling user's token at invocation time so the agent acts *as that user*. The **Supplier.Gateway** periodically pulls the supplier feed (persistent **Hangfire** `feed-pull` recurring job — cron from config, storage in a separate `hangfire` schema of `supplierGatewayDb`, dev-only dashboard at `/hangfire`, failed pulls retried at most twice — or `POST /v1/feeds/pull`), compares each record with the last published snapshot, and publishes only new/changed records as canonical events; the stateless **IngestionAgent** consumes them one message at a time and writes to Catalog/Stock through four **LLM-driven writer agents** calling their MCP tools — typed structured-output results, bounded retries, and a dead-letter queue. For instant-consistency decisions, **stock reservation** runs over a typed **gRPC** contract (`Shared/Protos`): basket/order call Stock synchronously (fail-closed — no reservation, no add-to-cart), TTL holds are swept by Hangfire, and the supplier feed is the **sole authority** for on-hand stock, which only order commits decrement.
 
 ## Tech Stack
 
@@ -110,19 +108,18 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | Project | Responsibility |
 |---------|----------------|
 | `catalog-api` | Products and their details (Catalog bounded context) |
-| `basket-api` | User baskets, items, applied discounts |
+| `basket-api` | User baskets and items |
 | `order-api` | Order placement and lifecycle |
-| `discount-api` | Discount codes and rates as a full aggregate |
 | `stock-api` | Product stock levels |
 | `payment-api` | Payment processing |
 | `file-api` | Product image storage/serving (internal) |
-| `storefront-api` | Push-only composite read model (catalog + stock + discount) |
+| `storefront-api` | Push-only composite read model (catalog + stock) |
 | `supplier-api` | Supplier feed simulator — one typed JSON endpoint, no DB, no bus |
 | `supplier-gateway` | Supplier boundary — Hangfire-scheduled feed pull, normalizes to the canonical event, publishes only new/changed records (snapshots in `supplierGatewayDb`) |
 | `gateway` | YARP reverse proxy / single entry point |
 | `identity-server` | Duende IdentityServer — OIDC/OAuth authority |
 | `chat-agent` | AI shopping assistant (MCP client over the gateway) |
-| `ingestion-agent` | Stateless supplier-ingestion consumer (per-message Agent Framework Workflow, five LLM writer agents over MCP, no database) |
+| `ingestion-agent` | Stateless supplier-ingestion consumer (per-message Agent Framework Workflow, four LLM writer agents over MCP, no database) |
 | `ecommerce-web` | Blazor storefront UI with an embedded chat widget |
 
 Shared foundations live under `src/others`: `Common` (domain building blocks, results, caching), `Shared` (integration-event contracts), and `Identity.Server`.
@@ -136,8 +133,8 @@ Shared foundations live under `src/others`: `Common` (domain building blocks, re
 - **The agent adds no business logic.** MCP tools re-invoke the same Wolverine command/query via `IMessageBus`; they only add an LLM-friendly name and description.
 - **LLM writers, deterministic guardrails.** The ingestion write path is deliberately LLM-driven — otherwise MCP is an empty ritual (a plain HTTP client with extra steps); here a model actually reads the tool schemas and calls them. The non-determinism is fenced in: per-writer tool allowlists, temperature 0, typed structured-output results, `ProductId` minted by Catalog and carried by code, success-without-a-tool-call treated as failure, and per-step time budgets.
 - **Sync RPC only where a yes/no must be immediate.** Stock reservation (basket/order → stock) is the one sanctioned synchronous channel: a typed gRPC contract, scope-protected, fail-closed. DB isolation still holds — callers hit Stock's API, never its database.
-- **Idempotency over transactions across services.** Cross-context writes can't share a transaction. The ingestion flow converges instead: SKU-keyed upsert, absolute `set_stock`, idempotent discount remove, a transactional outbox at the gateway (Wolverine + Marten — event and snapshot commit atomically), at-least-once delivery with bounded retries + DLQ.
-- **No roles — scopes only.** Role-based authorization was intentionally removed; authorization is purely scope-based. Reads (stock, discount, storefront) are anonymous; tokens matter on the shopping write path.
+- **Idempotency over transactions across services.** Cross-context writes can't share a transaction. The ingestion flow converges instead: SKU-keyed upsert, absolute `set_stock`, a transactional outbox at the gateway (Wolverine + Marten — event and snapshot commit atomically), at-least-once delivery with bounded retries + DLQ.
+- **No roles — scopes only.** Role-based authorization was intentionally removed; authorization is purely scope-based. Reads (stock, storefront) are anonymous; tokens matter on the shopping write path.
 
 ## Getting Started
 
@@ -185,7 +182,7 @@ dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj
 ```
 src/
   aspire/        AppHost (orchestration) + ServiceDefaults
-  services/      basket, catalog, discount, file, gateway,
+  services/      basket, catalog, file, gateway,
                  order, payment, stock, storefront, supplier
   others/        Common, Shared, Identity.Server
   agents/        ChatAgent (MCP client, LLM) + IngestionAgent (Workflows, LLM writers)
