@@ -124,15 +124,15 @@ US2/US3 tüketici temizlikleri onu güvenli kılar. Her faz sonunda çözüm der
 - [X] T033 [US1] ECommerceWithAgentFramework.slnx: Discount.Api ve Discount.Api.Tests proje kayıtlarını sil
 - [X] T034 [US1] src/aspire/AppHost/AppHost.cs + AppHost.csproj: discountDb, discount-api resource'u, WithReference(discountApi)
       (webapp/chat-agent/ingestion), WaitFor ve proje referansını sil
-- [ ] T035 [P] [US1] src/services/gateway/Gateway/appsettings.Development.json: discount-route, discount-mcp-route ve discount.cluster sil
+- [X] T035 [P] [US1] src/services/gateway/Gateway/appsettings.Development.json: discount-route, discount-mcp-route ve discount.cluster sil
 - [X] T036 [US1] Sil: src/services/discount/ ve tests/Discount.Api.Tests/ (klasörlerin tamamı; T033-T034'e bağlı)
-- [ ] T037 [US1] src/others/Shared/IntegrationEvents.cs: DiscountChangedEvent sil; RabbitMqConstants.cs: DiscountChanged +
+- [X] T037 [US1] src/others/Shared/IntegrationEvents.cs: DiscountChangedEvent sil; RabbitMqConstants.cs: DiscountChanged +
       OrderCreated.Queues.Discount sil; Utils/Constants/SchemaConstants.cs: DiscountSchemaName sil (T036'ya bağlı)
-- [ ] T038 [US1] src/others/Identity.Server/Config.cs: discount.read/write ApiScope'ları, discount.api ApiResource'u ve
+- [X] T038 [US1] src/others/Identity.Server/Config.cs: discount.read/write ApiScope'ları, discount.api ApiResource'u ve
       client scope taleplerini sil; src/others/Common/Utils/Constants/AuthorizationScopes.cs: DiscountRead/DiscountWrite sil
-- [ ] T039 [US1] src/ui/WebApp/Program.cs OIDC scope ekleri + src/ui/WebApp/Authentication/TokenService.cs scope dizesinden
+- [X] T039 [US1] src/ui/WebApp/Program.cs OIDC scope ekleri + src/ui/WebApp/Authentication/TokenService.cs scope dizesinden
       discount.read sil (K6: T038 ile AYNI commit — aksi halde login kırılır)
-- [ ] T040 [US1] Checkpoint: `dotnet build` + `dotnet test` yeşil; çözümde Discount projesi ve referansı yok
+- [X] T040 [US1] Checkpoint: `dotnet build` + `dotnet test` yeşil; çözümde Discount projesi ve referansı yok
 
 **Checkpoint**: Tüm story'ler tamam — sistem bir servis + bir DB eksik olarak derlenir, testler geçer.
 

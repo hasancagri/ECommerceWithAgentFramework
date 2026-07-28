@@ -35,10 +35,6 @@ public static class Config
         new ApiScope("payment.read", "Payment API - okuma"),
         new ApiScope("payment.write", "Payment API - yazma"),
 
-        // discount.api
-        new ApiScope("discount.read", "Discount API - okuma"),
-        new ApiScope("discount.write", "Discount API - yazma"),
-
         // stock.api
         new ApiScope("stock.write", "Stock API - yazma (artir/azalt)"),
         // 012: Basket/Order -> Stock gRPC rezervasyonu (SetReservedQuantity/Release/Commit).
@@ -78,11 +74,6 @@ public static class Config
             Scopes = { "payment.read", "payment.write" },
             UserClaims = ApiUserClaims,
         },
-        new ApiResource("discount.api", "Discount API")
-        {
-            Scopes = { "discount.read", "discount.write" },
-            UserClaims = ApiUserClaims,
-        },
         new ApiResource("stock.api", "Stock API")
         {
             Scopes = { "stock.write", "stock.reserve" },
@@ -103,18 +94,6 @@ public static class Config
 
     public static IEnumerable<Client> Clients =>
     [
-        // Anonim/giris yapmamis kullanici icin uygulamanin kendi kimligi (public okuma).
-        new Client
-        {
-            ClientId = "m2m.client",
-            ClientName = "Machine-to-machine test client",
-            AllowedGrantTypes = GrantTypes.ClientCredentials,
-            ClientSecrets = { new Secret("dev-secret".Sha256()) },
-            AllowedScopes =
-            {
-                "discount.read",
-            },
-        },
         // Admin m2m: UserKey issue/revoke uclarini cagirmak icin apikeys.manage tasir.
         // (v1'de uclar X-Internal-Secret ile korunur; bu client uretim scope-korumasi icin hazir.)
         new Client
@@ -148,7 +127,6 @@ public static class Config
                 "basket.read", "basket.write",
                 "order.read", "order.write",
                 "payment.read", "payment.write",
-                "discount.read", "discount.write",
                 "stock.write", "stock.reserve",
                 "storefront.read",
             },

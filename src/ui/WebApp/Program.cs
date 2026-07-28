@@ -147,9 +147,6 @@ builder.Services.AddAuthentication(configureOption =>
         // order
         options.Scope.Add("order.read");
         options.Scope.Add("order.write");
-        // discount
-        options.Scope.Add("discount.read");
-        options.Scope.Add("discount.write");
         // payment
         options.Scope.Add("payment.read");
         options.Scope.Add("payment.write");

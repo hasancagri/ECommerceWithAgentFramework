@@ -20,7 +20,6 @@ public static class IntegrationEvents
         string? ImageUrl,
         bool IsDeleted);
     public record StockChangedEvent(Guid ProductId, int Quantity);
-    public record DiscountChangedEvent(Guid ProductId, decimal? Rate);
 
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
     public record ReservationExpired(Guid ProductId, Guid UserId);
