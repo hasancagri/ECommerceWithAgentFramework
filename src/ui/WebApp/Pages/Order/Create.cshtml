@@ -1,116 +1,126 @@
-﻿@page
+@page
 @model CreateModel
 @{
+    var vm = Model.CreateOrderViewModel;
+    var noAddresses = vm.SavedAddresses.Count == 0;
+    var noCards = vm.SavedCards.Count == 0;
+    var blocked = noAddresses || noCards;
 }
 
-<form method="post">
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-6">
-                <h2>Order information</h2>
-                <div class="card mb-3">
-
-                    <div class="card-body">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-warning text-bg-warning   border-warning"></div>
-                        <h3>Address Information</h3>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Address.Province" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Address.Province" value="istanbul">
-                            <span asp-validation-for="CreateOrderViewModel.Address.Province" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Address.District" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Address.District" value="Maltepe">
-                            <span asp-validation-for="CreateOrderViewModel.Address.District" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Address.Street" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Address.Street" value="x cad. y mah.">
-                            <span asp-validation-for="CreateOrderViewModel.Address.Street" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Address.Line" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Address.Line" value="x cad. y mah.">
-                            <span asp-validation-for="CreateOrderViewModel.Address.Line" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Address.ZipCode" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Address.ZipCode" value="12345">
-                            <span asp-validation-for="CreateOrderViewModel.Address.ZipCode" class="text-danger"></span>
-                        </div>
-
-
-                        <h3>Payment Information</h3>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Payment.CardHolderName" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Payment.CardHolderName" value="ahmet yıldız">
-                            <span asp-validation-for="CreateOrderViewModel.Payment.CardHolderName" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Payment.CardNumber" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Payment.CardNumber" value="4111111111111111">
-                            <span asp-validation-for="CreateOrderViewModel.Payment.CardNumber" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Payment.Cvv" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Payment.Cvv" value="123">
-                            <span asp-validation-for="CreateOrderViewModel.Payment.Cvv" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="CreateOrderViewModel.Payment.ExpiryDate" class="form-label"></label>
-                            <input class="form-control" asp-for="CreateOrderViewModel.Payment.ExpiryDate" value="05/22">
-                            <span asp-validation-for="CreateOrderViewModel.Payment.ExpiryDate" class="text-danger"></span>
-                        </div>
-
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-            <div class="col-md-6">
-                <h2>Order Items</h2>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <table class="table">
-                            <thead>
-                            <tr>
-                                <th>Product Name</th>
-                                <th>Price</th>
-
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach (var item in Model.CreateOrderViewModel.OrderItems)
-                            {
-                                <tr>
-                                    <td>@item.ProductName</td>
-                                    <td>@item.UnitPrice</td>
-
-                                </tr>
-                            }
-                            </tbody>
-                            <tfoot>
-                            <tr class="table-info">
-                                <td>
-                                    <strong>Total Price:</strong>
-                                </td>
-                                <td>
-                                    <strong>@Model.CreateOrderViewModel.TotalPrice.ToString("C")</strong>
-                                </td>
-
-
-                            </tr>
-                            </tfoot>
-                        </table>
-
-                        <button type="submit" class="btn btn-primary">Complete payment</button>
-                    </div>
-                </div>
-            </div>
+<div class="container mt-5">
+    @if (blocked)
+    {
+        @* US3: kayitli adres VEYA kart yoksa checkout bloke + "once ekle" yonlendirmesi. *@
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Siparişi tamamlamak için önce eksikleri tamamla</h4>
+            <ul class="mb-3">
+                @if (noAddresses)
+                {
+                    <li>Kayıtlı adresin yok. <a asp-page="/Account/Addresses">My Addresses</a> sayfasından ekle.</li>
+                }
+                @if (noCards)
+                {
+                    <li>Kayıtlı kartın yok. <a asp-page="/Account/Cards">My Cards</a> sayfasından ekle.</li>
+                }
+            </ul>
+            <a class="btn btn-primary" asp-page="/Basket">Sepete dön</a>
         </div>
-    </div>
-</form>
+    }
+    else
+    {
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2>Order information</h2>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div asp-validation-summary="ModelOnly"
+                                 class="alert alert-warning text-bg-warning border-warning"></div>
+
+                            @* US1: kayitli adres SECIMI (manuel giris yok). *@
+                            <h3>Delivery Address</h3>
+                            <div class="list-group mb-4">
+                                @foreach (var a in vm.SavedAddresses)
+                                {
+                                    <label class="list-group-item d-flex gap-2">
+                                        <input class="form-check-input flex-shrink-0" type="radio"
+                                               asp-for="CreateOrderViewModel.SelectedAddressId" value="@a.Id"
+                                               checked="@(vm.SelectedAddressId == a.Id)"/>
+                                        <span>
+                                            <strong>@a.Street, @a.Line</strong>
+                                            @if (a.IsDefault)
+                                            {
+                                                <span class="badge bg-success ms-1">Default</span>
+                                            }
+                                            <br/>
+                                            <span class="text-muted small">@a.District / @a.Province — @a.ZipCode</span>
+                                        </span>
+                                    </label>
+                                }
+                            </div>
+
+                            @* US1: kayitli kart SECIMI (PAN/CVV YOK — yalniz marka+son4+etiket). *@
+                            <h3>Payment Card</h3>
+                            <div class="list-group">
+                                @foreach (var c in vm.SavedCards)
+                                {
+                                    <label class="list-group-item d-flex gap-2">
+                                        <input class="form-check-input flex-shrink-0" type="radio"
+                                               asp-for="CreateOrderViewModel.SelectedCardId" value="@c.Id"
+                                               checked="@(vm.SelectedCardId == c.Id)"/>
+                                        <span>
+                                            <strong>@c.Brand ···· @c.Last4</strong>
+                                            @if (c.IsDefault)
+                                            {
+                                                <span class="badge bg-success ms-1">Default</span>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(c.Label))
+                                            {
+                                                <span class="text-muted">· @c.Label</span>
+                                            }
+                                            <br/>
+                                            <span class="text-muted small">Expires @c.ExpiryMonth.ToString("D2")/@c.ExpiryYear</span>
+                                        </span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h2>Order Items</h2>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Price</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var item in vm.OrderItems)
+                                {
+                                    <tr>
+                                        <td>@item.ProductName</td>
+                                        <td>@item.UnitPrice</td>
+                                    </tr>
+                                }
+                                </tbody>
+                                <tfoot>
+                                <tr class="table-info">
+                                    <td><strong>Total Price:</strong></td>
+                                    <td><strong>@vm.TotalPrice.ToString("C")</strong></td>
+                                </tr>
+                                </tfoot>
+                            </table>
+
+                            <button type="submit" class="btn btn-primary">Complete payment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    }
+</div>
