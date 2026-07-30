@@ -27,4 +27,8 @@ public static class AuthorizationScopes
 
     // storefront.api
     public const string StorefrontRead = "storefront.read";
+
+    // customer.api (022): kayitli kart (Wallet) + adres defteri (AddressBook)
+    public const string CustomerRead = "customer.read";
+    public const string CustomerWrite = "customer.write";
 }

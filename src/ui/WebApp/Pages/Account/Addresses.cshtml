@@ -1,0 +1,71 @@
+@page
+@model WebApp.Pages.Account.AddressesModel
+@{
+    ViewData["Title"] = "My Addresses";
+}
+
+<h2 class="mb-4">My Addresses</h2>
+
+<div class="row">
+    <div class="col-md-7">
+        @if (Model.Addresses.Count == 0)
+        {
+            <div class="alert alert-info">No saved addresses yet.</div>
+        }
+        else
+        {
+            <div class="list-group mb-4">
+                @foreach (var a in Model.Addresses)
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>@a.Street, @a.Line</strong>
+                                @if (a.IsDefault)
+                                {
+                                    <span class="badge bg-success ms-2">Default</span>
+                                }
+                                <div class="text-muted small">@a.District / @a.Province — @a.ZipCode</div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                @if (!a.IsDefault)
+                                {
+                                    <a class="btn btn-outline-success" asp-page-handler="SetDefault" asp-route-id="@a.Id">Make Default</a>
+                                }
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-@a.Id">Edit</button>
+                                <a class="btn btn-outline-danger" asp-page-handler="Delete" asp-route-id="@a.Id"
+                                   onclick="return confirm('Delete this address?');">Delete</a>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="edit-@a.Id">
+                            <form method="post" asp-page-handler="Update" asp-route-id="@a.Id" class="row g-2">
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.Province" value="@a.Province" placeholder="Province"/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.District" value="@a.District" placeholder="District"/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.Street" value="@a.Street" placeholder="Street"/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.ZipCode" value="@a.ZipCode" placeholder="Zip Code"/></div>
+                                <div class="col-12"><input class="form-control form-control-sm" name="Input.Line" value="@a.Line" placeholder="Address Line"/></div>
+                                <div class="col-12"><button class="btn btn-sm btn-primary" type="submit">Save</button></div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">Add New Address</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Add" class="row g-2">
+                    <div class="col-6"><input class="form-control" asp-for="Input.Province" placeholder="Province"/></div>
+                    <div class="col-6"><input class="form-control" asp-for="Input.District" placeholder="District"/></div>
+                    <div class="col-12"><input class="form-control" asp-for="Input.Street" placeholder="Street"/></div>
+                    <div class="col-6"><input class="form-control" asp-for="Input.ZipCode" placeholder="Zip Code"/></div>
+                    <div class="col-12"><input class="form-control" asp-for="Input.Line" placeholder="Address Line (No, Daire...)"/></div>
+                    <div class="col-12"><button class="btn btn-primary w-100" type="submit">Add Address</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,58 @@
+@baseAddress = http://localhost:5251
+@id=3fa85f64-5717-4562-b3fc-2c963f66afac
+
+### AddressBook
+GET {{baseAddress}}/api/v1/addresses
+Accept: application/json
+###
+POST {{baseAddress}}/api/v1/addresses
+Accept: application/json
+Content-Type: application/json
+
+{
+  "province": "Istanbul",
+  "district": "Kadikoy",
+  "street": "Bagdat Cad.",
+  "zipCode": "34710",
+  "line": "No 12 D3"
+}
+###
+PUT {{baseAddress}}/api/v1/addresses/{{id}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "province": "Istanbul",
+  "district": "Uskudar",
+  "street": "Cengelkoy",
+  "zipCode": "34680",
+  "line": "No 5"
+}
+###
+DELETE {{baseAddress}}/api/v1/addresses/{{id}}
+Accept: application/json
+###
+POST {{baseAddress}}/api/v1/addresses/{{id}}/default
+Accept: application/json
+
+### Wallet
+GET {{baseAddress}}/api/v1/cards
+Accept: application/json
+###
+POST {{baseAddress}}/api/v1/cards
+Accept: application/json
+Content-Type: application/json
+
+{
+  "pan": "4111111111111111",
+  "cvv": "123",
+  "expiryMonth": 12,
+  "expiryYear": 2030,
+  "label": "is kartim"
+}
+###
+DELETE {{baseAddress}}/api/v1/cards/{{id}}
+Accept: application/json
+###
+POST {{baseAddress}}/api/v1/cards/{{id}}/default
+Accept: application/json
