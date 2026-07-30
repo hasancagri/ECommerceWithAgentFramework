@@ -23,13 +23,14 @@ It's a portfolio / learning project built to demonstrate how far you can push **
 
 ## What this project demonstrates
 
-- **Bounded-context isolation** — 8 services, each with its own PostgreSQL database and Marten schema. No shared domain model; the same concept (e.g. *Product*) is modeled differently in each context — a rich aggregate in Catalog, a plain basket-item entity in Basket, a read-model row in Storefront.
+- **Bounded-context isolation** — 9 services, each with its own PostgreSQL database and Marten schema. No shared domain model; the same concept (e.g. *Product*) is modeled differently in each context — a rich aggregate in Catalog, a plain basket-item entity in Basket, a read-model row in Storefront.
 - **Rich aggregates & enforced invariants** — business rules live inside aggregates (private collections, behavior methods), not in handlers. Illegal states are unrepresentable.
 - **Vertical Slice + CQRS** — code is organized by feature, not by technical layer. Writes and reads are separate slices; no repositories — handlers use Marten's `IDocumentSession` directly.
 - **Result pattern over exceptions** — expected failures (not-found, validation, rule violations) flow through typed `Result` objects; exceptions are reserved for the truly unexpected.
 - **Scope-based authorization** — identity issued by Duende IdentityServer; services authorize on OAuth **scopes** (no roles), enforced on HTTP endpoints *and* on Wolverine message handlers.
 - **Push-only read model** — the `storefront` service maintains a product-centric composite view (catalog + stock) fed purely by integration events — no outbound calls, no backfill. The web home page is served entirely from this view (fat `ProductChangedEvent` carries name, description, brand & category ids+names, price) — one anonymous read call renders every card with stock badges. The product list filters by dynamic **category & brand** (AND-combinable; facet options derive from the same view, so empty categories never appear — 016).
 - **Hybrid product search (filters + semantic, via chat)** — the storefront exposes a single `search_storefront_products` MCP tool (plus an anonymous REST twin): optional brand-OR / price-range / min-stock filters combined with a natural-language `searchText`. Embeddings (`text-embedding-3-small`) are produced on `ProductChangedEvent` only when the search text's hash actually changed, stored as a side document in **pgvector**-enabled `storefrontDb`, and queried with a raw cosine-distance SQL join — filters stay hard, ranking is semantic, and an embedding outage never blocks the view write or filter-only search (019). The slice splits into two execution paths behind one query: no `searchText` → Marten LINQ over sellable rows plus a pure, unit-testable filter core with deterministic `Name ASC` ordering; with `searchText` → hand-written SQL, because top-K + similarity-threshold must run *in the database* (limit-then-filter would silently drop results). Notable craft in the SQL path: the query vector travels as a **text parameter** with a server-side `::vector(1536)` cast (immune to Npgsql's pg_type cache race), every user value is a bound parameter (SQL string only ever concatenates constants), an `INNER JOIN` on the embedding side-table makes "no embedding → not ranked" structural rather than conditional, and the command borrows the Marten session's own connection instead of opening a new one. The similarity threshold (cosine distance ≤ 0.7) acts as a floor filter under top-K — it reliably drops unrelated matches, not a precision dial.
+- **Saved cards & addresses with PCI-safe tokenization** — a `customer` bounded context holds each user's **Wallet** (saved cards) and **AddressBook**, two aggregates keyed by user id with a "≤1 default" invariant. Raw PAN/CVV are **never persisted, logged, evented, or exposed** — `AddCard` passes them straight to a tokenizer (a simulated gateway now, swappable for a real PSP) and stores only a token + brand + last4 + expiry. MCP exposes **read-only** tools (`list_cards` / `list_addresses`) — there is deliberately no add-card tool. Checkout then lets the user **select** a saved address and card instead of retyping them, defaulting to the marked-default of each.
 - **Declarative, cross-cutting caching** — read queries are cached with a single `[Cached(...)]` attribute via an `IMessageBus` decorator over HybridCache (L1 in-memory + optional Redis L2). Handlers stay untouched.
 - **AI agent as a first-class client** — each service exposes its Wolverine commands/queries as MCP tools; ChatAgent consumes them per-user. MCP tools are thin wrappers — zero business logic duplication.
 - **LLM-driven writers with deterministic guardrails** — supplier ingestion is split at the boundary: `supplier-gateway` pulls the feed, normalizes it to a canonical `SupplierProductSnapshotReceived` event, and publishes **only new/changed records** (change gate via record value equality, transactional outbox). The stateless `ingestion-agent` consumes each message with a per-message **Agent Framework Workflow**: four writer agents (brand → category → catalog → stock), each a `ChatClientAgent` **scoped by allowlist** to its own service's MCP tools (`upsert_brand` / `upsert_category` / `upsert_product` / `set_stock`), temperature 0, returning **typed structured-output results** — no hand-written envelope parsing. Steps hand off via typed results over **conditional workflow edges**: a failed step routes straight to the terminal, so later LLMs are never even invoked. `BrandId`/`CategoryId`/`ProductId` are minted by Catalog and carried by *code*, never by the model; a "success" without a tool call is treated as failure. Each step runs under its **own 60s budget** beneath a 6-minute bus execution timeout, so a hung call (e.g. a downed service behind a proxy that queues instead of refusing) surfaces as a visible failure that triggers backoff retries (10/30/60s) and a DLQ with full record content — never a **silent false ack**. Recovery is operational by design: requeue the DLQ message from the RabbitMQ management UI and the idempotent writes converge.
@@ -56,6 +57,7 @@ flowchart TB
     GW --> Payment["payment-api"]
     GW --> File["file-api"]
     GW --> Storefront["storefront-api"]
+    GW --> Customer["customer-api"]
 
     IdP["Identity.Server (Duende OIDC/OAuth)"]
     GW -.->|JWT bearer / scopes| IdP
@@ -80,6 +82,7 @@ flowchart TB
     Payment --> DB6[("paymentDb")]
     File --> DB7[("fileDb")]
     Storefront --> DB8[("storefrontDb")]
+    Customer --> DB9[("customerDb")]
 
     Catalog -.->|L2 cache| Redis[("Redis")]
 ```
@@ -115,6 +118,7 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | `payment-api` | Payment processing |
 | `file-api` | Product image storage/serving (internal) |
 | `storefront-api` | Push-only composite read model (catalog + stock) |
+| `customer-api` | Wallet (saved cards, tokenized — no PAN/CVV) + AddressBook (Customer bounded context) |
 | `supplier-api` | Supplier feed simulator — one typed JSON endpoint, no DB, no bus |
 | `supplier-gateway` | Supplier boundary — Hangfire-scheduled feed pull, normalizes to the canonical event, publishes only new/changed records (snapshots in `supplierGatewayDb`) |
 | `gateway` | YARP reverse proxy / single entry point |
@@ -183,7 +187,7 @@ dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj
 ```
 src/
   aspire/        AppHost (orchestration) + ServiceDefaults
-  services/      basket, catalog, file, gateway,
+  services/      basket, catalog, customer, file, gateway,
                  order, payment, stock, storefront, supplier
   others/        Common, Shared, Identity.Server
   agents/        ChatAgent (MCP client, LLM) + IngestionAgent (Workflows, LLM writers)
