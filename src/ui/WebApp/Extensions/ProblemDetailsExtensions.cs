@@ -10,19 +10,13 @@ public static class ProblemDetailsExtensions
     {
         if (string.IsNullOrEmpty(apiException!.Content))
         {
-            logger.LogError(apiException.Message);
+            logger.LogError("API error {Status} {Uri}: {Message}",
+                (int)apiException.StatusCode, apiException.Uri, apiException.Message);
             return;
         }
 
-
-        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(apiException.Content!);
-
-        if (problemDetails is null) return;
-
-        logger.LogError(
-            "Problem Details: Title: {Title}, Detail: {Detail}, Status: {Status}",
-            problemDetails.Title,
-            problemDetails.Detail,
-            problemDetails.Status);
+        // API RFC7807 degil, FeatureResultModel zarfi dondurur; gercek HTTP status + ham govde logla.
+        logger.LogError("API error {Status} {Uri}: {Content}",
+            (int)apiException.StatusCode, apiException.Uri, apiException.Content);
     }
 }
