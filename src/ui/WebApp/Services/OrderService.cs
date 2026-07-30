@@ -15,20 +15,24 @@ public class OrderService(
     public async Task<ServiceResult> CreateOrder(CreateOrderViewModel viewModel)
     {
         // 1) Once odeme: client dogrudan Payment'a (kullanici token'i).
+        // 023: PAN/CVV yok; secili kayitli kartin gorunur alanlari doldurulur (Payment zaten yalniz
+        // Amount kullanir). CardNumber = son 4 hane; CVV bos.
+        var card = viewModel.SelectedCard!;
         var paymentRequest = new CreatePaymentRequest(
-            viewModel.Payment.CardNumber,
-            viewModel.Payment.CardHolderName,
-            viewModel.Payment.ExpiryDate,
-            viewModel.Payment.Cvv,
+            card.Last4,
+            card.Label ?? card.Brand,
+            $"{card.ExpiryMonth:D2}/{card.ExpiryYear}",
+            string.Empty,
             viewModel.TotalPrice);
 
         var paymentResult = await paymentService.CreatePayment(paymentRequest);
         if (paymentResult.IsFail)
             return ServiceResult.Error(paymentResult.Fail!);
 
-        // 2) Sonra siparis: donen paymentId ile.
-        var address = new AddressDto(viewModel.Address.Province, viewModel.Address.District,
-            viewModel.Address.Street, viewModel.Address.ZipCode, viewModel.Address.Line);
+        // 2) Sonra siparis: donen paymentId + secili kayitli adres ile.
+        var selected = viewModel.SelectedAddress!;
+        var address = new AddressDto(selected.Province, selected.District,
+            selected.Street, selected.ZipCode, selected.Line);
 
         var orderItems = viewModel.OrderItems
             .Select(x => new OrderItemDto(x.ProductId, x.ProductName, x.UnitPrice, x.Quantity))
