@@ -39,11 +39,11 @@
                         </div>
                         <div class="collapse mt-3" id="edit-@a.Id">
                             <form method="post" asp-page-handler="Update" asp-route-id="@a.Id" class="row g-2">
-                                <div class="col-6"><input class="form-control form-control-sm" name="Input.Province" value="@a.Province" placeholder="Province"/></div>
-                                <div class="col-6"><input class="form-control form-control-sm" name="Input.District" value="@a.District" placeholder="District"/></div>
-                                <div class="col-6"><input class="form-control form-control-sm" name="Input.Street" value="@a.Street" placeholder="Street"/></div>
-                                <div class="col-6"><input class="form-control form-control-sm" name="Input.ZipCode" value="@a.ZipCode" placeholder="Zip Code"/></div>
-                                <div class="col-12"><input class="form-control form-control-sm" name="Input.Line" value="@a.Line" placeholder="Address Line"/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.Province" value="@a.Province" placeholder="Province" required/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.District" value="@a.District" placeholder="District" required/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.Street" value="@a.Street" placeholder="Street" required/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="Input.ZipCode" value="@a.ZipCode" placeholder="Zip Code" required/></div>
+                                <div class="col-12"><input class="form-control form-control-sm" name="Input.Line" value="@a.Line" placeholder="Address Line" required/></div>
                                 <div class="col-12"><button class="btn btn-sm btn-primary" type="submit">Save</button></div>
                             </form>
                         </div>
@@ -58,11 +58,11 @@
             <div class="card-header">Add New Address</div>
             <div class="card-body">
                 <form method="post" asp-page-handler="Add" class="row g-2">
-                    <div class="col-6"><input class="form-control" asp-for="Input.Province" placeholder="Province"/></div>
-                    <div class="col-6"><input class="form-control" asp-for="Input.District" placeholder="District"/></div>
-                    <div class="col-12"><input class="form-control" asp-for="Input.Street" placeholder="Street"/></div>
-                    <div class="col-6"><input class="form-control" asp-for="Input.ZipCode" placeholder="Zip Code"/></div>
-                    <div class="col-12"><input class="form-control" asp-for="Input.Line" placeholder="Address Line (No, Daire...)"/></div>
+                    <div class="col-6"><input class="form-control" asp-for="Input.Province" placeholder="Province" required/></div>
+                    <div class="col-6"><input class="form-control" asp-for="Input.District" placeholder="District" required/></div>
+                    <div class="col-12"><input class="form-control" asp-for="Input.Street" placeholder="Street" required/></div>
+                    <div class="col-6"><input class="form-control" asp-for="Input.ZipCode" placeholder="Zip Code" required/></div>
+                    <div class="col-12"><input class="form-control" asp-for="Input.Line" placeholder="Address Line (No, Daire...)" required/></div>
                     <div class="col-12"><button class="btn btn-primary w-100" type="submit">Add Address</button></div>
                 </form>
             </div>

@@ -31,13 +31,29 @@ public class CustomerService(
     public async Task<ServiceResult> AddAddressAsync(AddAddressRequest request)
     {
         var response = await customerRefitService.AddAddressAsync(request);
-        return ToResult(response, "An error occurred while adding the address");
+        if (!response.IsSuccessStatusCode)
+            LogEmptyAddressFields("AddAddress", request.Province, request.District, request.Street, request.ZipCode, request.Line);
+        return ToResult(response, "Please fill in all address fields (province, district, street, zip code, line).");
     }
 
     public async Task<ServiceResult> UpdateAddressAsync(Guid id, UpdateAddressRequest request)
     {
         var response = await customerRefitService.UpdateAddressAsync(id, request);
-        return ToResult(response, "An error occurred while updating the address");
+        if (!response.IsSuccessStatusCode)
+            LogEmptyAddressFields("UpdateAddress", request.Province, request.District, request.Street, request.ZipCode, request.Line);
+        return ToResult(response, "Please fill in all address fields (province, district, street, zip code, line).");
+    }
+
+    // Teshis: gonderilen istekte hangi zorunlu alan(lar) bos gitti (yalniz alan adi, deger loglanmaz).
+    private void LogEmptyAddressFields(string op, string province, string district, string street, string zipCode, string line)
+    {
+        var empty = new[]
+        {
+            (nameof(province), province), (nameof(district), district), (nameof(street), street),
+            (nameof(zipCode), zipCode), (nameof(line), line),
+        }.Where(f => string.IsNullOrWhiteSpace(f.Item2)).Select(f => f.Item1).ToList();
+        if (empty.Count > 0)
+            logger.LogWarning("{Op} sent empty required field(s): {Fields}", op, string.Join(", ", empty));
     }
 
     public async Task<ServiceResult> DeleteAddressAsync(Guid id)
@@ -73,7 +89,8 @@ public class CustomerService(
     public async Task<ServiceResult> AddCardAsync(AddCardRequest request)
     {
         var response = await customerRefitService.AddCardAsync(request);
-        return ToResult(response, "An error occurred while adding the card");
+        // PCI: PAN/CVV asla loglanmaz; yalniz genel hata mesaji.
+        return ToResult(response, "Card could not be added. Check the number, expiry (not past) and CVV.");
     }
 
     public async Task<ServiceResult> DeleteCardAsync(Guid id)

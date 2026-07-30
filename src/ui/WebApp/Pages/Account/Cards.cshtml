@@ -52,16 +52,16 @@
             <div class="card-body">
                 <form method="post" asp-page-handler="Add" class="row g-2" autocomplete="off">
                     <div class="col-12">
-                        <input class="form-control" asp-for="Input.Pan" placeholder="Card number" inputmode="numeric" autocomplete="off"/>
+                        <input class="form-control" asp-for="Input.Pan" placeholder="Card number" inputmode="numeric" autocomplete="off" required/>
                     </div>
                     <div class="col-4">
-                        <input class="form-control" asp-for="Input.ExpiryMonth" placeholder="MM" inputmode="numeric"/>
+                        <input class="form-control" asp-for="Input.ExpiryMonth" placeholder="MM" inputmode="numeric" min="1" max="12" required/>
                     </div>
                     <div class="col-4">
-                        <input class="form-control" asp-for="Input.ExpiryYear" placeholder="YYYY" inputmode="numeric"/>
+                        <input class="form-control" asp-for="Input.ExpiryYear" placeholder="YYYY" inputmode="numeric" min="2000" max="2099" required/>
                     </div>
                     <div class="col-4">
-                        <input class="form-control" asp-for="Input.Cvv" placeholder="CVV" inputmode="numeric" autocomplete="off"/>
+                        <input class="form-control" asp-for="Input.Cvv" placeholder="CVV" inputmode="numeric" autocomplete="off" required/>
                     </div>
                     <div class="col-12">
                         <input class="form-control" asp-for="Input.Label" placeholder="Label (optional, e.g. work card)"/>
