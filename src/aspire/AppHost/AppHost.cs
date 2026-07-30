@@ -26,6 +26,7 @@ var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
 var supplierGatewayDb = postgres.AddDatabase("supplierGatewayDb");
+var customerDb = postgres.AddDatabase("customerDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -80,6 +81,14 @@ var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WithReference(paymentDb)
     .WaitFor(paymentDb);
 
+// 022: Customer BC — Wallet (kayitli kart) + AddressBook (adres defteri). Kendi DB'si;
+// bu feature'da servisler-arasi event/gRPC yok (identity token'iyla korunan salt CRUD + MCP okuma).
+var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
+    .WithReference(customerDb)
+    .WithReference(identityServer)
+    .WaitFor(customerDb)
+    .WaitFor(identityServer);
+
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)
@@ -88,6 +97,7 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(stockApi)
     .WithReference(fileApi)
     .WithReference(storefrontApi)
+    .WithReference(customerApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
@@ -99,6 +109,7 @@ web.WithReference(basketApi)
     .WithReference(fileApi)
     .WithReference(paymentApi)
     .WithReference(storefrontApi)
+    .WithReference(customerApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 

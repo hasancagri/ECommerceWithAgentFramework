@@ -46,6 +46,10 @@ public static class Config
         // storefront.api: herkese acik urun-vitrin gorunumu (yine de anonim-M2M scope ister).
         new ApiScope("storefront.read", "Storefront API - okuma (urun vitrin gorunumu)"),
 
+        // customer.api (022): Wallet (kayitli kart) + AddressBook (adres defteri).
+        new ApiScope("customer.read", "Customer API - okuma (kart/adres listeleme)"),
+        new ApiScope("customer.write", "Customer API - yazma (ekle/sil/varsayilan)"),
+
         // identity: UserKey (ApiKeys) yonetim yetkisi — admin issue/revoke uclarini korur.
         new ApiScope("apikeys.manage", "API Key yonetimi (admin issue/revoke)"),
     ];
@@ -90,6 +94,12 @@ public static class Config
             Scopes = { "storefront.read" },
             UserClaims = ApiUserClaims,
         },
+        // customer.api (022): kayitli kart + adres defteri; kullanici token'iyla korunur.
+        new ApiResource("customer.api", "Customer API")
+        {
+            Scopes = { "customer.read", "customer.write" },
+            UserClaims = ApiUserClaims,
+        },
     ];
 
     public static IEnumerable<Client> Clients =>
@@ -129,6 +139,7 @@ public static class Config
                 "payment.read", "payment.write",
                 "stock.write", "stock.reserve",
                 "storefront.read",
+                "customer.read", "customer.write",
             },
         },
     ];

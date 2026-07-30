@@ -61,6 +61,7 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StockService>();
 builder.Services.AddScoped<StorefrontService>();
+builder.Services.AddScoped<CustomerService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<ClientAuthenticatedHttpClientHandler>();
@@ -109,6 +110,14 @@ builder.Services.AddRefitClient<IStorefrontRefitService>().ConfigureHttpClient(c
     .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
 
 
+// 022: Customer API (kayitli kart + adres defteri); kullanici token'iyla korunur.
+builder.Services.AddRefitClient<ICustomerRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://customer-api");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
+    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+
+
 builder.Services.AddAuthentication(configureOption =>
     {
         configureOption.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -152,6 +161,9 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("payment.write");
         // 012: sepete ekleme/siparis Basket/Order -> Stock gRPC rezervasyonu icin.
         options.Scope.Add("stock.reserve");
+        // 022: kayitli kart + adres defteri.
+        options.Scope.Add("customer.read");
+        options.Scope.Add("customer.write");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // role/email id_token'da geliyor (Config.cs: AlwaysIncludeUserClaimsInIdToken),
@@ -179,7 +191,7 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 
 
-var cultureInfo = new CultureInfo("en-US");
+var cultureInfo = new CultureInfo("tr-TR");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 

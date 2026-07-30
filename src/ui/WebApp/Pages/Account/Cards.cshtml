@@ -1,0 +1,79 @@
+@page
+@model WebApp.Pages.Account.CardsModel
+@{
+    ViewData["Title"] = "My Cards";
+}
+
+<h2 class="mb-4">My Cards</h2>
+
+<div class="row">
+    <div class="col-md-7">
+        @if (Model.Cards.Count == 0)
+        {
+            <div class="alert alert-info">No saved cards yet.</div>
+        }
+        else
+        {
+            <div class="list-group mb-4">
+                @foreach (var c in Model.Cards)
+                {
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@c.Brand •••• @c.Last4</strong>
+                            @if (c.IsDefault)
+                            {
+                                <span class="badge bg-success ms-2">Default</span>
+                            }
+                            <div class="text-muted small">
+                                Exp @c.ExpiryMonth.ToString("00")/@c.ExpiryYear
+                                @if (!string.IsNullOrWhiteSpace(c.Label))
+                                {
+                                    <span>— @c.Label</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            @if (!c.IsDefault)
+                            {
+                                <a class="btn btn-outline-success" asp-page-handler="SetDefault" asp-route-id="@c.Id">Make Default</a>
+                            }
+                            <a class="btn btn-outline-danger" asp-page-handler="Delete" asp-route-id="@c.Id"
+                               onclick="return confirm('Delete this card?');">Delete</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">Add New Card</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Add" class="row g-2" autocomplete="off">
+                    <div class="col-12">
+                        <input class="form-control" asp-for="Input.Pan" placeholder="Card number" inputmode="numeric" autocomplete="off"/>
+                    </div>
+                    <div class="col-4">
+                        <input class="form-control" asp-for="Input.ExpiryMonth" placeholder="MM" inputmode="numeric"/>
+                    </div>
+                    <div class="col-4">
+                        <input class="form-control" asp-for="Input.ExpiryYear" placeholder="YYYY" inputmode="numeric"/>
+                    </div>
+                    <div class="col-4">
+                        <input class="form-control" asp-for="Input.Cvv" placeholder="CVV" inputmode="numeric" autocomplete="off"/>
+                    </div>
+                    <div class="col-12">
+                        <input class="form-control" asp-for="Input.Label" placeholder="Label (optional, e.g. work card)"/>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary w-100" type="submit">Add Card</button>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted">Card number and CVV are never stored — only a secure token, brand and last 4 digits are kept.</small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

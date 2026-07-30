@@ -1,0 +1,9 @@
+global using Xunit;
+global using Shouldly;
+global using Common;
+global using Common.Results;
+global using Common.Utils.Constants;
+global using Customer.Api.Domains.AddressBooks;
+global using Customer.Api.Domains.AddressBooks.ValueObjects;
+global using Customer.Api.Domains.Wallets;
+global using Customer.Api.Domains.Wallets.Tokenization;
