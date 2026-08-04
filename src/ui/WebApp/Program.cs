@@ -230,4 +230,16 @@ app.MapGet("/file/images/{name}", async (string name, IHttpClientFactory factory
     return Results.File(bytes, contentType);
 }).AllowAnonymous();
 
+// 025: header geri sayimi sifira inince sepeti bosaltir. Her sayfadan cagrilabilen
+// same-origin POST; idempotent (mevcut PurgeExpired). Kullaniciya bagli. API ucu oldugu
+// icin anonim istekte OIDC login-redirect DEGIL, temiz 401 doner (JS fetch redirect'i izleyemez).
+app.MapPost("/basket/purge-expired", async (HttpContext http, BasketService basketService) =>
+{
+    if (http.User.Identity?.IsAuthenticated != true)
+        return Results.Unauthorized();
+
+    await basketService.PurgeExpiredBasketAsync();
+    return Results.Ok();
+});
+
 app.Run();

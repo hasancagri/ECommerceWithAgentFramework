@@ -112,6 +112,21 @@ public class BasketService(
         return ServiceResult.Success();
     }
 
+    // 025: header geri sayimi icin hafif ozet — mevcut sepetten capa + aktiflik cikarir.
+    // Aktif = item var + basket-duzeyi bitis ani var (gecmisse de aktif; JS sifirda purge eder).
+    public async Task<BasketCountdownViewModel> GetCountdownAsync()
+    {
+        var result = await GetBasketsAsync();
+        if (result.IsFail || result.Data is null)
+            return BasketCountdownViewModel.Inactive();
+
+        var basket = result.Data;
+        if (basket.Items.Count == 0 || basket.ReservationExpiresAt is not { } expires)
+            return BasketCountdownViewModel.Inactive();
+
+        return new BasketCountdownViewModel(true, expires.UtcDateTime.ToString("O"));
+    }
+
     // 020: rezervasyon suresi dolunca sepeti sunucuda bosaltir (idempotent; sure dolmamissa no-op).
     public async Task<ServiceResult> PurgeExpiredBasketAsync()
     {
