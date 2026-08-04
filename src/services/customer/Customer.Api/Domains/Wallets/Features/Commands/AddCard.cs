@@ -44,7 +44,7 @@ public static class AddCard
             wallet ??= Wallet.Create(cmd.UserId);
 
             // Yalniz token + gosterilebilir alanlar saklanir (PAN/CVV yok).
-            var card = SavedCard.Create(token.Token!, token.Brand!, token.Last4!, cmd.ExpiryMonth, cmd.ExpiryYear, cmd.Label);
+            var card = SavedCard.Create(token.Token!, token.Brand!, token.Last4!, cmd.ExpiryMonth, cmd.ExpiryYear, cmd.Label, token.Bin);
             var added = wallet.AddCard(card, now);
             if (!added.IsSuccess)
                 return FeatureObjectResultModel<AddCardResponse>.Error(added.Messages);

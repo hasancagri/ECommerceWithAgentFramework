@@ -32,6 +32,7 @@ builder.AddOpenAIConversations();
 var gatewayUrl = builder.Configuration["services:gateway:http:0"] ?? "http://localhost:5178";
 var basketUrl = $"{gatewayUrl}/mcp/{McpServers.Basket}";
 var catalogUrl = $"{gatewayUrl}/mcp/{McpServers.Catalog}";
+var customerUrl = $"{gatewayUrl}/mcp/{McpServers.Customer}";
 var orderUrl = $"{gatewayUrl}/mcp/{McpServers.Order}";
 var paymentUrl = $"{gatewayUrl}/mcp/{McpServers.Payment}";
 var stockUrl = $"{gatewayUrl}/mcp/{McpServers.Stock}";
@@ -54,7 +55,9 @@ var storefrontUrl = $"{gatewayUrl}/mcp/{McpServers.Storefront}";
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem]),
     (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders]),
     (McpServers.Payment, paymentUrl, McpClients.WithToken, [PaymentTools.GetMyPayments]),
-    (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock])
+    (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock]),
+    // 024: taksit sorgusu icin default kart BIN okumasi (PAN/CVV/token asla).
+    (McpServers.Customer, customerUrl, McpClients.WithToken, [CustomerTools.GetDefaultCardBin])
 ];
 
 builder.Services.AddTransient<TokenInjectingHandler>();
@@ -70,6 +73,11 @@ builder.Services.AddHttpClient(McpClients.WithToken)
     .AddHttpMessageHandler<TokenInjectingHandler>();
 
 builder.Services.AddHttpClient(McpClients.NoToken)
+    .RemoveAllResilienceHandlers();
+
+// 024: A2A istemci HttpClient'i. MCP gibi uzun-omurlu SSE tuttugu icin standart resilience/
+// timeout akisi keser -> muaf tut + comert timeout. Auth handler YOK (merchant key ertelendi, FR-008).
+builder.Services.AddHttpClient(A2APayment.HttpClient, c => c.Timeout = TimeSpan.FromSeconds(60))
     .RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
 
@@ -88,6 +96,16 @@ var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 {
     var tools = sp.GetRequiredService<IMcpToolProvider>()
         .CollectTools(assistantAgentTools);
+
+    // 024: uzak A2A PaymentAgent taksit tool'u. Url yok/erisilemezse null -> eklenmez
+    // (graceful-degrade, US2). Boot'ta bir kez kurulur (Singleton factory), MCP CollectTools gibi bloklar.
+    var a2aTool = A2AInstallmentTool.TryBuildAsync(
+        sp.GetRequiredService<IConfiguration>(),
+        sp.GetRequiredService<IHttpClientFactory>(),
+        sp.GetRequiredService<ILoggerFactory>().CreateLogger("A2AInstallment")).GetAwaiter().GetResult();
+    if (a2aTool is not null)
+        tools.Add(a2aTool);
+
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.AssistantInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);
 

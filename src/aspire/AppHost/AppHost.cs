@@ -116,6 +116,9 @@ web.WithReference(basketApi)
 
 var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(gateway)
+    // 024: uzak A2A PaymentAgent url'i (ayri solution). Bos/eksik ise ChatAgent taksit tool'unu
+    // eklemeden acilir (graceful-degrade, US2). Uzak taraf gelince buraya adres verilir.
+    .WithEnvironment("PaymentGateway__A2AUrl", builder.Configuration["PaymentGateway:A2AUrl"] ?? "")
     .WaitFor(gateway);
 
 // Tedarikçi simülatörü: DB'siz (dataset dosyalarını istek anında okur — 005/R12).

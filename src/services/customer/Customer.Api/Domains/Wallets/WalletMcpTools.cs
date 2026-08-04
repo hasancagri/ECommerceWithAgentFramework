@@ -22,3 +22,21 @@ public static class ListCardsMcpTool
             new Agent.GetCards.GetCardsQuery(userId), ct);
     }
 }
+
+// 024: taksit sorgusu icin default kartin BIN'ini (ilk 6 hane) veren okuma tool'u. HASSAS DEGIL.
+// PAN/CVV/token ASLA. Default kart yoksa NotFound (assistant BIN'siz genel sorgu / kart ekle ister).
+[McpServerToolType]
+public static class DefaultCardBinMcpTool
+{
+    [McpServerTool(Name = "get_default_card_bin")]
+    [Description("Kullanicinin varsayilan kartinin BIN'ini (ilk 6 hane, banka tespiti icin) + marka + son 4 hane doner. Taksit sorgusunda kullanilir. PAN/CVV/token asla donmez. Varsayilan kart yoksa bulunamaz.")]
+    public static Task<FeatureObjectResultModel<Agent.GetDefaultCardBin.DefaultCardBinView>> GetDefaultCardBinAsync(
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        CancellationToken ct)
+    {
+        var userId = CurrentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<Agent.GetDefaultCardBin.DefaultCardBinView>>(
+            new Agent.GetDefaultCardBin.GetDefaultCardBinQuery(userId), ct);
+    }
+}

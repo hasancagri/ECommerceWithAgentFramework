@@ -4,6 +4,7 @@ public static class McpServers
 {
     public const string Basket = "basket";
     public const string Catalog = "catalog";
+    public const string Customer = "customer";
     public const string Order = "order";
     public const string Payment = "payment";
     public const string Stock = "stock";
@@ -17,6 +18,17 @@ public static class McpClients
 {
     public const string WithToken = "mcp-with-token";
     public const string NoToken = "mcp-no-token";
+}
+
+// 024: uzak A2A PaymentAgent (ayri solution) kontrat sabitleri (FR-007). Isimler onceden
+// kararlastirildi; uzak taraf bunlara gore yayinlar. A2A named HttpClient MCP client'lari gibi
+// resilience-muaf (SSE); auth handler YOK (merchant key ertelendi, FR-008).
+public static class A2APayment
+{
+    public const string AgentName = "payment-gateway-agent";
+    public const string InstallmentQuoteSkill = "installment_quote";
+    public const string HttpClient = "a2a-payment";
+    public const string A2AUrlConfigKey = "PaymentGateway:A2AUrl";
 }
 
 public static class CatalogTools
@@ -50,6 +62,11 @@ public static class StockTools
 public static class StorefrontTools
 {
     public const string SearchStorefrontProducts = "search_storefront_products";
+}
+
+public static class CustomerTools
+{
+    public const string GetDefaultCardBin = "get_default_card_bin";
 }
 
 public static class Prompts
@@ -113,8 +130,25 @@ public static class Prompts
         7) ÖDEMELERİM ("ödemelerim", "ödeme geçmişim"): get_my_payments aracını çağır ve sonucu
         kullanıcıya özetle.
 
+        8) TAKSİT SORGUSU ("taksitleri getir", "default kartımla taksitler", "sepet tutarına
+        taksit"): (a) get_basket ile sepet toplamını al. Sepet BOŞSA taksit aracını çağırma; önce
+        sepete ürün eklemesini iste. Sepet toplamı ALINAMAZSA (araç hata döner) taksit aracını
+        çağırma; durumu kullanıcıya açıkça söyle. (b) get_default_card_bin ile varsayılan kartın
+        BIN'ini al; varsa BIN'i, yoksa BIN'siz devam et. (c) Uzak ödeme agent'ının taksit aracını
+        sepet toplamı + para birimi (TRY) + (varsa) BIN ile çağır. Dönen taksit seçeneklerini
+        (banka, taksit sayısı, taksit başına tutar, komisyon) listele. Yalnız dönen alanları göster,
+        ASLA alan UYDURMA; yanıt eksik/biçimsizse eksik olduğunu söyle. Hiç taksit seçeneği yoksa
+        "uygun taksit seçeneği yok" de. NOT: BU YALNIZ BİLGİdir; ödeme/çekim YAPMA.
+
         Önemli: "var mı", "mevcut mu" gibi bulunurluk soruları bir EKLEME İSTEĞİ DEĞİLDİR;
         kullanıcı açıkça "ekle/at" demedikçe sepete asla ekleme yapma.
         Bir ürün bulunamazsa veya bir işlem başarısız olursa durumu kullanıcıya açıkça söyle.
+
+        Taksit aracı ELİNDE YOKSA veya çağrı başarısız olursa: kullanıcıya "taksit bilgisi şu an
+        alınamıyor" de; teknik hata/exception ayrıntısı verme, sohbetin geri kalanı normal çalışır.
+
+        ÖDEME / ÇEKİM (SATIN ALMA): "öde", "satın al", "kartımdan çek", "ödemeyi tamamla" gibi
+        gerçek ödeme istekleri KAPSAM DIŞIdır. Bunu yapamayacağını nazikçe söyle; yalnız taksit
+        BİLGİsi verebildiğini belirt. Hiçbir ödeme/çekim aracı çağırma.
         """;
 }

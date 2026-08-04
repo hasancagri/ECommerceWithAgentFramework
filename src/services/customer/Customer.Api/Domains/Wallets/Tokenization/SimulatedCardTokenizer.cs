@@ -12,6 +12,8 @@ public class SimulatedCardTokenizer : ICardTokenizer, ISingletonDependency
     {
         var digits = new string((pan ?? string.Empty).Where(char.IsDigit).ToArray());
         var last4 = digits.Length >= 4 ? digits[^4..] : digits;
+        // 024: BIN = ilk 6 hane (hassas degil, bankayi tanimlar). PAN yine yazilmaz/loglanmaz.
+        var bin = digits.Length >= 6 ? digits[..6] : null;
 
         // Sahte marka — yalniz demo icin placeholder. Gercek marka gercek gateway'den gelecek.
         var brand = digits.Length > 0 && digits[0] == '4' ? "Visa"
@@ -21,7 +23,7 @@ public class SimulatedCardTokenizer : ICardTokenizer, ISingletonDependency
         // Opak token — PAN'i icermez, geri cozulemez (stub: rastgele tutamac).
         var token = $"tok_{Guid.NewGuid():N}";
 
-        return Task.FromResult(new TokenizeResult(true, token, brand, last4, null));
+        return Task.FromResult(new TokenizeResult(true, token, brand, last4, null, bin));
     }
 
     public Task RevokeAsync(string token, CancellationToken ct) => Task.CompletedTask;
