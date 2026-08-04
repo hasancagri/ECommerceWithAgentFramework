@@ -1,4 +1,4 @@
-namespace Stock.Api.Domains.Stocks;
+namespace Stock.Api.Constants;
 
 // Stock context'ine ozel hata kodu sabitleri (Result pattern: Code serbest metin degil, sabittir).
 public static class StockResourceConstants
@@ -9,4 +9,7 @@ public static class StockResourceConstants
     public static readonly string STOCK_INSUFFICIENT = "STOCK_INSUFFICIENT";
     public static readonly string STOCK_NO_ACTIVE_RESERVATION = "STOCK_NO_ACTIVE_RESERVATION";
     public static readonly string STOCK_RESERVE_QUANTITY_INVALID = "STOCK_RESERVE_QUANTITY_INVALID";
+
+    public static readonly string RECORD_NOT_FOUND = "COMMON_MESSAGE_RECORD_NOT_FOUND";
+    public static readonly string AMOUNT_MUST_BE_POSITIVE = "AMOUNT_MUST_BE_POSITIVE";
 }

@@ -1,6 +1,6 @@
 using Common.Utils.Constants;
 using Storefront.Api.Domains.StorefrontView.Features.Agent;
-using static Storefront.Api.Domains.StorefrontView.Features.Agent.SearchStorefrontProducts;
+using static Storefront.Api.Domains.StorefrontView.Features.Agent.SearchStorefrontProductsForAgent;
 
 namespace Storefront.Api.Tests;
 
@@ -33,7 +33,7 @@ public class SearchStorefrontProductsTests
     {
         var messages = Validate(new SearchStorefrontProductsQuery());
 
-        messages.ShouldHaveSingleItem().Code.ShouldBe(CommonResourceConstants.COMMON_MESSAGE_VALUE_IS_REQUIRED);
+        messages.ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.VALUE_IS_REQUIRED);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class SearchStorefrontProductsTests
     {
         var messages = Validate(new SearchStorefrontProductsQuery(MaxResults: 5));
 
-        messages.ShouldHaveSingleItem().Code.ShouldBe(CommonResourceConstants.COMMON_MESSAGE_VALUE_IS_REQUIRED);
+        messages.ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.VALUE_IS_REQUIRED);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class SearchStorefrontProductsTests
     {
         var messages = Validate(new SearchStorefrontProductsQuery(MinPrice: 3000m, MaxPrice: 1000m));
 
-        messages.ShouldHaveSingleItem().Code.ShouldBe(CommonResourceConstants.COMMON_MESSAGE_INVALID_RANGE);
+        messages.ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.INVALID_RANGE);
     }
 
     [Theory]
@@ -59,7 +59,7 @@ public class SearchStorefrontProductsTests
     {
         var query = new SearchStorefrontProductsQuery(MinPrice: minPrice, MaxPrice: maxPrice);
 
-        Validate(query).ShouldHaveSingleItem().Code.ShouldBe(CommonResourceConstants.COMMON_MESSAGE_INVALID_VALUE);
+        Validate(query).ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.INVALID_VALUE);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class SearchStorefrontProductsTests
     {
         var messages = Validate(new SearchStorefrontProductsQuery(MinStock: 0));
 
-        messages.ShouldHaveSingleItem().Code.ShouldBe(CommonResourceConstants.COMMON_MESSAGE_INVALID_VALUE);
+        messages.ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.INVALID_VALUE);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class SearchStorefrontProductsTests
         var query = new SearchStorefrontProductsQuery(
             SearchText: "kış sporu ayakkabısı", MinPrice: 3000m, MaxPrice: 1000m);
 
-        Validate(query).ShouldHaveSingleItem().Code.ShouldBe(CommonResourceConstants.COMMON_MESSAGE_INVALID_RANGE);
+        Validate(query).ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.INVALID_RANGE);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class SearchStorefrontProductsTests
     {
         var messages = Validate(new SearchStorefrontProductsQuery(SearchText: "   "));
 
-        messages.ShouldHaveSingleItem().Code.ShouldBe(CommonResourceConstants.COMMON_MESSAGE_VALUE_IS_REQUIRED);
+        messages.ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.VALUE_IS_REQUIRED);
     }
 
     // --- MaxResults kırpma (FR-009) ---

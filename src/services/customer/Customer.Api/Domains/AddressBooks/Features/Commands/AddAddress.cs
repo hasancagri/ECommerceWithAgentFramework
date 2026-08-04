@@ -43,9 +43,9 @@ public static class AddAddressCommandEndpoint
 {
     public static RouteGroupBuilder AddAddressGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("", async ([FromBody] AddAddress.AddAddressCommand cmd, HttpContext httpContext, IMessageBus bus) =>
+        group.MapPost("", async ([FromBody] AddAddress.AddAddressCommand cmd, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<AddAddress.AddAddressResponse>>(cmd with { UserId = userId });
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })

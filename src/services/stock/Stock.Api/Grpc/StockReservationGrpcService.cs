@@ -1,7 +1,4 @@
-using Grpc.Core;
-using Shared.Grpc.Stock;
-
-namespace Stock.Api.Domains.Stocks.Grpc;
+namespace Stock.Api.Grpc;
 
 // 012: Stock rezervasyon gRPC sunucusu. Ince sarici — is mantigi aggregate'te, burada yalniz
 // Wolverine command'ini IMessageBus ile cagirir (MCP tool deseninin gRPC muadili). Yetki endpoint
@@ -87,7 +84,7 @@ public class StockReservationGrpcService(IMessageBus bus)
     {
         if (code == StockResourceConstants.STOCK_INSUFFICIENT) return ReservationStatus.InsufficientStock;
         if (code == StockResourceConstants.STOCK_NO_ACTIVE_RESERVATION) return ReservationStatus.NoActiveReservation;
-        if (code == CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND) return ReservationStatus.ProductNotFound;
+        if (code == StockResourceConstants.RECORD_NOT_FOUND) return ReservationStatus.ProductNotFound;
         return ReservationStatus.Unspecified;
     }
 }

@@ -1,4 +1,4 @@
-namespace Customer.Api.Domains.AddressBooks;
+namespace Customer.Api.Domains.AddressBooks.Entities;
 
 // AddressBook icinde sade entity (base almaz — BasketItem deseni). Kimligi (Id) var, bagimsiz yasamaz.
 public class SavedAddress

@@ -1,6 +1,6 @@
 namespace Order.Api.Domains.Orders.Features.Agent;
 
-public static class GetOrders
+public static class GetOrdersForAgent
 {
     public record GetOrdersQuery(Guid UserId);
 

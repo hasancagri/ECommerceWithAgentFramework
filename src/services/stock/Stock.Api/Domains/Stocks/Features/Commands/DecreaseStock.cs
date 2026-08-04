@@ -21,7 +21,7 @@ public static class DecreaseStock
         {
             if (cmd.Amount <= 0)
                 return FeatureObjectResultModel<DecreaseStockResponse>.Error(
-                    new MessageItem { Code = "AMOUNT_MUST_BE_POSITIVE" });
+                    new MessageItem { Code = StockResourceConstants.AMOUNT_MUST_BE_POSITIVE });
 
             var stock = await session.Query<ProductStock>()
                 .FirstOrDefaultAsync(x => x.ProductId == cmd.ProductId, ct);
@@ -31,7 +31,7 @@ public static class DecreaseStock
 
             if (stock.Quantity < cmd.Amount)
                 return FeatureObjectResultModel<DecreaseStockResponse>.Error(
-                    new MessageItem { Code = "INSUFFICIENT_STOCK" });
+                    new MessageItem { Code = StockResourceConstants.STOCK_INSUFFICIENT });
 
             stock.Decrease(cmd.Amount);
             session.Store(stock);

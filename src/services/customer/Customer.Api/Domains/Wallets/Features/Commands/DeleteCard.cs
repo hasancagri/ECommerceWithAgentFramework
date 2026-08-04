@@ -44,9 +44,9 @@ public static class DeleteCardCommandEndpoint
 {
     public static RouteGroupBuilder DeleteCardGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapDelete("/{id:guid}", async (Guid id, HttpContext httpContext, IMessageBus bus) =>
+        group.MapDelete("/{id:guid}", async (Guid id, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureResultModel>(new DeleteCard.DeleteCardCommand(userId, id));
                 return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
             })

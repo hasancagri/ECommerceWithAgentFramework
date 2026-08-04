@@ -44,7 +44,7 @@ public static class SetBasketItemQuantity
             // 021 (FR-005): sabit ust sinir otoriter — 5 ustune cikilamaz.
             if (cmd.Quantity > Basket.MaxItemQuantity)
                 return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(
-                    new MessageItem { Property = nameof(cmd.Quantity), Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_RANGE });
+                    new MessageItem { Property = nameof(cmd.Quantity), Code = BasketResourceConstants.INVALID_RANGE });
 
             // 017 (FR-003): mevcut capa gecirilir — rezervasyon capayla hizalanir, capa DEGISMEZ.
             var reserve = await reservation.SetReservedQuantityAsync(
@@ -70,9 +70,9 @@ public static class SetBasketItemQuantityEndpoint
     public static RouteGroupBuilder SetBasketItemQuantityGroupItemEndpoint(this RouteGroupBuilder group)
     {
         group.MapPut("/item/{productId:guid}/quantity", async (
-                Guid productId, [FromBody] SetQuantityBody body, HttpContext httpContext, IMessageBus bus) =>
+                Guid productId, [FromBody] SetQuantityBody body, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<SetBasketItemQuantity.SetBasketItemQuantityResponse>>(
                     new SetBasketItemQuantity.SetBasketItemQuantityCommand(userId, productId, body.Quantity));
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);

@@ -1,3 +1,5 @@
+using Stock.Api.Grpc;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.AddOpenApiDocumentation();
 

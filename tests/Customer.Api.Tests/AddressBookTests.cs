@@ -34,7 +34,7 @@ public class AddressBookTests
         var result = Address.Create("Istanbul", "", "Bagdat Cad.", "34710", "No 12");
 
         result.IsSuccess.ShouldBeFalse();
-        result.Messages!.ShouldContain(m => m.Code == CommonResourceConstants.COMMON_MESSAGE_VALUE_IS_REQUIRED);
+        result.Messages!.ShouldContain(m => m.Code == CustomerResourceConstants.VALUE_IS_REQUIRED);
     }
 
     [Fact]

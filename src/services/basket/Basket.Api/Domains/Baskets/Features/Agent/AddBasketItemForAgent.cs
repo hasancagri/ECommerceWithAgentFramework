@@ -1,6 +1,6 @@
 namespace Basket.Api.Domains.Baskets.Features.Agent;
 
-public static class AddBasketItem
+public static class AddBasketItemForAgent
 {
     [RequiredScope(AuthorizationScopes.BasketWrite)]
     public record AddBasketItemCommand(

@@ -1,6 +1,6 @@
 namespace Stock.Api.Domains.Stocks.Features.Agent;
 
-public static class GetStockByProductId
+public static class GetStockByProductIdForAgent
 {
     public record GetStockByProductIdQuery(Guid ProductId);
 

@@ -3,6 +3,7 @@ namespace Order.Api.Domains.Orders.Features.Commands;
 public static class CreateOrder
 {
     public record CreateOrderCommand(
+        Guid UserId,
         AddressDto Address,
         Guid PaymentId,
         List<OrderItemDto> Items);
@@ -14,20 +15,19 @@ public static class CreateOrder
     [Transactional]
     public class CreateOrderCommandHandler(
         IDocumentSession session,
-        IHttpContextAccessor httpContextAccessor,
         StockCommitClientProxy stockCommit,
         IMessageBus bus)
     {
         public async Task<FeatureResultModel> Handle(CreateOrderCommand cmd, CancellationToken ct)
         {
-            var userId = CurrentUser.Load(httpContextAccessor.HttpContext!.User).Id;
+            var userId = cmd.UserId;
 
             // Idempotency: ayni paymentId ikinci kez siparise baglanamaz.
             var alreadyUsed = await session.Query<Order>()
                 .AnyAsync(o => o.PaymentId == cmd.PaymentId, ct);
             if (alreadyUsed)
                 return FeatureResultModel.Error(new MessageItem
-                    { Code = "This payment has already been used for an order." });
+                    { Code = OrderResourceConstants.ORDER_PAYMENT_ALREADY_USED });
 
             var address = new Address(cmd.Address.Province, cmd.Address.District, cmd.Address.Street,
                 cmd.Address.ZipCode, cmd.Address.Line);
@@ -62,9 +62,11 @@ public static class CreateOrderCommandEndpoint
 {
     public static RouteGroupBuilder CreateOrderGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("/", async ([FromBody] CreateOrder.CreateOrderCommand cmd, IMessageBus bus) =>
+        group.MapPost("/", async ([FromBody] CreateOrder.CreateOrderCommand cmd, HttpContext httpContext,
+                ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var result = await bus.InvokeAsync<FeatureResultModel>(cmd);
+                var userId = currentUser.Load(httpContext.User).Id;
+                var result = await bus.InvokeAsync<FeatureResultModel>(cmd with { UserId = userId });
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })
             .RequireAuthorization(AuthorizationScopes.OrderWrite);

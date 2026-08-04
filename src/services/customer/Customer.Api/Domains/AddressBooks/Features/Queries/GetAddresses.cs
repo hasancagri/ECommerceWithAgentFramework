@@ -48,9 +48,9 @@ public static class GetAddressesQueryEndpoint
 {
     public static RouteGroupBuilder GetAddressesGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapGet("", async (HttpContext httpContext, IMessageBus bus) =>
+        group.MapGet("", async (HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureListResultModel<GetAddresses.AddressView>>(
                     new GetAddresses.GetAddressesQuery(userId));
                 return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);

@@ -1,5 +1,3 @@
-using Hangfire;
-
 namespace Stock.Api.Jobs;
 
 // 012 (US4): TTL suresi gecmis rezervasyonlari fiziksel siler ve her biri icin ReservationExpired

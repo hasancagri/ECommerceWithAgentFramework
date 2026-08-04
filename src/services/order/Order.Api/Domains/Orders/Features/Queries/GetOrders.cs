@@ -2,7 +2,7 @@ namespace Order.Api.Domains.Orders.Features.Queries;
 
 public static class GetOrders
 {
-    public record GetOrdersQuery;
+    public record GetOrdersQuery(Guid UserId);
 
     public record GetOrdersResponse
     {
@@ -36,14 +36,13 @@ public static class GetOrders
         public decimal UnitPrice { get; init; }
     }
 
-    public class GetOrdersQueryHandler(IQuerySession session, IHttpContextAccessor httpContextAccessor)
+    public class GetOrdersQueryHandler(IQuerySession session)
     {
         public async Task<FeatureObjectResultModel<List<GetOrdersResponse>>> Handle(GetOrdersQuery query,
             CancellationToken ct)
         {
-            var userId = Guid.Parse(httpContextAccessor.HttpContext!.User.FindFirst("sub")!.Value);
             var orders = await session.Query<Order>()
-                .Where(x => x.BuyerId == userId)
+                .Where(x => x.BuyerId == query.UserId)
                 .ToListAsync(ct);
 
             var response = orders.Select(GetOrdersResponse.From).ToList();
@@ -56,11 +55,12 @@ public static class GetOrdersEndpoint
 {
     public static RouteGroupBuilder GetOrdersGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (IMessageBus bus) =>
+        group.MapGet("/", async (HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
         {
+            var userId = currentUser.Load(httpContext.User).Id;
             var result =
                 await bus.InvokeAsync<FeatureObjectResultModel<List<GetOrders.GetOrdersResponse>>>(
-                    new GetOrders.GetOrdersQuery());
+                    new GetOrders.GetOrdersQuery(userId));
             return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
         })
             .RequireAuthorization(AuthorizationScopes.OrderRead);

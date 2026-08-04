@@ -38,17 +38,17 @@ public class Order : AggregateRoot
     {
         if (string.IsNullOrEmpty(productName))
         {
-            return FeatureResultModel.Error(new MessageItem { Code = "ProductName cannot be empty" });
+            return FeatureResultModel.Error(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_PRODUCT_NAME_REQUIRED });
         }
 
         if (unitPrice <= 0)
         {
-            return FeatureResultModel.Error(new MessageItem { Code = "UnitPrice must be greater than zero" });
+            return FeatureResultModel.Error(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_UNIT_PRICE_INVALID });
         }
 
         if (quantity <= 0)
         {
-            return FeatureResultModel.Error(new MessageItem { Code = "Quantity must be greater than zero" });
+            return FeatureResultModel.Error(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_QUANTITY_INVALID });
         }
 
         OrderItems.Add(OrderItem.Create(productId, productName, unitPrice, quantity));

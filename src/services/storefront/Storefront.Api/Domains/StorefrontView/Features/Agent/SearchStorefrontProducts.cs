@@ -8,7 +8,7 @@ namespace Storefront.Api.Domains.StorefrontView.Features.Agent;
 // 019: hibrit arama — tek slice, iki yol. SearchText yoksa Marten LINQ + saf in-memory cekirdek
 // (FR-008, deterministik Name ASC). SearchText varsa ham SQL: view ⋈ embedding join, kosinus
 // mesafesi sirali, esik alti elenir (R3/R6); filtreler her iki yolda da kesindir (FR-007).
-public static class SearchStorefrontProducts
+public static class SearchStorefrontProductsForAgent
 {
     public const int DefaultMaxResults = 8;
     public const int MaxResultsLimit = 20;
@@ -42,7 +42,7 @@ public static class SearchStorefrontProducts
             messages.Add(new MessageItem
             {
                 Property = nameof(SearchStorefrontProductsQuery),
-                Code = CommonResourceConstants.COMMON_MESSAGE_VALUE_IS_REQUIRED
+                Code = StorefrontResourceConstants.VALUE_IS_REQUIRED
             });
             return messages;
         }
@@ -51,28 +51,28 @@ public static class SearchStorefrontProducts
             messages.Add(new MessageItem
             {
                 Property = nameof(query.MinPrice),
-                Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_VALUE
+                Code = StorefrontResourceConstants.INVALID_VALUE
             });
 
         if (query.MaxPrice is < 0)
             messages.Add(new MessageItem
             {
                 Property = nameof(query.MaxPrice),
-                Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_VALUE
+                Code = StorefrontResourceConstants.INVALID_VALUE
             });
 
         if (query is { MinPrice: >= 0, MaxPrice: >= 0 } && query.MinPrice > query.MaxPrice)
             messages.Add(new MessageItem
             {
                 Property = nameof(query.MinPrice),
-                Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_RANGE
+                Code = StorefrontResourceConstants.INVALID_RANGE
             });
 
         if (query.MinStock is < 1)
             messages.Add(new MessageItem
             {
                 Property = nameof(query.MinStock),
-                Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_VALUE
+                Code = StorefrontResourceConstants.INVALID_VALUE
             });
 
         return messages;
@@ -290,15 +290,15 @@ public static class SearchStorefrontProductsEndpoint
                 string? searchText = null,
                 int? maxResults = null) =>
             {
-                var result = await bus.InvokeAsync<FeatureListResultModel<SearchStorefrontProducts.SearchStorefrontProductItem>>(
-                    new SearchStorefrontProducts.SearchStorefrontProductsQuery(
+                var result = await bus.InvokeAsync<FeatureListResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductItem>>(
+                    new SearchStorefrontProductsForAgent.SearchStorefrontProductsQuery(
                         brands, minPrice, maxPrice, minStock, searchText, maxResults), ct);
 
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })
             .WithName("SearchStorefrontProducts")
             .MapToApiVersion(1, 0)
-            .Produces<FeatureListResultModel<SearchStorefrontProducts.SearchStorefrontProductItem>>()
+            .Produces<FeatureListResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductItem>>()
             .AllowAnonymous();
 
         return group;

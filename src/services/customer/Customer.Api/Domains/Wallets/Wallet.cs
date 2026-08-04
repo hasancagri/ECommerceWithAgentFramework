@@ -19,7 +19,7 @@ public class Wallet : AggregateRoot
     {
         if (!IsExpiryInFuture(card.ExpiryMonth, card.ExpiryYear, now))
             return FeatureResultModel.Error(
-                new MessageItem { Property = nameof(card.ExpiryYear), Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_VALUE });
+                new MessageItem { Property = nameof(card.ExpiryYear), Code = CustomerResourceConstants.INVALID_VALUE });
 
         _cards.Add(card);
         return FeatureResultModel.Ok();

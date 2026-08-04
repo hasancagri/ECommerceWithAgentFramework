@@ -2,7 +2,7 @@ namespace Stock.Api.Domains.Stocks.Features.Agent;
 
 // Agent'a açık mutlak stok atama yüzü (005-supplier-ingestion). İş mantığı kopyalanmaz;
 // mevcut SetStockCommand'a delege edilir (negatif adet kuralı aggregate'te yaşar).
-public static class SetStock
+public static class SetStockForAgent
 {
     public record SetStockCommand(Guid ProductId, int Quantity);
 

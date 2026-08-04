@@ -31,9 +31,9 @@ public static class SetDefaultAddressCommandEndpoint
 {
     public static RouteGroupBuilder SetDefaultAddressGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("/{id:guid}/default", async (Guid id, HttpContext httpContext, IMessageBus bus) =>
+        group.MapPost("/{id:guid}/default", async (Guid id, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureResultModel>(new SetDefaultAddress.SetDefaultAddressCommand(userId, id));
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })

@@ -1,6 +1,6 @@
 namespace Catalog.Api.Domains.Products.Features.Agent;
 
-public static class GetProduct
+public static class GetProductForAgent
 {
     public record GetProductQuery(string Name);
 

@@ -15,7 +15,7 @@ public class Payment : AggregateRoot
             return ResultDomain<Payment>.Error(new MessageItem
             {
                 Property = nameof(UserId),
-                Code = "UserId cannot be empty."
+                Code = PaymentResourceConstants.PAYMENT_USER_ID_REQUIRED
             });
         }
 
@@ -24,7 +24,7 @@ public class Payment : AggregateRoot
             return ResultDomain<Payment>.Error(new MessageItem
             {
                 Property = nameof(Amount),
-                Code = "Amount must be greater than zero."
+                Code = PaymentResourceConstants.PAYMENT_AMOUNT_INVALID
             });
         }
 

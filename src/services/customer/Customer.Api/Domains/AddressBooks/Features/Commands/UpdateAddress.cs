@@ -44,9 +44,9 @@ public static class UpdateAddressCommandEndpoint
 
     public static RouteGroupBuilder UpdateAddressGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPut("/{id:guid}", async (Guid id, [FromBody] UpdateAddressBody body, HttpContext httpContext, IMessageBus bus) =>
+        group.MapPut("/{id:guid}", async (Guid id, [FromBody] UpdateAddressBody body, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureResultModel>(new UpdateAddress.UpdateAddressCommand(
                     userId, id, body.Province, body.District, body.Street, body.ZipCode, body.Line));
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);

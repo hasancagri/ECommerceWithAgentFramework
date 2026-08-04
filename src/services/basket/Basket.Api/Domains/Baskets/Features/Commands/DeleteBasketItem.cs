@@ -42,9 +42,9 @@ public static class DeleteBasketItemCommandEndpoint
 {
     public static RouteGroupBuilder DeleteBasketItemGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapDelete("/item/{id:guid}", async (Guid id, HttpContext httpContext, IMessageBus bus) =>
+        group.MapDelete("/item/{id:guid}", async (Guid id, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<DeleteBasketItem.DeleteBasketItemResponse>>(
                     new DeleteBasketItem.DeleteBasketItemCommand(userId, id));
                 return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
