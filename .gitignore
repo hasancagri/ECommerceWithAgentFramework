@@ -12,3 +12,6 @@ riderModule.iml
 
 # File.Api runtime-generated product images (upload output; not source)
 src/services/file/File.Api/Images/
+
+# ASP.NET Core Data Protection keys (dev-local, not for VCS)
+src/ui/WebApp/keys/

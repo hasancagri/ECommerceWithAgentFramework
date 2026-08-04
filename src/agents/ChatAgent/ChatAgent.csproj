@@ -9,6 +9,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Agents.AI.Hosting.OpenAI" />
+        <PackageReference Include="Microsoft.Agents.AI.A2A" />
+        <PackageReference Include="A2A" />
         <PackageReference Include="Microsoft.Extensions.AI" />
         <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
         <PackageReference Include="ModelContextProtocol.Core" />

@@ -14,7 +14,8 @@ public interface ICardTokenizer
     Task RevokeAsync(string token, CancellationToken ct);
 }
 
-// Basari: Success=true + opak Token + Brand + Last4 (PAN/CVV DONMEZ).
+// Basari: Success=true + opak Token + Brand + Last4 + Bin (PAN/CVV DONMEZ).
 // Hata: Success=false + ErrorCode (resource sabitine eslenir); Token null.
+// 024: Bin = kartin ilk 6 hanesi (hassas degil); gercek gateway gelince oradan gelir.
 public sealed record TokenizeResult(
-    bool Success, string? Token, string? Brand, string? Last4, string? ErrorCode);
+    bool Success, string? Token, string? Brand, string? Last4, string? ErrorCode, string? Bin = null);
