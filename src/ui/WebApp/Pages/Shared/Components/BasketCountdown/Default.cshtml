@@ -1,0 +1,11 @@
+@model WebApp.Pages.Basket.ViewModel.BasketCountdownViewModel
+
+@* 025: aktif rezervasyon yoksa/sepet bossa/anonimse hicbir sey render edilmez (FR-006). *@
+@if (Model.IsActive)
+{
+    <li class="nav-item d-flex align-items-center me-3" id="basket-countdown-wrapper">
+        <span class="navbar-text" title="Sepet rezervasyon suresi">
+            &#9203; <strong id="basket-countdown" data-expires="@Model.ExpiresAtIso">--:--</strong>
+        </span>
+    </li>
+}

@@ -4,20 +4,18 @@
     var index = 1;
 }
 
-@* 017 (FR-011/012): sepet duzeyi TEK rezervasyon banner'i — satir sayaci yok. *@
-@if (Model.Basket.HasItem && Model.Basket.ReservationExpiresAt is { } reservationExpiresAt)
+@* 025: geri sayim artik layout header'inda (tek kanonik sayac). Buradaki banner yalniz
+   bilgilendirir; kendi sayaci yoktur. Sifir/temizlik header JS'i tarafindan yonetilir. *@
+@if (Model.Basket.HasItem && Model.Basket.ReservationExpiresAt is not null)
 {
-    <div id="reservation-banner"
-         class="alert @(Model.Basket.IsReservationExpired ? "alert-secondary" : "alert-info")"
-         role="alert"
-         data-expires="@reservationExpiresAt.UtcDateTime.ToString("O")">
+    <div class="alert @(Model.Basket.IsReservationExpired ? "alert-secondary" : "alert-info")" role="alert">
         @if (Model.Basket.IsReservationExpired)
         {
             <span>Reservation <strong>expired</strong> — items may be removed from your basket.</span>
         }
         else
         {
-            <span>Items reserved for <strong id="reservation-countdown">…</strong></span>
+            <span>Items are reserved — see the countdown in the header.</span>
         }
     </div>
 }
@@ -110,38 +108,3 @@
 <a asp-page="/order/Create" class="btn btn-success w-100 mt-3 text-center">
     <i class="fa-solid fa-credit-card"></i> Proceed to Payment Step
 </a>
-
-@section Scripts {
-    <script>
-        // 017 (FR-012): sepet duzeyi TEK geri sayim — sunucu mutlak bitisine gore 1sn'de bir tiklar.
-        (function () {
-            const banner = document.getElementById('reservation-banner');
-            const el = document.getElementById('reservation-countdown');
-            if (!banner || !el) return;
-
-            const expires = Date.parse(banner.dataset.expires);
-            if (isNaN(expires)) return;
-
-            function pad(n) { return n < 10 ? '0' + n : '' + n; }
-
-            function tick() {
-                const remaining = Math.floor((expires - Date.now()) / 1000);
-                if (remaining <= 0) {
-                    // 020: sure doldu — sepeti sunucuda bosalt + sayfayi yenile (bos sepet gosterilir).
-                    clearInterval(timer);
-                    banner.classList.remove('alert-info');
-                    banner.classList.add('alert-secondary');
-                    banner.innerHTML = '<span>Reservation <strong>expired</strong> — clearing your basket…</span>';
-                    window.location.href = '?handler=PurgeExpired';
-                    return;
-                }
-                const m = Math.floor(remaining / 60);
-                const s = remaining % 60;
-                el.textContent = pad(m) + ':' + pad(s);
-            }
-
-            tick();
-            const timer = setInterval(tick, 1000);
-        })();
-    </script>
-}
