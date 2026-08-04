@@ -1,6 +1,6 @@
 namespace Catalog.Api.Domains.Products.Features.Agent;
 
-public static class SearchProducts
+public static class SearchProductsForAgent
 {
     // 016: opsiyonel kategori/marka daraltması (FR-012) — ad normalize edilip Id'ye çözülür, filtre Id ile.
     public record SearchProductsQuery(string Name, string? Category = null, string? Brand = null);

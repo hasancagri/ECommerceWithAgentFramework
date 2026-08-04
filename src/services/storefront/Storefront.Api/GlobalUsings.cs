@@ -11,6 +11,7 @@ global using Microsoft.AspNetCore.Mvc;
 global using Newtonsoft.Json;
 global using PagedList.Core;
 global using Shared;
+global using Storefront.Api.Constants;
 global using Storefront.Api.Dependencies;
 global using Storefront.Api.Domains.StorefrontView.Features.Queries;
 global using Storefront.Api.Domains.StorefrontView.Features.Agent;

@@ -21,7 +21,7 @@ public static class IncreaseStock
         {
             if (cmd.Amount <= 0)
                 return FeatureObjectResultModel<IncreaseStockResponse>.Error(
-                    new MessageItem { Code = "AMOUNT_MUST_BE_POSITIVE" });
+                    new MessageItem { Code = StockResourceConstants.AMOUNT_MUST_BE_POSITIVE });
 
             var stock = await session.Query<ProductStock>()
                 .FirstOrDefaultAsync(x => x.ProductId == cmd.ProductId, ct);

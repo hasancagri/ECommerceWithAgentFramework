@@ -35,9 +35,9 @@ public static class ClearExpiredBasketCommandEndpoint
 {
     public static RouteGroupBuilder ClearExpiredBasketGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("/purge-expired", async (HttpContext httpContext, IMessageBus bus) =>
+        group.MapPost("/purge-expired", async (HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureResultModel>(
                     new ClearExpiredBasket.ClearExpiredBasketCommand(userId));
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);

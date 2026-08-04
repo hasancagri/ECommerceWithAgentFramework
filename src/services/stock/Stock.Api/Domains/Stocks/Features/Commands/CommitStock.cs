@@ -27,7 +27,7 @@ public static class CommitStock
 
             if (stock is null)
                 return FeatureObjectResultModel<CommitStockResponse>.Error(
-                    new MessageItem { Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND });
+                    new MessageItem { Code = StockResourceConstants.RECORD_NOT_FOUND });
 
             var now = DateTimeOffset.UtcNow;
             var result = stock.Commit(cmd.UserId, cmd.Quantity, now);

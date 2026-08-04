@@ -1,3 +1,5 @@
+using StockReservation = Stock.Api.Domains.Stocks.Entities.StockReservation;
+
 namespace Stock.Api.Domains.Stocks;
 
 public class ProductStock : AggregateRoot

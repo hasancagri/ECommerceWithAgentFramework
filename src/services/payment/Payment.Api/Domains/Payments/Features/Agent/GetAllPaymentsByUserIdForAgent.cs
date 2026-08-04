@@ -1,6 +1,6 @@
 namespace Payment.Api.Domains.Payments.Features.Agent;
 
-public static class GetAllPaymentsByUserId
+public static class GetAllPaymentsByUserIdForAgent
 {
     public record GetAllPaymentsByUserIdQuery(Guid UserId);
 

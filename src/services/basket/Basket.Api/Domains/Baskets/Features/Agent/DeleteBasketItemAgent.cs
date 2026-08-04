@@ -1,6 +1,6 @@
 namespace Basket.Api.Domains.Baskets.Features.Agent;
 
-public static class DeleteBasketItem
+public static class DeleteBasketItemForAgent
 {
     [RequiredScope(AuthorizationScopes.BasketWrite)]
     public record DeleteBasketItemCommand(Guid UserId, Guid Id);

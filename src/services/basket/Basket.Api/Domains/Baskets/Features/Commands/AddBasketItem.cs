@@ -45,7 +45,7 @@ public static class AddBasketItem
             // 021 (FR-005): sabit ust sinir otoriter — 5 ustune cikilamaz (UI/API/agent farketmez).
             if (desiredQuantity > Basket.MaxItemQuantity)
                 return FeatureObjectResultModel<AddBasketItemResponse>.Error(
-                    new MessageItem { Property = nameof(cmd.ProductId), Code = CommonResourceConstants.COMMON_MESSAGE_INVALID_RANGE });
+                    new MessageItem { Property = nameof(cmd.ProductId), Code = BasketResourceConstants.INVALID_RANGE });
 
             var reserve = await reservation.SetReservedQuantityAsync(cmd.ProductId, cmd.UserId, desiredQuantity, anchor, ct);
             if (!reserve.Success)
@@ -67,9 +67,9 @@ public static class AddBasketItemCommandEndpoint
 {
     public static RouteGroupBuilder AddBasketItemGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("/item", async ([FromBody] AddBasketItem.AddBasketItemCommand cmd, HttpContext httpContext, IMessageBus bus) =>
+        group.MapPost("/item", async ([FromBody] AddBasketItem.AddBasketItemCommand cmd, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<AddBasketItem.AddBasketItemResponse>>(cmd with { UserId = userId });
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })

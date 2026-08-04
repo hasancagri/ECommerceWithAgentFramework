@@ -20,7 +20,7 @@ public class Brand : AggregateRoot
             return ResultDomain<Brand>.Error(new MessageItem
             {
                 Property = nameof(Name),
-                Code = CommonResourceConstants.COMMON_MESSAGE_VALUE_EMPTY
+                Code = CatalogResourceConstants.VALUE_EMPTY
             });
 
         var normalized = NameNormalization.Normalize(name);

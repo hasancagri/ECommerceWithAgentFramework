@@ -20,7 +20,7 @@ public class Category : AggregateRoot
             return ResultDomain<Category>.Error(new MessageItem
             {
                 Property = nameof(Name),
-                Code = CommonResourceConstants.COMMON_MESSAGE_VALUE_EMPTY
+                Code = CatalogResourceConstants.VALUE_EMPTY
             });
 
         var normalized = NameNormalization.Normalize(name);

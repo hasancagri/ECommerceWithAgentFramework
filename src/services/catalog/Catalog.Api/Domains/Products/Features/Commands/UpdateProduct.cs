@@ -36,7 +36,7 @@ public static class UpdateProduct
                 return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
                 {
                     Property = nameof(cmd.BrandId),
-                    Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
+                    Code = CatalogResourceConstants.RECORD_NOT_FOUND
                 });
 
             var category = await session.LoadAsync<Category>(cmd.CategoryId, ct);
@@ -44,7 +44,7 @@ public static class UpdateProduct
                 return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
                 {
                     Property = nameof(cmd.CategoryId),
-                    Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND
+                    Code = CatalogResourceConstants.RECORD_NOT_FOUND
                 });
 
             product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,

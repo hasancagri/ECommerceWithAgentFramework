@@ -31,7 +31,7 @@ public record Address
             || string.IsNullOrWhiteSpace(zipCode)
             || string.IsNullOrWhiteSpace(line))
             return ResultDomain<Address>.Error(
-                new MessageItem { Code = CommonResourceConstants.COMMON_MESSAGE_VALUE_IS_REQUIRED });
+                new MessageItem { Code = CustomerResourceConstants.VALUE_IS_REQUIRED });
 
         return ResultDomain<Address>.Ok(new Address(province, district, street, zipCode, line));
     }

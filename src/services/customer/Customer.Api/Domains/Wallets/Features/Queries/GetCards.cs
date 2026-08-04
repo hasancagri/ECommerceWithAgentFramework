@@ -48,9 +48,9 @@ public static class GetCardsQueryEndpoint
 {
     public static RouteGroupBuilder GetCardsGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapGet("", async (HttpContext httpContext, IMessageBus bus) =>
+        group.MapGet("", async (HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = CurrentUser.Load(httpContext.User).Id;
+                var userId = currentUser.Load(httpContext.User).Id;
                 var result = await bus.InvokeAsync<FeatureListResultModel<GetCards.CardView>>(
                     new GetCards.GetCardsQuery(userId));
                 return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);

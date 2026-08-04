@@ -49,7 +49,7 @@ public class CategoryBrandTests
         var result = Category.Create(name);
 
         result.IsSuccess.ShouldBeFalse();
-        result.Messages!.ShouldContain(m => m.Code == CommonResourceConstants.COMMON_MESSAGE_VALUE_EMPTY);
+        result.Messages!.ShouldContain(m => m.Code == CatalogResourceConstants.VALUE_EMPTY);
     }
 
     [Fact]

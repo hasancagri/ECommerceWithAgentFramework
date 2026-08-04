@@ -1,6 +1,6 @@
 namespace Basket.Api.Domains.Baskets.Features.Agent;
 
-public static class GetBasket
+public static class GetBasketForAgent
 {
     public record GetBasketQuery(Guid UserId);
 

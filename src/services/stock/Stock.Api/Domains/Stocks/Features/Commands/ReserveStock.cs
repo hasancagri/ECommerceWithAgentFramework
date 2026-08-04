@@ -28,7 +28,7 @@ public static class ReserveStock
 
             if (stock is null)
                 return FeatureObjectResultModel<ReserveStockResponse>.Error(
-                    new MessageItem { Code = CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND });
+                    new MessageItem { Code = StockResourceConstants.RECORD_NOT_FOUND });
 
             var now = DateTimeOffset.UtcNow;
             var result = stock.SetReservedQuantity(cmd.UserId, cmd.Quantity, options.Value.Ttl, now, cmd.ExpiresAt);

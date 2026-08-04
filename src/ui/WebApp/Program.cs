@@ -56,7 +56,6 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<BasketService>();
-builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StockService>();

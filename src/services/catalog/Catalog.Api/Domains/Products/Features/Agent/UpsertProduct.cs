@@ -6,7 +6,7 @@ namespace Catalog.Api.Domains.Products.Features.Agent;
 // İş mantığı kopyalanmaz; mevcut Create/Update command'larına delege edilir (yazma yolu tek).
 // 016: marka/kategori artık ad değil Id alır — Id'ler zincirin Brand/CategoryWrite adımlarından gelir (R10).
 // İkisi de zorunludur (kullanıcı kararı 2026-07-27): kategorisiz ürün yazılamaz.
-public static class UpsertProduct
+public static class UpsertProductForAgent
 {
     public record UpsertProductCommand(
         string Name,

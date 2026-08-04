@@ -72,9 +72,9 @@ public static class GetBasketQueryEndpoint
 {
     public static RouteGroupBuilder GetBasketGroupItemEndpoint(this RouteGroupBuilder group)
     {
-        group.MapGet("/user", async (HttpContext httpContext, IMessageBus bus) =>
+        group.MapGet("/user", async (HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
         {
-            var userId = CurrentUser.Load(httpContext.User).Id;
+            var userId = currentUser.Load(httpContext.User).Id;
             var result = await bus.InvokeAsync<FeatureObjectResultModel<GetBasket.GetBasketResponse>>(
                 new GetBasket.GetBasketQuery(userId));
             return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);

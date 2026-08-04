@@ -1,8 +1,6 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
 
-using Agent = Customer.Api.Domains.Wallets.Features.Agent;
-
 namespace Customer.Api.Domains.Wallets;
 
 // MCP okuma-yalniz: KART EKLEME ASLA bir tool DEGIL (ham PAN LLM turuna girmez, FR-019).
@@ -12,14 +10,15 @@ public static class ListCardsMcpTool
 {
     [McpServerTool(Name = "list_cards")]
     [Description("Giris yapmis kullanicinin kayitli kartlarini listeler (yalniz marka + son 4 hane + son-kullanma + etiket; PAN/CVV/token asla).")]
-    public static Task<FeatureListResultModel<Agent.GetCards.CardView>> ListCardsAsync(
+    public static Task<FeatureListResultModel<GetCardsForAgent.CardView>> ListCardsAsync(
         IMessageBus bus,
         IHttpContextAccessor http,
+        ICurrentUser currentUser,
         CancellationToken ct)
     {
-        var userId = CurrentUser.Load(http.HttpContext!.User).Id;
-        return bus.InvokeAsync<FeatureListResultModel<Agent.GetCards.CardView>>(
-            new Agent.GetCards.GetCardsQuery(userId), ct);
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureListResultModel<GetCardsForAgent.CardView>>(
+            new GetCardsForAgent.GetCardsQuery(userId), ct);
     }
 }
 
@@ -30,13 +29,14 @@ public static class DefaultCardBinMcpTool
 {
     [McpServerTool(Name = "get_default_card_bin")]
     [Description("Kullanicinin varsayilan kartinin BIN'ini (ilk 6 hane, banka tespiti icin) + marka + son 4 hane doner. Taksit sorgusunda kullanilir. PAN/CVV/token asla donmez. Varsayilan kart yoksa bulunamaz.")]
-    public static Task<FeatureObjectResultModel<Agent.GetDefaultCardBin.DefaultCardBinView>> GetDefaultCardBinAsync(
+    public static Task<FeatureObjectResultModel<GetDefaultCardBinForAgent.DefaultCardBinView>> GetDefaultCardBinAsync(
         IMessageBus bus,
         IHttpContextAccessor http,
+        ICurrentUser currentUser,
         CancellationToken ct)
     {
-        var userId = CurrentUser.Load(http.HttpContext!.User).Id;
-        return bus.InvokeAsync<FeatureObjectResultModel<Agent.GetDefaultCardBin.DefaultCardBinView>>(
-            new Agent.GetDefaultCardBin.GetDefaultCardBinQuery(userId), ct);
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<GetDefaultCardBinForAgent.DefaultCardBinView>>(
+            new GetDefaultCardBinForAgent.GetDefaultCardBinQuery(userId), ct);
     }
 }

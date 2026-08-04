@@ -2,7 +2,7 @@ namespace Catalog.Api.Domains.Brands.Features.Agent;
 
 // 016: get-or-create — normalize adla sorgula, yoksa oluştur (R4). Deterministik koddur; LLM karar vermez.
 // [Transactional] YOK: unique ihlalini yakalayıp mevcut kaydı okuyabilmek için commit handler içindedir.
-public static class UpsertBrand
+public static class UpsertBrandForAgent
 {
     [InvalidatesCache("catalog-products")]
     public record UpsertBrandCommand(string Name);
@@ -24,7 +24,7 @@ public static class UpsertBrand
                 return FeatureObjectResultModel<UpsertBrandResponse>.Error(new MessageItem
                 {
                     Property = nameof(cmd.Name),
-                    Code = CommonResourceConstants.COMMON_MESSAGE_VALUE_EMPTY
+                    Code = CatalogResourceConstants.VALUE_EMPTY
                 });
 
             var normalized = NameNormalization.Normalize(cmd.Name);

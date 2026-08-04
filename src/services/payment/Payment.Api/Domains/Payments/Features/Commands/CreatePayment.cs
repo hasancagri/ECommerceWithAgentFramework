@@ -45,9 +45,9 @@ public static class CreatePaymentCommandEndpoint
     public static RouteGroupBuilder CreatePaymentGroupItemEndpoint(this RouteGroupBuilder group)
     {
         group.MapPost("/",
-                async ([FromBody] CreatePayment.CreatePaymentCommand cmd, HttpContext httpContext, IMessageBus bus) =>
+                async ([FromBody] CreatePayment.CreatePaymentCommand cmd, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
                 {
-                    var userId = CurrentUser.Load(httpContext.User).Id;
+                    var userId = currentUser.Load(httpContext.User).Id;
                     var result =
                         await bus.InvokeAsync<FeatureObjectResultModel<CreatePayment.CreatePaymentResponse>>(
                             cmd with { UserId = userId });

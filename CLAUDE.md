@@ -163,7 +163,9 @@ Tüm sonuç tipleri `Common.Results` altındadır ve `BaseResultModel`'den türe
 - **`FeaturePagedResultModel<T>`** — sayfalı liste (PagedList.Core meta verisiyle).
 - **`ResultDomain` / `ResultDomain<T>`** — domain katmanı içi sonuç varyantı.
 
-Hata bilgisi `MessageItem` ile taşınır: `Property`, `Table`, `Code`, `Params`. **`Code` serbest metin değil, bir kaynak (resource) sabitidir** (ör. `CommonResourceConstants.COMMON_MESSAGE_RECORD_NOT_FOUND`) — yeni bir hata mesajı eklerken önce ilgili resource sabitini tanımla, sonra `Error(new MessageItem { Code = ... })` ile döndür.
+Hata bilgisi `MessageItem` ile taşınır: `Property`, `Table`, `Code`, `Params`. **`Code` serbest metin değil, bir kaynak (resource) sabitidir** (ör. `StockResourceConstants.STOCK_INSUFFICIENT`) — yeni bir hata mesajı eklerken önce ilgili resource sabitini tanımla, sonra `Error(new MessageItem { Code = ... })` ile döndür.
+
+**Her servis kendi hata kodlarının hepsine sahiptir.** Kod (generic ya da domain) `<Service>/Constants/<Service>ResourceConstants.cs`'te yaşar; "bu generic mi domain mi, Common'a mı gitsin" diye bakılmaz. `CommonResourceConstants` yalnız framework-içidir (Common'ın kendi `FeatureOutputModel`/`GlobalExceptionHandler`'ı emit eder); servisler ona referans vermez. Generic kodun servisler arası tekrarı BC izolasyonunda kabul edilir.
 
 Endpoint'ler sonucu HTTP'ye çevirir: `result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result)`. Aggregate metotları da uygun olduğunda Result döner (ör. `Basket.RemoveItem` → `FeatureResultModel.NotFound()`).
 
@@ -223,5 +225,7 @@ endpoint ve handler değişmez. Motor **HybridCache** (L1 in-memory + opsiyonel 
   dönük; mevcut belgeler bu yüzden yeniden biçimlendirilmez. Sığmıyorsa maddeyi böl
   veya ayrıntıyı ilgili yere taşı; tasks.md ne yapılacağını listeler, nasılını değil.
 - **Using'ler:** her projenin tek bir `GlobalUsings.cs`'i vardır. Paylaşılan namespace'leri dosyalara tek tek `using` serpiştirmek yerine oraya ekle.
+- **`Domains/` yalnız domain barındırır.** Servise özel teknik sabitler (resource/hata kodları vb.) `Domains/` altına değil, `<Service>/Constants/` klasörüne konur.
+  Namespace `<Service>.Constants`, `GlobalUsings.cs`'e eklenir. Hata kodları için sahiplik kuralı Result Pattern bölümünde (her servis kendi kodlarına sahip).
 - **DI kaydı Scrutor ile otomatiktir:** `Common.Dependencies` içindeki `ITransientDependency` / `IScopedDependency` / `ISingletonDependency` marker arayüzlerinden birini implemente et; `AddAllDependencies()` onu otomatik kaydeder. Bunları `Program.cs`'te elle kaydetme.
 - Agent / agent framework tipleri **Singleton**'dır — framework bunları başlangıçta yakalar; kullanıcıya özel davranış, agent'ı scope'lamakla değil, kullanıcının token'ını çağrı anında enjekte ederek sağlanır.

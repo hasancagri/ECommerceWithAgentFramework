@@ -1,5 +1,6 @@
 global using Asp.Versioning.Builder;
 global using Asp.Versioning;
+global using Catalog.Api.Constants;
 global using Catalog.Api.Dependencies;
 global using Common.Domains;
 global using Common.Exceptions;
@@ -30,3 +31,6 @@ global using System.ComponentModel;
 global using Catalog.Api.Domains.Products.Features.Commands;
 global using ModelContextProtocol.Server;
 global using Catalog.Api.Domains.Products.Features.Queries;
+global using Catalog.Api.Domains.Products.Features.Agent;
+global using Catalog.Api.Domains.Brands.Features.Agent;
+global using Catalog.Api.Domains.Categories.Features.Agent;
