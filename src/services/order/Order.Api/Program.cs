@@ -55,6 +55,13 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     AuthorizationScopes.OrderWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
+
+// L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
+if (builder.Configuration.GetConnectionString("redis") is not null)
+    builder.AddRedisDistributedCache("redis");
+
+// Declarative caching aspect'i: HybridCache + IMessageBus'ı şeffaf sar. UseWolverine'den sonra olmalı.
+builder.Services.AddCachingAspect("order");
 builder.Services.AddHttpContextAccessor();
 
 // 028: saga adimlari arka planda kosar (HttpContext yok) — kullanici bearer'i yerine

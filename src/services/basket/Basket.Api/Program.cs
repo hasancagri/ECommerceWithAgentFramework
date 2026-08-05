@@ -68,6 +68,13 @@ builder.Services.AddApiKeyAuthentication(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
+if (builder.Configuration.GetConnectionString("redis") is not null)
+    builder.AddRedisDistributedCache("redis");
+
+// Declarative caching aspect'i: HybridCache + IMessageBus'ı şeffaf sar. UseWolverine'den sonra olmalı.
+builder.Services.AddCachingAspect("basket");
+
 // 017: sepet capasi suresi (Basket:ReservationDuration, varsayilan 5 dk).
 builder.Services.Configure<Basket.Api.Domains.Baskets.BasketReservationOptions>(
     builder.Configuration.GetSection(Basket.Api.Domains.Baskets.BasketReservationOptions.SectionName));
