@@ -1,8 +1,11 @@
-<!-- Sync Impact Report — v1.3.1 → v1.4.0 (2026-08-05, MINOR)
-     Modified: İlke I senkron RPC sanksiyonu genişletildi — "anlık evet/hayır kararı"na ek
-     olarak, sürecin sahibi BC'de koşan orkestre edilmiş saga'ların adım/telafi komutları
-     (028 checkout saga: Order→Stock RevertCommit, Order→Basket ClearBasket) meşru kullanım.
-     DB izolasyonu ve kontrat zorunluluğu değişmedi. Runtime docs: CLAUDE.md 028 ile hizalanacak. -->
+<!-- Sync Impact Report — v1.4.0 → v1.5.0 (2026-08-05, MINOR)
+     Added: İlke VI (Domain-TDD) — saf domain mantığı (aggregate davranış metotları, saga On*
+     kararları, value object'ler) test-first yazılır; tasks.md'de test task'ı implementasyondan
+     önce. Handler/endpoint/UI/altyapı kapsam dışı (test-sonra veya canlı doğrulama sürer).
+     Modified: Kalite kapıları test maddesi İlke VI'ya bağlandı.
+     Templates: tasks-template.md ✅ (domain test task'ları zorunlu + önce sıralanır);
+     plan-template.md ✅ değişiklik gerekmez; spec-template.md ✅ değişiklik gerekmez.
+     Runtime docs: CLAUDE.md Testler maddesi hizalandı. -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -100,6 +103,20 @@ ve **scope** bazında yetkilendirir (`AuthorizationScopes.*`).
 - `Identity.Server` HTTPS üzerinden çalışmak zorundadır; tüm servislerin `Authority`
   değeri issuer ile eşleşir.
 
+### VI. Domain-TDD (saf domain mantığı test-first)
+
+Saf domain mantığı **test-first (red-green-refactor)** yazılır. Kapsam: aggregate
+davranış metotları, saga `On*` karar metotları, value object'ler ve mock'suz test
+edilebilir diğer domain birimleri.
+
+- Önce başarısız test (xUnit + Shouldly), sonra geçirecek en küçük kod, sonra refactor.
+- `tasks.md`'de bu birimlerin test task'ları ilgili implementasyon task'ından ÖNCE gelir.
+- Kapsam dışı: handler, endpoint, UI, altyapı/wiring — mevcut düzen sürer (test-sonra
+  veya canlı doğrulama). Bu ilke için entegrasyon/host harness'ı KURULMAZ.
+- Gerekçe: domain katmanı saf ve bağımlılıksızdır; TDD burada ucuz ve doğaldır,
+  harness gerektiren katmanlarda pahalıdır. İlke II'nin "iş kuralı aggregate'te"
+  kuralı bu ilkeyle test edilebilirliğini kanıtlar.
+
 ## Teknoloji ve Mimari Kısıtları
 
 - **.NET 10**, C#, her yerde `Nullable` + `ImplicitUsings` açık.
@@ -151,7 +168,7 @@ kademe seçilir. `001-product-sale-readiness` retrospektif olarak "Küçük"tü.
 Kalite kapıları:
 
 - Testler xUnit + Shouldly ile yazılır; domain birim testleri saftır (host/entegrasyon
-  harness'ı yoktur). Yeni kural/aggregate davranışı test edilir.
+  harness'ı yoktur). Saf domain mantığı İlke VI gereği **test-first** yazılır.
 - API sürümleme URL-segment tabanlıdır (`v1`); dokümanlar Scalar ile sunulur.
 - Fiziksel klasörler solution klasörleriyle birebir örtüşür.
 
@@ -166,7 +183,12 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.4.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-05
+**Version**: 1.5.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-05
+
+<!-- v1.5.0 (2026-08-05, MINOR): İlke VI (Domain-TDD) eklendi — saf domain mantığı test-first;
+     tasks.md'de domain test task'ları implementasyondan önce. Handler/endpoint/UI kapsam dışı.
+     Gerekçe: mülakat/TDD tartışması sonrası kullanıcı kararı; domain katmanı zaten mock'suz
+     test edildiğinden TDD maliyeti düşük, entegrasyon harness'ı gerektirmiyor. -->
 
 <!-- v1.4.0 (2026-08-05, MINOR): İlke I senkron RPC sanksiyonu orkestre edilmiş saga adım/telafi
      komutlarını kapsayacak şekilde genişletildi. Gerekçe: 028-checkout-saga — kullanıcı kararıyla

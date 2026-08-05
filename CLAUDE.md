@@ -55,6 +55,11 @@ dotnet test --filter "FullyQualifiedName~BasketTests.AddItem_AddsItemToBasket"
   yalnızca `spec.md` + `tasks.md` üretir — `plan/research/data-model/contracts/quickstart`
   üretme; _tam_ feature (yeni aggregate/tablo, servisler-arası event, yeni kontrat
   veya belirsizlik) tam akıştan geçer. Şüphedeyse bir üst kademeyi seç.
+- **Domain-TDD (anayasa İlke VI):** saf domain mantığı (aggregate davranış metotları,
+  saga `On*` kararları, value object'ler) test-first yazılır; tasks.md'de test task'ı
+  implementasyondan önce gelir. Handler/endpoint/UI/altyapı bu kuralın dışındadır;
+  onlarda mevcut düzen (test-sonra veya canlı doğrulama) sürer, mimari kurallar
+  (İlke III) aynen geçerlidir.
 
 ## Teknoloji Yığını
 

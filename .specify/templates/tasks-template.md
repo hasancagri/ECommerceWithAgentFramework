@@ -9,7 +9,7 @@ description: "Task list template for feature implementation"
 
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Constitution Principle VI (Domain-TDD) makes test tasks MANDATORY for pure domain logic (aggregate behavior methods, saga `On*` decision methods, value objects): write the failing test task BEFORE its implementation task and order it first. For all other layers (handlers, endpoints, UI, infrastructure) tests are OPTIONAL - only include them if explicitly requested in the feature specification.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -179,6 +179,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Within Each User Story
 
+- Domain-TDD (Principle VI): pure domain test tasks are mandatory and precede their implementation tasks
 - Tests (if included) MUST be written and FAIL before implementation
 - Models before services
 - Services before endpoints
