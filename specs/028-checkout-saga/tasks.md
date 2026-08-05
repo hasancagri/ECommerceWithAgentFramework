@@ -50,7 +50,7 @@
 - [X] T020 [US1] Features/Queries/GetOrders.cs (+Agent/GetOrders): Status + CancelReason döner (FR-019)
 - [X] T021 [US1] src/ui/WebApp: checkout sonrası Profil→Siparişlerim yönlendirme + Beklemede/Onaylandı/İptal rozetleri (+sebep) (FR-018)
 - [X] T022 [P] [US1] tests/Order.Api.Tests: saga mutlu yol karar testleri (CommitNextItem zinciri, son kalem→Confirm+ClearBasketStep)
-- [ ] T023 [US1] Canlı doğrulama S1 (quickstart.md; Aspire ile)
+- [X] T023 [US1] Canlı doğrulama S1 (quickstart.md; Aspire ile)
 
 **Checkpoint**: MVP — mutlu yol uçtan uca canlı
 
@@ -64,7 +64,7 @@
 
 - [X] T024 [US2] CheckoutSaga.cs: telafi dalı — iş hatası→CompensateCheckout→RevertCommit döngüsü→Cancel(reason); CompensationFailed bayrağı+alarm logu (FR-006/013)
 - [X] T025 [P] [US2] tests/Order.Api.Tests: telafi karar testleri (2. kalemde fail→CommittedItems doğru revert edilir; iş hatası retry edilmez)
-- [ ] T026 [US2] Canlı doğrulama S2 (quickstart.md)
+- [X] T026 [US2] Canlı doğrulama S2 (quickstart.md)
 
 **Checkpoint**: partial-commit deliği kapalı
 
@@ -79,7 +79,7 @@
 - [X] T027 [US3] CheckoutSaga.cs: start'ta CheckoutTimedOut ScheduleAsync (config süre) + timeout handler (bitmişse no-op) (FR-011/012; R3)
 - [X] T028 [US3] CheckoutSaga.cs: teknik hata sınıflandırması + Attempt sayacı (maks 3, 5 sn arayla scheduled re-dispatch) (FR-005; R6)
 - [X] T029 [P] [US3] tests/Order.Api.Tests: timeout no-op + Attempt sayaç davranış testleri
-- [ ] T030 [US3] Canlı doğrulama S3 — Stock kapalı + Order.Api restart senaryosu (quickstart.md)
+- [X] T030 [US3] Canlı doğrulama S3 — Stock kapalı + Order.Api restart senaryosu (quickstart.md)
 
 **Checkpoint**: hiçbir sipariş süresiz Beklemede kalmaz
 
@@ -92,7 +92,7 @@
 **Independent Test**: quickstart S4 — Basket kapalı; sipariş Onaylandı kalır, logda retry izi.
 
 - [X] T031 [US4] CheckoutSaga.cs: ClearBasketStep retry (maks 3) + tükenince log-and-complete; sipariş etkilenmez (FR-009)
-- [ ] T032 [US4] Canlı doğrulama S4 (quickstart.md)
+- [X] T032 [US4] Canlı doğrulama S4 (quickstart.md)
 
 **Checkpoint**: pivot-sonrası adım izole
 
