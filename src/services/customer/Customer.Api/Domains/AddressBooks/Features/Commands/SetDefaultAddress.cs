@@ -2,6 +2,7 @@ namespace Customer.Api.Domains.AddressBooks.Features.Commands;
 
 public static class SetDefaultAddress
 {
+    [InvalidatesCache("addresses")]
     public record SetDefaultAddressCommand(Guid UserId, Guid AddressId);
 
     [Transactional]

@@ -2,6 +2,7 @@ namespace Customer.Api.Domains.Wallets.Features.Commands;
 
 public static class SetDefaultCard
 {
+    [InvalidatesCache("cards")]
     public record SetDefaultCardCommand(Guid UserId, Guid CardId);
 
     [Transactional]

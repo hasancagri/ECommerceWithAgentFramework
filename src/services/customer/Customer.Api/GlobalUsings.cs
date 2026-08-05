@@ -27,6 +27,7 @@ global using Common.Utils.Constants;
 global using Customer.Api.Constants;
 global using Common.Auths;
 global using Common.Utils.Authorization;
+global using Common.Utils.Caching;
 global using Shared.Utils.Constants;
 global using Customer.Api.Domains.AddressBooks.Entities;
 global using System.ComponentModel;

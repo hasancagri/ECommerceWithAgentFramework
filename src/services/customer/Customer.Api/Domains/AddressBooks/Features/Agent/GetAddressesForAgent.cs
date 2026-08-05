@@ -3,6 +3,7 @@ namespace Customer.Api.Domains.AddressBooks.Features.Agent;
 // MCP (okuma-yalniz) icin adres listeleme slice'i. list_addresses tool'u bunu IMessageBus ile sarar.
 public static class GetAddressesForAgent
 {
+    [Cached("addresses", 300)]
     public record GetAddressesQuery(Guid UserId);
 
     public class AddressView

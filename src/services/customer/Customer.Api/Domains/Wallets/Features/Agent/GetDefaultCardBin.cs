@@ -5,6 +5,7 @@ namespace Customer.Api.Domains.Wallets.Features.Agent;
 // yoksa NotFound (assistant BIN'siz genel sorgu yapar veya kart eklemesi ister).
 public static class GetDefaultCardBinForAgent
 {
+    [Cached("cards", 300)]
     public record GetDefaultCardBinQuery(Guid UserId);
 
     public class DefaultCardBinView

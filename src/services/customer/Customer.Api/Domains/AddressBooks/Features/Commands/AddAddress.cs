@@ -2,6 +2,7 @@ namespace Customer.Api.Domains.AddressBooks.Features.Commands;
 
 public static class AddAddress
 {
+    [InvalidatesCache("addresses")]
     public record AddAddressCommand(
         Guid UserId,
         string Province,
