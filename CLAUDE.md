@@ -210,6 +210,12 @@ API'sine erişir. Şu an tek kullanım **stok rezervasyonu**: `Basket`/`Order` �
 - Idempotency: `Commit`/`RevertCommit` proto'da `order_id` anahtarı taşır; `ProductStock`
   işlenmiş operasyonları tutar (at-least-once teslimata dayanır).
 - `OrderCreatedEvent` SİLİNDİ — sepet temizliği event'le değil saga adımıyla yapılır.
+- Pivot kuralı: Confirm öncesi adımlar telafi edilir (compensatable); sonrası yalnız ileri
+  gider (retryable) — pivot sonrası hata siparişi asla iptal ettirmez.
+- Saga sürecin sahibi BC'de host edilir; ayrı orchestration servisi AÇILMAZ (god-service).
+  Yeni saga eklerken karar mantığını saf `On*` metotlarında tut (mock'suz birim test).
+- Gerekçe/öğrenme katmanı Obsidian: `adr-checkout-saga-orchestration` (stil seçimi, pivot,
+  idempotency anahtarı, makine token'ı, canlı S1-S4 kanıtları, mülakat kartları).
 
 ### Önbellekleme (AOP, declarative — cross-cutting)
 
