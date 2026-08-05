@@ -4,22 +4,7 @@
     var index = 1;
 }
 
-@* 025: geri sayim artik layout header'inda (tek kanonik sayac). Buradaki banner yalniz
-   bilgilendirir; kendi sayaci yoktur. Sifir/temizlik header JS'i tarafindan yonetilir. *@
-@if (Model.Basket.HasItem && Model.Basket.ReservationExpiresAt is not null)
-{
-    <div class="alert @(Model.Basket.IsReservationExpired ? "alert-secondary" : "alert-info")" role="alert">
-        @if (Model.Basket.IsReservationExpired)
-        {
-            <span>Reservation <strong>expired</strong> — items may be removed from your basket.</span>
-        }
-        else
-        {
-            <span>Items are reserved — see the countdown in the header.</span>
-        }
-    </div>
-}
-
+@* 025: sepet rezervasyon bilgisi/geri sayimi tamamen layout header'inda; sepet sayfasinda banner yok. *@
 <table class="table table-striped">
     <thead class="table-dark">
     <tr>

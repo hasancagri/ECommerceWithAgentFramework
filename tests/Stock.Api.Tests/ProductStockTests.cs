@@ -311,4 +311,29 @@ public class ProductStockTests
         stock.AvailableAt(now).ShouldBe(0);     // negatif olmaz (G1/FR-017)
         stock.IsOversoldAt(now).ShouldBeTrue(); // handler bunu log'lar
     }
+
+    // 026 (US2/FR-005): bayat durable tetik fire olsa bile aktif (yenilenmis) rezervasyon
+    // PurgeExpired ile SILINMEZ; yalniz suresi gecmis olan silinir.
+    [Fact]
+    public void PurgeExpired_LeavesActiveReservation_RemovesOnlyExpired()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var stock = ProductStock.Create(Guid.NewGuid(), 10);
+        var user = Guid.NewGuid();
+
+        // Aktif rezervasyon: bitis now+5dk (ileri).
+        stock.SetReservedQuantity(user, 2, TimeSpan.FromMinutes(5), now, now.AddMinutes(5));
+
+        // Bayat tetik anini simule et (now) => rezervasyon HALA aktif => hicbir sey silinmez.
+        var purgedEarly = stock.PurgeExpired(now);
+
+        purgedEarly.Count.ShouldBe(0);
+        stock.Reservations.Count.ShouldBe(1);
+
+        // Gercek bitisten sonra purge => rezervasyon silinir.
+        var purgedLate = stock.PurgeExpired(now.AddMinutes(6));
+
+        purgedLate.Count.ShouldBe(1);
+        stock.Reservations.Count.ShouldBe(0);
+    }
 }
