@@ -4,7 +4,6 @@ namespace Catalog.Api.Domains.Brands.Features.Agent;
 // [Transactional] YOK: unique ihlalini yakalayıp mevcut kaydı okuyabilmek için commit handler içindedir.
 public static class UpsertBrandForAgent
 {
-    [InvalidatesCache("catalog-products")]
     public record UpsertBrandCommand(string Name);
 
     public class UpsertBrandResponse

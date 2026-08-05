@@ -12,7 +12,7 @@ using WebApp.Pages.Basket.Dto;
 namespace WebApp.Pages.Basket;
 
 [Authorize]
-public class IndexModel(CatalogService catalogService, BasketService basketService) : BasePageModel
+public class IndexModel(StorefrontService storefrontService, BasketService basketService) : BasePageModel
 {
     public BasketPageViewModel Basket { get; set; } = new();
 
@@ -31,10 +31,13 @@ public class IndexModel(CatalogService catalogService, BasketService basketServi
 
     public async Task<IActionResult> OnGetAddBasketAsync(Guid productId)
     {
-        var product = await catalogService.GetProduct(productId);
+        // Ürün bilgisi vitrinden (read model) — Catalog REST uçları silindi. Fiyat snapshot'ı
+        // event-beslemeli satırdan gelir; nihai stok koruması gRPC rezervasyonda.
+        var product = await storefrontService.GetProductAsync(productId);
 
+        if (product.IsFail) return ErrorPage(product, "Index");
 
-        var createOrUpdateBasket = new AddBasketRequest(product.Data!.Id, product.Data.Name,
+        var createOrUpdateBasket = new AddBasketRequest(product.Data!.ProductId, product.Data.Name,
             product.Data.Price, product.Data.ImageUrl);
 
 

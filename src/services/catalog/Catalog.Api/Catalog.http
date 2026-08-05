@@ -1,0 +1,46 @@
+# Catalog.Api — sistemi Aspire AppHost ile başlat (portlar launchSettings'ten; Aspire dashboard'da doğrula)
+# REST okuma uçları yok (UI vitrinden okur, agent MCP'den); yazma uçları catalog.write scope ister.
+@baseAddress = https://localhost:7052
+@identity = https://localhost:5001
+@productId = 3fa85f64-5717-4562-b3fc-2c963f66afac
+@brandId = 3fa85f64-5717-4562-b3fc-2c963f66afa1
+@categoryId = 3fa85f64-5717-4562-b3fc-2c963f66afa2
+
+### Token al (client_credentials — scope: catalog.write)
+POST {{identity}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=ecommerce.bff&client_secret=webshop-secret&scope=catalog.write
+
+> {% client.global.set("token", response.body.access_token); %}
+
+### Ürün oluştur (catalog.write) — normalde ürünler tedarikçi feed'inden gelir (IngestionAgent)
+POST {{baseAddress}}/api/v1/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Örnek Telefon",
+  "description": "Test ürünü",
+  "price": 14999.00,
+  "sku": "SKU-0001",
+  "brandId": "{{brandId}}",
+  "categoryId": "{{categoryId}}",
+  "imageUrl": null
+}
+
+### Ürün güncelle (catalog.write)
+PUT {{baseAddress}}/api/v1/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": "{{productId}}",
+  "name": "Örnek Telefon v2",
+  "description": "Güncellenmiş test ürünü",
+  "price": 13999.00,
+  "sku": "SKU-0001",
+  "brandId": "{{brandId}}",
+  "categoryId": "{{categoryId}}",
+  "imageUrl": null
+}

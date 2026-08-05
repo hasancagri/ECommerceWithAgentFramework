@@ -2,6 +2,7 @@ namespace Customer.Api.Domains.AddressBooks.Features.Commands;
 
 public static class UpdateAddress
 {
+    [InvalidatesCache("addresses")]
     public record UpdateAddressCommand(
         Guid UserId,
         Guid AddressId,

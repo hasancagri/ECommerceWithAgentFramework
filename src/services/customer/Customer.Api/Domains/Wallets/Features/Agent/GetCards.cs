@@ -4,6 +4,7 @@ namespace Customer.Api.Domains.Wallets.Features.Agent;
 // SC-002: token/PAN/CVV asla donmez — yalniz marka+son4+expiry+etiket.
 public static class GetCardsForAgent
 {
+    [Cached("cards", 300)]
     public record GetCardsQuery(Guid UserId);
 
     public class CardView

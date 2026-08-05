@@ -3,6 +3,7 @@ namespace Customer.Api.Domains.Wallets.Features.Queries;
 public static class GetCards
 {
     [RequiredScope(AuthorizationScopes.CustomerRead)]
+    [Cached("cards", 300)]
     public record GetCardsQuery(Guid UserId);
 
     // SC-002: token ve PAN/CVV HICBIR kosulda donmez — yalniz marka+son4+son-kullanma+etiket.

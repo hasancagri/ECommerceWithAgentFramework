@@ -12,4 +12,7 @@ public interface IStorefrontRefitService
 
     [Get("/api/v1/storefront/products/filters")]
     Task<ApiResponse<StorefrontFilterOptionsDto>> GetFilterOptions();
+
+    [Get("/api/v1/storefront/products/{productId}")]
+    Task<ApiResponse<StorefrontProductDetailDto>> GetProduct(Guid productId);
 }

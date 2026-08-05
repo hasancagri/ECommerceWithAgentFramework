@@ -2,6 +2,7 @@ namespace Customer.Api.Domains.Wallets.Features.Commands;
 
 public static class DeleteCard
 {
+    [InvalidatesCache("cards")]
     public record DeleteCardCommand(Guid UserId, Guid CardId);
 
     [Transactional]

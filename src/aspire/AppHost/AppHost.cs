@@ -43,17 +43,21 @@ var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
 var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
     .WithReference(stockDb)
     .WithReference(rabbit)
+    .WithReference(redis)
     .WaitFor(stockDb)
-    .WaitFor(rabbit);
+    .WaitFor(rabbit)
+    .WaitFor(redis);
 
 // 012: Basket & Order, Stock'a senkron gRPC (rezervasyon Reserve/Release/Commit) çağırır.
 var basketApi = builder.AddProject<Projects.Basket_Api>("basket-api")
     .WithReference(basketDb)
     .WithReference(rabbit)
     .WithReference(stockApi)
+    .WithReference(redis)
     .WaitFor(basketDb)
     .WaitFor(rabbit)
-    .WaitFor(stockApi);
+    .WaitFor(stockApi)
+    .WaitFor(redis);
 
 var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
     .WithReference(orderDb)
@@ -61,36 +65,46 @@ var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
     .WithReference(stockApi)
     // 028: checkout saga ClearBasket adimi Basket gRPC ucunu cagirir.
     .WithReference(basketApi)
+    .WithReference(redis)
     .WaitFor(orderDb)
     .WaitFor(rabbit)
     .WaitFor(stockApi)
-    .WaitFor(basketApi);
+    .WaitFor(basketApi)
+    .WaitFor(redis);
 
 var fileApi = builder.AddProject<Projects.File_Api>("file-api")
     .WithReference(fileDb)
     .WithReference(rabbit)
+    .WithReference(redis)
     .WaitFor(fileDb)
-    .WaitFor(rabbit);
+    .WaitFor(rabbit)
+    .WaitFor(redis);
 
 var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api")
     .WithReference(storefrontDb)
     .WithReference(rabbit)
     .WithReference(identityServer)
+    .WithReference(redis)
     .WaitFor(storefrontDb)
     .WaitFor(rabbit)
-    .WaitFor(identityServer);
+    .WaitFor(identityServer)
+    .WaitFor(redis);
 
 var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WithReference(paymentDb)
-    .WaitFor(paymentDb);
+    .WithReference(redis)
+    .WaitFor(paymentDb)
+    .WaitFor(redis);
 
 // 022: Customer BC — Wallet (kayitli kart) + AddressBook (adres defteri). Kendi DB'si;
 // bu feature'da servisler-arasi event/gRPC yok (identity token'iyla korunan salt CRUD + MCP okuma).
 var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
     .WithReference(customerDb)
     .WithReference(identityServer)
+    .WithReference(redis)
     .WaitFor(customerDb)
-    .WaitFor(identityServer);
+    .WaitFor(identityServer)
+    .WaitFor(redis);
 
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
@@ -106,7 +120,6 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
 
 var web = builder.AddProject<Projects.WebApp>("ecommerce-web");
 web.WithReference(basketApi)
-    .WithReference(catalogApi)
     .WithReference(stockApi)
     .WithReference(orderApi)
     .WithReference(fileApi)

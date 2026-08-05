@@ -2,6 +2,7 @@ namespace Customer.Api.Domains.AddressBooks.Features.Commands;
 
 public static class DeleteAddress
 {
+    [InvalidatesCache("addresses")]
     public record DeleteAddressCommand(Guid UserId, Guid AddressId);
 
     [Transactional]

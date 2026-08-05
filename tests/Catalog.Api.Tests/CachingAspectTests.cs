@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Catalog.Api.Domains.Products.Features.Queries;
 using Common;
 using Common.Utils.Caching;
 using Shouldly;
@@ -8,16 +7,28 @@ using Xunit;
 namespace Catalog.Api.Tests;
 
 // T013 + T017: aspect'in saf (host'suz) doğrulanabilir parçaları — anahtar üretimi + L2 round-trip.
+// Sorgu tipleri test-yerlidir: aspect mesajın kendisinden bağımsızdır, Catalog REST sorguları silindi.
 public class CachingAspectTests
 {
+    private record SampleByIdQuery(Guid Id);
+
+    private record SampleParameterlessQuery;
+
+    public class SampleResponse
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public decimal Price { get; set; }
+    }
+
     // --- CacheKeyFactory (FR-004) ---
 
     [Fact]
     public void Build_SameQuerySameParams_ProducesSameKey()
     {
         var id = Guid.NewGuid();
-        var a = CacheKeyFactory.Build("catalog", new GetProductById.GetProductByIdQuery(id));
-        var b = CacheKeyFactory.Build("catalog", new GetProductById.GetProductByIdQuery(id));
+        var a = CacheKeyFactory.Build("catalog", new SampleByIdQuery(id));
+        var b = CacheKeyFactory.Build("catalog", new SampleByIdQuery(id));
 
         a.ShouldBe(b);
     }
@@ -25,8 +36,8 @@ public class CachingAspectTests
     [Fact]
     public void Build_DifferentParams_ProducesDifferentKeys()
     {
-        var a = CacheKeyFactory.Build("catalog", new GetProductById.GetProductByIdQuery(Guid.NewGuid()));
-        var b = CacheKeyFactory.Build("catalog", new GetProductById.GetProductByIdQuery(Guid.NewGuid()));
+        var a = CacheKeyFactory.Build("catalog", new SampleByIdQuery(Guid.NewGuid()));
+        var b = CacheKeyFactory.Build("catalog", new SampleByIdQuery(Guid.NewGuid()));
 
         a.ShouldNotBe(b);
     }
@@ -34,11 +45,11 @@ public class CachingAspectTests
     [Fact]
     public void Build_ParameterlessQuery_ProducesStableKey()
     {
-        var a = CacheKeyFactory.Build("catalog", new GetAllProducts.GetAllProductsQuery());
-        var b = CacheKeyFactory.Build("catalog", new GetAllProducts.GetAllProductsQuery());
+        var a = CacheKeyFactory.Build("catalog", new SampleParameterlessQuery());
+        var b = CacheKeyFactory.Build("catalog", new SampleParameterlessQuery());
 
         a.ShouldBe(b);
-        a.ShouldStartWith("catalog:GetAllProductsQuery:");
+        a.ShouldStartWith("catalog:SampleParameterlessQuery:");
     }
 
     [Fact]
@@ -47,12 +58,29 @@ public class CachingAspectTests
         // Sabit girdi → sabit anahtar. string.GetHashCode randomizasyonu kullanılsaydı bu değer
         // her süreçte değişirdi; FNV-1a olduğundan literal olarak kilitlenebilir (cross-instance L2).
         var key = CacheKeyFactory.Build("catalog",
-            new GetProductById.GetProductByIdQuery(Guid.Parse("11111111-1111-1111-1111-111111111111")));
+            new SampleByIdQuery(Guid.Parse("11111111-1111-1111-1111-111111111111")));
 
-        key.ShouldBe("catalog:GetProductByIdQuery:" + key.Split(':')[2]);
+        key.ShouldBe("catalog:SampleByIdQuery:" + key.Split(':')[2]);
         // İki kez üretip birebir eşitlik determinizmi kanıtlar:
         key.ShouldBe(CacheKeyFactory.Build("catalog",
-            new GetProductById.GetProductByIdQuery(Guid.Parse("11111111-1111-1111-1111-111111111111"))));
+            new SampleByIdQuery(Guid.Parse("11111111-1111-1111-1111-111111111111"))));
+    }
+
+    // Aynı kısa ada sahip ikinci tip (Queries/ vs Agent/ slice'larının simülasyonu).
+    private static class OtherSlice
+    {
+        internal record SampleByIdQuery(Guid Id);
+    }
+
+    [Fact]
+    public void Build_SameShortName_DifferentTypes_ProduceDifferentKeys()
+    {
+        // Aynı kısa ada sahip farklı record'lar (Queries/ vs Agent/ slice'ları) çarpışmamalı:
+        // hash'e FullName girer.
+        var a = CacheKeyFactory.Build("catalog", new SampleByIdQuery(Guid.Empty));
+        var b = CacheKeyFactory.Build("catalog", new OtherSlice.SampleByIdQuery(Guid.Empty));
+
+        a.ShouldNotBe(b);
     }
 
     // --- L2 serialize round-trip (FR-013) ---
@@ -60,18 +88,15 @@ public class CachingAspectTests
     [Fact]
     public void FeatureObjectResultModel_RoundTrips_ViaSystemTextJson()
     {
-        var original = FeatureObjectResultModel<GetProductById.ProductResponse>.Ok(new GetProductById.ProductResponse
+        var original = FeatureObjectResultModel<SampleResponse>.Ok(new SampleResponse
         {
             Id = Guid.NewGuid(),
             Name = "Apple iPhone",
-            Description = "desc",
-            Price = 42.5m,
-            Sku = "SKU-1",
-            IsActive = true
+            Price = 42.5m
         });
 
         var json = JsonSerializer.Serialize(original);
-        var restored = JsonSerializer.Deserialize<FeatureObjectResultModel<GetProductById.ProductResponse>>(json);
+        var restored = JsonSerializer.Deserialize<FeatureObjectResultModel<SampleResponse>>(json);
 
         restored.ShouldNotBeNull();
         restored!.IsSuccess.ShouldBeTrue();

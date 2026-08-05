@@ -4,6 +4,7 @@ public static class AddCard
 {
     // Ham PAN/CVV YALNIZ bu komutta (in-proc InvokeAsync; kalici kuyruga girmez). Tokenize'a
     // gecer, hicbir yere yazilmaz/loglanmaz (FR-008). Saklanan: token + gosterilebilir alanlar.
+    [InvalidatesCache("cards")]
     public record AddCardCommand(
         Guid UserId,
         string Pan,

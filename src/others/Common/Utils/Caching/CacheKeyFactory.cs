@@ -19,7 +19,9 @@ public static class CacheKeyFactory
     {
         var type = message.GetType();
         var json = JsonSerializer.Serialize(message, type, SerializerOptions);
-        return $"{prefix}:{type.Name}:{Fnv1a64(json):x16}";
+        // Hash'e FullName girer: ayni KISA ada sahip farkli slice record'lari (or. Queries/GetAddressesQuery
+        // ile Agent/GetAddressesQuery) ayni anahtara dusmesin — farkli Response tipleri carpisirdi.
+        return $"{prefix}:{type.Name}:{Fnv1a64(type.FullName + json):x16}";
     }
 
     // Kriptografik değil — yalnız anahtarı kısa/sabit uzunluğa indirmek için. Saf matematik olduğundan

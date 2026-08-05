@@ -3,6 +3,7 @@ namespace Customer.Api.Domains.AddressBooks.Features.Queries;
 public static class GetAddresses
 {
     [RequiredScope(AuthorizationScopes.CustomerRead)]
+    [Cached("addresses", 300)]
     public record GetAddressesQuery(Guid UserId);
 
     // Checkout kopyasi icin tum adres alanlarini tasir (FR-016).

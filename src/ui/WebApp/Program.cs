@@ -54,7 +54,6 @@ builder.Services.AddHttpClient("file-images", client =>
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<BasketService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<PaymentService>();
@@ -65,13 +64,6 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<ClientAuthenticatedHttpClientHandler>();
 builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
-
-builder.Services.AddRefitClient<ICatalogRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://catalog-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
-
 
 builder.Services.AddRefitClient<IBasketRefitService>().ConfigureHttpClient(configure =>
     {
@@ -147,8 +139,6 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("email");
         options.Scope.Add("roles");
         options.Scope.Add("offline_access"); // refresh token
-        // catalog (okuma anonim — read scope istenmez)
-        options.Scope.Add("catalog.write");
         // basket
         options.Scope.Add("basket.read");
         options.Scope.Add("basket.write");

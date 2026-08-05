@@ -2,9 +2,12 @@ namespace Storefront.Api.Domains.StorefrontView.Features.Queries;
 
 // 016 US1-3/R8: filtre seçenekleri (facet) satılabilir satırlardan türetilir — ürünü olmayan
 // kategori/marka kendiliğinden görünmez; kategorisi null satır kategori listesine girmez.
-// Cache yok (K4 duruşu korunur); okuma anonim (mevcut storefront duruşu).
+// Filtre seçenekleri cache'lidir (sabit anahtar, herkese aynı); boşaltma ProductChangedEvent
+// handler'ında (CacheInvalidator, projeksiyon-BC kuralı) + 60sn TTL güvenlik ağı.
+// Liste/tekil ürün query'leri bilinçli cache'siz: kardinalite + yazma-yolu kuralı (CLAUDE.md). Okuma anonim.
 public static class GetStorefrontFilterOptions
 {
+    [Cached("filters", 60)]
     public record GetStorefrontFilterOptionsQuery();
 
     public class FilterOptionResponse

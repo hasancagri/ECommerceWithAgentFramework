@@ -52,4 +52,24 @@ public class StorefrontService(
             content.Categories.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
             content.Brands.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList());
     }
+
+    // Ürün detayı vitrinden (read model) okunur — Catalog'a gidilmez. Kısmi satır (Name/Price
+    // henüz raporlanmadı) veya silinmiş ürün alıcıya "bulunamadı" davranır.
+    public async Task<ServiceResult<StorefrontProductViewModel>> GetProductAsync(Guid productId)
+    {
+        var response = await storefrontRefitService.GetProduct(productId);
+
+        if (!response.IsSuccessStatusCode)
+            return ServiceResult<StorefrontProductViewModel>.FailFromProblemDetails(response.Error);
+
+        var p = response.Content!;
+        if (p.IsDeleted || p.Name is null || p.Price is null)
+            return ServiceResult<StorefrontProductViewModel>.Error(
+                "Ürün bulunamadı.", "Ürün vitrinde değil veya henüz yayınlanmadı.");
+
+        return ServiceResult<StorefrontProductViewModel>.Success(new StorefrontProductViewModel(
+            p.ProductId, p.Name, p.Description ?? string.Empty, p.Brand ?? string.Empty,
+            p.Price.Value, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
+            p.CategoryId, p.BrandId));
+    }
 }

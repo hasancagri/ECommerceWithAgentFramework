@@ -1,19 +1,48 @@
-@baseAddress = http://localhost:5023
-@courseId=3fa85f64-5717-4562-b3fc-2c963f66afac
+# Basket.Api — sistemi Aspire AppHost ile başlat (portlar launchSettings'ten; Aspire dashboard'da doğrula)
+# CurrentUser gerektiren uçlar için kullanıcı token'ı gerekir (client_credentials token'ında sub yok):
+# WebApp oturumundan bearer'ı kopyalayıp {{token}} yerine yapıştırabilirsin.
+@baseAddress = https://localhost:7224
+@identity = https://localhost:5001
+@productId = 3fa85f64-5717-4562-b3fc-2c963f66afac
 
+### Token al (client_credentials — makine token'ı, scope: basket.read basket.write)
+POST {{identity}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=ecommerce.bff&client_secret=webshop-secret&scope=basket.read basket.write
+
+> {% client.global.set("token", response.body.access_token); %}
+
+### Sepeti getir (kullanıcının sepeti — basket.read)
 GET {{baseAddress}}/api/v1/baskets/user
 Accept: application/json
-###
+Authorization: Bearer {{token}}
+
+### Sepete ürün ekle (basket.write) — UserId token'dan çözülür, body'de gönderilmez
 POST {{baseAddress}}/api/v1/baskets/item
-Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-  "courseId":"{{courseId}}",
-  "courseName": "yyyy2",
-  "coursePrice": 20
+  "productId": "{{productId}}",
+  "productName": "Örnek Ürün",
+  "price": 199.90,
+  "imageUrl": "/file/images/{{productId}}.png"
 }
-###
-DELETE {{baseAddress}}/api/v1/baskets/item/{{courseId}}
-Accept: application/json
+
+### Sepet kalemi adedini güncelle (basket.write)
+PUT {{baseAddress}}/api/v1/baskets/item/{{productId}}/quantity
 Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "quantity": 2
+}
+
+### Sepet kalemini sil (basket.write)
+DELETE {{baseAddress}}/api/v1/baskets/item/{{productId}}
+Authorization: Bearer {{token}}
+
+### Süresi dolmuş sepeti temizle (basket.write)
+POST {{baseAddress}}/api/v1/baskets/purge-expired
+Authorization: Bearer {{token}}
