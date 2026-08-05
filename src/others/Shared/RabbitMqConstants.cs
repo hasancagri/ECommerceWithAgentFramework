@@ -2,15 +2,7 @@ namespace Shared;
 
 public static class RabbitMqConstants
 {
-    public static class OrderCreated
-    {
-        public const string Exchange = "order.created";
-
-        public static class Queues
-        {
-            public const string Basket = "basket.order-created";
-        }
-    }
+    // 028: OrderCreated exchange kaldirildi — sepet temizligi artik CheckoutSaga'nin gRPC adimidir.
 
     public static class UploadCoursePicture
     {

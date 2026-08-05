@@ -60,9 +60,12 @@ public class CreateModel(BasketService basketService, OrderService orderService,
 
         var result = await orderService.CreateOrder(CreateOrderViewModel);
 
-        return result.IsFail
-            ? ErrorPage(result)
-            : SuccessPage("Sipariş başarıyla oluşturuldu", "/Order/Result");
+        if (result.IsFail) return ErrorPage(result);
+
+        // 028: siparis Pending dogar (saga arka planda) — Siparislerim'e yonlendir, rozet orada.
+        TempData["Success"] = true;
+        TempData["Success_Message"] = "Siparişin alındı; durumunu Siparişlerim'den takip edebilirsin.";
+        return RedirectToPage("/Account/Profile", new { tab = "orders" });
     }
 
     private async Task LoadInitialFormData()

@@ -12,48 +12,55 @@ public static class CreateOrder
     // 012: Quantity varsayilan 1 (geriye-uyumlu; WebApp checkout adet gonderir).
     public record OrderItemDto(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity = 1);
 
-    [Transactional]
-    public class CreateOrderCommandHandler(
-        IDocumentSession session,
-        StockCommitClientProxy stockCommit,
-        IMessageBus bus)
+    // 028: yanit siparis kimligini tasir — UI "Beklemede" rozetini bu kayitla gosterir.
+    public class CreateOrderResponse
     {
-        public async Task<FeatureResultModel> Handle(CreateOrderCommand cmd, CancellationToken ct)
+        public Guid OrderId { get; set; }
+        public string Code { get; set; } = string.Empty;
+    }
+
+    // 028: handler artik stok DUSURMEZ — siparisi Pending yaratir, CheckoutSaga'yi baslatir ve
+    // hemen doner (FR-001). Stok commit/telafi/sepet temizligi saga adimlaridir (CheckoutSaga.cs).
+    [Transactional]
+    public class CreateOrderCommandHandler(IDocumentSession session, IMessageBus bus)
+    {
+        public async Task<FeatureObjectResultModel<CreateOrderResponse>> Handle(
+            CreateOrderCommand cmd, CancellationToken ct)
         {
             var userId = cmd.UserId;
 
-            // Idempotency: ayni paymentId ikinci kez siparise baglanamaz.
+            // Idempotency: ayni paymentId ikinci kez siparise baglanamaz (FR-016).
             var alreadyUsed = await session.Query<Order>()
                 .AnyAsync(o => o.PaymentId == cmd.PaymentId, ct);
             if (alreadyUsed)
-                return FeatureResultModel.Error(new MessageItem
+                return FeatureObjectResultModel<CreateOrderResponse>.Error(new MessageItem
                     { Code = OrderResourceConstants.ORDER_PAYMENT_ALREADY_USED });
 
             var address = new Address(cmd.Address.Province, cmd.Address.District, cmd.Address.Street,
                 cmd.Address.ZipCode, cmd.Address.Line);
-            var order = Order.Create(userId, address);
+            var order = Order.Create(userId, address, cmd.PaymentId);
 
             foreach (var item in cmd.Items)
             {
                 var addResult = order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Quantity);
-                if (!addResult.IsSuccess) return addResult;
+                if (!addResult.IsSuccess)
+                    return FeatureObjectResultModel<CreateOrderResponse>.Error(addResult.Messages);
             }
 
-            // 012 (US2/FR-008): stogu KALICI dusur (Commit). Gecerli rezervasyon yoksa/erisilemezse
-            // siparis OLUSTURULMAZ (oversell yasak). Odeme alinmis olabilir -> refund kapsam disi.
-            foreach (var item in cmd.Items)
+            session.Store(order); // Id burada atanir (Marten)
+
+            // Outbox: StartCheckout, Marten commit'iyle atomik yayinlanir — siparis kaydi olmadan
+            // saga baslamaz, saga baslamadan siparis kaydi kalmaz.
+            await bus.PublishAsync(new StartCheckout(
+                order.Id,
+                userId,
+                cmd.Items.Select(i => new CheckoutItem(i.ProductId, i.Quantity)).ToList()));
+
+            return FeatureObjectResultModel<CreateOrderResponse>.Ok(new CreateOrderResponse
             {
-                var commit = await stockCommit.CommitAsync(item.ProductId, userId, item.Quantity, ct);
-                if (!commit.Success)
-                    return FeatureResultModel.Error(new MessageItem
-                        { Property = nameof(item.ProductId), Code = commit.Code });
-            }
-
-            order.SetPaidStatus(cmd.PaymentId);
-            session.Store(order);
-
-            await bus.PublishAsync(new IntegrationEvents.OrderCreatedEvent(order.Id, userId, order.TotalPrice));
-            return FeatureResultModel.Ok();
+                OrderId = order.Id,
+                Code = order.Code
+            });
         }
     }
 }
@@ -66,7 +73,8 @@ public static class CreateOrderCommandEndpoint
                 ICurrentUser currentUser, IMessageBus bus) =>
             {
                 var userId = currentUser.Load(httpContext.User).Id;
-                var result = await bus.InvokeAsync<FeatureResultModel>(cmd with { UserId = userId });
+                var result = await bus.InvokeAsync<FeatureObjectResultModel<CreateOrder.CreateOrderResponse>>(
+                    cmd with { UserId = userId });
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })
             .RequireAuthorization(AuthorizationScopes.OrderWrite);

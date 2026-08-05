@@ -196,6 +196,21 @@ API'sine erişir. Şu an tek kullanım **stok rezervasyonu**: `Basket`/`Order` �
   StockWrite geri geldi ve `OnHand`'i mutlak ezer. `OnHand` ayrıca sipariş Commit'iyle düşer.
 - Fail-closed: Stock erişilemezse sepete **eklenmez** (oversell yasak).
 
+### Checkout Saga — orchestration (028)
+
+- Sipariş akışı **Wolverine durable saga** ile orkestre edilir: `CheckoutSaga` (Order BC,
+  state Marten'da, Id=OrderId). Sipariş Pending doğar, HTTP hemen döner.
+- Adımlar: kalem kalem gRPC StockCommit → Confirm → gRPC ClearBasket (Basket sunucu oldu).
+  İş hatasında telafi: `RevertCommit` + `Cancel(reason)`. Sepet temizliği pivot-sonrası
+  retryable adımdır — başarısızlığı siparişi iptal ETMEZ.
+- Watchdog: scheduled `CheckoutTimedOut` (config `Checkout:WatchdogSeconds`, 120 sn);
+  bitmemiş süreç telafi+iptal edilir. Karar mantığı saf `On*` metotlarında (birim testli).
+- Arka plan yetkisi: kullanıcı bearer'ı YOK — `SagaTokenHandler` client-credentials
+  `order-saga` makine token'ı alır (stock.reserve + basket.write).
+- Idempotency: `Commit`/`RevertCommit` proto'da `order_id` anahtarı taşır; `ProductStock`
+  işlenmiş operasyonları tutar (at-least-once teslimata dayanır).
+- `OrderCreatedEvent` SİLİNDİ — sepet temizliği event'le değil saga adımıyla yapılır.
+
 ### Önbellekleme (AOP, declarative — cross-cutting)
 
 Okuma sorguları **handler'a kod yazmadan** önbelleklenir. Aspect `Common.Utils.Caching`'te yaşar

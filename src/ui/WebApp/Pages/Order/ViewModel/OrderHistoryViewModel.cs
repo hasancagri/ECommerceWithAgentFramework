@@ -6,7 +6,13 @@ using System.Collections.Immutable;
 
 namespace WebApp.Pages.Order.ViewModel;
 
-public record OrderHistoryViewModel(string DateTime, string TotalPrice)
+// 028: StatusText/BadgeClass rozet icin; CancelReasonText yalniz iptal durumunda dolu.
+public record OrderHistoryViewModel(
+    string DateTime,
+    string TotalPrice,
+    string StatusText = "",
+    string BadgeClass = "",
+    string? CancelReasonText = null)
 {
     private List<OrderItemViewModel> OrderItems { get; } = [];
 

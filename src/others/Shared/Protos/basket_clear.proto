@@ -1,0 +1,22 @@
+// Sepet Temizliği — checkout saga'sının pivot-sonrası adımı (spec 028).
+// Sunucu: Basket.Api (GrpcServices=Server). İstemci: Order.Api (GrpcServices=Client).
+syntax = "proto3";
+
+option csharp_namespace = "Shared.Grpc.Basket";
+
+package basketclear;
+
+service BasketClear {
+  // İdempotent: sepet yoksa da success döner. Yetki: basket.write scope.
+  rpc ClearBasket (ClearBasketRequest) returns (ClearBasketReply);
+}
+
+message ClearBasketRequest {
+  string user_id = 1;    // Guid; sepet sahibi
+  string order_id = 2;   // iz/log amaçlı (hangi sipariş temizletti)
+}
+
+message ClearBasketReply {
+  bool success = 1;
+  string message_code = 2;  // hata resource sabiti; başarıda boş
+}

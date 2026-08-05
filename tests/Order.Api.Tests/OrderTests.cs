@@ -6,17 +6,20 @@ public class OrderTests
         new("Istanbul", "Kadikoy", "Bagdat", "34000", "No 1");
 
     private static OrderAggregate NewOrder() =>
-        OrderAggregate.Create(Guid.NewGuid(), SampleAddress());
+        OrderAggregate.Create(Guid.NewGuid(), SampleAddress(), Guid.NewGuid());
 
     [Fact]
-    public void Create_StartsWaitingForPayment_WithZeroTotalAndTenDigitCode()
+    public void Create_StartsPending_WithZeroTotalAndTenDigitCode()
     {
         var buyerId = Guid.NewGuid();
+        var paymentId = Guid.NewGuid();
 
-        var order = OrderAggregate.Create(buyerId, SampleAddress());
+        var order = OrderAggregate.Create(buyerId, SampleAddress(), paymentId);
 
         order.BuyerId.ShouldBe(buyerId);
-        order.Status.ShouldBe(OrderStatus.WaitingForPayment);
+        order.Status.ShouldBe(OrderStatus.Pending);
+        order.PaymentId.ShouldBe(paymentId);
+        order.CancelReason.ShouldBeNull();
         order.TotalPrice.ShouldBe(0m);
         order.OrderItems.ShouldBeEmpty();
         order.Code.Length.ShouldBe(10);
@@ -71,15 +74,65 @@ public class OrderTests
         order.TotalPrice.ShouldBe(150m);
     }
 
+    // --- 028: durum gecisleri ---
+
     [Fact]
-    public void SetPaidStatus_MarksPaidAndStoresPaymentId()
+    public void Confirm_FromPending_SetsConfirmed()
     {
         var order = NewOrder();
-        var paymentId = Guid.NewGuid();
 
-        order.SetPaidStatus(paymentId);
+        var result = order.Confirm();
 
-        order.Status.ShouldBe(OrderStatus.Paid);
-        order.PaymentId.ShouldBe(paymentId);
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Confirmed);
+    }
+
+    [Fact]
+    public void Cancel_FromPending_SetsCancelledWithReason()
+    {
+        var order = NewOrder();
+
+        var result = order.Cancel("ORDER_TIMEOUT");
+
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Cancelled);
+        order.CancelReason.ShouldBe("ORDER_TIMEOUT");
+    }
+
+    [Fact]
+    public void Confirm_FromCancelled_ReturnsError()
+    {
+        var order = NewOrder();
+        order.Cancel("ORDER_TIMEOUT");
+
+        var result = order.Confirm();
+
+        result.IsSuccess.ShouldBeFalse();
+        order.Status.ShouldBe(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public void Cancel_FromConfirmed_ReturnsError()
+    {
+        var order = NewOrder();
+        order.Confirm();
+
+        var result = order.Cancel("ORDER_STOCK_STEP_FAILED");
+
+        result.IsSuccess.ShouldBeFalse();
+        order.Status.ShouldBe(OrderStatus.Confirmed);
+        order.CancelReason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Confirm_Twice_SecondReturnsError()
+    {
+        var order = NewOrder();
+        order.Confirm();
+
+        var result = order.Confirm();
+
+        result.IsSuccess.ShouldBeFalse();
+        order.Status.ShouldBe(OrderStatus.Confirmed);
     }
 }

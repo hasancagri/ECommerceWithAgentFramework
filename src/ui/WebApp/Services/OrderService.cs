@@ -71,9 +71,21 @@ public class OrderService(
 
         foreach (var orderResponse in response.Content)
         {
+            // 028: durum rozeti (1=Beklemede, 2=Onaylandı, 3=İptal).
+            var (statusText, badgeClass) = orderResponse.Status switch
+            {
+                1 => ("Beklemede", "bg-warning text-dark"),
+                2 => ("Onaylandı", "bg-success"),
+                3 => ("İptal", "bg-danger"),
+                _ => ("Bilinmiyor", "bg-secondary")
+            };
+
             var newOrderHistory =
-                new OrderHistoryViewModel(orderResponse.Created.ToLongDateString(),
-                    orderResponse.TotalPrice.ToString("C"));
+                new OrderHistoryViewModel(orderResponse.CreatedTime.ToLongDateString(),
+                    orderResponse.TotalPrice.ToString("C"),
+                    statusText,
+                    badgeClass,
+                    MapCancelReason(orderResponse.CancelReason));
 
             foreach (var orderItem in orderResponse.Items)
                 newOrderHistory.AddItem(orderItem.ProductId, orderItem.ProductName, orderItem.UnitPrice, orderItem.Quantity);
@@ -84,4 +96,16 @@ public class OrderService(
 
         return ServiceResult<List<OrderHistoryViewModel>>.Success(orderHistoryList);
     }
+
+    // 028: iptal sebep kodunu kullanici metnine cevirir (bilinmeyen kod oldugu gibi gosterilir).
+    private static string? MapCancelReason(string? code) => code switch
+    {
+        null or "" => null,
+        "ORDER_TIMEOUT" => "Zaman aşımı — stok işlemi tamamlanamadı",
+        "STOCK_INSUFFICIENT" => "Yetersiz stok",
+        "STOCK_NO_ACTIVE_RESERVATION" => "Rezervasyon süresi dolmuş",
+        "STOCK_COMMIT_UNAVAILABLE" => "Stok servisine ulaşılamadı",
+        "ORDER_STOCK_STEP_FAILED" => "Stok işlemi başarısız",
+        _ => code
+    };
 }

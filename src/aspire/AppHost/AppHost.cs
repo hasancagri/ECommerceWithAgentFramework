@@ -59,9 +59,12 @@ var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
     .WithReference(orderDb)
     .WithReference(rabbit)
     .WithReference(stockApi)
+    // 028: checkout saga ClearBasket adimi Basket gRPC ucunu cagirir.
+    .WithReference(basketApi)
     .WaitFor(orderDb)
     .WaitFor(rabbit)
-    .WaitFor(stockApi);
+    .WaitFor(stockApi)
+    .WaitFor(basketApi);
 
 var fileApi = builder.AddProject<Projects.File_Api>("file-api")
     .WithReference(fileDb)

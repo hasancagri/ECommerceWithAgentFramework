@@ -27,9 +27,10 @@
         </PackageReference>
     </ItemGroup>
 
-    <!-- 012: Stock rezervasyon gRPC istemcisi (Commit; paylaşılan proto). -->
+    <!-- 012: Stock rezervasyon istemcisi; 028: Basket ClearBasket istemcisi (paylaşılan protolar). -->
     <ItemGroup>
         <Protobuf Include="..\..\..\others\Shared\Protos\stock_reservation.proto" GrpcServices="Client" />
+        <Protobuf Include="..\..\..\others\Shared\Protos\basket_clear.proto" GrpcServices="Client" />
     </ItemGroup>
 
     <ItemGroup>

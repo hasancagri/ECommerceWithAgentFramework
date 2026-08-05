@@ -16,6 +16,21 @@ public class ProductStock : AggregateRoot
     [JsonProperty("Reservations")] private List<StockReservation> _reservations = new();
     [JsonIgnore] public IReadOnlyList<StockReservation> Reservations => _reservations.AsReadOnly();
 
+    // 028: islenmis saga operasyon anahtarlari ("orderId:commit" / "orderId:revert").
+    // At-least-once teslimatta mukerrer Commit/RevertCommit'i no-op yapar. Bounded (son 100).
+    [JsonProperty("ProcessedOps")] private List<string> _processedOps = new();
+    private const int ProcessedOpsLimit = 100;
+
+    private static string CommitKey(Guid orderId) => $"{orderId}:commit";
+    private static string RevertKey(Guid orderId) => $"{orderId}:revert";
+
+    private void MarkProcessed(string key)
+    {
+        _processedOps.Add(key);
+        if (_processedOps.Count > ProcessedOpsLimit)
+            _processedOps.RemoveRange(0, _processedOps.Count - ProcessedOpsLimit);
+    }
+
     private ProductStock()
     {
     }
@@ -119,8 +134,12 @@ public class ProductStock : AggregateRoot
     }
 
     // Siparis: gecerli rezervasyonu kalici stok dususune cevir (OnHand duser, hold kapanir).
-    public ResultDomain Commit(Guid userId, int quantity, DateTimeOffset now)
+    // 028: orderId idempotency anahtari — ayni siparisin mukerrer Commit'i no-op basari doner.
+    public ResultDomain Commit(Guid userId, int quantity, DateTimeOffset now, Guid orderId = default)
     {
+        if (orderId != Guid.Empty && _processedOps.Contains(CommitKey(orderId)))
+            return ResultDomain.Ok();
+
         var existing = _reservations.FirstOrDefault(r => r.UserId == userId && r.IsActiveAt(now));
         if (existing is null || existing.Quantity < quantity)
             return ResultDomain.Error(new MessageItem
@@ -133,6 +152,27 @@ public class ProductStock : AggregateRoot
         else
             existing.SetQuantity(existing.Quantity - quantity);
 
+        if (orderId != Guid.Empty) MarkProcessed(CommitKey(orderId));
+        return ResultDomain.Ok();
+    }
+
+    // 028: saga telafisi — commit edilmis adedi stoga geri ekler. orderId ile idempotent;
+    // yalniz daha once commit edilmis siparis geri alinabilir (kacak artis engellenir).
+    public ResultDomain RevertCommit(int quantity, Guid orderId)
+    {
+        if (orderId == Guid.Empty || quantity <= 0)
+            return ResultDomain.Error(new MessageItem
+                { Code = StockResourceConstants.STOCK_REVERT_INVALID });
+
+        if (_processedOps.Contains(RevertKey(orderId)))
+            return ResultDomain.Ok();
+
+        if (!_processedOps.Contains(CommitKey(orderId)))
+            return ResultDomain.Error(new MessageItem
+                { Code = StockResourceConstants.STOCK_REVERT_WITHOUT_COMMIT });
+
+        Quantity += quantity;
+        MarkProcessed(RevertKey(orderId));
         return ResultDomain.Ok();
     }
 
