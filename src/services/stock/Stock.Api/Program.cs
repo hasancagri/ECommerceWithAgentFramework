@@ -114,8 +114,10 @@ app.MapMcp("/mcp");
 app.MapGrpcService<StockReservationGrpcService>()
     .RequireAuthorization(AuthorizationScopes.StockReserve);
 
-// 012 (US4): suresi gecmis rezervasyonlari periyodik temizle + ReservationExpired yayinla.
-var sweepCron = builder.Configuration.GetValue("Reservations:SweepCron", "* * * * *")!;
+// 012 (US4) + 026: birincil temizlik durable sure-sonu tetigidir (SweepReservation). Bu cron
+// yalniz GUVENLIK-AGI: DLQ'ya dusen/kacan tetiklerin biraktigi bayatlari seyrek (~10dk) toplar.
+// Ayni idempotent PurgeExpired'i kullanir; durable tetikle cakismaz.
+var sweepCron = builder.Configuration.GetValue("Reservations:SweepCron", "*/10 * * * *")!;
 using (var scope = app.Services.CreateScope())
 {
     scope.ServiceProvider.GetRequiredService<IRecurringJobManager>()

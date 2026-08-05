@@ -21,6 +21,7 @@ public static class ReserveStock
             ReserveStockCommand cmd,
             IDocumentSession session,
             IOptions<ReservationOptions> options,
+            IMessageBus bus,
             CancellationToken ct)
         {
             var stock = await session.Query<ProductStock>()
@@ -38,6 +39,13 @@ public static class ReserveStock
             session.Store(stock);
 
             var reservation = stock.Reservations.FirstOrDefault(r => r.UserId == cmd.UserId);
+
+            // 026: rezervasyon TTL bitis anina durable sure-sonu tetigi planla (yenileme = yeni tetik;
+            // bayat tetik fire olunca PurgeExpired aktif rezervasyonu no-op birakir). [Transactional]
+            // oldugu icin scheduled mesaj Marten commit'iyle outbox'a atomik yazilir.
+            if (reservation?.ExpiresAt is { } expiresAt)
+                await bus.ScheduleAsync(new SweepReservation(stock.ProductId, cmd.UserId), expiresAt);
+
             return FeatureObjectResultModel<ReserveStockResponse>.Ok(new ReserveStockResponse
             {
                 ProductId = stock.ProductId,
