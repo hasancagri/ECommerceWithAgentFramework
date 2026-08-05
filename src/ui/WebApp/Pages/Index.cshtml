@@ -1,7 +1,7 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Ana Sayfa";
 }
 
 <div class="container mt-5">
@@ -12,7 +12,7 @@
         {
             <div class="col">
                 <div class="alert alert-warning" role="alert">
-                    No Products Found!
+                    Ürün bulunamadı!
                 </div>
             </div>
             return;
@@ -27,6 +27,6 @@
 
     @* 011 US2: dashboard ilk 8 ürünü gösterir; tamamı Tüm Ürünler ekranında (FR-007). *@
     <div class="text-center mt-4">
-        <a asp-page="/Products/Index" class="btn btn-outline-primary">View All Products</a>
+        <a asp-page="/Products/Index" class="btn btn-outline-primary">Tüm Ürünleri Gör</a>
     </div>
 </div>

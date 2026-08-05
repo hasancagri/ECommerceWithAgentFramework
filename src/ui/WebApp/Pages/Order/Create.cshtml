@@ -16,11 +16,11 @@
             <ul class="mb-3">
                 @if (noAddresses)
                 {
-                    <li>Kayıtlı adresin yok. <a asp-page="/Account/Addresses">My Addresses</a> sayfasından ekle.</li>
+                    <li>Kayıtlı adresin yok. <a asp-page="/Account/Profile" asp-route-tab="addresses">Profilim</a> sayfasından ekle.</li>
                 }
                 @if (noCards)
                 {
-                    <li>Kayıtlı kartın yok. <a asp-page="/Account/Cards">My Cards</a> sayfasından ekle.</li>
+                    <li>Kayıtlı kartın yok. <a asp-page="/Account/Profile" asp-route-tab="cards">Profilim</a> sayfasından ekle.</li>
                 }
             </ul>
             <a class="btn btn-primary" asp-page="/Basket">Sepete dön</a>
@@ -31,14 +31,14 @@
         <form method="post">
             <div class="row">
                 <div class="col-md-6">
-                    <h2>Order information</h2>
+                    <h2>Sipariş Bilgileri</h2>
                     <div class="card mb-3">
                         <div class="card-body">
                             <div asp-validation-summary="ModelOnly"
                                  class="alert alert-warning text-bg-warning border-warning"></div>
 
                             @* US1: kayitli adres SECIMI (manuel giris yok). *@
-                            <h3>Delivery Address</h3>
+                            <h3>Teslimat Adresi</h3>
                             <div class="list-group mb-4">
                                 @foreach (var a in vm.SavedAddresses)
                                 {
@@ -50,7 +50,7 @@
                                             <strong>@a.Street, @a.Line</strong>
                                             @if (a.IsDefault)
                                             {
-                                                <span class="badge bg-success ms-1">Default</span>
+                                                <span class="badge bg-success ms-1">Varsayılan</span>
                                             }
                                             <br/>
                                             <span class="text-muted small">@a.District / @a.Province — @a.ZipCode</span>
@@ -60,7 +60,7 @@
                             </div>
 
                             @* US1: kayitli kart SECIMI (PAN/CVV YOK — yalniz marka+son4+etiket). *@
-                            <h3>Payment Card</h3>
+                            <h3>Ödeme Kartı</h3>
                             <div class="list-group">
                                 @foreach (var c in vm.SavedCards)
                                 {
@@ -72,14 +72,14 @@
                                             <strong>@c.Brand ···· @c.Last4</strong>
                                             @if (c.IsDefault)
                                             {
-                                                <span class="badge bg-success ms-1">Default</span>
+                                                <span class="badge bg-success ms-1">Varsayılan</span>
                                             }
                                             @if (!string.IsNullOrWhiteSpace(c.Label))
                                             {
                                                 <span class="text-muted">· @c.Label</span>
                                             }
                                             <br/>
-                                            <span class="text-muted small">Expires @c.ExpiryMonth.ToString("D2")/@c.ExpiryYear</span>
+                                            <span class="text-muted small">Son kullanma @c.ExpiryMonth.ToString("D2")/@c.ExpiryYear</span>
                                         </span>
                                     </label>
                                 }
@@ -89,14 +89,14 @@
                 </div>
 
                 <div class="col-md-6">
-                    <h2>Order Items</h2>
+                    <h2>Sipariş Kalemleri</h2>
                     <div class="card mb-3">
                         <div class="card-body">
                             <table class="table">
                                 <thead>
                                 <tr>
-                                    <th>Product Name</th>
-                                    <th>Price</th>
+                                    <th>Ürün Adı</th>
+                                    <th>Fiyat</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -110,13 +110,13 @@
                                 </tbody>
                                 <tfoot>
                                 <tr class="table-info">
-                                    <td><strong>Total Price:</strong></td>
+                                    <td><strong>Toplam Tutar:</strong></td>
                                     <td><strong>@vm.TotalPrice.ToString("C")</strong></td>
                                 </tr>
                                 </tfoot>
                             </table>
 
-                            <button type="submit" class="btn btn-primary">Complete payment</button>
+                            <button type="submit" class="btn btn-primary">Ödemeyi Tamamla</button>
                         </div>
                     </div>
                 </div>

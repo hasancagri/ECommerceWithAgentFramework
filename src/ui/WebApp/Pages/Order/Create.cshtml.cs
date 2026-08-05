@@ -62,7 +62,7 @@ public class CreateModel(BasketService basketService, OrderService orderService,
 
         return result.IsFail
             ? ErrorPage(result)
-            : SuccessPage("order created successfully", "/Order/Result");
+            : SuccessPage("Sipariş başarıyla oluşturuldu", "/Order/Result");
     }
 
     private async Task LoadInitialFormData()

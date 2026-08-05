@@ -15,11 +15,11 @@
                 @* FR-009: stok null = bilinmiyor, rozet yok; 0 = stokta yok; >0 = stokta. *@
                 @if (Model.IsInStock == true)
                 {
-                    <span class="badge bg-success">In Stock</span>
+                    <span class="badge bg-success">Stokta</span>
                 }
                 else if (Model.IsInStock == false)
                 {
-                    <span class="badge bg-secondary">Out of Stock</span>
+                    <span class="badge bg-secondary">Stokta Yok</span>
                 }
                 @* 016: kategori rozeti; null/boş = Catalog raporlamadı, çizilmez. *@
                 @* Id varsa rozet o kategoriye filtreli /Products'a link olur (tek facet). *@
@@ -39,7 +39,7 @@
             <p class="card-text">@Model.TruncateDescription(100)</p>
             <p class="card-text">
                 @* Id varsa marka o markaya filtreli /Products'a link olur (tek facet). *@
-                <small class="text-muted">Brand:
+                <small class="text-muted">Marka:
                     @if (Model.BrandId is not null)
                     {
                         <a asp-page="/Products/Index" asp-route-brandId="@Model.BrandId"><strong>@Model.Brand</strong></a>
@@ -55,8 +55,7 @@
             </p>
         </div>
         <div class="card-footer">
-            <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId" class="btn btn-primary mt-2">Show
-                Detail</a>
+            <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId" class="btn btn-primary mt-2">Detay</a>
         </div>
     </div>
 </div>

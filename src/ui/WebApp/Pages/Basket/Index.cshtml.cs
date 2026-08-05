@@ -40,14 +40,14 @@ public class IndexModel(CatalogService catalogService, BasketService basketServi
 
         var result = await basketService.CreateOrUpdateBasketAsync(createOrUpdateBasket);
 
-        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("product added to basket", "Index");
+        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("Ürün sepete eklendi", "Index");
     }
 
     public async Task<IActionResult> OnGetDeleteAsync(Guid productId)
     {
         var result = await basketService.DeleteBasketAsync(productId);
 
-        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("product deleted from basket", "Index");
+        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("Ürün sepetten kaldırıldı", "Index");
     }
 
     // 021: sepet satiri adedini hedef degere getirir (mevcut ± 1, view'dan gelir).
@@ -56,7 +56,7 @@ public class IndexModel(CatalogService catalogService, BasketService basketServi
     {
         var result = await basketService.SetQuantityAsync(productId, quantity);
 
-        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("basket updated", "Index");
+        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("Sepet güncellendi", "Index");
     }
 
     // 020: sayac sifira ulasinca istemci buraya gelir; sepeti sunucuda bosaltir (idempotent),

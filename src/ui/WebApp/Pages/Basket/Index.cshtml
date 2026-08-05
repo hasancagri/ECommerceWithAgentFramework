@@ -9,11 +9,11 @@
     <thead class="table-dark">
     <tr>
         <th scope="col">#</th>
-        <th scope="col">Product Picture</th>
-        <th scope="col">Product Name</th>
-        <th scope="col">Product Price</th>
-        <th scope="col">Qty</th>
-        <th>Action</th>
+        <th scope="col">Ürün Görseli</th>
+        <th scope="col">Ürün Adı</th>
+        <th scope="col">Ürün Fiyatı</th>
+        <th scope="col">Adet</th>
+        <th>İşlem</th>
     </tr>
     </thead>
     <tbody>
@@ -21,7 +21,7 @@
     @if (!Model.Basket.HasItem)
     {
         <tr>
-            <td colspan="6" class="text-center">No items in the basket.</td>
+            <td colspan="6" class="text-center">Sepetinde ürün yok.</td>
         </tr>
     }
 
@@ -71,13 +71,13 @@
 
             <td>
 
-                <a asp-page-handler="Delete" asp-route-productId="@basketItem.Id" class="btn btn-danger">Remove</a>
+                <a asp-page-handler="Delete" asp-route-productId="@basketItem.Id" class="btn btn-danger">Kaldır</a>
             </td>
         </tr>
         index++;
     }
     <tr class="table-active">
-        <td colspan="5" class="text-end fw-bold">Total Price:</td>
+        <td colspan="5" class="text-end fw-bold">Toplam Tutar:</td>
         <td>@Model.Basket.GetTotalPrice().ToString("C")</td>
     </tr>
 
@@ -91,5 +91,5 @@
 }
 
 <a asp-page="/order/Create" class="btn btn-success w-100 mt-3 text-center">
-    <i class="fa-solid fa-credit-card"></i> Proceed to Payment Step
+    <i class="fa-solid fa-credit-card"></i> Ödeme Adımına Geç
 </a>

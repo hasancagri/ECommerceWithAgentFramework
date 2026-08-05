@@ -14,7 +14,7 @@
                      src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/NoImage.jpeg" : Model.Product.ImageUrl)">
                 <div class="card-body">
                     <h2 class="mb-4">@Model.Product.Name</h2>
-                    <h5 class="card-title">Description</h5>
+                    <h5 class="card-title">Açıklama</h5>
                     <p>@Model.Product.Description</p>
                 </div>
             </div>
@@ -25,34 +25,34 @@
             <div class="card shadow-lg border-0">
                 <div class="card-body">
 
-                    <h5 class="card-title">Brand</h5>
+                    <h5 class="card-title">Marka</h5>
                     <p class="card-text">@Model.Product.Brand</p>
                     <hr>
 
-                    <h5 class="card-title">Category</h5>
+                    <h5 class="card-title">Kategori</h5>
                     <p class="card-text">@Model.Product.Category</p>
                     <hr>
 
-                    <h5 class="card-title">Price</h5>
+                    <h5 class="card-title">Fiyat</h5>
                     <p class="card-text">
                         <strong>@Model.Product.Price.ToString("C")</strong>
                     </p>
                     <hr>
 
-                    <h5 class="card-title">Stock</h5>
+                    <h5 class="card-title">Stok</h5>
                     <p class="card-text">
                         @* 012 (US5): Available'dan turetilmis stok rozeti — az kaldiginda "son N adet". *@
                         @if (Model.StockQuantity <= 0)
                         {
-                            <span class="badge bg-danger">Out of stock</span>
+                            <span class="badge bg-danger">Stokta yok</span>
                         }
                         else if (Model.StockQuantity <= 5)
                         {
-                            <span class="badge bg-warning text-dark">Only @Model.StockQuantity left</span>
+                            <span class="badge bg-warning text-dark">Son @Model.StockQuantity adet</span>
                         }
                         else
                         {
-                            <span class="badge bg-success">In stock: @Model.StockQuantity</span>
+                            <span class="badge bg-success">Stokta: @Model.StockQuantity</span>
                         }
                     </p>
                     <hr>
@@ -60,11 +60,11 @@
                     @if (Model.StockQuantity > 0)
                     {
                         <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.Id"
-                           class="btn btn-primary">Add To Basket</a>
+                           class="btn btn-primary">Sepete Ekle</a>
                     }
                     else
                     {
-                        <button class="btn btn-primary" disabled>Add To Basket</button>
+                        <button class="btn btn-primary" disabled>Sepete Ekle</button>
                     }
                 </div>
             </div>
