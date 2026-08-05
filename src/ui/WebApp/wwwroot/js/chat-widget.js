@@ -64,10 +64,10 @@
                 body: JSON.stringify({ message: message, previousResponseId: previousResponseId })
             });
         } catch {
-            botEl.textContent = 'Sorry, I cannot help right now.';
+            botEl.textContent = 'Üzgünüm, şu an yardımcı olamıyorum.';
             return;
         }
-        if (!resp.ok || !resp.body) { botEl.textContent = 'Sorry, I cannot help right now.'; return; }
+        if (!resp.ok || !resp.body) { botEl.textContent = 'Üzgünüm, şu an yardımcı olamıyorum.'; return; }
 
         const reader = resp.body.getReader();
         const decoder = new TextDecoder();
@@ -93,7 +93,7 @@
             /\/(?:Products\/Detail\/[0-9a-fA-F-]{36}|Basket)\b/g,
             function (m) { return window.location.origin + m; }
         );
-        if (botEl.textContent === '') botEl.textContent = '(empty response)';
+        if (botEl.textContent === '') botEl.textContent = '(boş yanıt)';
     }
 
     form.addEventListener('submit', function (e) {

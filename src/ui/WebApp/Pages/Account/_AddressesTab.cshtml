@@ -1,0 +1,65 @@
+@model WebApp.Pages.Account.ProfileModel
+
+<div class="row">
+    <div class="col-md-7">
+        @if (Model.Addresses.Count == 0)
+        {
+            <div class="alert alert-info">Henüz kayıtlı adresin yok.</div>
+        }
+        else
+        {
+            <div class="list-group mb-4">
+                @foreach (var a in Model.Addresses)
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>@a.Street, @a.Line</strong>
+                                @if (a.IsDefault)
+                                {
+                                    <span class="badge bg-success ms-2">Varsayılan</span>
+                                }
+                                <div class="text-muted small">@a.District / @a.Province — @a.ZipCode</div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                @if (!a.IsDefault)
+                                {
+                                    <a class="btn btn-outline-success" asp-page-handler="SetDefaultAddress" asp-route-id="@a.Id">Varsayılan Yap</a>
+                                }
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-@a.Id">Düzenle</button>
+                                <a class="btn btn-outline-danger" asp-page-handler="DeleteAddress" asp-route-id="@a.Id"
+                                   onclick="return confirm('Bu adres silinsin mi?');">Sil</a>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="edit-@a.Id">
+                            <form method="post" asp-page-handler="UpdateAddress" asp-route-id="@a.Id" class="row g-2">
+                                <div class="col-6"><input class="form-control form-control-sm" name="AddressForm.Province" value="@a.Province" placeholder="İl" required/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="AddressForm.District" value="@a.District" placeholder="İlçe" required/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="AddressForm.Street" value="@a.Street" placeholder="Sokak" required/></div>
+                                <div class="col-6"><input class="form-control form-control-sm" name="AddressForm.ZipCode" value="@a.ZipCode" placeholder="Posta Kodu" required/></div>
+                                <div class="col-12"><input class="form-control form-control-sm" name="AddressForm.Line" value="@a.Line" placeholder="Adres Satırı" required/></div>
+                                <div class="col-12"><button class="btn btn-sm btn-primary" type="submit">Kaydet</button></div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">Yeni Adres Ekle</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="AddAddress" class="row g-2">
+                    <div class="col-6"><input class="form-control" asp-for="AddressForm.Province" placeholder="İl" required/></div>
+                    <div class="col-6"><input class="form-control" asp-for="AddressForm.District" placeholder="İlçe" required/></div>
+                    <div class="col-12"><input class="form-control" asp-for="AddressForm.Street" placeholder="Sokak" required/></div>
+                    <div class="col-6"><input class="form-control" asp-for="AddressForm.ZipCode" placeholder="Posta Kodu" required/></div>
+                    <div class="col-12"><input class="form-control" asp-for="AddressForm.Line" placeholder="Adres Satırı (No, Daire...)" required/></div>
+                    <div class="col-12"><button class="btn btn-primary w-100" type="submit">Adres Ekle</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

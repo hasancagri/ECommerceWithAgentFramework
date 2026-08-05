@@ -1,6 +1,6 @@
 ﻿@using System.Security.Claims
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -23,7 +23,7 @@
             <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                 <ul class="navbar-nav flex-grow-1">
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                        <a class="nav-link text-dark" asp-area="" asp-page="/Index">Ana Sayfa</a>
                     </li>
 
                 </ul>
@@ -40,22 +40,16 @@
 
 
                                 <li>
-                                    <a class="dropdown-item" asp-page="/Basket/Index">Basket</a>
+                                    <a class="dropdown-item" asp-page="/Basket/Index">Sepetim</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" asp-page="/Order/History">Order History</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-page="/Account/Cards">My Cards</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-page="/Account/Addresses">My Addresses</a>
+                                    <a class="dropdown-item" asp-page="/Account/Profile">Profilim</a>
                                 </li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" asp-page="/Auth/SignIn" asp-page-handler="SignOut">Sign Out</a>
+                                    <a class="dropdown-item" asp-page="/Auth/SignIn" asp-page-handler="SignOut">Çıkış Yap</a>
                                 </li>
                             </ul>
                         </li>
@@ -63,10 +57,10 @@
                     else
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Auth/SignIn">Sign In</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Auth/SignIn">Giriş Yap</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Auth/SignUp">Sign Up</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Auth/SignUp">Kayıt Ol</a>
                         </li>
                     }
                 </ul>
@@ -86,7 +80,7 @@
 
 <footer class="border-top footer text-muted">
     <div class="container">
-        &copy; 2025 - WebApp - <a asp-area="" asp-page="/Privacy">Privacy</a>
+        &copy; 2025 - WebApp - <a asp-area="" asp-page="/Privacy">Gizlilik</a>
     </div>
 </footer>
 
