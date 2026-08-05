@@ -1,23 +1,32 @@
-@baseAddress = http://localhost:5029
-@clientCredentialToken=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjVnZad3FmRVFSUU0tOXBpVnEwaFpCMW1EaDVDOFM5NlMtNFVDWmdHUlI0In0.eyJleHAiOjE3NTczMzc4OTAsImlhdCI6MTc1NzMzNjA5MCwianRpIjoiNDMyMGQ0NGMtOWViZS00NzBlLWI1OWEtZmEwMDk5OGVlMjRiIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy91ZGVteVRlbmFudCIsImF1ZCI6WyJwYXltZW50LmFwaSIsImFjY291bnQiXSwic3ViIjoiOWYyMTdkY2EtODI5Ni00MTM3LWFmMjMtYzY3MjFjYjRhZDYzIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoib3JkZXIuYXBpIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SG9zdCI6IjE3Mi4xOC4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiZGVmYXVsdC1yb2xlcy11ZGVteXRlbmFudCIsInVtYV9hdXRob3JpemF0aW9uIl0sInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1vcmRlci5hcGkiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6Im9yZGVyLmFwaSJ9.Z642dEvG743WuJfmBZfnZ2KJ-fJmLupEnB1au14a0sr_C-75Q2c-IpdE3UEqHWjJX0Y3YsHgvcab9rff6OF97RGLTexXwRj0GmfguDsMIJ0-sQCKY61WrZCuylPoHVPjYxP3JRZaRjEevNjh8vrXmcO5NmPbCAUuhhul-qKBzTtjN17pEVV3UWbNPbxHdcSqUObYSEoFTsA-I_iq535DwqaoJ699baUTKSfjCoxR0HvFGml5QzTOC-PsrY7G9A79OE6CNDMZ6HR7siPjY1cqhvrvGgKiFiZPQkFKDYqWwzvJ1sTP5HCETq104QeYyI5X882DMOlAkKK9hcfcCISyOw
-@passwordToken= eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjVnZad3FmRVFSUU0tOXBpVnEwaFpCMW1EaDVDOFM5NlMtNFVDWmdHUlI0In0.eyJleHAiOjE3NTM4MjE4NTksImlhdCI6MTc1MzgyMDA1OSwianRpIjoiNTZiODlkZDItZGQ3Ny00NzFlLTg3MGUtZThjMTQ1MjA1Y2RhIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy91ZGVteVRlbmFudCIsImF1ZCI6WyJmaWxlLmFwaSIsInBheW1lbnQuYXBpIiwiY2F0YWxvZy5hcGkiLCJiYXNrZXQuYXBpIiwiZGlzY291bnQuYXBpIiwib3JkZXIuYXBpIiwiYWNjb3VudCJdLCJzdWIiOiJjZDk5YThiMi0wMzY3LTRhOTktYWVhMS0zOWIwZGE5MDlkMmUiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJ3ZWIiLCJzaWQiOiJlMWI0YjA3Zi00NmEwLTRkOGYtYWNmOC1kMTg5Y2UwZmU1MDMiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6ImVtYWlsIHBob25lIHByb2ZpbGUiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInJvbGVzIjpbImluc3RydWN0b3IiLCJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtdWRlbXl0ZW5hbnQiLCJ1bWFfYXV0aG9yaXphdGlvbiJdLCJuYW1lIjoiZmF0aWggw6dha8Sxcm_En2x1IiwicHJlZmVycmVkX3VzZXJuYW1lIjoiZmNha2lyb2dsdTE2IiwiZ2l2ZW5fbmFtZSI6ImZhdGloIiwiZmFtaWx5X25hbWUiOiLDp2FrxLFyb8SfbHUiLCJlbWFpbCI6ImYtY2FraXJvZ2x1QG91dGxvb2suY29tIn0.cSer6KClQfDWzpqv894l3-kjb7bNHwgb1UVfnX1nAbPX3EmgfqPLsNZb62Rz1ylxzznODui0QVaGp2vHyoksx1MNr801TLDyzAyRamUxaSDdfcXUirw7mnI7GQ3nqJlFTdmHU8nD8UQl2cIm7js8s64FPGQAgWThCrHhnLTGjdjp1qubT83Knd5CPV9S-awnLfXQS4qbFzvwPazwY0aT-7LrpzFc8YrUoEIhYEpNA-2m-kkM2fIP4s2Eura_NqvgDAIZmz_8Iv1FcC_bVER4iD8EQSZfR9PP9xeuEmqKO4SG0AQAuAFw9org4pilac1ZvCKnCBOzw0B--Z-IwUflPg
+# Payment.Api — sistemi Aspire AppHost ile başlat (portlar launchSettings'ten; Aspire dashboard'da doğrula)
+# CurrentUser gerektiren uçlar için kullanıcı token'ı gerekir; WebApp oturumundan bearer yapıştırılabilir.
+@baseAddress = https://localhost:7126
+@identity = https://localhost:5001
+@userId = 3fa85f64-5717-4562-b3fc-2c963f66afac
 
+### Token al (client_credentials — scope: payment.read payment.write)
+POST {{identity}}/connect/token
+Content-Type: application/x-www-form-urlencoded
 
-### Create a Payment
+grant_type=client_credentials&client_id=ecommerce.bff&client_secret=webshop-secret&scope=payment.read payment.write
+
+> {% client.global.set("token", response.body.access_token); %}
+
+### Ödeme oluştur (payment.write) — UserId token'dan çözülür; yanıt PaymentId döner
+# (checkout akışında bu PaymentId sipariş oluştururken kullanılır)
 POST {{baseAddress}}/api/v1/payments
 Content-Type: application/json
-Accept: application/json
-Authorization: Bearer {{passwordToken}}
+Authorization: Bearer {{token}}
 
 {
-  "CardNumber": "4111111111111111",
-  "CardHolderName": "John Doe",
-  "CardExpirationDate": "12/25",
-  "CardSecurityNumber": "123",
-  "Amount": 150.75
+  "cardNumber": "4111111111111111",
+  "cardHolderName": "Ahmet Yılmaz",
+  "cardExpirationDate": "12/30",
+  "cardSecurityNumber": "123",
+  "amount": 199.90
 }
-### Get All Payments
-GET {{baseAddress}}/api/v1/payments
+
+### Kullanıcının ödemeleri (payment.read)
+GET {{baseAddress}}/api/v1/payments/user?userId={{userId}}
 Accept: application/json
-Authorization: Bearer {{passwordToken}}
-###
+Authorization: Bearer {{token}}

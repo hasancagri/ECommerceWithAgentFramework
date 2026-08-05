@@ -1,0 +1,45 @@
+# Order.Api — sistemi Aspire AppHost ile başlat (portlar launchSettings'ten; Aspire dashboard'da doğrula)
+# CurrentUser gerektiren uçlar için kullanıcı token'ı gerekir; WebApp oturumundan bearer yapıştırılabilir.
+# Sipariş Pending doğar, HTTP hemen döner; stok commit + sepet temizliği CheckoutSaga adımlarıdır (028).
+@baseAddress = https://localhost:7018
+@identity = https://localhost:5001
+@productId = 3fa85f64-5717-4562-b3fc-2c963f66afac
+@paymentId = 3fa85f64-5717-4562-b3fc-2c963f66afa9
+
+### Token al (client_credentials — scope: order.read order.write)
+POST {{identity}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=ecommerce.bff&client_secret=webshop-secret&scope=order.read order.write
+
+> {% client.global.set("token", response.body.access_token); %}
+
+### Siparişleri getir (kullanıcının siparişleri — order.read)
+GET {{baseAddress}}/api/v1/orders
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### Sipariş oluştur (order.write) — UserId token'dan çözülür; PaymentId idempotency anahtarıdır
+# (aynı PaymentId ikinci kez siparişe bağlanamaz). Yanıt: OrderId + Code (sipariş Pending).
+POST {{baseAddress}}/api/v1/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "address": {
+    "province": "İstanbul",
+    "district": "Kadıköy",
+    "street": "Bağdat Cad.",
+    "zipCode": "34710",
+    "line": "No 12 D3"
+  },
+  "paymentId": "{{paymentId}}",
+  "items": [
+    {
+      "productId": "{{productId}}",
+      "productName": "Örnek Ürün",
+      "unitPrice": 199.90,
+      "quantity": 1
+    }
+  ]
+}

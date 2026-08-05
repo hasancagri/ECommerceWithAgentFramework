@@ -1,58 +1,83 @@
-@baseAddress = http://localhost:5251
-@id=3fa85f64-5717-4562-b3fc-2c963f66afac
+# Customer.Api — sistemi Aspire AppHost ile başlat (portlar launchSettings'ten; Aspire dashboard'da doğrula)
+# Tüm uçlar CurrentUser ister: client_credentials token'ında sub olmadığından
+# WebApp oturumundan kullanıcı bearer'ını kopyalayıp {{token}} yerine yapıştırmak gerekebilir.
+@baseAddress = https://localhost:7251
+@identity = https://localhost:5001
+@id = 3fa85f64-5717-4562-b3fc-2c963f66afac
 
-### AddressBook
+### Token al (client_credentials — scope: customer.read customer.write)
+POST {{identity}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=ecommerce.bff&client_secret=webshop-secret&scope=customer.read customer.write
+
+> {% client.global.set("token", response.body.access_token); %}
+
+### --- Adres Defteri (AddressBook) ---
+
+### Adresleri getir (customer.read)
 GET {{baseAddress}}/api/v1/addresses
 Accept: application/json
-###
+Authorization: Bearer {{token}}
+
+### Adres ekle (customer.write) — UserId token'dan çözülür
 POST {{baseAddress}}/api/v1/addresses
-Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-  "province": "Istanbul",
-  "district": "Kadikoy",
-  "street": "Bagdat Cad.",
+  "province": "İstanbul",
+  "district": "Kadıköy",
+  "street": "Bağdat Cad.",
   "zipCode": "34710",
   "line": "No 12 D3"
 }
-###
+
+### Adres güncelle (customer.write)
 PUT {{baseAddress}}/api/v1/addresses/{{id}}
-Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-  "province": "Istanbul",
-  "district": "Uskudar",
-  "street": "Cengelkoy",
+  "province": "İstanbul",
+  "district": "Üsküdar",
+  "street": "Çengelköy",
   "zipCode": "34680",
   "line": "No 5"
 }
-###
-DELETE {{baseAddress}}/api/v1/addresses/{{id}}
-Accept: application/json
-###
-POST {{baseAddress}}/api/v1/addresses/{{id}}/default
-Accept: application/json
 
-### Wallet
+### Adres sil (customer.write)
+DELETE {{baseAddress}}/api/v1/addresses/{{id}}
+Authorization: Bearer {{token}}
+
+### Varsayılan adres yap (customer.write)
+POST {{baseAddress}}/api/v1/addresses/{{id}}/default
+Authorization: Bearer {{token}}
+
+### --- Kayıtlı Kartlar (Wallet) ---
+
+### Kartları getir (customer.read) — maskeli döner, PAN asla dönmez
 GET {{baseAddress}}/api/v1/cards
 Accept: application/json
-###
+Authorization: Bearer {{token}}
+
+### Kart ekle (customer.write) — PAN tokenize edilir, saklanmaz
 POST {{baseAddress}}/api/v1/cards
-Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "pan": "4111111111111111",
   "cvv": "123",
   "expiryMonth": 12,
   "expiryYear": 2030,
-  "label": "is kartim"
+  "label": "İş kartım"
 }
-###
+
+### Kart sil (customer.write)
 DELETE {{baseAddress}}/api/v1/cards/{{id}}
-Accept: application/json
-###
+Authorization: Bearer {{token}}
+
+### Varsayılan kart yap (customer.write)
 POST {{baseAddress}}/api/v1/cards/{{id}}/default
-Accept: application/json
+Authorization: Bearer {{token}}
