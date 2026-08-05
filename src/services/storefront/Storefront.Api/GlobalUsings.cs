@@ -3,6 +3,7 @@ global using Asp.Versioning;
 global using Common.Domains;
 global using Common.Exceptions;
 global using Common.Extensions;
+global using Common.Utils.Caching;
 global using Common.Utils.Constants;
 global using Common;
 global using Marten.Newtonsoft;

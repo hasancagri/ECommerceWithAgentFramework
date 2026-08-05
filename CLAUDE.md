@@ -233,9 +233,26 @@ endpoint ve handler değişmez. Motor **HybridCache** (L1 in-memory + opsiyonel 
 - Bir command record'una `[InvalidatesCache("tag")]` ekle → başarılı + commit sonrası `RemoveByTagAsync`
   ile iki katman boşalır. Negatif sonuç (NotFound) önbeklenmez.
 - Servis `Program.cs`'te `UseWolverine`'den **sonra** `AddCachingAspect("<prefix>")` çağırır; L2 için
-  Redis conn-string varsa `AddRedisDistributedCache("redis")`. İlk tüketici: Catalog.
+  Redis conn-string varsa `AddRedisDistributedCache("redis")`. Altyapı tüm servislerde hazır; tüketici: Customer.
+- Anahtar VE tag BC-prefix'lidir (`CacheKeyFactory` + decorator) — paylaşımlı Redis'te BC izolasyonu.
+- Çok-instance L1 tutarlılığı: boşaltma Redis pub/sub backplane'e yayınlanır (`cache-inv:{prefix}` kanalı);
+  her instance `CacheBackplaneSubscriber` ile dinler, yerelini düşürür. At-most-once — ≤5sn L1 TTL güvenlik ağıdır.
 - Neden middleware değil decorator: Wolverine `Before/After` short-circuit'te değer döndüremiyor
   (kanıtlandı). Gerekçe Obsidian `adr-aop-caching-mechanism`; sınır kararı `adr-cache-vs-readmodel`.
+
+Cache kuralları (ne cache'lenir, kim boşaltır):
+
+- Redis yalnız BC'nin KENDİ verisi için; başka BC'nin verisi gerekiyorsa cache değil read model (event aboneliği).
+- Cache'lenebilirlik ölçütü: herkese-aynı + tekrar okunan + bayatlığa toleranslı. Per-user düşük-tekrar veri (Basket,
+  Order) ve tutarlılık-kritik veri (Stock) cache'lenmez.
+- Invalidation'ın sahibi veriyi DEĞİŞTİREN koddur. Command-BC'de `[InvalidatesCache]` (decorator); projeksiyon-BC'de
+  (Storefront) event handler satırı yazdıktan sonra `RemoveByTagAsync` — kaynak BC hedefin cache'inden habersizdir.
+- `[Cached]` tag'i ile boşaltma tag'i birebir aynı olmalı; tag = aggregate/veri-kümesi adı, entity'ye ayrı tag yok.
+- Yazma yolunu besleyen query CACHE'LENMEZ (ör. sepete-ekleye fiyat veren tekil vitrin sorgusu) — bayat değer
+  kalıcı kayda sızar. Cache yalnız ekrana giden sonuçlara.
+- Kardinalite ölçütü: aynı parametre kombinasyonu tekrar gelmiyorsa (serbest filtre/arama) `[Cached]` koyma.
+- Saga/event-handler mutasyonları decorator'dan geçmez — o yollarda invalidation elle yapılır veya kısa TTL'e bırakılır.
+- Elle boşaltma HER ZAMAN `CacheInvalidator.InvalidateAsync` ile — doğrudan `RemoveByTagAsync` backplane'e yayılmaz.
 
 ### Yetkilendirme (scope-tabanlı, rol yok)
 

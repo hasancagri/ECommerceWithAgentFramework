@@ -7,6 +7,7 @@ public static class StorefrontEventHandlers
         IDocumentSession session,
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         ILogger<IntegrationEvents.ProductChangedEvent> logger,
+        CacheInvalidator cacheInvalidator,
         CancellationToken ct)
     {
         var view = await session.LoadAsync<StorefrontView>(evt.ProductId, ct)
@@ -17,6 +18,11 @@ public static class StorefrontEventHandlers
 
         session.Store(view);
         await session.SaveChangesAsync(ct);
+
+        // Projeksiyon-BC invalidation kuralı (CLAUDE.md): satırı yazan handler kendi cache'ini
+        // boşaltır — CacheInvalidator üzerinden (yerel + backplane). Facet verisini yalnız Catalog
+        // kaynaklı alanlar etkiler; StockChangedEvent facet'e girmez, orada boşaltma yok.
+        await cacheInvalidator.InvalidateAsync("filters", ct);
 
         // 019: view kaydi YUKARIDA garanti altina alindi (FR-014); embedding ayri kayit + ayri
         // SaveChanges. Uretim hatasi yutulur — kayit eksik kalir, urun anlamsal siralamaya girmez,
