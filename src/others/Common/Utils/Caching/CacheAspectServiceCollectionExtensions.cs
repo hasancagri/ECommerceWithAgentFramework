@@ -20,10 +20,6 @@ public static class CacheAspectServiceCollectionExtensions
     {
         services.AddSingleton(new CacheAspectOptions { KeyPrefix = keyPrefix });
 
-        // Gözlemlenebilirlik (FR-014): IMeterFactory'yi garanti et (idempotent) + CacheMetrics singleton.
-        services.AddMetrics();
-        services.AddSingleton<CacheMetrics>();
-
         services.AddHybridCache(o =>
         {
             // L1 global sabiti (FR-005/SC-004). L2 Expiration attribute başına (ttlSeconds) verilir;
@@ -33,6 +29,10 @@ public static class CacheAspectServiceCollectionExtensions
                 LocalCacheExpiration = l1Expiration ?? TimeSpan.FromSeconds(5)
             };
         });
+
+        // Boşaltmanın tek kapısı + backplane dinleyicisi. Redis kayıtlı değilse ikisi de yerel/no-op moddadır.
+        services.AddSingleton<CacheInvalidator>();
+        services.AddHostedService<CacheBackplaneSubscriber>();
 
         services.Decorate<IMessageBus, CachingMessageBus>();
         return services;

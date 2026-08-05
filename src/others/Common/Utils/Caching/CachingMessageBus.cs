@@ -21,7 +21,7 @@ public sealed class CachingMessageBus(
     IMessageBus inner,
     HybridCache cache,
     CacheAspectOptions options,
-    CacheMetrics metrics)
+    CacheInvalidator invalidator)
     : IMessageBus
 {
     // ---- Cache/invalidation uygulanan tek nokta: InvokeAsync<T> ----
@@ -46,11 +46,9 @@ public sealed class CachingMessageBus(
         var invalidates = messageType.GetCustomAttribute<InvalidatesCacheAttribute>();
         // Boşaltma commit SONRASI: innerCall döndüyse Wolverine [Transactional] handler commit'i tamamdır.
         // Başarısız yazmada (IsSuccess=false) boşaltma yapılmaz.
+        // Boşaltma tek kapıdan (CacheInvalidator): BC-prefix'li tag + backplane yayını birlikte.
         if (invalidates is not null && result is not BaseResultModel { IsSuccess: false })
-        {
-            await cache.RemoveByTagAsync(invalidates.Tag, ct);
-            metrics.RecordInvalidation();
-        }
+            await invalidator.InvalidateAsync(invalidates.Tag, ct);
 
         return result;
     }
@@ -62,15 +60,12 @@ public sealed class CachingMessageBus(
         var entryOptions = new HybridCacheEntryOptions { Expiration = TimeSpan.FromSeconds(cached.TtlSeconds) };
         // L1 (LocalCacheExpiration ≤5sn) global ayardan gelir (bkz. AddCachingAspect) — burada set edilmez.
 
-        // factory yalnız cache-miss'te çalışır → hit/miss ayrımını buradan tespit ederiz (FR-014).
-        var factoryRan = false;
         try
         {
-            var result = await cache.GetOrCreateAsync(
+            return await cache.GetOrCreateAsync(
                 key,
                 async token =>
                 {
-                    factoryRan = true;
                     var value = await innerCall(token);
                     // Negatif sonuç önbeklenmez: sentinel ile factory'yi hataya düşür → HybridCache yazmaz.
                     if (value is BaseResultModel { IsSuccess: false })
@@ -78,16 +73,11 @@ public sealed class CachingMessageBus(
                     return value;
                 },
                 entryOptions,
-                tags: [cached.Tag],
+                tags: [$"{options.KeyPrefix}:{cached.Tag}"],
                 cancellationToken: ct);
-
-            if (factoryRan) metrics.RecordMiss();
-            else metrics.RecordHit();
-            return result;
         }
         catch (NegativeResultException ex)
         {
-            metrics.RecordMiss(); // negatif sonuç kaynağa gitti (önbeklenmedi)
             return (T)ex.Result;
         }
     }
