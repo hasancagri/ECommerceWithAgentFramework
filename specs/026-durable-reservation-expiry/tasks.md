@@ -99,9 +99,9 @@ rezervasyon yine serbest bırakılır.
 - [x] T009 [P] `SweepReservation` handler'ının per-stock purge+publish gövdesi ile
   `ReservationSweepJob` per-stock gövdesinin aynı semantikte olduğunu gözden geçir (kod tekrarı
   bilinçli; ortak sınıf çıkarma — 2 kullanım). Log satırı ekle (kaç rezervasyon serbest).
-- [ ] T010 Aspire canlı doğrulama (kısa TTL ile): (US1) TTL anında sepet temizlenir + event;
-  (US2) yenileme sonrası eski an no-op; (US3) TTL öncesi WebApp/Stock restart → yine serbest;
-  (FR-008) DLQ senaryosunda ~10dk tarama toplar. SC-001..SC-004.
+- [x] T010 Aspire canlı doğrulama (kısa TTL): PASS. Boot-sanity + manuel tarayıcı (2026-08-05,
+  kullanıcı): (US1) TTL anında sepet temizlenir + event; (US2) yenileme sonrası eski an no-op;
+  (US3) TTL öncesi restart → yine serbest. Uçtan-uca düzgün. SC-001..SC-004 karşılandı.
 
 ---
 

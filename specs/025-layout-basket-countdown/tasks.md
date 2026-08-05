@@ -101,10 +101,10 @@ Kaynak: mevcut `GetBasketResponse.ReservationExpiresAt` + `purge-expired` yetene
 - [x] T013 [P] Edge: anonim kullanıcı + boş sepet + rezervasyonsuz durumda header'da sayaç
   GÖRÜNMEZ olduğunu doğrula (FR-006). Gerekirse component koşulunu düzelt.
 - [x] T014 [P] Header sayaç stilini (konum, düşük-süre vurgusu) `_Layout` + mevcut CSS ile hizala.
-- [~] T015 Aspire ile canlı doğrulama: KISMİ. Sunucu-yüzeyleri PASS — anonim'de sayaç
-  elementi yok (FR-006), `basket-countdown.js` servis ediliyor, `POST /basket/purge-expired`
-  anonim'de temiz 401 (500 bug'ı bulundu+düzeltildi). BEKLEMEDE: authed geri sayım UI'ı
-  (US1 tick / US2 sıfırda purge+reload / US3 tek sayaç) — tarayıcı + login + stok'lu sepet ister.
+- [x] T015 Aspire canlı doğrulama: PASS. Sunucu-yüzeyleri (FR-006 anonim gizlenme, asset,
+  `POST /basket/purge-expired` 401 — 500 bug'ı düzeltildi) + manuel tarayıcı (2026-08-05,
+  kullanıcı): authed geri sayım UI'ı (US1 tick / US2 sıfırda purge+reload / US3 tek sayaç)
+  düzgün çalışıyor. SC-001..SC-004 karşılandı.
 
 ---
 
