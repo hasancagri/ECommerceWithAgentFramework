@@ -2,7 +2,6 @@ namespace Catalog.Api.Domains.Products.Features.Commands;
 
 public static class UpdateProduct
 {
-    [InvalidatesCache("catalog-products")]
     public record UpdateProductCommand(
         Guid Id,
         string Name,

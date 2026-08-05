@@ -8,6 +8,9 @@ public static class GetProductStorefrontView
     {
         public Guid ProductId { get; set; }
         public string? Name { get; set; }
+        // Urun detayi vitrinden beslenir: aciklama + fiyat da tasinir. null = Catalog henuz raporlamadi.
+        public string? Description { get; set; }
+        public decimal? Price { get; set; }
         public string? ImageUrl { get; set; }
         public bool IsDeleted { get; set; }
 
@@ -25,6 +28,8 @@ public static class GetProductStorefrontView
         {
             ProductId = view.ProductId,
             Name = view.Name,
+            Description = view.Description,
+            Price = view.Price,
             ImageUrl = view.ImageUrl,
             IsDeleted = view.IsDeleted,
             BrandId = view.BrandId,

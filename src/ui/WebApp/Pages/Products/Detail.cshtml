@@ -59,7 +59,7 @@
 
                     @if (Model.StockQuantity > 0)
                     {
-                        <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.Id"
+                        <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.ProductId"
                            class="btn btn-primary">Sepete Ekle</a>
                     }
                     else

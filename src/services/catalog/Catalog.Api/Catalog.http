@@ -1,5 +1,5 @@
 # Catalog.Api — sistemi Aspire AppHost ile başlat (portlar launchSettings'ten; Aspire dashboard'da doğrula)
-# Okuma uçları anonim; yazma uçları catalog.write scope ister.
+# REST okuma uçları yok (UI vitrinden okur, agent MCP'den); yazma uçları catalog.write scope ister.
 @baseAddress = https://localhost:7052
 @identity = https://localhost:5001
 @productId = 3fa85f64-5717-4562-b3fc-2c963f66afac
@@ -13,26 +13,6 @@ Content-Type: application/x-www-form-urlencoded
 grant_type=client_credentials&client_id=ecommerce.bff&client_secret=webshop-secret&scope=catalog.write
 
 > {% client.global.set("token", response.body.access_token); %}
-
-### Tüm ürünler (anonim, sayfalı)
-GET {{baseAddress}}/api/v1/products
-Accept: application/json
-
-### Ürün (Id ile, anonim)
-GET {{baseAddress}}/api/v1/products/{{productId}}
-Accept: application/json
-
-### Ürün ara (ada göre, anonim)
-GET {{baseAddress}}/api/v1/products/search?name=telefon
-Accept: application/json
-
-### Markalar (anonim)
-GET {{baseAddress}}/api/v1/products/brands
-Accept: application/json
-
-### Kategoriler (anonim)
-GET {{baseAddress}}/api/v1/products/categories
-Accept: application/json
 
 ### Ürün oluştur (catalog.write) — normalde ürünler tedarikçi feed'inden gelir (IngestionAgent)
 POST {{baseAddress}}/api/v1/products

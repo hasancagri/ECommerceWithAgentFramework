@@ -30,7 +30,6 @@ global using Wolverine.Attributes;
 global using System.ComponentModel;
 global using Catalog.Api.Domains.Products.Features.Commands;
 global using ModelContextProtocol.Server;
-global using Catalog.Api.Domains.Products.Features.Queries;
 global using Catalog.Api.Domains.Products.Features.Agent;
 global using Catalog.Api.Domains.Brands.Features.Agent;
 global using Catalog.Api.Domains.Categories.Features.Agent;

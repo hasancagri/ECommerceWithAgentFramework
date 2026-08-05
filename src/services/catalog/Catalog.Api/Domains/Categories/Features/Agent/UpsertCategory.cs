@@ -3,7 +3,6 @@ namespace Catalog.Api.Domains.Categories.Features.Agent;
 // 016: get-or-create — UpsertBrand ile aynı desen (R4); commit handler içinde (unique ihlali yakalanır).
 public static class UpsertCategoryForAgent
 {
-    [InvalidatesCache("catalog-products")]
     public record UpsertCategoryCommand(string Name);
 
     public class UpsertCategoryResponse
