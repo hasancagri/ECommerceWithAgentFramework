@@ -18,7 +18,9 @@ public sealed class StockCommitClientProxy(StockReservation.StockReservationClie
     // DeadlineExceeded RpcException -> mevcut catch fail-closed'a duser (siparis hizli reddedilir).
     private static readonly TimeSpan CallDeadline = TimeSpan.FromSeconds(5);
 
-    public async Task<CommitResult> CommitAsync(Guid productId, Guid userId, int quantity, CancellationToken ct)
+    // 028: orderId idempotency anahtari — saga adiminin mukerrer teslimi stogu iki kez dusurmez.
+    public async Task<CommitResult> CommitAsync(
+        Guid productId, Guid userId, int quantity, Guid orderId, CancellationToken ct)
     {
         try
         {
@@ -26,7 +28,30 @@ public sealed class StockCommitClientProxy(StockReservation.StockReservationClie
             {
                 ProductId = productId.ToString(),
                 UserId = userId.ToString(),
-                Quantity = quantity
+                Quantity = quantity,
+                OrderId = orderId.ToString()
+            }, deadline: DateTime.UtcNow.Add(CallDeadline), cancellationToken: ct);
+
+            return new CommitResult { Success = reply.Success, Code = reply.MessageCode };
+        }
+        catch (RpcException)
+        {
+            return new CommitResult { Success = false, Code = CommitUnavailable };
+        }
+    }
+
+    // 028: telafi — commit edilmis adedi geri ekler; orderId ile idempotent.
+    public async Task<CommitResult> RevertCommitAsync(
+        Guid productId, Guid userId, int quantity, Guid orderId, CancellationToken ct)
+    {
+        try
+        {
+            var reply = await client.RevertCommitAsync(new RevertCommitRequest
+            {
+                ProductId = productId.ToString(),
+                UserId = userId.ToString(),
+                Quantity = quantity,
+                OrderId = orderId.ToString()
             }, deadline: DateTime.UtcNow.Add(CallDeadline), cancellationToken: ct);
 
             return new CommitResult { Success = reply.Success, Code = reply.MessageCode };

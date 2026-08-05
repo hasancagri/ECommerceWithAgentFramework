@@ -114,6 +114,16 @@ public static class Config
             ClientSecrets = { new Secret("apikeys-admin-secret".Sha256()) },
             AllowedScopes = { "apikeys.manage" },
         },
+        // 028: checkout saga m2m — saga arka planda kosar (HttpContext yok), kullanici bearer'i
+        // tasinamaz. Stock Commit/RevertCommit + Basket ClearBasket adimlari bu token'la yetkilenir.
+        new Client
+        {
+            ClientId = "order-saga",
+            ClientName = "Checkout saga (m2m)",
+            AllowedGrantTypes = GrantTypes.ClientCredentials,
+            ClientSecrets = { new Secret("order-saga-secret".Sha256()) },
+            AllowedScopes = { "stock.reserve", "basket.write" },
+        },
         // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
         // anonim okuma icin de Client Credentials.
         new Client

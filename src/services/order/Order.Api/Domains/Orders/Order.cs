@@ -1,10 +1,11 @@
 namespace Order.Api.Domains.Orders;
 
+// 028: int degerler eski adlarla birebir (1/2/3) — mevcut dev kayitlari migration'siz okunur.
 public enum OrderStatus
 {
-    WaitingForPayment = 1,
-    Paid = 2,
-    Cancel = 3
+    Pending = 1,
+    Confirmed = 2,
+    Cancelled = 3
 }
 
 public class Order : AggregateRoot
@@ -14,6 +15,9 @@ public class Order : AggregateRoot
     public OrderStatus Status { get; private set; }
     public decimal TotalPrice { get; private set; }
     public Guid? PaymentId { get; private set; }
+
+    // 028: yalniz Cancelled'da dolu; resource kodu tasir (UI cevirir).
+    public string? CancelReason { get; private set; }
     public Address Address { get; private set; } = null!;
     public List<OrderItem> OrderItems { get; private set; } = [];
 
@@ -21,14 +25,16 @@ public class Order : AggregateRoot
     {
     }
 
-    public static Order Create(Guid buyerId, Address address)
+    // 028: siparis Pending dogar; PaymentId idempotency alani olarak dogumda atanir.
+    public static Order Create(Guid buyerId, Address address, Guid paymentId)
     {
         return new Order
         {
             Code = GenerateCode(),
             BuyerId = buyerId,
-            Status = OrderStatus.WaitingForPayment,
+            Status = OrderStatus.Pending,
             TotalPrice = 0,
+            PaymentId = paymentId,
             Address = address,
             OrderItems = []
         };
@@ -56,10 +62,26 @@ public class Order : AggregateRoot
         return FeatureResultModel.Ok();
     }
 
-    public void SetPaidStatus(Guid paymentId)
+    // 028: durum gecisleri aggregate'te korunur — yalniz Pending'den ileri gidilir.
+    public FeatureResultModel Confirm()
     {
-        Status = OrderStatus.Paid;
-        PaymentId = paymentId;
+        if (Status != OrderStatus.Pending)
+            return FeatureResultModel.Error(new MessageItem
+                { Property = nameof(Status), Code = OrderResourceConstants.ORDER_INVALID_STATUS_TRANSITION });
+
+        Status = OrderStatus.Confirmed;
+        return FeatureResultModel.Ok();
+    }
+
+    public FeatureResultModel Cancel(string reasonCode)
+    {
+        if (Status != OrderStatus.Pending)
+            return FeatureResultModel.Error(new MessageItem
+                { Property = nameof(Status), Code = OrderResourceConstants.ORDER_INVALID_STATUS_TRANSITION });
+
+        Status = OrderStatus.Cancelled;
+        CancelReason = reasonCode;
+        return FeatureResultModel.Ok();
     }
 
     private void RecalculateTotalPrice()

@@ -1,7 +1,8 @@
-<!-- Sync Impact Report — v1.3.0 → v1.3.1 (2026-07-28, PATCH)
-     Modified: İlke I'deki açıklayıcı örnek — Discount BC'si sistemden kaldırıldı (018);
-     örnek yaşayan bir kavramla ("Ürün": Catalog aggregate / Basket entity / Storefront satırı) değiştirildi.
-     İlke içeriği değişmedi. Runtime docs: CLAUDE.md aynı örnekle hizalandı (✅). -->
+<!-- Sync Impact Report — v1.3.1 → v1.4.0 (2026-08-05, MINOR)
+     Modified: İlke I senkron RPC sanksiyonu genişletildi — "anlık evet/hayır kararı"na ek
+     olarak, sürecin sahibi BC'de koşan orkestre edilmiş saga'ların adım/telafi komutları
+     (028 checkout saga: Order→Stock RevertCommit, Order→Basket ClearBasket) meşru kullanım.
+     DB izolasyonu ve kontrat zorunluluğu değişmedi. Runtime docs: CLAUDE.md 028 ile hizalanacak. -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -23,12 +24,14 @@ kendi Postgres veritabanı, kendi Marten şeması ve kendi domain modeli vardır
 - Bir servis başka bir servisin veritabanına, tablosuna, DbContext'ine veya
   aggregate'ine **doğrudan erişemez**.
 - Context'ler arası iletişim **integration event'leri** (RabbitMQ fanout), **MCP** ve —
-  anlık evet/hayır gerektiren senkron kararlar için — **tipli senkron RPC (gRPC/HTTP)**
+  anlık evet/hayır gerektiren senkron kararlar ile sürecin sahibi BC'de koşan orkestre
+  edilmiş saga'ların adım/telafi komutları için — **tipli senkron RPC (gRPC/HTTP)**
   ile olur. Senkron RPC yalnız bilinçli bir kontrat üzerinden yapılır ve DB izolasyonunu
   bozmaz (bir servis diğerinin DB/tablo/aggregate'ine yine doğrudan erişemez). Paylaşılabilen
   tek şey `Shared.IntegrationEvents` / `Shared/Protos` gibi bilinçli sözleşmelerdir.
-  Örnek: stok rezervasyonu (012) Basket/Order→Stock gRPC (request/response zorunlu; async
-  event anlık karar veremez).
+  Örnekler: stok rezervasyonu (012) Basket/Order→Stock gRPC (request/response zorunlu; async
+  event anlık karar veremez); checkout saga adımları (028) Order→Stock/Basket gRPC (hedefli
+  komut + telafi, süreç bilgisi yalnız saga'da).
 
 ### II. Zengin Aggregate, İçeride Korunan Invariant'lar
 
@@ -163,7 +166,12 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.3.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-07-28
+**Version**: 1.4.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-05
+
+<!-- v1.4.0 (2026-08-05, MINOR): İlke I senkron RPC sanksiyonu orkestre edilmiş saga adım/telafi
+     komutlarını kapsayacak şekilde genişletildi. Gerekçe: 028-checkout-saga — kullanıcı kararıyla
+     tam orchestration; telafi (RevertCommit) ve pivot-sonrası temizlik (ClearBasket) hedefli komut
+     ister, fanout event bunu modelleyemez. DB izolasyonu ve Shared/Protos kontrat kuralı aynen. -->
 
 <!-- v1.3.1 (2026-07-28, PATCH): İlke I örneği güncellendi — Discount BC'si 018 ile
      kaldırıldığından örnek "Ürün" (Catalog aggregate / Basket entity / Storefront read-model

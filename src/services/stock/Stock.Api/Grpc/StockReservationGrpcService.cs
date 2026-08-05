@@ -52,9 +52,33 @@ public class StockReservationGrpcService(IMessageBus bus)
 
     public override async Task<ReservationReply> Commit(CommitRequest request, ServerCallContext context)
     {
+        // 028: order_id bos gelirse anahtarsiz eski davranis (Guid.Empty).
+        var orderId = Guid.TryParse(request.OrderId, out var parsedOrderId) ? parsedOrderId : Guid.Empty;
+
         var result = await bus.InvokeAsync<FeatureObjectResultModel<CommitStock.CommitStockResponse>>(
             new CommitStock.CommitStockCommand(
-                Guid.Parse(request.ProductId), Guid.Parse(request.UserId), request.Quantity),
+                Guid.Parse(request.ProductId), Guid.Parse(request.UserId), request.Quantity, orderId),
+            context.CancellationToken);
+
+        if (!result.IsSuccess)
+            return Fail(FirstCode(result.Messages));
+
+        return new ReservationReply
+        {
+            Success = true,
+            Status = ReservationStatus.Ok,
+            Available = result.Data!.Available,
+            MessageCode = string.Empty
+        };
+    }
+
+    // 028: checkout saga telafisi — ince sarici, is mantigi RevertCommitStock command'inde.
+    public override async Task<ReservationReply> RevertCommit(RevertCommitRequest request, ServerCallContext context)
+    {
+        var result = await bus.InvokeAsync<FeatureObjectResultModel<RevertCommitStock.RevertCommitStockResponse>>(
+            new RevertCommitStock.RevertCommitStockCommand(
+                Guid.Parse(request.ProductId), Guid.Parse(request.UserId), request.Quantity,
+                Guid.Parse(request.OrderId)),
             context.CancellationToken);
 
         if (!result.IsSuccess)

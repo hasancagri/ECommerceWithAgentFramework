@@ -2,7 +2,7 @@ namespace Shared;
 
 public static class IntegrationEvents
 {
-    public record OrderCreatedEvent(Guid OrderId, Guid UserId, decimal TotalPrice);
+    // 028: OrderCreatedEvent kaldirildi — sepet temizligi CheckoutSaga'nin gRPC adimina tasindi.
 
     // 003-storefront-read-model: writer-publishes, fat event'ler (Storefront pull-back yapmaz).
     // 006-home-storefront-list: Description/Price/Brand eklendi.

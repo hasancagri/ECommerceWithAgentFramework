@@ -4,7 +4,8 @@ namespace Stock.Api.Domains.Stocks.Features.Commands;
 // Order.Api gRPC Commit ile cagirir. StockChangedEvent yayinlanir (Storefront guncel kalir).
 public static class CommitStock
 {
-    public record CommitStockCommand(Guid ProductId, Guid UserId, int Quantity);
+    // 028: OrderId idempotency anahtari (bos Guid => anahtarsiz eski davranis).
+    public record CommitStockCommand(Guid ProductId, Guid UserId, int Quantity, Guid OrderId = default);
 
     public class CommitStockResponse
     {
@@ -30,7 +31,7 @@ public static class CommitStock
                     new MessageItem { Code = StockResourceConstants.RECORD_NOT_FOUND });
 
             var now = DateTimeOffset.UtcNow;
-            var result = stock.Commit(cmd.UserId, cmd.Quantity, now);
+            var result = stock.Commit(cmd.UserId, cmd.Quantity, now, cmd.OrderId);
             if (!result.IsSuccess)
                 return FeatureObjectResultModel<CommitStockResponse>.Error(result.Messages);
 

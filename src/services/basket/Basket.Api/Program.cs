@@ -29,13 +29,7 @@ builder.Host.UseWolverine(opts =>
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    rabbit.DeclareExchange(RabbitMqConstants.OrderCreated.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.OrderCreated.Queues.Basket);
-    });
-
-    opts.ListenToRabbitQueue(RabbitMqConstants.OrderCreated.Queues.Basket);
+    // 028: OrderCreated dinleyicisi kaldirildi — sepet temizligi saga'nin gRPC adimi (ClearBasket).
 
     // 012 (US4): TTL dolunca Stock yayinlar; sepet satirini sileriz.
     rabbit.DeclareExchange(RabbitMqConstants.ReservationExpired.Exchange, e =>
@@ -52,7 +46,7 @@ builder.Host.UseWolverine(opts =>
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
     // *EventHandlers static sinifi ad konvansiyonuyla otomatik kesfedilmiyor (Storefront deseni);
-    // acikca dahil et — yoksa OrderCreated (sepet temizligi) ve ReservationExpired (012 US4) calismaz.
+    // acikca dahil et — yoksa ReservationExpired (012 US4) calismaz.
     opts.Discovery.IncludeType(typeof(Basket.Api.BasketEventHandlers));
 });
 
@@ -79,6 +73,9 @@ builder.Services.Configure<Basket.Api.Domains.Baskets.BasketReservationOptions>(
     builder.Configuration.GetSection(Basket.Api.Domains.Baskets.BasketReservationOptions.SectionName));
 
 builder.Services.AddHttpContextAccessor();
+
+// 028: checkout saga ClearBasket gRPC sunucusu (Order saga'si makine token'iyla cagirir).
+builder.Services.AddGrpc();
 
 // 012: Stock rezervasyon gRPC istemcisi (senkron Reserve/Release). Adres Aspire service discovery;
 // kullanici bearer token'i BearerForwardingHandler ile taşınır (stock.reserve scope).
@@ -116,5 +113,9 @@ app.UseAuthorization();
 app.AddBasketGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
+
+// 028: ClearBasket gRPC ucu; yetki endpoint seviyesinde (userId cagri govdesinde — Stock deseni).
+app.MapGrpcService<Basket.Api.Grpc.BasketClearGrpcService>()
+    .RequireAuthorization(AuthorizationScopes.BasketWrite);
 
 await app.RunAsync();

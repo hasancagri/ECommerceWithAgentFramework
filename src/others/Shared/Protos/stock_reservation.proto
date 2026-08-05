@@ -17,6 +17,9 @@ service StockReservation {
 
   // Sipariş: geçerli rezervasyonu kalıcı stok düşüşüne çevir.
   rpc Commit (CommitRequest) returns (ReservationReply);
+
+  // 028: checkout saga telafisi — commit edilmiş adedi stoğa geri ekler. order_id ile idempotent.
+  rpc RevertCommit (RevertCommitRequest) returns (ReservationReply);
 }
 
 message SetReservedQuantityRequest {
@@ -37,6 +40,15 @@ message CommitRequest {
   string product_id = 1;
   string user_id = 2;
   int32 quantity = 3;
+  // 028: idempotency anahtarı (at-least-once teslimat). Boş => anahtarsız eski davranış.
+  string order_id = 4;
+}
+
+message RevertCommitRequest {
+  string product_id = 1;
+  string user_id = 2;      // veri amaçlı (log/iz); yetki token scope'unda
+  int32 quantity = 3;
+  string order_id = 4;     // zorunlu; mükerrer Revert no-op başarı döner
 }
 
 message ReservationReply {

@@ -11,6 +11,8 @@ public static class GetOrdersForAgent
         public DateTime CreatedTime { get; private set; }
         public decimal TotalPrice { get; private set; }
         public OrderStatus Status { get; private set; }
+        // 028: yalniz Cancelled'da dolu; agent yaniti sebep kodunu aynen tasir.
+        public string? CancelReason { get; private set; }
         public List<OrderItemResponse> Items { get; private set; } = [];
 
         public static GetOrdersResponse From(Order order) => new()
@@ -20,6 +22,7 @@ public static class GetOrdersForAgent
             CreatedTime = order.CreatedTime,
             TotalPrice = order.TotalPrice,
             Status = order.Status,
+            CancelReason = order.CancelReason,
             Items = order.OrderItems.Select(i => new OrderItemResponse
             {
                 ProductId = i.ProductId,

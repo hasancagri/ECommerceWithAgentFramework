@@ -29,16 +29,9 @@ builder.Host.UseWolverine(opts =>
     // kuramaz ve service-location ister. StockCommitClientProxy CreateOrder handler'ina enjekte edilir.
     opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
 
-    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
+    // 028: OrderCreated exchange kaldirildi; sepet temizligi CheckoutSaga gRPC adimi.
+    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
-
-    rabbit.DeclareExchange(RabbitMqConstants.OrderCreated.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-    });
-
-    opts.PublishMessage<Shared.IntegrationEvents.OrderCreatedEvent>()
-        .ToRabbitExchange(RabbitMqConstants.OrderCreated.Exchange);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
@@ -64,8 +57,9 @@ builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
 
-// 012 (US2): Stock Commit gRPC istemcisi; kullanici bearer token'i propagate edilir.
-builder.Services.AddTransient<BearerForwardingHandler>();
+// 028: saga adimlari arka planda kosar (HttpContext yok) — kullanici bearer'i yerine
+// client-credentials makine token'i (order-saga) SagaTokenHandler ile eklenir.
+builder.Services.AddTransient<SagaTokenHandler>();
 // gRPC balancer'inin Aspire service-discovery cozumleyicisi YOK; 'stock-api' adini Aspire'in
 // enjekte ettigi cozumlenmis endpoint'ten alip somut adresi veriyoruz.
 var stockGrpcAddress = builder.Configuration["services:stock-api:https:0"]
@@ -73,9 +67,18 @@ var stockGrpcAddress = builder.Configuration["services:stock-api:https:0"]
     ?? "https://stock-api";
 builder.Services
     .AddGrpcClient<StockReservation.StockReservationClient>(o => o.Address = new Uri(stockGrpcAddress))
-    .AddHttpMessageHandler<BearerForwardingHandler>();
-// Proxy'yi somut tipiyle kaydet: CreateOrder handler onu concrete type ile ister.
+    .AddHttpMessageHandler<SagaTokenHandler>();
+// Proxy'yi somut tipiyle kaydet: saga handler'lari onu concrete type ile ister.
 builder.Services.AddScoped<StockCommitClientProxy>();
+
+// 028: ClearBasket gRPC istemcisi (saga pivot-sonrasi adimi).
+var basketGrpcAddress = builder.Configuration["services:basket-api:https:0"]
+    ?? builder.Configuration["services:basket-api:http:0"]
+    ?? "https://basket-api";
+builder.Services
+    .AddGrpcClient<Shared.Grpc.Basket.BasketClear.BasketClearClient>(o => o.Address = new Uri(basketGrpcAddress))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+builder.Services.AddScoped<BasketClearClientProxy>();
 
 builder.Services
     .AddMcpServer()

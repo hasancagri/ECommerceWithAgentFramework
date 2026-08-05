@@ -336,4 +336,66 @@ public class ProductStockTests
         purgedLate.Count.ShouldBe(1);
         stock.Reservations.Count.ShouldBe(0);
     }
+
+    // --- 028: Commit/RevertCommit idempotency (SC-006) ---
+
+    [Fact]
+    public void Commit_SameOrderIdTwice_SecondIsNoOp()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+        var orderId = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 2, Ttl, now);
+
+        stock.Commit(user, 2, now, orderId).IsSuccess.ShouldBeTrue();
+        var second = stock.Commit(user, 2, now, orderId);
+
+        second.IsSuccess.ShouldBeTrue();
+        stock.OnHand.ShouldBe(3); // tek islem kadar dustu
+    }
+
+    [Fact]
+    public void RevertCommit_RestoresOnHand_OnceOnly()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+        var orderId = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 2, Ttl, now);
+        stock.Commit(user, 2, now, orderId);
+
+        stock.RevertCommit(2, orderId).IsSuccess.ShouldBeTrue();
+        var second = stock.RevertCommit(2, orderId);
+
+        second.IsSuccess.ShouldBeTrue();
+        stock.OnHand.ShouldBe(5); // tek revert kadar geri geldi
+    }
+
+    [Fact]
+    public void RevertCommit_WithoutPriorCommit_ReturnsError()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+
+        var result = stock.RevertCommit(2, Guid.NewGuid());
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_REVERT_WITHOUT_COMMIT);
+        stock.OnHand.ShouldBe(5);
+    }
+
+    [Fact]
+    public void Commit_WithoutOrderId_KeepsLegacyBehavior()
+    {
+        var now = DateTimeOffset.UnixEpoch;
+        var stock = ProductStock.Create(Guid.NewGuid(), 5);
+        var user = Guid.NewGuid();
+        stock.SetReservedQuantity(user, 2, Ttl, now);
+
+        stock.Commit(user, 2, now).IsSuccess.ShouldBeTrue();
+        var second = stock.Commit(user, 2, now);
+
+        second.IsSuccess.ShouldBeFalse(); // anahtar yok => rezervasyon kapandi, eski davranis
+        stock.OnHand.ShouldBe(3);
+    }
 }
