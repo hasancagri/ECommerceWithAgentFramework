@@ -1,11 +1,13 @@
-<!-- Sync Impact Report — v1.4.0 → v1.5.0 (2026-08-05, MINOR)
-     Added: İlke VI (Domain-TDD) — saf domain mantığı (aggregate davranış metotları, saga On*
-     kararları, value object'ler) test-first yazılır; tasks.md'de test task'ı implementasyondan
-     önce. Handler/endpoint/UI/altyapı kapsam dışı (test-sonra veya canlı doğrulama sürer).
-     Modified: Kalite kapıları test maddesi İlke VI'ya bağlandı.
-     Templates: tasks-template.md ✅ (domain test task'ları zorunlu + önce sıralanır);
-     plan-template.md ✅ değişiklik gerekmez; spec-template.md ✅ değişiklik gerekmez.
-     Runtime docs: CLAUDE.md Testler maddesi hizalandı. -->
+<!-- Sync Impact Report — v1.5.0 → v1.6.0 (2026-08-06, MINOR)
+     Modified: İlke V yeniden adlandı — "Scope-Tabanlı Yetkilendirme (Rol Yok)" →
+     "Scope-Öncelikli Yetkilendirme + Rol Sınıflandırması". (1) IdP teknoloji-nötr yazıldı
+     (Duende adı ilkeden çıktı; hedef OpenIddict + ASP.NET Identity, lisans gerekçesi MIT).
+     (2) Rol geri geldi: register otomatik `customer` (sunucu atar, seçilemez); admin rolleri
+     yalnız admin atar; servis zorlaması scope kalır, rol-policy yalnız back-office; seed =
+     admin+customer rol + bootstrap admin; endpoint-bazlı DB yetki yasak; permission'a açık.
+     Templates: plan/spec/tasks-template ✅ değişiklik gerekmez (İlke V referansı yok).
+     Runtime docs: CLAUDE.md ⚠ pending — Duende + "rol yoktur" maddeleri migrasyon feature'ı
+     merge olunca hizalanır (kod bugün hâlâ Duende; erken güncelleme yanıltır). -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -87,19 +89,33 @@ zaman `Common.Results` altındaki bir Result tipi döner
 - Exception yalnızca gerçekten beklenmeyen durumlar içindir; onları
   `GlobalExceptionHandler` yakalar.
 
-### V. Scope-Tabanlı Yetkilendirme (Rol Yok)
+### V. Scope-Öncelikli Yetkilendirme + Rol Sınıflandırması
 
-Kimlik `Identity.Server` (Duende) tarafından verilir; servisler JWT bearer doğrular
-ve **scope** bazında yetkilendirir (`AuthorizationScopes.*`).
+Kimlik merkezi IdP `Identity.Server` tarafından verilir (teknoloji değiştirilebilir;
+mevcut hedef OpenIddict + ASP.NET Identity). Servisler JWT bearer doğrular ve
+**scope** bazında yetkilendirir (`AuthorizationScopes.*`). Basım merkezidir,
+zorlama dağıtıktır; merkezi yetki-karar servisi (PDP) açılmaz.
 
-- **Rol yoktur** — rol tabanlı yetkilendirme bilinçli olarak kaldırılmıştır; yalnızca
-  scope kullanılır.
+- **Her kullanıcının rolü vardır; rolü sunucu atar.** Register olan otomatik
+  `customer` rolü alır; kayıt sırasında rol seçilemez. Diğer rolleri yalnız
+  rol-atama yetkilisi (admin) verir. Seed: `admin` + `customer` rolleri ve
+  bootstrap admin kullanıcı.
+- **Rol client değildir, kullanıcı claim'idir** — login token'ına biner.
+  ClientId/Secret makine kimliğidir; rol taşımaz.
+- **Servis akışlarında zorlama scope iledir:** müşteri uçları rol kontrolü yapmaz
+  (`customer` sınıflandırmadır, kapı değildir). Rol-policy yalnız back-office/yönetim
+  yüzeylerinde (kullanıcı/rol yönetimi vb.) kullanılır ve **sabit adlı policy** ile
+  tanımlanır.
+- Yetki dili iş yetkisidir: endpoint-bazlı (DB'de rol×endpoint tablosu) yetkilendirme
+  yasaktır. İleride rol×permission katmanına geçiş policy içini değiştirir, uçları
+  değiştirmez.
 - Scope zorlaması endpoint'lerde `.RequireAuthorization(...)` ile, Wolverine mesaj
   handler'larında ise `[RequiredScope]` + `ScopeAuthorizationMiddleware` ile uygulanır.
 - Kimlik doğrulama şeması JWT bearer ile sınırlı değildir: dış entegrasyonlar için
   JWT-olmayan custom authentication şemaları (ör. opak UserKey) meşrudur — koşul,
-  yetkinin **yine scope-tabanlı** kalması ve rol getirilmemesidir. İlkenin özü
-  mekanizma değil, "scope, rol değil"dir.
+  yetki modelinin bu ilkeye uymasıdır (zorlama scope, rol sınıflandırma/back-office).
+- Anonim gezinme meşrudur: kimlik istemeyen okuma yüzeyleri (vitrin vb.) login'siz
+  erişilebilir kalır; login yalnız kullanıcıya bağlı işlemler için istenir.
 - `Identity.Server` HTTPS üzerinden çalışmak zorundadır; tüm servislerin `Authority`
   değeri issuer ile eşleşir.
 
@@ -183,7 +199,14 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.5.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-05
+**Version**: 1.6.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-06
+
+<!-- v1.6.0 (2026-08-06, MINOR): İlke V yeniden yazıldı — IdP teknoloji-nötr (hedef OpenIddict +
+     ASP.NET Identity; Duende lisans gerekçesiyle terk ediliyor) ve rol modeli geri geldi:
+     register otomatik `customer` rolü (sunucu atar), yönetim yüzeyleri rol-policy (sabit adlı),
+     servis akışlarında zorlama scope kalır, seed admin+customer + bootstrap admin, endpoint-bazlı
+     DB yetki yasak, rol×permission katmanına açık. Gerekçe: 2026-08-06 tasarım oturumu —
+     OpenIddict migrasyonu + kullanıcı/rol yönetim ekranları + e-posta aktivasyonlu register. -->
 
 <!-- v1.5.0 (2026-08-05, MINOR): İlke VI (Domain-TDD) eklendi — saf domain mantığı test-first;
      tasks.md'de domain test task'ları implementasyondan önce. Handler/endpoint/UI kapsam dışı.

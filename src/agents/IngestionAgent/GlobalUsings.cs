@@ -15,3 +15,5 @@ global using System.Reflection;
 global using Wolverine;
 global using Wolverine.ErrorHandling;
 global using Wolverine.RabbitMQ;
+global using Microsoft.Agents.AI;
+global using System.Globalization;

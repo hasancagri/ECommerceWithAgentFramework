@@ -1,6 +1,3 @@
-using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
-
 namespace IngestionAgent.Workflows._02_CategoryWrite;
 
 // Kategori yazıcısı (016 R10): yalnız catalog MCP'sinin upsert_category tool'una scope'lu, KENDİ

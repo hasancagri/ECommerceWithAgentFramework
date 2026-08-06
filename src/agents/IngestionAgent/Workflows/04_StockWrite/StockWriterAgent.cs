@@ -1,6 +1,3 @@
-using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
-
 namespace IngestionAgent.Workflows._04_StockWrite;
 
 // Stok yazıcısı (015): yalnız stock MCP'sinin set_stock tool'una scope'lu, KENDİ ChatClientAgent'ını
