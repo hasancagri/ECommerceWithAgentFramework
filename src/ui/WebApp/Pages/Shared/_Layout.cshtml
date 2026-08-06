@@ -25,7 +25,6 @@
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-page="/Index">Ana Sayfa</a>
                     </li>
-
                 </ul>
 
                 <ul class="navbar-nav">
@@ -45,6 +44,13 @@
                                 <li>
                                     <a class="dropdown-item" asp-page="/Account/Profile">Profilim</a>
                                 </li>
+                                @* 030 RBAC: admin'e yönetim paneli girişi (IdP /Admin/Roles). *@
+                                @if (User.IsInRole("admin"))
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="https://localhost:5001/Admin/Roles">Yönetim Paneli</a>
+                                    </li>
+                                }
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>

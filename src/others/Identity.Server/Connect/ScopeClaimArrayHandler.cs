@@ -49,7 +49,10 @@ public static class OidcClaimDestinations
 {
     public static IEnumerable<string> GetDestinations(Claim claim) => claim.Type switch
     {
-        Claims.Subject or Claims.Name or Claims.Email or Claims.Role =>
+        // 030 RBAC: rol YALNIZ id_token'a gider (WebApp header link gibi UI kararı için). Access
+        // token'a girmez → downstream servisler rolü hiç görmez, yalnız scope zorlar (İlke V).
+        Claims.Role => [Destinations.IdentityToken],
+        Claims.Subject or Claims.Name or Claims.Email =>
             [Destinations.AccessToken, Destinations.IdentityToken],
         _ => [Destinations.AccessToken],
     };

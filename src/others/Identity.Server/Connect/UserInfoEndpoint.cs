@@ -38,7 +38,11 @@ public static class UserInfoEndpoint
 
         if (!string.IsNullOrEmpty(name)) claims[Claims.Name] = name;
         if (!string.IsNullOrEmpty(email)) claims[Claims.Email] = email;
-        // role: bu feature'da atanmadığından userinfo'da da boş (FR-011).
+
+        // 030 RBAC: kullanıcının (tek) rolü userinfo'da da döner — WebApp GetClaimsFromUserInfoEndpoint=true
+        // olduğundan claim kaynağı burasıdır; UI (admin link) için gerekli. Downstream yalnız scope zorlar.
+        var role = (await userManager.GetRolesAsync(user)).FirstOrDefault();
+        if (!string.IsNullOrEmpty(role)) claims[Claims.Role] = role;
 
         return Results.Json(claims);
     }

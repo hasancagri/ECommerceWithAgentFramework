@@ -254,12 +254,14 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
 - Saga/event-handler mutasyonları decorator'dan geçmez — o yollarda invalidation elle yapılır veya kısa TTL'e bırakılır.
 - Elle boşaltma HER ZAMAN `CacheInvalidator.InvalidateAsync` ile — doğrudan `RemoveByTagAsync` backplane'e yayılmaz.
 
-### Yetkilendirme (scope-tabanlı, rol yok)
+### Yetkilendirme (scope-tabanlı; rol = scope demeti, 030)
 
 - Kimlik `Identity.Server` (OpenIddict + ASP.NET Identity, 029) tarafından verilir. Servisler `AddAuthenticationAndAuthorizationExtension(config, ...scopes)` çağırır ve `AuthorizationScopes.CatalogRead` / `BasketWrite` gibi scope'lar ister.
 - **Access token `scope` claim'i çoklu-değerdir** (Duende paritesi): OpenIddict RFC 9068 tek-string yerine, `ScopeClaimArrayHandler` JWT'de diziye çevirir; `RequireClaim("scope", x)` + `ScopeAuthorizationMiddleware` bugünkü gibi çalışır. Servis kodu değişmez.
 - **DİKKAT (`ScopeClaimArrayHandler`):** `context.TokenType` URN'dir (`TokenTypeIdentifiers.AccessToken`), kısa hint `TokenTypeHints.AccessToken` DEĞİL. Guard'ı hint'le kıyaslarsan handler no-op olur; scope tek string kalır → 403 → WebApp sepet redirect döngüsü.
-- **Rol yoktur** — rol tabanlı yetkilendirme bilinçli olarak kaldırıldı; yalnızca scope kullan.
+- **Rol = token verme anındaki scope demeti (030).** Kullanıcı TEK rol taşır; `AuthorizeEndpoint` granted scope'ları `ScopeResolver` ile `requested ∩ rol demeti`ne süzer (`RoleScopeQuery` DB'den rol scope'larını okur). Downstream servisler rolü GÖRMEZ — rol yalnız id_token'a biner (UI), access token'a girmez.
+- **KnownScopes** (`Rbac/KnownScopes.cs`) kod-sahipli kapalı registry; rol→scope yazımı `AssignableScopeValidator` ile bu listeye kısıtlı (serbest metin yasak). Rol + rol→scope map DB'de (`RoleScope` tablosu), admin `/Admin/*` Razor Pages'ten yönetir (cookie admin-rol guard, İlke V IdP istisnası). Giriş: WebApp header koşullu "Yönetim" linki.
+- **Register** otomatik `customer` rolü atar (direkt login, aktivasyon yok). **Seed** (`SeedHostedService`) idempotent: admin+customer + rol→scope map + bootstrap admin (config'ten parola) + `ingestion-agent` client. Makine kimlikleri (agent/saga) client_credentials + statik scope, RBAC dışı.
 - Scope zorlaması **Wolverine mesaj handler'larına da** uygulanır: `[RequiredScope]` taşıyan her mesaj tipi için bir `ScopeAuthorizationMiddleware` çalışır.
 - `Identity.Server` **HTTPS** üzerinden çalışmak zorundadır (`SameSite=None; Secure` cookie'leri düz HTTP'de sonsuz döngüye girer ve tüm servislerin `Authority` değeri issuer ile eşleşmelidir).
 

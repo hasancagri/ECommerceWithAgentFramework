@@ -3,6 +3,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using Identity.Server.Rbac;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using static OpenIddict.Abstractions.OpenIddictConstants;
@@ -19,7 +20,8 @@ public static class TokenEndpoint
         HttpContext context,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IOpenIddictScopeManager scopeManager)
+        IOpenIddictScopeManager scopeManager,
+        RoleScopeQuery roleScopeQuery)
     {
         var request = context.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException("OIDC token isteği çözülemedi.");
@@ -69,6 +71,22 @@ public static class TokenEndpoint
             // Destinasyonlar yeniden hesaplanır (refresh'te de claim'ler doğru token'a gitsin).
             var identity = new ClaimsIdentity(principal.Claims,
                 TokenValidationParameters.DefaultAuthenticationType, Claims.Name, Claims.Role);
+
+            // 030 RBAC: refresh'te scope'ları kullanıcının GÜNCEL rol demetiyle yeniden süz (FR-012) —
+            // rol düşürülmüşse yeni yetki bir sonraki (refresh) token'da daralır. Rol yükseltme
+            // authorize'da geniş talep zaten süzüldüğünden re-login gerektirir. Kaynaklar da güncellenir.
+            if (request.IsRefreshTokenGrantType())
+            {
+                var roleBundle = await roleScopeQuery.GetUserScopeBundleAsync(user, context.RequestAborted);
+                identity.SetScopes(ScopeResolver.Resolve(
+                    identity.GetScopes(), roleBundle, Config.IdentityScopes.ToHashSet()));
+
+                var resources = new List<string>();
+                await foreach (var resource in scopeManager.ListResourcesAsync(identity.GetScopes()))
+                    resources.Add(resource);
+                identity.SetResources(resources);
+            }
+
             identity.SetDestinations(OidcClaimDestinations.GetDestinations);
 
             return Results.SignIn(new ClaimsPrincipal(identity), null,

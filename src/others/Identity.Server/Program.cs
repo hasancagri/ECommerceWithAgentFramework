@@ -8,7 +8,9 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorPages();
+// 030 RBAC: /Admin/* yönetim sayfaları cookie kullanıcısının admin rolünü ister (D3).
+builder.Services.AddRazorPages(options =>
+    options.Conventions.AuthorizeFolder("/Admin", "AdminRole"));
 
 // Aspire çalışma anında enjekte eder; design-time (migration üretimi) için fallback.
 var connectionString = builder.Configuration.GetConnectionString("identityDb")
@@ -28,6 +30,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<ApiKeyService>();
+
+// 030 RBAC: token verme yolunda rol→scope demeti + admin yönetim servisi.
+builder.Services.AddScoped<Identity.Server.Rbac.RoleScopeQuery>();
+builder.Services.AddScoped<Identity.Server.Rbac.RoleAssignmentService>();
 
 // Login/challenge yolları + "beni hatırla" süresi (persistent cookie bu kadar yaşar).
 builder.Services.ConfigureApplicationCookie(options =>
@@ -96,12 +102,19 @@ builder.Services.AddAuthentication()
     });
 
 builder.Services.AddAuthorization(options =>
+{
     options.AddPolicy("apikeys.manage", policy =>
     {
         policy.AddAuthenticationSchemes("Bearer");
         policy.RequireAuthenticatedUser();
         policy.RequireClaim("scope", "apikeys.manage");
-    }));
+    });
+
+    // 030 RBAC: IdP admin UI guard'ı — Identity cookie principal'ında admin rolü (D3).
+    // İlke V istisnası: IdP kendi iç yüzeyini rolle korur; downstream yalnız scope.
+    options.AddPolicy("AdminRole", policy =>
+        policy.RequireRole(Identity.Server.Rbac.RoleAssignmentService.AdminRole));
+});
 
 var app = builder.Build();
 

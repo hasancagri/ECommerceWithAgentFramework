@@ -23,7 +23,7 @@ sabiti + WebApp'te tek header linki. Yeni servis/BC yok.
 
 **Purpose**: Proje iskeleti ve test projesi
 
-- [ ] T001 [P] `src/others/Identity.Server/Rbac/` klasörünü oluştur ve `tests/Identity.Server.Tests/`
+- [X] T001 [P] `src/others/Identity.Server/Rbac/` klasörünü oluştur ve `tests/Identity.Server.Tests/`
   xUnit+Shouldly projesini (yoksa) kur, `ECommerceWithAgentFramework.slnx`'e ekle
 
 ---
@@ -33,21 +33,21 @@ sabiti + WebApp'te tek header linki. Yeni servis/BC yok.
 **Purpose**: US1/US2/US4'ün paylaştığı çekirdek — scope registry, RoleScope tablosu, saf
 birimler, rol yönetim servisi. **⚠️ Tüm story'ler bunu bekler.**
 
-- [ ] T002 [P] `identity.roles.manage` sabitini `src/others/Common/Utils/Constants/AuthorizationScopes.cs`'e ekle
-- [ ] T003 `identity.roles.manage` scope'unu `src/others/Identity.Server/Config.cs`'te kaydet
+- [X] T002 [P] `identity.roles.manage` sabitini `src/others/Common/Utils/Constants/AuthorizationScopes.cs`'e ekle
+- [X] T003 `identity.roles.manage` scope'unu `src/others/Identity.Server/Config.cs`'te kaydet
   (AllApiScopes + ScopeResources; admin demetine girecek)
-- [ ] T004 [P] KnownScopes registry'sini (ad + açıklama) `src/others/Identity.Server/Rbac/KnownScopes.cs`'te
+- [X] T004 [P] KnownScopes registry'sini (ad + açıklama) `src/others/Identity.Server/Rbac/KnownScopes.cs`'te
   oluştur; kaynak AuthorizationScopes/AllApiScopes (FR-005/007)
-- [ ] T005 [P] RoleScope EF entity'sini `src/others/Identity.Server/Rbac/RoleScope.cs`'te oluştur (Id, RoleId, Scope)
-- [ ] T006 `DbSet<RoleScope>` + unique(RoleId,Scope) index'i `src/others/Identity.Server/Data/ApplicationDbContext.cs`'e ekle (T005)
-- [ ] T007 RoleScopes tablosu için EF migration üret + uygula (T006)
-- [ ] T008 [P] Domain-TDD: `ApplySingleRole` için başarısız birim testi yaz
+- [X] T005 [P] RoleScope EF entity'sini `src/others/Identity.Server/Rbac/RoleScope.cs`'te oluştur (Id, RoleId, Scope)
+- [X] T006 `DbSet<RoleScope>` + unique(RoleId,Scope) index'i `src/others/Identity.Server/Data/ApplicationDbContext.cs`'e ekle (T005)
+- [X] T007 RoleScopes tablosu için EF migration üret + uygula (T006)
+- [X] T008 [P] Domain-TDD: `ApplySingleRole` için başarısız birim testi yaz
   `tests/Identity.Server.Tests/ApplySingleRoleTests.cs` (INV-2/3: atama mevcut rolü değiştirir, rolsüz bırakmaz)
-- [ ] T009 [P] Domain-TDD: `AssignableScopeValidator` için başarısız birim testi yaz
+- [X] T009 [P] Domain-TDD: `AssignableScopeValidator` için başarısız birim testi yaz
   `tests/Identity.Server.Tests/AssignableScopeValidatorTests.cs` (INV-1: bilinmeyen scope reddi)
-- [ ] T010 `ApplySingleRole` saf mantığını `src/others/Identity.Server/Rbac/RoleAssignmentRules.cs`'te yaz (T008 geçsin)
-- [ ] T011 `AssignableScopeValidator` saf mantığını `src/others/Identity.Server/Rbac/AssignableScopeValidator.cs`'te yaz (T009 geçsin)
-- [ ] T012 `RoleAssignmentService`'i `src/others/Identity.Server/Rbac/RoleAssignmentService.cs`'te yaz:
+- [X] T010 `ApplySingleRole` saf mantığını `src/others/Identity.Server/Rbac/RoleAssignmentRules.cs`'te yaz (T008 geçsin)
+- [X] T011 `AssignableScopeValidator` saf mantığını `src/others/Identity.Server/Rbac/AssignableScopeValidator.cs`'te yaz (T009 geçsin)
+- [X] T012 `RoleAssignmentService`'i `src/others/Identity.Server/Rbac/RoleAssignmentService.cs`'te yaz:
   rol CRUD (seed+kullanımda-olan silme guard'ı INV-5), rol→scope set (T011 doğrulama), tek-rol atama
   (T010), son-admin kilidi (INV-4) — UserManager/RoleManager + RoleScope üzerinden (T005,T010,T011)
 
@@ -63,14 +63,14 @@ yalnız scope görür.
 **Independent Test**: ScopeResolver birim testi mock'suz; canlı: customer vs admin login →
 token scope claim'i rol demetine göre farklı (quickstart S1/S2/S5). Canlı demo seed'e (US4) bağlı.
 
-- [ ] T013 [P] [US1] Domain-TDD: `ScopeResolver` için başarısız birim testi yaz
+- [X] T013 [P] [US1] Domain-TDD: `ScopeResolver` için başarısız birim testi yaz
   `tests/Identity.Server.Tests/ScopeResolverTests.cs` (INV-6: granted=requested∩bundle; geçersiz/KnownScopes-dışı eşleme yazılmaz)
-- [ ] T014 [US1] `ScopeResolver` saf mantığını `src/others/Identity.Server/Rbac/ScopeResolver.cs`'te yaz (T013 geçsin)
-- [ ] T015 [US1] Kullanıcının rol demetini (rol→scope) getiren okuma yardımcısını
+- [X] T014 [US1] `ScopeResolver` saf mantığını `src/others/Identity.Server/Rbac/ScopeResolver.cs`'te yaz (T013 geçsin)
+- [X] T015 [US1] Kullanıcının rol demetini (rol→scope) getiren okuma yardımcısını
   `src/others/Identity.Server/Rbac/RoleScopeQuery.cs`'te yaz (T005)
-- [ ] T016 [US1] `src/others/Identity.Server/Endpoints/AuthorizeEndpoint.cs`'te `SetScopes(...)`'ı
+- [X] T016 [US1] `src/others/Identity.Server/Endpoints/AuthorizeEndpoint.cs`'te `SetScopes(...)`'ı
   rol demetiyle süz (T014,T015); kimlik scope'ları (openid/profile/email/roles/offline_access) her zaman geçer
-- [ ] T017 [P] [US1] `src/others/Identity.Server/Endpoints/TokenEndpoint.cs` refresh dalında scope'ları
+- [X] T017 [P] [US1] `src/others/Identity.Server/Endpoints/TokenEndpoint.cs` refresh dalında scope'ları
   GÜNCEL rolden yeniden türet (FR-012); client_credentials (makine) dalına DOKUNMA (RBAC dışı)
 
 **Checkpoint**: Login/refresh rol-süzülmüş scope verir; makine token'ı etkilenmez.
@@ -85,15 +85,15 @@ bootstrap admin, ingestion-agent client, rolsüz kullanıcı backfill.
 **Independent Test**: Temiz identityDb → bootstrap admin login olur, yönetim ekranı açılır;
 yeniden başlat → duplike yok (quickstart S1/S7).
 
-- [ ] T018 [US4] `admin` + `customer` rollerini seed et (RoleManager, idempotent)
+- [X] T018 [US4] `admin` + `customer` rollerini seed et (RoleManager, idempotent)
   `src/others/Identity.Server/SeedHostedService.cs`
-- [ ] T019 [US4] Rol→scope map'ini seed et (customer/admin demetleri KnownScopes'tan; admin ⊇ customer +
+- [X] T019 [US4] Rol→scope map'ini seed et (customer/admin demetleri KnownScopes'tan; admin ⊇ customer +
   yönetim/yazma scope'ları + identity.roles.manage) `src/others/Identity.Server/SeedHostedService.cs` (T012,T019⟵T004)
-- [ ] T020 [US4] Bootstrap admin kullanıcıyı seed et (email+parola config'ten; admin rolü; EmailConfirmed=true)
+- [X] T020 [US4] Bootstrap admin kullanıcıyı seed et (email+parola config'ten; admin rolü; EmailConfirmed=true)
   `src/others/Identity.Server/SeedHostedService.cs` + config anahtarları (parola KODDA DEĞİL) (FR-016)
-- [ ] T021 [P] [US4] `ingestion-agent` client'ını ekle (client_credentials, catalog.write+stock.write)
+- [X] T021 [P] [US4] `ingestion-agent` client'ını ekle (client_credentials, catalog.write+stock.write)
   `src/others/Identity.Server/Config.cs` + seed loop (FR-018)
-- [ ] T022 [US4] Rolsüz mevcut kullanıcıları `customer`'a backfill et `src/others/Identity.Server/SeedHostedService.cs` (T018, FR-021)
+- [X] T022 [US4] Rolsüz mevcut kullanıcıları `customer`'a backfill et `src/others/Identity.Server/SeedHostedService.cs` (T018, FR-021)
 
 **Checkpoint**: Temiz kurulumda admin girer; seed idempotent; makine client hazır.
 
@@ -107,15 +107,15 @@ yapar; scope yalnız KnownScopes'tan seçilir; giriş WebApp header linkinden.
 **Independent Test**: Admin ekranda rol yaratır, scope işaretler, kullanıcı rolü değiştirir;
 uydurma scope reddedilir; customer ekrana giremez (quickstart S0/S3/S4).
 
-- [ ] T023 [US2] `/Admin/*` sayfalarını cookie kullanıcısının `admin` rolüyle koru (convention/policy)
+- [X] T023 [US2] `/Admin/*` sayfalarını cookie kullanıcısının `admin` rolüyle koru (convention/policy)
   `src/others/Identity.Server/Program.cs` + `Pages/Admin/` (D3); `identity.roles.manage` eşdeğer guard notu
-- [ ] T024 [P] [US2] `Pages/Admin/Roles` — List + Create + Delete (seed-rol & kullanımda-rol guard'ı T012 servisinden)
+- [X] T024 [P] [US2] `Pages/Admin/Roles` — List + Create + Delete (seed-rol & kullanımda-rol guard'ı T012 servisinden)
   `src/others/Identity.Server/Pages/Admin/Roles/`
-- [ ] T025 [P] [US2] `Pages/Admin/Roles/Scopes` — KnownScopes'tan checkbox listesi + kaydet (T012 doğrulama; serbest metin yok)
+- [X] T025 [P] [US2] `Pages/Admin/Roles/Scopes` — KnownScopes'tan checkbox listesi + kaydet (T012 doğrulama; serbest metin yok)
   `src/others/Identity.Server/Pages/Admin/Roles/Scopes.cshtml(.cs)` (FR-006/009)
-- [ ] T026 [P] [US2] `Pages/Admin/Users` — List + SetRole (tek-rol, son-admin kilidi T012 servisinden)
+- [X] T026 [P] [US2] `Pages/Admin/Users` — List + SetRole (tek-rol, son-admin kilidi T012 servisinden)
   `src/others/Identity.Server/Pages/Admin/Users/` (FR-010/019)
-- [ ] T027 [US2] WebApp header'ına scope-koşullu "Yönetim" linki (`identity.roles.manage`) → IdP `/Admin/Roles`
+- [X] T027 [US2] WebApp header'ına scope-koşullu "Yönetim" linki (`identity.roles.manage`) → IdP `/Admin/Roles`
   `src/ui/WebApp/` (layout/header + view component) (D6, FR-011 kozmetik görünürlük)
 
 **Checkpoint**: Tüm rol yönetimi ekrandan; uyumsuzluk (uydurma scope) imkansız.
@@ -128,9 +128,9 @@ uydurma scope reddedilir; customer ekrana giremez (quickstart S0/S3/S4).
 
 **Independent Test**: Yeni hesap → onay adımı yok → login → token customer scope'ları (quickstart S2).
 
-- [ ] T028 [US3] Register akışında otomatik `customer` rolü ata (T012 servisi/UserManager)
+- [X] T028 [US3] Register akışında otomatik `customer` rolü ata (T012 servisi/UserManager)
   `src/others/Identity.Server/Pages/Account/Create/Index.cshtml.cs` (FR-013)
-- [ ] T029 [US3] Kayıt sonrası aktivasyonsuz direkt login yolunu doğrula/koru (mevcut auto sign-in)
+- [X] T029 [US3] Kayıt sonrası aktivasyonsuz direkt login yolunu doğrula/koru (mevcut auto sign-in)
   `src/others/Identity.Server/Pages/Account/Create/Index.cshtml.cs` (FR-014)
 
 **Checkpoint**: Yeni kullanıcı customer olarak anında girer.
@@ -141,11 +141,11 @@ uydurma scope reddedilir; customer ekrana giremez (quickstart S0/S3/S4).
 
 **Purpose**: Doküman, bellek, canlı doğrulama
 
-- [ ] T030 [P] CLAUDE.md "Yetkilendirme" bölümünü güncelle — rol=scope demeti, KnownScopes,
+- [X] T030 [P] CLAUDE.md "Yetkilendirme" bölümünü güncelle — rol=scope demeti, KnownScopes,
   token-anında süzme, admin ekran, seed, ingestion-agent client
-- [ ] T031 [P] Memory `roles-status.md`'yi güncelle — "roles REMOVED" → RBAC 030 built (rol=scope demeti)
+- [X] T031 [P] Memory `roles-status.md`'yi güncelle — "roles REMOVED" → RBAC 030 built (rol=scope demeti)
 - [ ] T032 Quickstart S0–S7'yi Aspire üzerinden canlı doğrula (`dotnet run --project src/aspire/AppHost/AppHost.csproj`)
-- [ ] T033 [P] `dotnet test --filter "FullyQualifiedName~Rbac"` tüm saf birim testleri yeşil (İlke VI)
+- [X] T033 [P] `dotnet test --filter "FullyQualifiedName~Rbac"` tüm saf birim testleri yeşil (İlke VI)
 
 ---
 

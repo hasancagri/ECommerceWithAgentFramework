@@ -50,12 +50,16 @@ public class Index : PageModel
             return Page();
         }
 
-        // name/email kullanıcının claim'lerine yazılır (token/userinfo bunları okur). Rol atanmaz (FR-011).
+        // name/email kullanıcının claim'lerine yazılır (token/userinfo bunları okur).
         var claims = new List<Claim>();
         if (!string.IsNullOrWhiteSpace(Input.Name)) claims.Add(new Claim(Claims.Name, Input.Name));
         if (!string.IsNullOrWhiteSpace(Input.Email)) claims.Add(new Claim(Claims.Email, Input.Email));
         if (claims.Count > 0) await _userManager.AddClaimsAsync(user, claims);
 
+        // 030 RBAC: yeni kullanıcı otomatik tek rol olarak customer alır (sunucu atar, seçilemez).
+        await _userManager.AddToRoleAsync(user, Rbac.RoleAssignmentService.CustomerRole);
+
+        // Aktivasyon-mail YOK: kayıt sonrası doğrudan login (FR-014).
         await _signInManager.SignInAsync(user, isPersistent: false);
 
         // returnUrl = create-prompt'u temizlenmiş authorize devamı (yerel). Oraya dön → token akışı biter.
