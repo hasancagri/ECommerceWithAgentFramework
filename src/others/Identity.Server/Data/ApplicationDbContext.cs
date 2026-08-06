@@ -28,5 +28,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             e.Property(x => x.Scope).IsRequired();
             e.HasIndex(x => new { x.UserId, x.Scope }).IsUnique();
         });
+
+        // OpenIddict 4 tablosu (Applications/Authorizations/Scopes/Tokens) aynı context'e.
+        builder.UseOpenIddict();
     }
 }

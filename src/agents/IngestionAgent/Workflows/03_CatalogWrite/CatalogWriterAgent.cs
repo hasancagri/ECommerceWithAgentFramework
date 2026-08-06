@@ -1,7 +1,3 @@
-using System.Globalization;
-using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
-
 namespace IngestionAgent.Workflows._03_CatalogWrite;
 
 // Katalog yazıcısı (015): yalnız catalog MCP'sinin upsert_product tool'una scope'lu, KENDİ

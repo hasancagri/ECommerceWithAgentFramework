@@ -67,7 +67,7 @@ dotnet test --filter "FullyQualifiedName~BasketTests.AddItem_AddsItemToBasket"
 - **.NET Aspire** — `src/aspire/AppHost` sistemi kurar: Postgres (pgAdmin ve kalıcı volume ile), RabbitMQ (management plugin) ve tüm servis/gateway/web/agent projeleri birer resource olarak.
 - **Marten** (`9.5.0`) — kalıcılık (persistence). Postgres, EF Core ile değil, bir **document store / event store** olarak kullanılır. Serileştirme Newtonsoft iledir; non-public setter'lar + non-public default constructor'lar açıktır (böylece aggregate'ler private setter'larını korur).
 - **Wolverine** (`6.4.1`) — iki iş yapar: (1) süreç-içi command/query bus'ı (`IMessageBus.InvokeAsync`) ve (2) RabbitMQ üzerinden integration mesajlaşması. Handler'lar assembly taramasıyla keşfedilir (`opts.Discovery.IncludeAssembly`).
-- **Duende IdentityServer** (`Identity.Server`) — OIDC/OAuth. Servisler JWT bearer ile kimlik doğrular ve **scope** bazında yetkilendirir (aşağıdaki Yetkilendirme'ye bak).
+- **OpenIddict** (`Identity.Server`, 029) — OIDC/OAuth sunucusu + **ASP.NET Identity** (kullanıcı store). Servisler JWT bearer ile kimlik doğrular, **scope** bazında yetkilendirir (aşağıya bak). `Duende.IdentityModel` yalnız istemci yardımcısı olarak KALIR (ücretsiz).
 - **YARP** gateway (`src/services/gateway`) — Aspire service-discovery destination resolver ile.
 - **MCP** (Model Context Protocol) — her API `/mcp` altında bir MCP sunucusu barındırır; `ChatAgent` ise bir MCP istemcisidir.
 - **ChatAgent** — AI agent uygulaması; **Microsoft Agent Framework** (`Microsoft.Agents.AI.*`) + `Microsoft.Extensions.AI` (OpenAI) üzerine kurulu. Resource adı: `chat-agent`.
@@ -256,7 +256,8 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
 
 ### Yetkilendirme (scope-tabanlı, rol yok)
 
-- Kimlik `Identity.Server` (Duende) tarafından verilir. Servisler `AddAuthenticationAndAuthorizationExtension(config, ...scopes)` çağırır ve `AuthorizationScopes.CatalogRead` / `BasketWrite` gibi scope'lar ister.
+- Kimlik `Identity.Server` (OpenIddict + ASP.NET Identity, 029) tarafından verilir. Servisler `AddAuthenticationAndAuthorizationExtension(config, ...scopes)` çağırır ve `AuthorizationScopes.CatalogRead` / `BasketWrite` gibi scope'lar ister.
+- **Access token `scope` claim'i çoklu-değerdir** (Duende paritesi): OpenIddict RFC 9068 tek-string yerine, `ScopeClaimArrayHandler` JWT'de diziye çevirir; `RequireClaim("scope", x)` + `ScopeAuthorizationMiddleware` bugünkü gibi çalışır. Servis kodu değişmez.
 - **Rol yoktur** — rol tabanlı yetkilendirme bilinçli olarak kaldırıldı; yalnızca scope kullan.
 - Scope zorlaması **Wolverine mesaj handler'larına da** uygulanır: `[RequiredScope]` taşıyan her mesaj tipi için bir `ScopeAuthorizationMiddleware` çalışır.
 - `Identity.Server` **HTTPS** üzerinden çalışmak zorundadır (`SameSite=None; Secure` cookie'leri düz HTTP'de sonsuz döngüye girer ve tüm servislerin `Authority` değeri issuer ile eşleşmelidir).

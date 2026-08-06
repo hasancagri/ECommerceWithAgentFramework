@@ -1,11 +1,5 @@
-using Duende.IdentityServer;
-using Duende.IdentityServer.Events;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Services;
-using Duende.IdentityServer.Stores;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -15,221 +9,44 @@ namespace Identity.Server.Pages.Login;
 [AllowAnonymous]
 public class Index : PageModel
 {
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IIdentityServerInteractionService _interaction;
-    private readonly IEventService _events;
-    private readonly IAuthenticationSchemeProvider _schemeProvider;
-    private readonly IIdentityProviderStore _identityProviderStore;
+    private const string StoreHome = "https://localhost:7042/";
 
-    public ViewModel View { get; set; } = default!;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
     [BindProperty]
     public InputModel Input { get; set; } = default!;
 
-    public Index(
-        IIdentityServerInteractionService interaction,
-        IAuthenticationSchemeProvider schemeProvider,
-        IIdentityProviderStore identityProviderStore,
-        IEventService events,
-        SignInManager<ApplicationUser> signInManager,
-        UserManager<ApplicationUser> userManager)
-    {
-        _signInManager = signInManager;
-        _userManager = userManager;
-        _interaction = interaction;
-        _schemeProvider = schemeProvider;
-        _identityProviderStore = identityProviderStore;
-        _events = events;
-    }
+    public bool AllowRememberLogin => LoginOptions.AllowRememberLogin;
 
-    public async Task<IActionResult> OnGet(string? returnUrl)
-    {
-        // WebApp "Sign Up" akisi prompt=create gonderir: login yerine kayit sayfasina
-        // yonlendir. returnUrl (authorize devami) tasinir ki kayit sonrasi flow
-        // istemciye (WebApp) geri donsun ve kullanici login olmus olsun.
-        var createContext = await _interaction.GetAuthorizationContextAsync(returnUrl);
-        if (createContext?.PromptModes.Contains("create") == true)
-            return RedirectToPage("/Account/Create/Index", new { returnUrl });
+    public Index(SignInManager<ApplicationUser> signInManager) => _signInManager = signInManager;
 
-        await BuildModelAsync(returnUrl);
-
-        if (View.IsExternalLoginOnly)
-        {
-            // we only have one option for logging in and it's an external provider
-            return RedirectToPage("/ExternalLogin/Challenge", new { scheme = View.ExternalLoginScheme, returnUrl });
-        }
-
-        return Page();
-    }
+    public void OnGet(string? returnUrl) => Input = new InputModel { ReturnUrl = returnUrl };
 
     public async Task<IActionResult> OnPost()
     {
-        // check if we are in the context of an authorization request
-        var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
-
-        // the user clicked the "cancel" button
+        // "Cancel" → giriş yapmadan mağazaya dön.
         if (Input.Button != "login")
+            return Redirect(StoreHome);
+
+        if (!ModelState.IsValid)
+            return Page();
+
+        // ASP.NET Identity ile doğrula; başarısızlık nedenine göre kilit/2FA ayrıştırılır.
+        var result = await _signInManager.PasswordSignInAsync(
+            Input.Username!, Input.Password!, Input.RememberLogin, lockoutOnFailure: true);
+
+        if (result.Succeeded)
+            // returnUrl = authorize devamı (yerel path). Oraya dön → token akışı tamamlanır.
+            return Redirect(Url.IsLocalUrl(Input.ReturnUrl) ? Input.ReturnUrl! : StoreHome);
+
+        var message = result switch
         {
-            if (context != null)
-            {
-                // This "can't happen", because if the ReturnUrl was null, then the context would be null
-                ArgumentNullException.ThrowIfNull(Input.ReturnUrl, nameof(Input.ReturnUrl));
-
-                // if the user cancels, send a result back into IdentityServer as if they 
-                // denied the consent (even if this client does not require consent).
-                // this will send back an access denied OIDC error response to the client.
-                await _interaction.DenyAuthorizationAsync(context, AuthorizationError.AccessDenied);
-
-                // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                if (context.IsNativeClient())
-                {
-                    // The client is native, so this change in how to
-                    // return the response is for better UX for the end user.
-                    return this.LoadingPage(Input.ReturnUrl);
-                }
-
-                return Redirect(Input.ReturnUrl ?? "~/");
-            }
-            else
-            {
-                // since we don't have a valid context, then we just go back to the home page
-                return Redirect("~/");
-            }
-        }
-
-        if (ModelState.IsValid)
-        {
-            // validate username/password against ASP.NET Core Identity
-            var result = await _signInManager.PasswordSignInAsync(
-                Input.Username!, Input.Password!, Input.RememberLogin, lockoutOnFailure: true);
-            if (result.Succeeded)
-            {
-                var user = await _userManager.FindByNameAsync(Input.Username!);
-                await _events.RaiseAsync(new UserLoginSuccessEvent(user!.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
-                Telemetry.Metrics.UserLogin(context?.Client.ClientId, IdentityServerConstants.LocalIdentityProvider);
-
-                // SignInManager kimlik doğrulama cookie'sini zaten yukarıda yazdı.
-
-                if (context != null)
-                {
-                    // This "can't happen", because if the ReturnUrl was null, then the context would be null
-                    ArgumentNullException.ThrowIfNull(Input.ReturnUrl, nameof(Input.ReturnUrl));
-
-                    if (context.IsNativeClient())
-                    {
-                        // The client is native, so this change in how to
-                        // return the response is for better UX for the end user.
-                        return this.LoadingPage(Input.ReturnUrl);
-                    }
-
-                    // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                    return Redirect(Input.ReturnUrl ?? "~/");
-                }
-
-                // request for a local page
-                if (Url.IsLocalUrl(Input.ReturnUrl))
-                {
-                    return Redirect(Input.ReturnUrl);
-                }
-                else if (string.IsNullOrEmpty(Input.ReturnUrl))
-                {
-                    return Redirect("~/");
-                }
-                else
-                {
-                    // user might have clicked on a malicious link - should be logged
-                    throw new ArgumentException("invalid return URL");
-                }
-            }
-
-            // Basarisizligin gercek nedenini ayristir: aksi halde lockout/not-allowed/2FA
-            // hepsi "invalid credentials" gibi gorunur ve teshis imkansizlasir.
-            var (error, userMessage) = result switch
-            {
-                { IsLockedOut: true } => ("locked out", "Account is locked out. Please try again later."),
-                { IsNotAllowed: true } => ("not allowed", "Login not allowed. The account may require confirmation."),
-                { RequiresTwoFactor: true } => ("requires 2FA", "Two-factor authentication is required."),
-                _ => ("invalid credentials", LoginOptions.InvalidCredentialsErrorMessage),
-            };
-            await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, error, clientId: context?.Client.ClientId));
-            Telemetry.Metrics.UserLoginFailure(context?.Client.ClientId, IdentityServerConstants.LocalIdentityProvider, error);
-            ModelState.AddModelError(string.Empty, userMessage);
-        }
-
-        // something went wrong, show form with error
-        await BuildModelAsync(Input.ReturnUrl);
+            { IsLockedOut: true } => "Account is locked out. Please try again later.",
+            { IsNotAllowed: true } => "Login not allowed. The account may require confirmation.",
+            { RequiresTwoFactor: true } => "Two-factor authentication is required.",
+            _ => LoginOptions.InvalidCredentialsErrorMessage,
+        };
+        ModelState.AddModelError(string.Empty, message);
         return Page();
-    }
-
-    private async Task BuildModelAsync(string? returnUrl)
-    {
-        Input = new InputModel
-        {
-            ReturnUrl = returnUrl
-        };
-
-        var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
-        if (context?.IdP != null)
-        {
-            var scheme = await _schemeProvider.GetSchemeAsync(context.IdP);
-            if (scheme != null)
-            {
-                var local = context.IdP == Duende.IdentityServer.IdentityServerConstants.LocalIdentityProvider;
-
-                // this is meant to short circuit the UI and only trigger the one external IdP
-                View = new ViewModel
-                {
-                    EnableLocalLogin = local,
-                };
-
-                Input.Username = context.LoginHint;
-
-                if (!local)
-                {
-                    View.ExternalProviders = [new ViewModel.ExternalProvider(authenticationScheme: context.IdP, displayName: scheme.DisplayName)];
-                }
-            }
-
-            return;
-        }
-
-        var schemes = await _schemeProvider.GetAllSchemesAsync();
-
-        var providers = schemes
-            .Where(x => x.DisplayName != null)
-            .Select(x => new ViewModel.ExternalProvider
-            (
-                authenticationScheme: x.Name,
-                displayName: x.DisplayName ?? x.Name
-            )).ToList();
-
-        var dynamicSchemes = (await _identityProviderStore.GetAllSchemeNamesAsync())
-            .Where(x => x.Enabled)
-            .Select(x => new ViewModel.ExternalProvider
-            (
-                authenticationScheme: x.Scheme,
-                displayName: x.DisplayName ?? x.Scheme
-            ));
-        providers.AddRange(dynamicSchemes);
-
-
-        var allowLocal = true;
-        var client = context?.Client;
-        if (client != null)
-        {
-            allowLocal = client.EnableLocalLogin;
-            if (client.IdentityProviderRestrictions != null && client.IdentityProviderRestrictions.Count != 0)
-            {
-                providers = providers.Where(provider => client.IdentityProviderRestrictions.Contains(provider.AuthenticationScheme)).ToList();
-            }
-        }
-
-        View = new ViewModel
-        {
-            AllowRememberLogin = LoginOptions.AllowRememberLogin,
-            EnableLocalLogin = allowLocal && LoginOptions.AllowLocalLogin,
-            ExternalProviders = providers.ToArray()
-        };
     }
 }

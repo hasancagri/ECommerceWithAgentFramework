@@ -1,6 +1,3 @@
-using System.Net.Http.Headers;
-using System.Text.Json;
-
 namespace Order.Api.Grpc;
 
 // 028: saga arka planda kosar (HttpContext yok) — kullanici bearer'i tasinamaz. gRPC adimlarina

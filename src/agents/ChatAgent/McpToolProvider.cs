@@ -1,7 +1,3 @@
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging.Abstractions;
-using ModelContextProtocol.Client;
-
 namespace ChatAgent;
 
 // MCP tool'larini boot'ta bir kez ANONIM keşfeder (ListTools) ve allowlist'e gore filtreler; her

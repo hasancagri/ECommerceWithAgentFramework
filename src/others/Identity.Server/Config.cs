@@ -1,156 +1,105 @@
-using Duende.IdentityServer.Models;
-
 namespace Identity.Server;
 
+// Duende in-memory modelleri yerine düz seed sabitleri. SeedHostedService bunları
+// açılışta OpenIddict application/scope manager'larına idempotent yazar.
 public static class Config
 {
-    // Servislerin token'da bekledigi ekstra claim'ler (role/email policy'leri icin).
-    private static readonly string[] ApiUserClaims = ["role", "email", "name"];
+    // WebApp'in redirect/logout URI'ları (launchSettings https profili).
+    public const string WebAppRedirectUri = "https://localhost:7042/signin-oidc";
+    public const string WebAppPostLogoutRedirectUri = "https://localhost:7042/signout-callback-oidc";
 
-    public static IEnumerable<IdentityResource> IdentityResources =>
+    // Kullanıcı token'larına taşınan claim'ler (WebApp + servis policy'leri okur).
+    public static readonly string[] UserClaims = ["role", "email", "name"];
+
+    // Identity scope'ları (openid/profile/email + role taşıyıcı "roles").
+    public static readonly string[] IdentityScopes = ["openid", "profile", "email", "roles", "offline_access"];
+
+    // apikeys.manage: Identity.Server kendi Bearer policy'siyle doğrular (audience'sız).
+    public const string ApiKeysManageScope = "apikeys.manage";
+
+    // Scope → audience (resource) haritası. Token üretiminde ListResourcesAsync bu eşlemeden
+    // 'aud' claim'ini üretir; servisler kendi adını (basket.api...) ValidateAudience ile arar.
+    public static readonly IReadOnlyDictionary<string, string> ScopeResources =
+        new Dictionary<string, string>
+        {
+            ["catalog.write"] = "catalog.api",
+            ["basket.read"] = "basket.api",
+            ["basket.write"] = "basket.api",
+            ["order.read"] = "order.api",
+            ["order.write"] = "order.api",
+            ["payment.read"] = "payment.api",
+            ["payment.write"] = "payment.api",
+            ["stock.write"] = "stock.api",
+            ["stock.reserve"] = "stock.api",
+            ["file.write"] = "file.api",
+            ["storefront.read"] = "storefront.api",
+            ["customer.read"] = "customer.api",
+            ["customer.write"] = "customer.api",
+        };
+
+    // WebApp BFF'nin talep ettiği 12 servis scope'u (file.write + apikeys.manage HARİÇ; bugünkü Duende paritesi).
+    public static readonly string[] BffServiceScopes =
     [
-        new IdentityResources.OpenId(),
-        new IdentityResources.Profile(),
-        new IdentityResources.Email(),
-        // id_token/userinfo'ya role claim'i tasimak icin.
-        new IdentityResource("roles", "Roller", ["role"]),
+        "catalog.write",
+        "basket.read", "basket.write",
+        "order.read", "order.write",
+        "payment.read", "payment.write",
+        "stock.write", "stock.reserve",
+        "storefront.read",
+        "customer.read", "customer.write",
     ];
 
-    // ApiScope = servis basina read/write yetki birimi.
-    // read = liste/detay/sorgu, write = olustur/guncelle/sil.
-    public static IEnumerable<ApiScope> ApiScopes =>
+    // Tüm API scope'ları (13 servis scope'u + apikeys.manage) — seed edilir.
+    public static IEnumerable<string> AllApiScopes =>
+        ScopeResources.Keys.Append(ApiKeysManageScope);
+
+    // İstemci kayıtları (secret düz değer; store hash'ler — WebApp/SagaTokenHandler config'i değişmez).
+    public static IReadOnlyList<ClientSeed> Clients =>
     [
-        // catalog.api (okuma anonim — scope yok; yalnizca yazma korunur)
-        new ApiScope("catalog.write", "Catalog API - yazma (olustur/guncelle/sil)"),
-
-        // basket.api
-        new ApiScope("basket.read", "Basket API - okuma"),
-        new ApiScope("basket.write", "Basket API - yazma"),
-
-        // order.api
-        new ApiScope("order.read", "Order API - okuma"),
-        new ApiScope("order.write", "Order API - yazma"),
-
-        // payment.api
-        new ApiScope("payment.read", "Payment API - okuma"),
-        new ApiScope("payment.write", "Payment API - yazma"),
-
-        // stock.api
-        new ApiScope("stock.write", "Stock API - yazma (artir/azalt)"),
-        // 012: Basket/Order -> Stock gRPC rezervasyonu (SetReservedQuantity/Release/Commit).
-        new ApiScope("stock.reserve", "Stock API - rezervasyon (sepet/siparis)"),
-
-        // file.api: gorsel upload MCP tool'unu korur.
-        new ApiScope("file.write", "File API - yazma (gorsel upload)"),
-
-        // storefront.api: herkese acik urun-vitrin gorunumu (yine de anonim-M2M scope ister).
-        new ApiScope("storefront.read", "Storefront API - okuma (urun vitrin gorunumu)"),
-
-        // customer.api (022): Wallet (kayitli kart) + AddressBook (adres defteri).
-        new ApiScope("customer.read", "Customer API - okuma (kart/adres listeleme)"),
-        new ApiScope("customer.write", "Customer API - yazma (ekle/sil/varsayilan)"),
-
-        // identity: UserKey (ApiKeys) yonetim yetkisi — admin issue/revoke uclarini korur.
-        new ApiScope("apikeys.manage", "API Key yonetimi (admin issue/revoke)"),
-    ];
-
-    // ApiResource adi = servisin dogruladigi Audience (appsettings IdentityOption.Audience).
-    // Token'in 'aud' claim'i bu ada esitlenir; uyusmazsa servis token'i reddeder.
-    public static IEnumerable<ApiResource> ApiResources =>
-    [
-        new ApiResource("catalog.api", "Catalog API")
-        {
-            Scopes = { "catalog.write" },
-            UserClaims = ApiUserClaims,
-        },
-        new ApiResource("basket.api", "Basket API")
-        {
-            Scopes = { "basket.read", "basket.write" },
-            UserClaims = ApiUserClaims,
-        },
-        new ApiResource("order.api", "Order API")
-        {
-            Scopes = { "order.read", "order.write" },
-            UserClaims = ApiUserClaims,
-        },
-        new ApiResource("payment.api", "Payment API")
-        {
-            Scopes = { "payment.read", "payment.write" },
-            UserClaims = ApiUserClaims,
-        },
-        new ApiResource("stock.api", "Stock API")
-        {
-            Scopes = { "stock.write", "stock.reserve" },
-            UserClaims = ApiUserClaims,
-        },
-        // file.api: MCP upload yuzeyi file.write scope'uyla korunur.
-        new ApiResource("file.api", "File API")
-        {
-            Scopes = { "file.write" },
-            UserClaims = ApiUserClaims,
-        },
-        new ApiResource("storefront.api", "Storefront API")
-        {
-            Scopes = { "storefront.read" },
-            UserClaims = ApiUserClaims,
-        },
-        // customer.api (022): kayitli kart + adres defteri; kullanici token'iyla korunur.
-        new ApiResource("customer.api", "Customer API")
-        {
-            Scopes = { "customer.read", "customer.write" },
-            UserClaims = ApiUserClaims,
-        },
-    ];
-
-    public static IEnumerable<Client> Clients =>
-    [
-        // Admin m2m: UserKey issue/revoke uclarini cagirmak icin apikeys.manage tasir.
-        // (v1'de uclar X-Internal-Secret ile korunur; bu client uretim scope-korumasi icin hazir.)
-        new Client
+        // Admin m2m: UserKey issue/revoke uçlarını apikeys.manage ile korur.
+        new ClientSeed
         {
             ClientId = "apikeys.admin",
-            ClientName = "API Key admin (m2m)",
-            AllowedGrantTypes = GrantTypes.ClientCredentials,
-            ClientSecrets = { new Secret("apikeys-admin-secret".Sha256()) },
-            AllowedScopes = { "apikeys.manage" },
+            ClientSecret = "apikeys-admin-secret",
+            DisplayName = "API Key admin (m2m)",
+            AllowClientCredentials = true,
+            Scopes = [ApiKeysManageScope],
         },
-        // 028: checkout saga m2m — saga arka planda kosar (HttpContext yok), kullanici bearer'i
-        // tasinamaz. Stock Commit/RevertCommit + Basket ClearBasket adimlari bu token'la yetkilenir.
-        new Client
+        // 028: checkout saga m2m — arka planda koşar (kullanıcı bearer'ı taşınamaz).
+        new ClientSeed
         {
             ClientId = "order-saga",
-            ClientName = "Checkout saga (m2m)",
-            AllowedGrantTypes = GrantTypes.ClientCredentials,
-            ClientSecrets = { new Secret("order-saga-secret".Sha256()) },
-            AllowedScopes = { "stock.reserve", "basket.write" },
+            ClientSecret = "order-saga-secret",
+            DisplayName = "Checkout saga (m2m)",
+            AllowClientCredentials = true,
+            Scopes = ["stock.reserve", "basket.write"],
         },
-        // WebApp (Razor Pages BFF): kullanici login'i icin Authorization Code,
-        // anonim okuma icin de Client Credentials.
-        new Client
+        // WebApp (Razor Pages BFF): kullanıcı login'i (code+PKCE) + anonim okuma (client credentials).
+        new ClientSeed
         {
             ClientId = "ecommerce.bff",
-            ClientName = "ECommerce (Razor Pages BFF)",
-            AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
-            ClientSecrets = { new Secret("webshop-secret".Sha256()) },
-            // WebApp'in calistigi URL (launchSettings https profili). Aspire farkli port
-            // atarsa buraya o URL'i de eklemek gerekir; OIDC redirect birebir eslesmeli.
-            RedirectUris = { "https://localhost:7042/signin-oidc" },
-            PostLogoutRedirectUris = { "https://localhost:7042/signout-callback-oidc" },
-            RequireConsent = false,
-            AllowOfflineAccess = true,
-            // role/email/name claim'lerini id_token'a koy ki WebApp principal'inda olsun.
-            AlwaysIncludeUserClaimsInIdToken = true,
-            AllowedScopes =
-            {
-                "openid", "profile", "email", "roles",
-                "catalog.write",
-                "basket.read", "basket.write",
-                "order.read", "order.write",
-                "payment.read", "payment.write",
-                "stock.write", "stock.reserve",
-                "storefront.read",
-                "customer.read", "customer.write",
-            },
+            ClientSecret = "webshop-secret",
+            DisplayName = "ECommerce (Razor Pages BFF)",
+            AllowAuthorizationCode = true,
+            AllowClientCredentials = true,
+            AllowRefreshToken = true,
+            RedirectUris = [WebAppRedirectUri],
+            PostLogoutRedirectUris = [WebAppPostLogoutRedirectUri],
+            Scopes = [.. IdentityScopes, .. BffServiceScopes],
         },
     ];
+}
+
+// Tek istemci seed tanımı (Duende Client'ın düz karşılığı).
+public sealed class ClientSeed
+{
+    public required string ClientId { get; init; }
+    public required string ClientSecret { get; init; }
+    public required string DisplayName { get; init; }
+    public bool AllowAuthorizationCode { get; init; }
+    public bool AllowClientCredentials { get; init; }
+    public bool AllowRefreshToken { get; init; }
+    public string[] RedirectUris { get; init; } = [];
+    public string[] PostLogoutRedirectUris { get; init; } = [];
+    public string[] Scopes { get; init; } = [];
 }

@@ -1,7 +1,3 @@
-using A2A;
-using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
-
 namespace ChatAgent;
 
 // 024: uzak A2A PaymentAgent'i (ayri solution) assistant'a taksit-sorgu tool'u olarak baglar.

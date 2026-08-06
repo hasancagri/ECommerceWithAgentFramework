@@ -10,26 +10,11 @@
         <div class="col-sm-6">
             <div class="alert alert-danger">
                 Sorry, there was an error
-
-                @if (Model.View.Error != null)
+                @if (Model.Error != null)
                 {
-                    <strong>
-                        <em>
-                            : @Model.View.Error.Error
-                        </em>
-                    </strong>
-
-                    if (Model.View.Error.ErrorDescription != null)
-                    {
-                        <div>@Model.View.Error.ErrorDescription</div>
-                    }
+                    <strong><em>: @Model.Error</em></strong>
                 }
             </div>
-
-            @if (Model?.View?.Error?.RequestId != null)
-            {
-                <div class="request-id">Request Id: @Model.View.Error.RequestId</div>
-            }
         </div>
     </div>
 </div>
