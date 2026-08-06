@@ -1,13 +1,19 @@
-<!-- Sync Impact Report — v1.5.0 → v1.6.0 (2026-08-06, MINOR)
-     Modified: İlke V yeniden adlandı — "Scope-Tabanlı Yetkilendirme (Rol Yok)" →
-     "Scope-Öncelikli Yetkilendirme + Rol Sınıflandırması". (1) IdP teknoloji-nötr yazıldı
-     (Duende adı ilkeden çıktı; hedef OpenIddict + ASP.NET Identity, lisans gerekçesi MIT).
-     (2) Rol geri geldi: register otomatik `customer` (sunucu atar, seçilemez); admin rolleri
-     yalnız admin atar; servis zorlaması scope kalır, rol-policy yalnız back-office; seed =
-     admin+customer rol + bootstrap admin; endpoint-bazlı DB yetki yasak; permission'a açık.
-     Templates: plan/spec/tasks-template ✅ değişiklik gerekmez (İlke V referansı yok).
-     Runtime docs: CLAUDE.md ⚠ pending — Duende + "rol yoktur" maddeleri migrasyon feature'ı
-     merge olunca hizalanır (kod bugün hâlâ Duende; erken güncelleme yanıltır). -->
+<!-- Sync Impact Report — v1.6.0 → v1.7.1 (2026-08-06; v1.7.0 MINOR + v1.7.1 PATCH)
+     v1.7.1 PATCH: İlke V'e açıklayıcı istisna — IdP'nin kendi server-rendered admin UI'ı cookie
+     ile auth olur (scope yok), admin rolüyle korunur; "back-office scope-gated" downstream API
+     içindir. 030-rbac analyze K1'i kapatır. Templates ✅ değişmez.
+     --- v1.7.0 MINOR ---
+     Modified: İlke V keskinleştirildi. Rol mekanizması netleşti — rol artık token'a "claim
+     olarak biner" değil, token verme anında rol→scope map'inden SCOPE DEMETİNE açılır;
+     downstream servisler rolü GÖRMEZ (rol claim ile yetki yok, [Authorize(Roles=...)] yok).
+     Scope kümesi KOD-sahipli kapalı registry (KnownScopes); rol→scope ve rol yönetimi DB'de,
+     admin ekrandan; admin serbest scope string giremez, listeden seçer. Back-office dahil her
+     yüzey scope ile korunur (rol-policy downstream'de kullanılmaz). Makine kimlikleri
+     (agent/saga) client_credentials + statik scope, RBAC dışı. Register aktivasyon-mail
+     ZORUNLU DEĞİL (customer direkt login). Seed: admin+customer rolleri, rol→scope map ve
+     login olabilen bootstrap admin kullanıcı. Templates: plan/spec/tasks ✅ değişiklik gerekmez
+     (İlke V referansı yok). Runtime docs: CLAUDE.md ⚠ pending — RBAC feature merge olunca
+     "rol→scope map" + KnownScopes + ekran akışı hizalanır. -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -89,31 +95,43 @@ zaman `Common.Results` altındaki bir Result tipi döner
 - Exception yalnızca gerçekten beklenmeyen durumlar içindir; onları
   `GlobalExceptionHandler` yakalar.
 
-### V. Scope-Öncelikli Yetkilendirme + Rol Sınıflandırması
+### V. Scope-Öncelikli Yetkilendirme + Rol = Scope Demeti
 
-Kimlik merkezi IdP `Identity.Server` tarafından verilir (teknoloji değiştirilebilir;
-mevcut hedef OpenIddict + ASP.NET Identity). Servisler JWT bearer doğrular ve
-**scope** bazında yetkilendirir (`AuthorizationScopes.*`). Basım merkezidir,
-zorlama dağıtıktır; merkezi yetki-karar servisi (PDP) açılmaz.
+Kimlik merkezi IdP `Identity.Server` tarafından verilir (OpenIddict + ASP.NET Identity).
+Servisler JWT bearer doğrular ve **yalnız scope** bazında yetkilendirir
+(`AuthorizationScopes.*`). Basım merkezidir, zorlama dağıtıktır; merkezi yetki-karar
+servisi (PDP) açılmaz.
 
-- **Her kullanıcının rolü vardır; rolü sunucu atar.** Register olan otomatik
-  `customer` rolü alır; kayıt sırasında rol seçilemez. Diğer rolleri yalnız
-  rol-atama yetkilisi (admin) verir. Seed: `admin` + `customer` rolleri ve
-  bootstrap admin kullanıcı.
-- **Rol client değildir, kullanıcı claim'idir** — login token'ına biner.
-  ClientId/Secret makine kimliğidir; rol taşımaz.
-- **Servis akışlarında zorlama scope iledir:** müşteri uçları rol kontrolü yapmaz
-  (`customer` sınıflandırmadır, kapı değildir). Rol-policy yalnız back-office/yönetim
-  yüzeylerinde (kullanıcı/rol yönetimi vb.) kullanılır ve **sabit adlı policy** ile
-  tanımlanır.
-- Yetki dili iş yetkisidir: endpoint-bazlı (DB'de rol×endpoint tablosu) yetkilendirme
-  yasaktır. İleride rol×permission katmanına geçiş policy içini değiştirir, uçları
-  değiştirmez.
+- **Rol = token verme anındaki scope demetidir.** Kullanıcının rolleri, token
+  basılırken rol→scope map'inden scope'lara **açılır** ve access_token'ın `scope`
+  claim'ine yazılır. Downstream servisler rolü **GÖRMEZ**: rol claim'iyle yetki kararı
+  verilmez, `[Authorize(Roles=...)]` kullanılmaz. Rol yalnız IdP'de yaşar; BC izolasyonu
+  korunur (servis rol taksonomisini bilmez, yalnız scope).
+- **Scope kümesi KOD-sahipli, kapalı bir registry'dir** (`KnownScopes`). Scope'ları
+  servisler kodda tanımlar; hiçbir ekran/DB yeni scope string'i **üretemez**. Rol→scope
+  eşlemesi bu kapalı listeden **seçilir** (serbest metin yasak) — uyumsuzluk imkansız.
+- **Rol ve rol→scope map DB'de yaşar; admin ekrandan yönetir.** Rol CRUD, rol→scope
+  işaretleme ve rol→kullanıcı ataması yetkili admin tarafından yapılır. Register olan
+  otomatik `customer` rolü alır (sunucu atar, seçilemez) ve **doğrudan login olabilir**
+  (aktivasyon-mail zorunlu değil). Seed: `admin` + `customer` rolleri, rol→scope map ve
+  login olabilen **bootstrap admin** kullanıcı (secret config'ten, kodda değil).
+- **Back-office dahil her yüzey scope ile korunur.** Yönetim uçları (kullanıcı/rol
+  yönetimi vb.) özel bir scope ister (ör. `identity.roles.manage`); bu scope admin
+  rolünün demetindedir. Downstream servislerde rol-policy kullanılmaz.
+- **İstisna — IdP'nin kendi admin UI'ı:** Bu scope kuralı **downstream API yüzeyleri**
+  içindir. `Identity.Server`'ın KENDİ server-rendered yönetim sayfaları (rol/scope/kullanıcı
+  yönetimi) rol otoritesinin iç yüzeyidir ve interaktif **cookie** ile auth olur — cookie'de
+  scope claim'i bulunmaz, dolayısıyla cookie kullanıcısının `admin` rolüyle korunur. Bu, "rol
+  ile yetki" değil, rol otoritesinin kendini koruması olduğundan İlke'yi ihlal etmez;
+  `identity.roles.manage` scope'u programatik/API erişim için eşdeğer guard olarak tanımlı kalır.
+- **Makine kimlikleri RBAC dışıdır.** Agent/saga gibi insan-olmayan çağıranlar
+  `client_credentials` + **statik** scope ile kimliklenir (ClientId/Secret); rol, mail,
+  kullanıcı kaydı taşımaz (ör. `ingestion-agent`, `order-saga`).
 - Scope zorlaması endpoint'lerde `.RequireAuthorization(...)` ile, Wolverine mesaj
   handler'larında ise `[RequiredScope]` + `ScopeAuthorizationMiddleware` ile uygulanır.
 - Kimlik doğrulama şeması JWT bearer ile sınırlı değildir: dış entegrasyonlar için
   JWT-olmayan custom authentication şemaları (ör. opak UserKey) meşrudur — koşul,
-  yetki modelinin bu ilkeye uymasıdır (zorlama scope, rol sınıflandırma/back-office).
+  zorlamanın scope olmasıdır.
 - Anonim gezinme meşrudur: kimlik istemeyen okuma yüzeyleri (vitrin vb.) login'siz
   erişilebilir kalır; login yalnız kullanıcıya bağlı işlemler için istenir.
 - `Identity.Server` HTTPS üzerinden çalışmak zorundadır; tüm servislerin `Authority`
@@ -199,7 +217,23 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.6.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-06
+**Version**: 1.7.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-06
+
+<!-- v1.7.1 (2026-08-06, PATCH): İlke V'e açıklayıcı istisna eklendi — "back-office scope-gated"
+     kuralı downstream API yüzeyleri içindir; Identity.Server'ın KENDİ server-rendered admin UI'ı
+     cookie ile auth olur (cookie'de scope yok) ve cookie kullanıcısının admin rolüyle korunur.
+     Bu rol-otoritesinin kendini koruması olduğundan İlke'yi ihlal etmez; identity.roles.manage
+     programatik guard olarak kalır. Gerekçe: 030-rbac /speckit-analyze K1 gerginliğini kapatır. -->
+
+<!-- v1.7.0 (2026-08-06, MINOR): İlke V keskinleştirildi — rol mekanizması netleşti. Rol token'a
+     "claim biner" değil, token verme anında rol→scope map'inden SCOPE DEMETİNE açılır; downstream
+     servisler rolü GÖRMEZ (rol claim ile yetki yok, [Authorize(Roles=...)] yok). Scope kümesi
+     KOD-sahipli kapalı registry (KnownScopes); rol + rol→scope map DB'de, admin ekrandan yönetir,
+     serbest scope string yazamaz (listeden seçer). Back-office dahil her yüzey scope ile korunur.
+     Makine kimlikleri client_credentials + statik scope, RBAC dışı. Register aktivasyon-mail
+     zorunlu değil (customer direkt login). Seed: admin+customer + rol→scope + bootstrap admin.
+     Gerekçe: 2026-08-06 RBAC tasarım oturumu — granülarite endişesi (rol=scope demeti), ekrandan
+     rol yönetimi + uyumsuzluk riski (kapalı scope registry), makine=client_credentials ayrımı. -->
 
 <!-- v1.6.0 (2026-08-06, MINOR): İlke V yeniden yazıldı — IdP teknoloji-nötr (hedef OpenIddict +
      ASP.NET Identity; Duende lisans gerekçesiyle terk ediliyor) ve rol modeli geri geldi:
