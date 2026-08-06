@@ -1,3 +1,7 @@
+using System.Security.Claims;
+using Identity.Server.Rbac;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -37,6 +41,58 @@ public sealed class SeedHostedService(IServiceProvider provider) : IHostedServic
             else
                 await apps.UpdateAsync(existing, descriptor, ct);
         }
+
+        // 030 RBAC: roller + rol→scope map + bootstrap admin + backfill (idempotent).
+        await SeedRbacAsync(scope.ServiceProvider, ct);
+    }
+
+    // 030 RBAC seed. Roller ve rol→scope map yalnız YOKken doldurulur; admin'in ekrandan
+    // yaptığı scope düzenlemeleri yeniden başlatmada EZİLMEZ.
+    private static async Task SeedRbacAsync(IServiceProvider sp, CancellationToken ct)
+    {
+        var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
+        var db = sp.GetRequiredService<ApplicationDbContext>();
+        var config = sp.GetRequiredService<IConfiguration>();
+
+        // Roller (admin + customer).
+        foreach (var roleName in Config.RoleScopeSeed.Keys)
+            if (!await roleManager.RoleExistsAsync(roleName))
+                await roleManager.CreateAsync(new IdentityRole(roleName));
+
+        // Rol→scope map — yalnız o rol için hiç satır yoksa doldur.
+        foreach (var (roleName, bundle) in Config.RoleScopeSeed)
+        {
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role is null) continue;
+
+            if (await db.RoleScopes.AnyAsync(rs => rs.RoleId == role.Id, ct)) continue;
+
+            foreach (var s in bundle.Distinct())
+                db.RoleScopes.Add(new RoleScope { Id = Guid.NewGuid(), RoleId = role.Id, Scope = s });
+        }
+        await db.SaveChangesAsync(ct);
+
+        // Bootstrap admin — email+parola config'ten (kodda değil); yoksa oluşturma atlanır.
+        var adminEmail = config["BootstrapAdmin:Email"];
+        var adminPassword = config["BootstrapAdmin:Password"];
+        if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword)
+            && await userManager.FindByNameAsync(adminEmail) is null)
+        {
+            var admin = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+            var created = await userManager.CreateAsync(admin, adminPassword);
+            if (created.Succeeded)
+            {
+                await userManager.AddToRoleAsync(admin, RoleAssignmentService.AdminRole);
+                await userManager.AddClaimsAsync(admin,
+                    [new Claim(Claims.Name, adminEmail), new Claim(Claims.Email, adminEmail)]);
+            }
+        }
+
+        // Backfill: rolsüz mevcut kullanıcılar → customer (feature öncesi kayıtlılar).
+        foreach (var user in await userManager.Users.ToListAsync(ct))
+            if ((await userManager.GetRolesAsync(user)).Count == 0)
+                await userManager.AddToRoleAsync(user, RoleAssignmentService.CustomerRole);
     }
 
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;

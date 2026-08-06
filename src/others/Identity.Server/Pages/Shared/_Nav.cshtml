@@ -15,6 +15,10 @@
         @if (!string.IsNullOrWhiteSpace(name))
         {
             <ul class="navbar-nav mr-auto">
+                @* 030 RBAC: yonetim panelinden ana siteye (WebApp) donus linki. *@
+                <li class="nav-item">
+                    <a class="nav-link" href="https://localhost:7042/">Ana Siteye Dön</a>
+                </li>
                 <li class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">@name <b class="caret"></b></a>
 

@@ -155,12 +155,13 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("customer.write");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
-        // role/email id_token'da geliyor (Config.cs: AlwaysIncludeUserClaimsInIdToken),
-        // OIDC handler bunlari otomatik principal'a kopyalar.
+        // 030 RBAC: MapInboundClaims (default true) gelen "role"u ClaimTypes.Role (uzun URI)'ye
+        // cevirir; RoleClaimType de ona esitlenmeli yoksa User.IsInRole("admin") eslesmez.
+        // AuthenticatedHttpClientHandler da ClaimTypes.Role kullanir → tutarli.
         options.TokenValidationParameters = new()
         {
             NameClaimType = "name",
-            RoleClaimType = "role",
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role,
         };
 
         // SignUp akisinda set edilen "prompt=create"i authorize istegine tasi

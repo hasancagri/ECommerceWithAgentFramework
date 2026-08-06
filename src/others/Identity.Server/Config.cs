@@ -17,6 +17,9 @@ public static class Config
     // apikeys.manage: Identity.Server kendi Bearer policy'siyle doğrular (audience'sız).
     public const string ApiKeysManageScope = "apikeys.manage";
 
+    // 030 RBAC: rol/scope/kullanıcı yönetim yüzeyi scope'u (audience'sız; IdP iç yüzeyi + WebApp link).
+    public const string IdentityRolesManageScope = "identity.roles.manage";
+
     // Scope → audience (resource) haritası. Token üretiminde ListResourcesAsync bu eşlemeden
     // 'aud' claim'ini üretir; servisler kendi adını (basket.api...) ValidateAudience ile arar.
     public static readonly IReadOnlyDictionary<string, string> ScopeResources =
@@ -49,9 +52,33 @@ public static class Config
         "customer.read", "customer.write",
     ];
 
-    // Tüm API scope'ları (13 servis scope'u + apikeys.manage) — seed edilir.
+    // Tüm API scope'ları (13 servis scope'u + apikeys.manage + identity.roles.manage) — seed edilir.
+    // 030: KnownScopes registry bu listeyi tek kaynak olarak kullanır (atanabilir scope kümesi).
     public static IEnumerable<string> AllApiScopes =>
-        ScopeResources.Keys.Append(ApiKeysManageScope);
+        ScopeResources.Keys.Append(ApiKeysManageScope).Append(IdentityRolesManageScope);
+
+    // 030 RBAC seed rol demetleri (KnownScopes ⊇ bunlar). Admin ⊇ customer + yönetim/yazma.
+    // customer: müşteri akışı (katalog yazma / stok mutlak yazma / api-key / rol yönetimi HARİÇ).
+    public static readonly string[] CustomerRoleScopes =
+    [
+        "basket.read", "basket.write",
+        "order.read", "order.write",
+        "payment.read", "payment.write",
+        "stock.reserve",
+        "storefront.read",
+        "customer.read", "customer.write",
+    ];
+
+    // admin: tüm atanabilir scope'lar (customer + catalog.write + stock.write + apikeys.manage + identity.roles.manage).
+    public static IEnumerable<string> AdminRoleScopes => AllApiScopes;
+
+    // Seed edilecek roller ve scope demetleri (rol adı → scope'lar). SeedHostedService idempotent yazar.
+    public static IReadOnlyDictionary<string, string[]> RoleScopeSeed =>
+        new Dictionary<string, string[]>
+        {
+            ["customer"] = CustomerRoleScopes,
+            ["admin"] = [.. AdminRoleScopes],
+        };
 
     // İstemci kayıtları (secret düz değer; store hash'ler — WebApp/SagaTokenHandler config'i değişmez).
     public static IReadOnlyList<ClientSeed> Clients =>
@@ -73,6 +100,15 @@ public static class Config
             DisplayName = "Checkout saga (m2m)",
             AllowClientCredentials = true,
             Scopes = ["stock.reserve", "basket.write"],
+        },
+        // 030: ingestion agent m2m — feed yazımları (Catalog+Stock) için statik scope; RBAC dışı.
+        new ClientSeed
+        {
+            ClientId = "ingestion-agent",
+            ClientSecret = "ingestion-agent-secret",
+            DisplayName = "Ingestion agent (m2m)",
+            AllowClientCredentials = true,
+            Scopes = ["catalog.write", "stock.write"],
         },
         // WebApp (Razor Pages BFF): kullanıcı login'i (code+PKCE) + anonim okuma (client credentials).
         new ClientSeed

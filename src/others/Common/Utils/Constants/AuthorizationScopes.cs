@@ -31,4 +31,8 @@ public static class AuthorizationScopes
     // customer.api (022): kayitli kart (Wallet) + adres defteri (AddressBook)
     public const string CustomerRead = "customer.read";
     public const string CustomerWrite = "customer.write";
+
+    // identity (030 RBAC): IdP rol/scope/kullanici yonetim yuzeyi. Downstream servis zorlamaz;
+    // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.
+    public const string IdentityRolesManage = "identity.roles.manage";
 }

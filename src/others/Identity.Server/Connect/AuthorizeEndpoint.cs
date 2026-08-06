@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
+using Identity.Server.Rbac;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using static OpenIddict.Abstractions.OpenIddictConstants;
@@ -21,7 +22,8 @@ public static class AuthorizeEndpoint
         HttpContext context,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IOpenIddictScopeManager scopeManager)
+        IOpenIddictScopeManager scopeManager,
+        RoleScopeQuery roleScopeQuery)
     {
         var request = context.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException("OIDC authorize isteği çözülemedi.");
@@ -68,7 +70,17 @@ public static class AuthorizeEndpoint
         identity.SetClaim(Claims.Name, name);
         identity.SetClaim(Claims.Email, email);
 
-        identity.SetScopes(request.GetScopes());
+        // 030 RBAC: kullanıcının (tek) rolü id_token'a biner (WebApp header link gibi UI kararı için);
+        // access token'a GİRMEZ (destinations). Yetki kararı yine scope iledir, rol değil.
+        var roleName = (await userManager.GetRolesAsync(user)).FirstOrDefault();
+        if (roleName is not null)
+            identity.SetClaim(Claims.Role, roleName);
+
+        // 030 RBAC: granted API scope'ları = requested ∩ (rol demeti ∪ kimlik scope'ları).
+        // Rol yalnız burada scope'a AÇILIR; token'a rol claim'i yazılmaz → downstream yalnız scope görür.
+        var roleBundle = await roleScopeQuery.GetUserScopeBundleAsync(user, context.RequestAborted);
+        identity.SetScopes(ScopeResolver.Resolve(
+            request.GetScopes(), roleBundle, Config.IdentityScopes.ToHashSet()));
 
         var resources = new List<string>();
         await foreach (var resource in scopeManager.ListResourcesAsync(identity.GetScopes()))
