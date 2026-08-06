@@ -258,6 +258,7 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
 
 - Kimlik `Identity.Server` (OpenIddict + ASP.NET Identity, 029) tarafından verilir. Servisler `AddAuthenticationAndAuthorizationExtension(config, ...scopes)` çağırır ve `AuthorizationScopes.CatalogRead` / `BasketWrite` gibi scope'lar ister.
 - **Access token `scope` claim'i çoklu-değerdir** (Duende paritesi): OpenIddict RFC 9068 tek-string yerine, `ScopeClaimArrayHandler` JWT'de diziye çevirir; `RequireClaim("scope", x)` + `ScopeAuthorizationMiddleware` bugünkü gibi çalışır. Servis kodu değişmez.
+- **DİKKAT (`ScopeClaimArrayHandler`):** `context.TokenType` URN'dir (`TokenTypeIdentifiers.AccessToken`), kısa hint `TokenTypeHints.AccessToken` DEĞİL. Guard'ı hint'le kıyaslarsan handler no-op olur; scope tek string kalır → 403 → WebApp sepet redirect döngüsü.
 - **Rol yoktur** — rol tabanlı yetkilendirme bilinçli olarak kaldırıldı; yalnızca scope kullan.
 - Scope zorlaması **Wolverine mesaj handler'larına da** uygulanır: `[RequiredScope]` taşıyan her mesaj tipi için bir `ScopeAuthorizationMiddleware` çalışır.
 - `Identity.Server` **HTTPS** üzerinden çalışmak zorundadır (`SameSite=None; Secure` cookie'leri düz HTTP'de sonsuz döngüye girer ve tüm servislerin `Authority` değeri issuer ile eşleşmelidir).

@@ -9,7 +9,7 @@
   <img alt="Wolverine" src="https://img.shields.io/badge/Wolverine-CQRS%20%2B%20messaging-0ea5e9">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-per--service-4169E1?logo=postgresql&logoColor=white">
   <img alt="RabbitMQ" src="https://img.shields.io/badge/RabbitMQ-integration_events-FF6600?logo=rabbitmq&logoColor=white">
-  <img alt="Duende IdentityServer" src="https://img.shields.io/badge/Duende-IdentityServer-000000">
+  <img alt="OpenIddict" src="https://img.shields.io/badge/OpenIddict-OIDC%2FOAuth-512BD4">
   <img alt="YARP" src="https://img.shields.io/badge/YARP-gateway-blueviolet">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-tool_server%2Fclient-9333ea">
   <img alt="A2A" src="https://img.shields.io/badge/A2A-agent--to--agent-e11d48">
@@ -28,7 +28,7 @@ It's a portfolio / learning project built to demonstrate how far you can push **
 - **Rich aggregates & enforced invariants** — business rules live inside aggregates (private collections, behavior methods), not in handlers. Illegal states are unrepresentable.
 - **Vertical Slice + CQRS** — code is organized by feature, not by technical layer. Writes and reads are separate slices; no repositories — handlers use Marten's `IDocumentSession` directly.
 - **Result pattern over exceptions** — expected failures (not-found, validation, rule violations) flow through typed `Result` objects; exceptions are reserved for the truly unexpected.
-- **Scope-based authorization** — identity issued by Duende IdentityServer; services authorize on OAuth **scopes** (no roles), enforced on HTTP endpoints *and* on Wolverine message handlers.
+- **Scope-based authorization** — identity issued by OpenIddict + ASP.NET Identity; services authorize on OAuth **scopes** (no roles), enforced on HTTP endpoints *and* on Wolverine message handlers.
 - **Push-only read model** — the `storefront` service maintains a product-centric composite view (catalog + stock) fed purely by integration events — no outbound calls, no backfill. The web home page is served entirely from this view (fat `ProductChangedEvent` carries name, description, brand & category ids+names, price) — one anonymous read call renders every card with stock badges. The product list filters by dynamic **category & brand** (AND-combinable; facet options derive from the same view, so empty categories never appear — 016).
 - **Hybrid product search (filters + semantic, via chat)** — the storefront exposes a single `search_storefront_products` MCP tool (plus an anonymous REST twin): optional brand-OR / price-range / min-stock filters combined with a natural-language `searchText`. Embeddings (`text-embedding-3-small`) are produced on `ProductChangedEvent` only when the search text's hash actually changed, stored as a side document in **pgvector**-enabled `storefrontDb`, and queried with a raw cosine-distance SQL join — filters stay hard, ranking is semantic, and an embedding outage never blocks the view write or filter-only search (019). The slice splits into two execution paths behind one query: no `searchText` → Marten LINQ over sellable rows plus a pure, unit-testable filter core with deterministic `Name ASC` ordering; with `searchText` → hand-written SQL, because top-K + similarity-threshold must run *in the database* (limit-then-filter would silently drop results). Notable craft in the SQL path: the query vector travels as a **text parameter** with a server-side `::vector(1536)` cast (immune to Npgsql's pg_type cache race), every user value is a bound parameter (SQL string only ever concatenates constants), an `INNER JOIN` on the embedding side-table makes "no embedding → not ranked" structural rather than conditional, and the command borrows the Marten session's own connection instead of opening a new one. The similarity threshold (cosine distance ≤ 0.7) acts as a floor filter under top-K — it reliably drops unrelated matches, not a precision dial.
 - **Saved cards & addresses with PCI-safe tokenization** — a `customer` bounded context holds each user's **Wallet** (saved cards) and **AddressBook**, two aggregates keyed by user id with a "≤1 default" invariant. Raw PAN/CVV are **never persisted, logged, evented, or exposed** — `AddCard` passes them straight to a tokenizer (a simulated gateway now, swappable for a real PSP) and stores only a token + brand + last4 + expiry. MCP exposes **read-only** tools (`list_cards` / `list_addresses`) — there is deliberately no add-card tool. Checkout then lets the user **select** a saved address and card instead of retyping them, defaulting to the marked-default of each.
@@ -61,7 +61,7 @@ flowchart TB
     GW --> Storefront["storefront-api"]
     GW --> Customer["customer-api"]
 
-    IdP["Identity.Server (Duende OIDC/OAuth)"]
+    IdP["Identity.Server (OpenIddict OIDC/OAuth + ASP.NET Identity)"]
     GW -.->|JWT bearer / scopes| IdP
     Agent -.->|user token| IdP
 
@@ -104,7 +104,7 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | In-process bus & messaging | Wolverine (CQRS bus + RabbitMQ integration messaging) |
 | Messaging transport | RabbitMQ (fanout exchanges) |
 | Caching | HybridCache (L1 in-memory + optional Redis L2), AOP decorator |
-| Identity & AuthZ | Duende IdentityServer (OIDC/OAuth, scope-based) |
+| Identity & AuthZ | OpenIddict + ASP.NET Identity (OIDC/OAuth, scope-based) |
 | API Gateway | YARP (with Aspire service discovery) |
 | Sync RPC | gRPC (stock reservation — shared proto contract) |
 | AI Agents | Microsoft Agent Framework + Microsoft.Extensions.AI (OpenAI), MCP |
@@ -128,7 +128,7 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | `supplier-api` | Supplier feed simulator — one typed JSON endpoint, no DB, no bus |
 | `supplier-gateway` | Supplier boundary — Hangfire-scheduled feed pull, normalizes to the canonical event, publishes only new/changed records (snapshots in `supplierGatewayDb`) |
 | `gateway` | YARP reverse proxy / single entry point |
-| `identity-server` | Duende IdentityServer — OIDC/OAuth authority |
+| `identity-server` | OpenIddict + ASP.NET Identity — OIDC/OAuth authority |
 | `chat-agent` | AI shopping assistant — MCP client over the gateway + A2A client to the remote payment agent (installment quotes) |
 | `ingestion-agent` | Stateless supplier-ingestion consumer (per-message Agent Framework Workflow, four LLM writer agents over MCP, no database) |
 | `ecommerce-web` | Blazor storefront UI with an embedded chat widget |
