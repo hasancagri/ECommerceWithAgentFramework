@@ -62,51 +62,44 @@ builder.Services.AddScoped<StorefrontService>();
 builder.Services.AddScoped<CustomerService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
-builder.Services.AddScoped<ClientAuthenticatedHttpClientHandler>();
 builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
 
 builder.Services.AddRefitClient<IBasketRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://basket-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
 builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://order-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
 builder.Services.AddRefitClient<IPaymentRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://payment-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
 builder.Services.AddRefitClient<IStockRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://stock-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
 // 006: ana sayfa vitrin listesi; okuma anonim, handler zinciri diğer istemcilerle tutarlılık için.
 builder.Services.AddRefitClient<IStorefrontRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://storefront-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
 // 022: Customer API (kayitli kart + adres defteri); kullanici token'iyla korunur.
 builder.Services.AddRefitClient<ICustomerRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://customer-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<ClientAuthenticatedHttpClientHandler>();
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
 builder.Services.AddAuthentication(configureOption =>

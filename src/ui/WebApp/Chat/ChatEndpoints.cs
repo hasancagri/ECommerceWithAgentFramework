@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using WebApp.Authentication;
 
 namespace WebApp.Chat;
 
@@ -18,7 +17,6 @@ public static class ChatEndpoints
             ChatRequest body,
             HttpContext http,
             IHttpClientFactory httpClientFactory,
-            TokenService tokenService,
             CancellationToken ct) =>
         {
             var isAuthenticated = http.User.Identity?.IsAuthenticated == true;
@@ -28,10 +26,12 @@ public static class ChatEndpoints
                 ? ("/assistant/v1/responses", "assistant")
                 : ("/public/v1/responses", "public");
 
+            // Login ise user token forward edilir; anonim public agent yalniz storefront okur
+            // (uclar AllowAnonymous) => bearer YOK, M2M client_credentials'a gerek kalmadi.
             var token = isAuthenticated
                 ? await http.GetTokenAsync(OpenIdConnectParameterNames.AccessToken)
                   ?? throw new UnauthorizedAccessException("Access token bulunamadi.")
-                : (await tokenService.GetClientAccessTokenAsync()).AccessToken!;
+                : null;
 
             // OpenAI Responses govdesi. Cok turlu gecmis previous_response_id ile zincirlenir
             // (orchestrator tarafinda RAM'de tutulur).
@@ -47,7 +47,8 @@ public static class ChatEndpoints
             var client = httpClientFactory.CreateClient("orchestrator");
             using var request = new HttpRequestMessage(HttpMethod.Post, agentPath);
             request.Content = JsonContent.Create(payload);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (token is not null)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
             using var upstream = await client.SendAsync(

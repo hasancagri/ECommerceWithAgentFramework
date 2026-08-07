@@ -110,14 +110,14 @@ public static class Config
             AllowClientCredentials = true,
             Scopes = ["catalog.write", "stock.write"],
         },
-        // WebApp (Razor Pages BFF): kullanıcı login'i (code+PKCE) + anonim okuma (client credentials).
+        // WebApp (Razor Pages BFF): yalnız kullanıcı login'i (code+PKCE+refresh, confidential).
+        // 031: anonim okuma artık gerçekten anonim (storefront AllowAnonymous) → client_credentials KALKTI.
         new ClientSeed
         {
             ClientId = "ecommerce.bff",
             ClientSecret = "webshop-secret",
             DisplayName = "ECommerce (Razor Pages BFF)",
             AllowAuthorizationCode = true,
-            AllowClientCredentials = true,
             AllowRefreshToken = true,
             RedirectUris = [WebAppRedirectUri],
             PostLogoutRedirectUris = [WebAppPostLogoutRedirectUri],
