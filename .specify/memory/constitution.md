@@ -206,6 +206,26 @@ Kalite kapıları:
 - API sürümleme URL-segment tabanlıdır (`v1`); dokümanlar Scalar ile sunulur.
 - Fiziksel klasörler solution klasörleriyle birebir örtüşür.
 
+## E2E Testing (Playwright)
+
+- E2E testler Microsoft.Playwright + xUnit ile yazılır; Aspire.Hosting.Testing
+  üzerinden tam stack (PostgreSQL, RabbitMQ, servisler) ayağa kaldırılarak koşulur.
+- Kapsam SADECE kritik kullanıcı akışlarıyla sınırlıdır:
+  - Anonim vitrin gezinme (login'siz ana sayfa + ürün listeleme)
+  - Customer login → sepet → checkout (saga) → sonuç ekranı
+  - Admin login → rol/scope yönetimi (`/Admin/Roles`) temel akışı
+  - Kritik hata senaryoları (korumalı uca anonim 403, stok yetersiz, geçersiz token)
+- Business logic (aggregate invariant'ları, saga `On*` geçişleri, `ScopeResolver`,
+  value object'ler) E2E ile DEĞİL, unit testlerle doğrulanır — İlke VI aynen geçerli.
+- E2E testler TDD döngüsüne dahil değildir; feature tamamlandıktan sonra
+  regression güvencesi olarak yazılır.
+- Assertion'larda web-first assertions (`Expect` + `ToBeVisibleAsync` vb.)
+  kullanılır; `Thread.Sleep` / manuel bekleme yasaktır.
+- Selector stratejisi: `data-testid` öncelikli; CSS class veya text tabanlı
+  selector'lardan kaçınılır.
+- IdP HTTPS olduğundan Playwright `IgnoreHTTPSErrors` kullanır; OpenAI-bağımlı
+  chat akışı E2E dışıdır (mock/CI-dışı). Harness `tests/E2E`'de, ilk ihtiyaçla kurulur.
+
 ## Governance
 
 - Bu anayasa diğer tüm pratiklerin üstündedir. Bir spec/plan/PR anayasayla
@@ -217,7 +237,14 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.7.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-06
+**Version**: 1.8.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-07
+
+<!-- v1.8.0 (2026-08-07, MINOR): Yeni bölüm — "E2E Testing (Playwright)". Kullanıcıya-dönük kritik
+     akışlar (anonim vitrin, sepet/checkout-saga, RBAC admin, kritik hatalar) Microsoft.Playwright +
+     xUnit ile Aspire.Hosting.Testing tam-stack üstünde regression olarak doğrulanır; business logic
+     unit'te kalır (İlke VI). E2E TDD döngüsü dışı, feature-sonrası. web-first assertions zorunlu,
+     Thread.Sleep yasak, data-testid öncelikli. Gerekçe: unit var, E2E yok — kritik yollar için
+     otomatik regression güvencesi. Harness tests/E2E'de ilk ihtiyaçla kurulur (henüz yok). -->
 
 <!-- v1.7.1 (2026-08-06, PATCH): İlke V'e açıklayıcı istisna eklendi — "back-office scope-gated"
      kuralı downstream API yüzeyleri içindir; Identity.Server'ın KENDİ server-rendered admin UI'ı
