@@ -46,8 +46,10 @@ public static class UpdateProduct
                     Code = CatalogResourceConstants.RECORD_NOT_FOUND
                 });
 
-            product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
+            var update = product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
                 cmd.BrandId, cmd.CategoryId, cmd.ImageUrl);
+            if (!update.IsSuccess)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(update.Messages);
             session.Store(product);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.

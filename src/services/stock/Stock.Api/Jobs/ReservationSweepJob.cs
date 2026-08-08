@@ -23,7 +23,9 @@ public sealed class ReservationSweepJob(IDocumentStore store, IMessageBus bus, I
                 var stock = await session.LoadAsync<ProductStock>(id, ct);
                 if (stock is null) continue;
 
-                var expired = stock.PurgeExpired(now);
+                var purge = stock.PurgeExpired(now);
+                if (!purge.IsSuccess) continue;
+                var expired = purge.Data!;
                 if (expired.Count == 0) continue;
 
                 session.Store(stock);

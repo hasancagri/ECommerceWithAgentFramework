@@ -276,3 +276,20 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
   Namespace `<Service>.Constants`, `GlobalUsings.cs`'e eklenir. Hata kodları için sahiplik kuralı Result Pattern bölümünde (her servis kendi kodlarına sahip).
 - **DI kaydı Scrutor ile otomatiktir:** `Common.Dependencies` içindeki `ITransientDependency` / `IScopedDependency` / `ISingletonDependency` marker arayüzlerinden birini implemente et; `AddAllDependencies()` onu otomatik kaydeder. Bunları `Program.cs`'te elle kaydetme.
 - Agent / agent framework tipleri **Singleton**'dır — framework bunları başlangıçta yakalar; kullanıcıya özel davranış, agent'ı scope'lamakla değil, kullanıcının token'ını çağrı anında enjekte ederek sağlanır.
+
+## Kod standartları
+
+- **Sonuç sözleşmesi.** Handler'dan çağrılan aggregate davranış/fabrika metotları
+  `ResultDomain` / `ResultDomain<T>` döner — **void mutator dahil** (`Basket.AddItem`,
+  `ProductStock.Increase`, `Payment.SetStatus`). Başarıda `Ok()`/`Ok(data)`; invariant/guard
+  ihlali `Error(messages)` ile sinyallenir (exception atmak yerine — Result pattern'in amacı).
+  Çağıran deseni: `var r = agg.Method(...); if(!r.IsSuccess) return <handler-error>(r.Messages);`
+  (`<T>` için `r.Data!`). Veri dönen metot `ResultDomain<T>` (ör.
+  `ProductStock.PurgeExpired` → `ResultDomain<IReadOnlyList<StockReservation>>`).
+  **Muaf:** saf getter/sorgu (`GetTotalPrice`, `AvailableAt`, `IsExpiredAt`) sarılmaz;
+  outcome-enum dönen metot enum'u `Ok(outcome)` ile taşır.
+- **Aggregate-klasör.** `Domains/<X>/` klasörünün hemen altı tek bir `: AggregateRoot`
+  barındırır; iç içe aggregate yoktur. İstisna: domain-service, seeder ve read-model tipleri
+  aynı BC içinde ayrı yerleşebilir (aggregate değildir).
+- **ValueObjects.** Bir aggregate'e bağlı standalone value object `<Aggregate>/ValueObjects/`
+  altına konur (ör. `AddressBooks/ValueObjects/Address`), aggregate kökünde durmaz.

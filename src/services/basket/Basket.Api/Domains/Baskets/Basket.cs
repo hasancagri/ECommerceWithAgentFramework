@@ -30,27 +30,33 @@ public class Basket : AggregateRoot
         _items.Count > 0 && ReservationExpiresAt is not null && ReservationExpiresAt <= now;
 
     // 017 (FR-002): capayi kurar. Yalniz capa yokken cagrilir; ekleme/adet/silme capaya DOKUNMAZ (FR-003).
-    public void StartReservation(DateTimeOffset expiresAt) => ReservationExpiresAt = expiresAt;
+    public ResultDomain StartReservation(DateTimeOffset expiresAt)
+    {
+        ReservationExpiresAt = expiresAt;
+        return ResultDomain.Ok();
+    }
 
     // 017 (FR-008): sure dolmussa TUM satirlari dusur + capayi sifirla (tembel temizlik); aksi halde no-op.
-    public void PurgeExpiredItems(DateTimeOffset now)
+    public ResultDomain PurgeExpiredItems(DateTimeOffset now)
     {
-        if (!IsExpiredAt(now)) return;
+        if (!IsExpiredAt(now)) return ResultDomain.Ok();
         _items.Clear();
         ReservationExpiresAt = null;
+        return ResultDomain.Ok();
     }
     public decimal GetTotalPrice()
     {
         return _items.Sum(x => x.Price * x.Quantity);
     }
 
-    public void AddItem(BasketItem item)
+    public ResultDomain AddItem(BasketItem item)
     {
         var existing = _items.FirstOrDefault(x => x.Id == item.Id);
         if (existing is not null)
             _items.Remove(existing);
 
         _items.Add(item);
+        return ResultDomain.Ok();
     }
 
     // 012: bir urunun sepetteki mevcut adedi (handler yeni rezervasyon adedini hesaplarken kullanir).
@@ -59,7 +65,7 @@ public class Basket : AggregateRoot
 
     // 012: urunu verilen mutlak adede getirir (upsert). Rezervasyon Stock'ta kararlastirildiktan sonra
     // handler bunu cagirir; ayna model (sepet adedi = rezervasyon adedi). Bitis artik sepet capasinda (017).
-    public void SetItem(Guid id, string name, string? imageUrl, decimal price, int quantity, int availableStock = 0)
+    public ResultDomain SetItem(Guid id, string name, string? imageUrl, decimal price, int quantity, int availableStock = 0)
     {
         var existing = _items.FirstOrDefault(x => x.Id == id);
         if (existing is null)
@@ -71,6 +77,7 @@ public class Basket : AggregateRoot
         existing.SetQuantity(quantity);
         // 021: son bilinen kalan serbest stok — efektif max hesabi icin saklanir.
         existing.SetAvailableStock(availableStock);
+        return ResultDomain.Ok();
     }
 
     public FeatureResultModel RemoveItem(Guid itemId)

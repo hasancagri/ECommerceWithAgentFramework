@@ -29,7 +29,9 @@ public static class IncreaseStock
             if (stock is null)
                 return FeatureObjectResultModel<IncreaseStockResponse>.NotFound();
 
-            stock.Increase(cmd.Amount);
+            var increase = stock.Increase(cmd.Amount);
+            if (!increase.IsSuccess)
+                return FeatureObjectResultModel<IncreaseStockResponse>.Error(increase.Messages);
             session.Store(stock);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un StockInfo'sunu besler.

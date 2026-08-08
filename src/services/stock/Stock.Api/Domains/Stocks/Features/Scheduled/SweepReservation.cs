@@ -22,7 +22,9 @@ public class SweepReservationHandler
             .FirstOrDefaultAsync(x => x.ProductId == message.ProductId, ct);
         if (stock is null) return;
 
-        var expired = stock.PurgeExpired(DateTimeOffset.UtcNow);
+        var purge = stock.PurgeExpired(DateTimeOffset.UtcNow);
+        if (!purge.IsSuccess) return;
+        var expired = purge.Data!;
         if (expired.Count == 0) return; // aktif/yenilenmiş => no-op
 
         session.Store(stock);

@@ -21,7 +21,7 @@ public class AddressBookTests
     {
         var book = AddressBook.Create(Guid.NewGuid());
 
-        var saved = book.AddAddress(ValidAddress());
+        var saved = book.AddAddress(ValidAddress()).Data!;
 
         book.Addresses.Count.ShouldBe(1);
         book.Addresses[0].Id.ShouldBe(saved.Id);
@@ -41,8 +41,8 @@ public class AddressBookTests
     public void SetDefaultAddress_KeepsAtMostOneDefault()
     {
         var book = AddressBook.Create(Guid.NewGuid());
-        var a1 = book.AddAddress(ValidAddress("A1"));
-        var a2 = book.AddAddress(ValidAddress("A2"));
+        var a1 = book.AddAddress(ValidAddress("A1")).Data!;
+        var a2 = book.AddAddress(ValidAddress("A2")).Data!;
 
         book.SetDefaultAddress(a1.Id).IsSuccess.ShouldBeTrue();
         book.Addresses.Count(x => x.IsDefault).ShouldBe(1);
@@ -66,7 +66,7 @@ public class AddressBookTests
     public void UpdateAddress_ChangesRecord_ButCapturedSnapshotStaysFrozen()
     {
         var book = AddressBook.Create(Guid.NewGuid());
-        var saved = book.AddAddress(ValidAddress("Old"));
+        var saved = book.AddAddress(ValidAddress("Old")).Data!;
         // Checkout snapshot benzeri: o anki VO referansi kopyalanir/tutulur.
         var snapshot = saved.Value;
 
@@ -81,7 +81,7 @@ public class AddressBookTests
     public void RemoveAddress_RemovesFromBook()
     {
         var book = AddressBook.Create(Guid.NewGuid());
-        var saved = book.AddAddress(ValidAddress());
+        var saved = book.AddAddress(ValidAddress()).Data!;
 
         book.RemoveAddress(saved.Id).IsSuccess.ShouldBeTrue();
         book.Addresses.ShouldBeEmpty();
