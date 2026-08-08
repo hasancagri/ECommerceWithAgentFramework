@@ -23,7 +23,9 @@ public static class ClearExpiredBasket
             // 020 (FR-002/003): sure dolmussa TUM satirlari dusur + capayi sifirla; aksi halde no-op.
             // PurgeExpiredItems zaten idempotenttir (IsExpiredAt false ise dokunmaz).
             // Stock'a Release CAGRILMAZ (FR-006): rezervasyonlar ayni mutlak anda dolmustur, sweep supurur.
-            basket.PurgeExpiredItems(DateTimeOffset.UtcNow);
+            var purge = basket.PurgeExpiredItems(DateTimeOffset.UtcNow);
+            if (!purge.IsSuccess)
+                return FeatureResultModel.Error(purge.Messages);
 
             session.Store(basket);
             return FeatureResultModel.Ok();

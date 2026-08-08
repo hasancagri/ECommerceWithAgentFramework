@@ -33,3 +33,4 @@ global using Grpc.Core;
 global using Basket.Api.Grpc;
 global using System.ComponentModel;
 global using ModelContextProtocol.Server;
+global using Common.Results;

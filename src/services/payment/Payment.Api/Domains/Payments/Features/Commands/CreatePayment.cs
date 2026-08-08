@@ -29,7 +29,9 @@ public static class CreatePayment
                 return FeatureObjectResultModel<CreatePaymentResponse>.Error(result.Messages);
             }
 
-            result.Data!.SetStatus(PaymentStatus.Success);
+            var setStatus = result.Data!.SetStatus(PaymentStatus.Success);
+            if (!setStatus.IsSuccess)
+                return FeatureObjectResultModel<CreatePaymentResponse>.Error(setStatus.Messages);
             session.Store(result.Data!);
 
             return FeatureObjectResultModel<CreatePaymentResponse>.Ok(new CreatePaymentResponse

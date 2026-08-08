@@ -225,7 +225,7 @@ public class ProductStockTests
         stock.SetReservedQuantity(activeUser, 3, TimeSpan.FromMinutes(30), now);
 
         var later = now.AddMinutes(5);
-        var purged = stock.PurgeExpired(later);
+        var purged = stock.PurgeExpired(later).Data!;
 
         purged.Count.ShouldBe(1);
         purged.Single().UserId.ShouldBe(expiredUser);
@@ -325,13 +325,13 @@ public class ProductStockTests
         stock.SetReservedQuantity(user, 2, TimeSpan.FromMinutes(5), now, now.AddMinutes(5));
 
         // Bayat tetik anini simule et (now) => rezervasyon HALA aktif => hicbir sey silinmez.
-        var purgedEarly = stock.PurgeExpired(now);
+        var purgedEarly = stock.PurgeExpired(now).Data!;
 
         purgedEarly.Count.ShouldBe(0);
         stock.Reservations.Count.ShouldBe(1);
 
         // Gercek bitisten sonra purge => rezervasyon silinir.
-        var purgedLate = stock.PurgeExpired(now.AddMinutes(6));
+        var purgedLate = stock.PurgeExpired(now.AddMinutes(6)).Data!;
 
         purgedLate.Count.ShouldBe(1);
         stock.Reservations.Count.ShouldBe(0);

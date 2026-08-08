@@ -44,14 +44,16 @@ public class ProductStock : AggregateRoot
         };
     }
 
-    public void Increase(int amount)
+    public ResultDomain Increase(int amount)
     {
         Quantity += amount;
+        return ResultDomain.Ok();
     }
 
-    public void Decrease(int amount)
+    public ResultDomain Decrease(int amount)
     {
         Quantity -= amount;
+        return ResultDomain.Ok();
     }
 
     // 005-supplier-ingestion: feed mutlak adet verir; set semantigi Increase/Decrease'ten ayridir.
@@ -177,10 +179,10 @@ public class ProductStock : AggregateRoot
     }
 
     // Sweep: suresi gecmis rezervasyonlari sil ve serbest birakilanlari dondur (event icin).
-    public IReadOnlyList<StockReservation> PurgeExpired(DateTimeOffset now)
+    public ResultDomain<IReadOnlyList<StockReservation>> PurgeExpired(DateTimeOffset now)
     {
         var expired = _reservations.Where(r => !r.IsActiveAt(now)).ToList();
         foreach (var e in expired) _reservations.Remove(e);
-        return expired;
+        return ResultDomain<IReadOnlyList<StockReservation>>.Ok(expired);
     }
 }

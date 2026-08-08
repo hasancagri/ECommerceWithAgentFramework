@@ -33,9 +33,11 @@ public static class AddAddress
             book ??= AddressBook.Create(cmd.UserId);
 
             var saved = book.AddAddress(address.Data!);
+            if (!saved.IsSuccess)
+                return FeatureObjectResultModel<AddAddressResponse>.Error(saved.Messages);
 
             session.Store(book);
-            return FeatureObjectResultModel<AddAddressResponse>.Ok(new AddAddressResponse { Id = saved.Id });
+            return FeatureObjectResultModel<AddAddressResponse>.Ok(new AddAddressResponse { Id = saved.Data!.Id });
         }
     }
 }

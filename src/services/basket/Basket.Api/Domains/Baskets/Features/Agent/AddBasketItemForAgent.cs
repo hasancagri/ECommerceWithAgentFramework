@@ -29,7 +29,9 @@ public static class AddBasketItemForAgent
             var newItem = new BasketItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price);
 
             basket ??= Basket.Create(cmd.UserId);
-            basket.AddItem(newItem);
+            var add = basket.AddItem(newItem);
+            if (!add.IsSuccess)
+                return FeatureObjectResultModel<AddBasketItemResponse>.Error(add.Messages);
 
             session.Store(basket);
             return FeatureObjectResultModel<AddBasketItemResponse>.Ok(new AddBasketItemResponse { Id = basket.Id });

@@ -32,7 +32,9 @@ public static class AddBasketItem
             // 017 (FR-008, R6): sure dolmus sepette once tembel temizlik — satirlar duser, capa sifirlanir.
             // Stock'a Release CAGRILMAZ: rezervasyonlar ayni mutlak anda dolmustur, sweep supurur.
             var now = DateTimeOffset.UtcNow;
-            basket.PurgeExpiredItems(now);
+            var purge = basket.PurgeExpiredItems(now);
+            if (!purge.IsSuccess)
+                return FeatureObjectResultModel<AddBasketItemResponse>.Error(purge.Messages);
 
             // 017 (FR-002/003): capa adayi = mevcut capa ?? now + Duration. Rezervasyon capayla yaratilir;
             // basarida (yalniz capa yokken) kurulur — sonraki eklemeler capaya dokunmaz.
@@ -53,9 +55,15 @@ public static class AddBasketItem
                     new MessageItem { Property = nameof(cmd.ProductId), Code = reserve.Code });
 
             // 021: kalan serbest stok saklanir (efektif max = min(5, adet+available)).
-            basket.SetItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price, desiredQuantity, reserve.Available);
+            var setItem = basket.SetItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price, desiredQuantity, reserve.Available);
+            if (!setItem.IsSuccess)
+                return FeatureObjectResultModel<AddBasketItemResponse>.Error(setItem.Messages);
             if (basket.ReservationExpiresAt is null)
-                basket.StartReservation(anchor);
+            {
+                var start = basket.StartReservation(anchor);
+                if (!start.IsSuccess)
+                    return FeatureObjectResultModel<AddBasketItemResponse>.Error(start.Messages);
+            }
 
             session.Store(basket);
             return FeatureObjectResultModel<AddBasketItemResponse>.Ok(new AddBasketItemResponse { Id = basket.Id });

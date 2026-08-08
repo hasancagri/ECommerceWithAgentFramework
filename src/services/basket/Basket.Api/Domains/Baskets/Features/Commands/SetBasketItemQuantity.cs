@@ -54,7 +54,9 @@ public static class SetBasketItemQuantity
                     new MessageItem { Property = nameof(cmd.Quantity), Code = reserve.Code });
 
             // 021: kalan serbest stok saklanir (efektif max = min(5, adet+available)).
-            basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity, reserve.Available);
+            var setItem = basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity, reserve.Available);
+            if (!setItem.IsSuccess)
+                return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(setItem.Messages);
             session.Store(basket);
 
             return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Ok(new SetBasketItemQuantityResponse

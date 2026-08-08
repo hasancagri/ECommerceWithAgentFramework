@@ -14,11 +14,11 @@ public class AddressBook : AggregateRoot
 
     [JsonIgnore] public IReadOnlyList<SavedAddress> Addresses => _addresses.AsReadOnly();
 
-    public SavedAddress AddAddress(Address value)
+    public ResultDomain<SavedAddress> AddAddress(Address value)
     {
         var address = SavedAddress.Create(value);
         _addresses.Add(address);
-        return address;
+        return ResultDomain<SavedAddress>.Ok(address);
     }
 
     public FeatureResultModel UpdateAddress(Guid addressId, Address value)

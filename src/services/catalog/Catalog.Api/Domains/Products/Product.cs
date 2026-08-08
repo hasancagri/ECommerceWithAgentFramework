@@ -36,7 +36,7 @@ public class Product : AggregateRoot
         return product;
     }
 
-    public void Update(string name, string description, decimal price, string sku,
+    public ResultDomain Update(string name, string description, decimal price, string sku,
         Guid brandId, Guid categoryId, string? imageUrl)
     {
         Name = name;
@@ -46,6 +46,7 @@ public class Product : AggregateRoot
         BrandId = brandId;
         CategoryId = categoryId;
         ImageUrl = imageUrl;
+        return ResultDomain.Ok();
     }
 
     public void UpdateImageUrl(string imageUrl)

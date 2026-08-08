@@ -33,7 +33,9 @@ public static class DecreaseStock
                 return FeatureObjectResultModel<DecreaseStockResponse>.Error(
                     new MessageItem { Code = StockResourceConstants.STOCK_INSUFFICIENT });
 
-            stock.Decrease(cmd.Amount);
+            var decrease = stock.Decrease(cmd.Amount);
+            if (!decrease.IsSuccess)
+                return FeatureObjectResultModel<DecreaseStockResponse>.Error(decrease.Messages);
             session.Store(stock);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un StockInfo'sunu besler.

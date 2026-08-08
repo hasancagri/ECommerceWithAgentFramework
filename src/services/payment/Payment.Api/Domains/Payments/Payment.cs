@@ -36,9 +36,10 @@ public class Payment : AggregateRoot
         });
     }
 
-    public void SetStatus(PaymentStatus status)
+    public ResultDomain SetStatus(PaymentStatus status)
     {
         Status = status;
+        return ResultDomain.Ok();
     }
 }
 
