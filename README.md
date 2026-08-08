@@ -217,6 +217,35 @@ Domains/<Aggregate>/
     Agent/                        # agent-facing slices (exposed via MCP)
 ```
 
+## DropShop payment-gateway onboarding (E1)
+
+This storefront can register itself as a merchant with the external **DropShop** payment gateway
+(a separate solution, consumed as a contract — never a shared DB/model). Everything lives under
+`src/ui/WebApp/GatewayOnboarding/` and is additive; the storefront is the merchant's public face,
+so it hosts the public `/.well-known` discovery files.
+
+- **Descriptor** — `GET /.well-known/merchant-descriptor.json`: public, secret-free identity
+  declaration built from config (`GatewayOnboarding` section: legalName, taxId, contactEmail,
+  webhookUrl). The gateway reads this to learn who is applying.
+- **Domain-control challenge** — `GET /.well-known/merchant-challenge/{token}`: serves the
+  expected value the gateway issued (HTTP-01 style proof of domain ownership). Kept in an
+  in-memory `IChallengeStore` (dev).
+- **Automated registration** — `POST /gateway-onboarding/register`: `GatewayRegistrationClient`
+  calls the gateway's Merchant.Api `/mcp submit_registration` tool (structured MCP call, robust vs
+  A2A/LLM text parsing) and drives the two-step challenge automatically (get `ChallengeRequired` →
+  publish the value locally → call again → `Pending`). Auth is a DropShop-Identity
+  `client_credentials` token (`ecommerce-onboarding`, `merchant.write`); config lives under
+  `DropShopGateway` (Identity address, `McpUrl`, client id/secret).
+- **MerchantKey handling** — after admin approval the gateway shows the **MerchantKey** once on its
+  activation page; a human copies it into `POST /gateway-onboarding/merchant-key` which stores
+  `{merchantId, merchantKey}` in an in-memory `IMerchantCredentialStore` (dev). The key is the
+  gateway OAuth `client_secret` (`client_id = merchantId`); it only ever goes to the gateway's
+  `connect/token`. Actually *using* it (token acquisition + charge calls) is a later feature (G5) —
+  today it is only stored.
+
+> Dev shortcuts (to harden for prod): in-memory stores → secret store / persistence; fixed-port
+> gateway URLs (`DropShopGateway:McpUrl`) → service discovery; dev-cert acceptance.
+
 ## Notes
 
 - **Central Package Management** is enabled — package versions live in `Directory.Packages.props`, not individual `.csproj` files.
