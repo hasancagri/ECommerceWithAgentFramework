@@ -1,0 +1,136 @@
+using System.Net.Http.Headers;
+using System.Text.Json;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
+
+namespace WebApp.GatewayOnboarding;
+
+/// <summary>
+/// E1 otomatik kayıt sürüşü: DropShop Merchant.Api <c>/mcp submit_registration</c> tool'unu çağırır
+/// (yapısal sonuç — A2A/LLM'den robust). İki-adımı otomatikler: ilk çağrı <c>ChallengeRequired</c>
+/// dönerse beklenen değeri yerel <see cref="IChallengeStore"/>'a yazar (challenge endpoint'i servis
+/// eder) ve tekrar çağırır → Pending. Token = DropShop Identity client_credentials (ecommerce-onboarding,
+/// merchant.write). Config: <c>DropShopGateway:{IdentityAddress,McpUrl,ClientId,ClientSecret}</c>.
+/// </summary>
+public sealed class GatewayRegistrationClient(
+    IConfiguration config, IChallengeStore store, ILogger<GatewayRegistrationClient> logger)
+{
+    public record RegisterResult(string Status, Guid? RequestId, string? Message);
+
+    public async Task<RegisterResult> RegisterAsync(string descriptorUrl, CancellationToken ct)
+    {
+        var mcp = await CreateMcpClientAsync(ct);
+
+        // 1) İlk deneme.
+        var first = await CallSubmitAsync(mcp, descriptorUrl, ct);
+        if (first.Status != "ChallengeRequired")
+            return new RegisterResult(first.Status, first.RequestId, first.Message);
+
+        // 2) Gateway'in verdiği değeri yerel challenge endpoint'inde yayınla.
+        if (!string.IsNullOrWhiteSpace(first.Token) && !string.IsNullOrWhiteSpace(first.ExpectedValue))
+        {
+            store.Set(first.Token!, first.ExpectedValue!);
+            logger.LogInformation("Challenge yayınlandı: {Path}", first.PublishPath);
+        }
+
+        // 3) Tekrar çağır → doğrulanır (Pending).
+        var second = await CallSubmitAsync(mcp, descriptorUrl, ct);
+        return new RegisterResult(second.Status, second.RequestId, second.Message);
+    }
+
+    private async Task<SubmitDto> CallSubmitAsync(McpClient mcp, string descriptorUrl, CancellationToken ct)
+    {
+        var result = await mcp.CallToolAsync("submit_registration",
+            new Dictionary<string, object?> { ["descriptorUrl"] = descriptorUrl }, cancellationToken: ct);
+
+        var text = result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text;
+        if (string.IsNullOrWhiteSpace(text))
+            return new SubmitDto { Status = "Error", Message = "Boş MCP yanıtı." };
+
+        try
+        {
+            var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var env = JsonSerializer.Deserialize<EnvelopeDto>(text, opts);
+            if (env is { IsSuccess: true, Data: not null })
+                return env.Data;
+
+            var code = env?.Messages?.FirstOrDefault()?.Code ?? "Bilinmeyen hata";
+            return new SubmitDto { Status = "Error", Message = code };
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "submit_registration yanıtı ayrıştırılamadı: {Text}", text);
+            return new SubmitDto { Status = "Error", Message = "Yanıt ayrıştırılamadı." };
+        }
+    }
+
+    private async Task<McpClient> CreateMcpClientAsync(CancellationToken ct)
+    {
+        var mcpUrl = config["DropShopGateway:McpUrl"]
+                     ?? throw new InvalidOperationException("DropShopGateway:McpUrl yapılandırılmamış.");
+        var token = await GetTokenAsync(ct);
+
+        var http = new HttpClient(new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        });
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        return await McpClient.CreateAsync(
+            new HttpClientTransport(new HttpClientTransportOptions
+                {
+                    Name = "dropshop-merchant-api",
+                    Endpoint = new Uri(mcpUrl),
+                    TransportMode = HttpTransportMode.StreamableHttp
+                },
+                http,
+                ownsHttpClient: true),
+            cancellationToken: ct);
+    }
+
+    private async Task<string> GetTokenAsync(CancellationToken ct)
+    {
+        var authority = config["DropShopGateway:IdentityAddress"] ?? "https://localhost:5101";
+        using var http = new HttpClient(new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        });
+
+        using var resp = await http.PostAsync($"{authority}/connect/token",
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["grant_type"] = "client_credentials",
+                ["client_id"] = config["DropShopGateway:ClientId"] ?? "ecommerce-onboarding",
+                ["client_secret"] = config["DropShopGateway:ClientSecret"]
+                                    ?? throw new InvalidOperationException("DropShopGateway:ClientSecret yapılandırılmamış."),
+                ["scope"] = "merchant.read merchant.write"
+            }), ct);
+        resp.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(ct));
+        return json.RootElement.GetProperty("access_token").GetString()!;
+    }
+
+    private sealed class EnvelopeDto
+    {
+        public bool IsSuccess { get; set; }
+        public SubmitDto? Data { get; set; }
+        public List<MessageDto>? Messages { get; set; }
+    }
+
+    private sealed class SubmitDto
+    {
+        public string Status { get; set; } = string.Empty;
+        public Guid? RequestId { get; set; }
+        public string? Token { get; set; }
+        public string? ExpectedValue { get; set; }
+        public string? PublishPath { get; set; }
+        public string? Message { get; set; }
+    }
+
+    private sealed class MessageDto
+    {
+        public string? Property { get; set; }
+        public string? Code { get; set; }
+    }
+}

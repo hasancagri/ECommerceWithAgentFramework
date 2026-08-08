@@ -10,6 +10,7 @@ using WebApp.Services.Refit;
 using WebApp.Authentication;
 using WebApp.Chat;
 using WebApp.Extensions;
+using WebApp.GatewayOnboarding;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -169,6 +170,12 @@ builder.Services.AddAuthentication(configureOption =>
 
 builder.Services.AddAuthorization();
 
+// E1: DropShop gateway kayıt — challenge + merchant credential deposu (bellek-içi, dev) + otomatik
+// kayıt istemcisi (Merchant.Api /mcp submit_registration).
+builder.Services.AddSingleton<WebApp.GatewayOnboarding.IChallengeStore, WebApp.GatewayOnboarding.InMemoryChallengeStore>();
+builder.Services.AddSingleton<WebApp.GatewayOnboarding.IMerchantCredentialStore, WebApp.GatewayOnboarding.InMemoryMerchantCredentialStore>();
+builder.Services.AddScoped<WebApp.GatewayOnboarding.GatewayRegistrationClient>();
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -198,6 +205,9 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.MapChatProxy();
+
+// E1: DropShop gateway kayıt yüzeyi (descriptor + challenge + dev challenge-set).
+app.MapGatewayOnboarding();
 
 // Urun gorseli proxy'si: DB'deki gateway-goreli /file/images/{name} yolunu ayni origin'den servis
 // eder. file-api ic servis oldugundan (browser 'http://file-api'yi cozemez) WebApp sunucu tarafinda
