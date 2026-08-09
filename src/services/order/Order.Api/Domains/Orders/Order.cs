@@ -26,6 +26,8 @@ public class Order : AggregateRoot
     }
 
     // 028: siparis Pending dogar; PaymentId idempotency alani olarak dogumda atanir.
+    /// <summary>Yeni siparisi Pending durumunda, sifir tutarla ve verilen adres/paymentId ile olusturur.</summary>
+    /// <remarks>Handler: CreateOrderCommandHandler</remarks>
     public static Order Create(Guid buyerId, Address address, Guid paymentId)
     {
         return new Order
@@ -40,6 +42,8 @@ public class Order : AggregateRoot
         };
     }
 
+    /// <summary>Siparise kalem ekler; ad/fiyat/adet dogrulamasi yapar ve toplam tutari yeniden hesaplar.</summary>
+    /// <remarks>Handler: CreateOrderCommandHandler</remarks>
     public FeatureResultModel AddOrderItem(Guid productId, string productName, decimal unitPrice, int quantity = 1)
     {
         if (string.IsNullOrEmpty(productName))
@@ -63,6 +67,8 @@ public class Order : AggregateRoot
     }
 
     // 028: durum gecisleri aggregate'te korunur — yalniz Pending'den ileri gidilir.
+    /// <summary>Siparisi Pending'den Confirmed'e gecirir; baska durumda gecis hatasi doner.</summary>
+    /// <remarks>Handler: CheckoutSaga</remarks>
     public FeatureResultModel Confirm()
     {
         if (Status != OrderStatus.Pending)
@@ -73,6 +79,8 @@ public class Order : AggregateRoot
         return FeatureResultModel.Ok();
     }
 
+    /// <summary>Siparisi Pending'den Cancelled'e gecirir ve iptal sebep kodunu kaydeder.</summary>
+    /// <remarks>Handler: CheckoutSaga</remarks>
     public FeatureResultModel Cancel(string reasonCode)
     {
         if (Status != OrderStatus.Pending)

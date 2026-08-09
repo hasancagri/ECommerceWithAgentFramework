@@ -13,6 +13,8 @@ public class Category : AggregateRoot
 
     // JasperFxIgnore: tek parametreli statik Create, event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
+    /// <summary>Ad'ı doğrular, normalize eder ve yeni bir Category üretir; ad boşsa hata döner.</summary>
+    /// <remarks>Handler: UpsertCategoryCommandHandler</remarks>
     [JasperFx.Core.JasperFxIgnore]
     public static ResultDomain<Category> Create(string name)
     {

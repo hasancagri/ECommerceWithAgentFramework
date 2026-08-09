@@ -20,6 +20,8 @@ public class Product : AggregateRoot
     {
     }
 
+    /// <summary>Verilen alanlarla yeni bir Product aggregate'i oluşturur.</summary>
+    /// <remarks>Handler: CreateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public static Product Create(string name, string description, decimal price, string sku,
         Guid brandId, Guid categoryId, string? imageUrl)
     {
@@ -36,6 +38,8 @@ public class Product : AggregateRoot
         return product;
     }
 
+    /// <summary>Ürünün tüm temel alanlarını (ad, açıklama, fiyat, sku, marka, kategori, görsel) günceller.</summary>
+    /// <remarks>Handler: UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain Update(string name, string description, decimal price, string sku,
         Guid brandId, Guid categoryId, string? imageUrl)
     {
@@ -49,16 +53,22 @@ public class Product : AggregateRoot
         return ResultDomain.Ok();
     }
 
+    /// <summary>Ürünün görsel URL'sini günceller.</summary>
+    /// <remarks>Handler: — (çağrılmıyor)</remarks>
     public void UpdateImageUrl(string imageUrl)
     {
         ImageUrl = imageUrl;
     }
 
+    /// <summary>Ürünü aktif duruma getirir (IsActive = true).</summary>
+    /// <remarks>Handler: — (çağrılmıyor)</remarks>
     public void Activate()
     {
         IsActive = true;
     }
 
+    /// <summary>Ürünü pasif duruma getirir (IsActive = false).</summary>
+    /// <remarks>Handler: — (çağrılmıyor)</remarks>
     public void Deactivate()
     {
         IsActive = false;

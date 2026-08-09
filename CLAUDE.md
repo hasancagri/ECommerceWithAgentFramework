@@ -315,5 +315,6 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
   **inline** yazılır (kod tekrarı bilinçli). **VO MUAF** (VO'da private helper serbest).
 - **Aggregate metodu yalnız handler'dan çağrılır.** Başka aggregate metodundan (factory
   dahil) ÇAĞRILMAZ; domain-içi tek çağrılan metot gövdesi çağırana inline edilir. **VO MUAF**.
-- **Aggregate public metoduna handler notu.** XML doc'a `/// <remarks>Handler: <Ad></remarks>`
-  eklenir (çoklu handler virgülle); iç Handler tipini gösterir, dış slice rename etkilemez. **VO MUAF**.
+- **Aggregate public metoduna iki not.** (1) `/// <summary>` metodun ne işe yaradığını yazar;
+  (2) `/// <remarks>Handler: <Ad></remarks>` onu çağıran Handler tipini gösterir (çoklu handler
+  virgülle; saga/event-handler de sayılır). Dış slice rename etkilemez. **VO MUAF**.
