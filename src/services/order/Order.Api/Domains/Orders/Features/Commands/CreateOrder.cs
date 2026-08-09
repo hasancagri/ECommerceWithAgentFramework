@@ -1,3 +1,4 @@
+
 namespace Order.Api.Domains.Orders.Features.Commands;
 
 public static class CreateOrder

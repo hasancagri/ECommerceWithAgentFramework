@@ -1,4 +1,3 @@
-using Identity.Server.ApiKeys;
 
 namespace Identity.Server.Tests;
 

@@ -12,7 +12,6 @@ global using Microsoft.AspNetCore.Mvc;
 global using Payment.Api.Dependencies;
 global using Payment.Api.Domains.Payments.Features.Commands;
 global using Payment.Api.Domains.Payments.Features.Queries;
-global using Payment.Api.Domains.Payments.Features.Agent;
 global using Payment.Api.Domains.Payments;
 global using System.Reflection;
 global using System;
@@ -25,3 +24,8 @@ global using Common.Utils.Authorization;
 global using Common.Auths;
 global using System.ComponentModel;
 global using ModelContextProtocol.Server;
+
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Common.Dependencies;
+global using Payment.Api.Domains.Payments.Features.Agents;
+global using Shared.Utils.Constants;

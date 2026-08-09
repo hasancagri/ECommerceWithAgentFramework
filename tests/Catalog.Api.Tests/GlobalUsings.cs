@@ -1,1 +1,12 @@
 global using Catalog.Api.Constants;
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Catalog.Api.Domains.Brands;
+global using Catalog.Api.Domains.Categories;
+global using Catalog.Api.Domains.Products;
+global using Catalog.Api.Domains;
+global using Common.Utils.Caching;
+global using Common.Utils.Constants;
+global using Common;
+global using Shouldly;
+global using System.Text.Json;
+global using Xunit;

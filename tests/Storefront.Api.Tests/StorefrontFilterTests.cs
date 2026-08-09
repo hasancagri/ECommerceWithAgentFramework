@@ -1,4 +1,3 @@
-using Storefront.Api.Domains.StorefrontView.Features.Queries;
 using static Storefront.Api.Domains.StorefrontView.Features.Queries.GetStorefrontProductList;
 
 namespace Storefront.Api.Tests;

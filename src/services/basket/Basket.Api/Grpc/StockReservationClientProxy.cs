@@ -1,4 +1,3 @@
-using Grpc.Core;
 
 namespace Basket.Api.Grpc;
 

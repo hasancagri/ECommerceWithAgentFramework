@@ -17,3 +17,8 @@ global using Wolverine.ErrorHandling;
 global using Wolverine.RabbitMQ;
 global using Microsoft.Agents.AI;
 global using System.Globalization;
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Microsoft.Extensions.Logging.Abstractions;
+global using ModelContextProtocol.Client;
+global using ModelContextProtocol.Protocol;
+global using System.Text.Json;

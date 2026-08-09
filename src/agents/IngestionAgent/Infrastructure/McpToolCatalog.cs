@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
-using ModelContextProtocol.Client;
 
 namespace IngestionAgent.Infrastructure;
 

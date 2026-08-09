@@ -1,10 +1,3 @@
-using System.Net;
-using System.Text;
-using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace Common.Tests;
 

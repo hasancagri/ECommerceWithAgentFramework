@@ -19,3 +19,7 @@ global using Common.Utils.Constants;
 global using ModelContextProtocol.Server;
 global using SixLabors.ImageSharp;
 global using SixLabors.ImageSharp.Processing;
+
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Common.Dependencies;
+global using Shared.Utils.Constants;

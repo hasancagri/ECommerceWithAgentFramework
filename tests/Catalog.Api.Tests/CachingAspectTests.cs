@@ -1,8 +1,3 @@
-using System.Text.Json;
-using Common;
-using Common.Utils.Caching;
-using Shouldly;
-using Xunit;
 
 namespace Catalog.Api.Tests;
 

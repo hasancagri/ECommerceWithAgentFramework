@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using ModelContextProtocol.Server;
 
 namespace Customer.Api.Domains.Wallets;
 

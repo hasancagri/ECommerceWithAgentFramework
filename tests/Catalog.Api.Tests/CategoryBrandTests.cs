@@ -1,9 +1,3 @@
-using Catalog.Api.Domains;
-using Catalog.Api.Domains.Brands;
-using Catalog.Api.Domains.Categories;
-using Common.Utils.Constants;
-using Shouldly;
-using Xunit;
 
 namespace Catalog.Api.Tests;
 

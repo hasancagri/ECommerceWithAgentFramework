@@ -1,3 +1,4 @@
+
 namespace Payment.Api.Domains.Payments;
 
 [McpServerToolType]

@@ -1,4 +1,3 @@
-using Shared.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddOpenApiDocumentation();

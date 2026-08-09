@@ -10,7 +10,6 @@ global using Microsoft.AspNetCore.Mvc;
 global using Order.Api.Constants;
 global using Order.Api.Dependencies;
 global using Order.Api.Domains.Orders.Entities;
-global using Order.Api.Domains.Orders.Features.Agent;
 global using Order.Api.Domains.Orders.Features.Commands;
 global using Order.Api.Domains.Orders.Features.Queries;
 global using Order.Api.Domains.Orders.ValueObjects;
@@ -29,3 +28,14 @@ global using Shared.Grpc.Stock;
 global using Order.Api.Grpc;
 global using System.Net.Http.Headers;
 global using System.Text.Json;
+
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Common.Dependencies;
+global using Grpc.Core;
+global using ModelContextProtocol.Server;
+global using Newtonsoft.Json;
+global using Order.Api.Domains.Orders.Features.Agents;
+global using Order.Api.Sagas;
+global using Shared.Grpc.Basket;
+global using System.ComponentModel;
+global using Wolverine.Persistence.Sagas;

@@ -32,7 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Domains\Payments\Features\Agent\" />
+      <Folder Include="Domains\Payments\Features\Agents\" />
     </ItemGroup>
 
 </Project>

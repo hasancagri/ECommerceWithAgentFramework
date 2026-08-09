@@ -1,6 +1,3 @@
-using System.Net;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Supplier.Gateway.Tests;
 

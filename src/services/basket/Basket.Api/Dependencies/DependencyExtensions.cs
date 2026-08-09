@@ -1,5 +1,4 @@
 
-using Common.Dependencies;
 
 namespace Basket.Api.Dependencies;
 

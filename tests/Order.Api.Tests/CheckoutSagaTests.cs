@@ -1,4 +1,3 @@
-using Order.Api.Grpc;
 
 namespace Order.Api.Tests;
 
