@@ -53,7 +53,7 @@ public sealed class SeedHostedService(IServiceProvider provider) : IHostedServic
         var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
         var db = sp.GetRequiredService<ApplicationDbContext>();
-        var config = sp.GetRequiredService<IConfiguration>();
+        var bootstrapAdmin = sp.GetRequiredService<Identity.Server.Options.BootstrapAdmin>();
 
         // Roller (admin + customer).
         foreach (var roleName in Config.RoleScopeSeed.Keys)
@@ -74,8 +74,8 @@ public sealed class SeedHostedService(IServiceProvider provider) : IHostedServic
         await db.SaveChangesAsync(ct);
 
         // Bootstrap admin — email+parola config'ten (kodda değil); yoksa oluşturma atlanır.
-        var adminEmail = config["BootstrapAdmin:Email"];
-        var adminPassword = config["BootstrapAdmin:Password"];
+        var adminEmail = bootstrapAdmin.Email;
+        var adminPassword = bootstrapAdmin.Password;
         if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword)
             && await userManager.FindByNameAsync(adminEmail) is null)
         {

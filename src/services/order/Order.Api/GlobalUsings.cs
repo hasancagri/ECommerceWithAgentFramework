@@ -39,3 +39,6 @@ global using Order.Api.Sagas;
 global using Shared.Grpc.Basket;
 global using System.ComponentModel;
 global using Wolverine.Persistence.Sagas;
+global using Common.Options;
+global using Order.Api.Options;
+global using Microsoft.Extensions.Options;

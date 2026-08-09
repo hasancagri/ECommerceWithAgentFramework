@@ -16,9 +16,10 @@ public static class ApiKeyEndpoints
 
         // Resolve (servislerin ApiKey handler'ı çağırır)
         group.MapPost("/resolve", async (
-            ResolveRequest body, HttpContext http, ApiKeyService service, IConfiguration config, CancellationToken ct) =>
+            ResolveRequest body, HttpContext http, ApiKeyService service,
+            Identity.Server.Options.ApiKeyAuth apiKeyAuth, CancellationToken ct) =>
         {
-            if (!IsInternalCallAuthorized(http, config))
+            if (!IsInternalCallAuthorized(http, apiKeyAuth))
                 return Results.Unauthorized();
 
             var resolved = await service.ResolveAsync(body.Key, ct);
@@ -45,9 +46,9 @@ public static class ApiKeyEndpoints
         }).RequireAuthorization("apikeys.manage");
     }
 
-    private static bool IsInternalCallAuthorized(HttpContext http, IConfiguration config)
+    private static bool IsInternalCallAuthorized(HttpContext http, Identity.Server.Options.ApiKeyAuth apiKeyAuth)
     {
-        var expected = config["ApiKeyAuth:InternalSecret"];
+        var expected = apiKeyAuth.InternalSecret;
         if (string.IsNullOrEmpty(expected))
             return false;
 

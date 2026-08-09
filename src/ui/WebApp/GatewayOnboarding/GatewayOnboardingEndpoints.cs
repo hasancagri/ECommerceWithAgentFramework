@@ -14,20 +14,17 @@ public static class GatewayOnboardingEndpoints
     public static IEndpointRouteBuilder MapGatewayOnboarding(this IEndpointRouteBuilder app)
     {
         // Descriptor — public, statik, sırsız (config'ten). Gateway zorunlu alanları okur.
-        app.MapGet("/.well-known/merchant-descriptor.json", (IConfiguration config) =>
-        {
-            var s = config.GetSection("GatewayOnboarding");
-            return Results.Json(new
+        app.MapGet("/.well-known/merchant-descriptor.json", (WebApp.Options.GatewayOnboarding opts) =>
+            Results.Json(new
             {
-                schemaVersion = s["SchemaVersion"] ?? "1.0",
-                domain = s["Domain"] ?? string.Empty,
-                legalName = s["LegalName"] ?? string.Empty,
-                taxId = s["TaxId"] ?? string.Empty,
-                contactEmail = s["ContactEmail"] ?? string.Empty,
-                webhookUrl = s["WebhookUrl"] ?? string.Empty,
-                agent = new { a2aCardUrl = s["A2aCardUrl"] }
-            });
-        }).AllowAnonymous();
+                schemaVersion = opts.SchemaVersion,
+                domain = opts.Domain,
+                legalName = opts.LegalName,
+                taxId = opts.TaxId,
+                contactEmail = opts.ContactEmail,
+                webhookUrl = opts.WebhookUrl,
+                agent = new { a2aCardUrl = opts.A2aCardUrl }
+            })).AllowAnonymous();
 
         // Challenge — gateway'in verdiği beklenen değeri düz metin döner (tek-kullanım kanıtı).
         app.MapGet("/.well-known/merchant-challenge/{token}", (string token, IChallengeStore store) =>
@@ -50,9 +47,10 @@ public static class GatewayOnboardingEndpoints
         // Otomatik kayıt sürüşü: descriptorUrl'i (kendi well-known'ımız) DropShop'a gönderir, challenge'ı
         // otomatik yayınlar, Pending başvuru oluşturur. descriptorUrl config'ten veya istek origin'inden.
         app.MapPost("/gateway-onboarding/register",
-            async (HttpContext http, GatewayRegistrationClient client, IConfiguration config, CancellationToken ct) =>
+            async (HttpContext http, GatewayRegistrationClient client, WebApp.Options.GatewayOnboarding opts,
+                CancellationToken ct) =>
             {
-                var descriptorUrl = config["GatewayOnboarding:SelfDescriptorUrl"];
+                var descriptorUrl = opts.SelfDescriptorUrl;
                 if (string.IsNullOrWhiteSpace(descriptorUrl))
                     descriptorUrl = $"{http.Request.Scheme}://{http.Request.Host}/.well-known/merchant-descriptor.json";
 
