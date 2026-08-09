@@ -99,7 +99,7 @@ var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 
     // 024: uzak A2A PaymentAgent taksit tool'u. Url yok/erisilemezse null -> eklenmez
     // (graceful-degrade, US2). Boot'ta bir kez kurulur (Singleton factory), MCP CollectTools gibi bloklar.
-    var a2aTool = A2AInstallmentTool.TryBuildAsync(
+    var a2aTool = PaymentAgentInstallmentTool.TryBuildAsync(
         sp.GetRequiredService<IConfiguration>(),
         sp.GetRequiredService<IHttpClientFactory>(),
         sp.GetRequiredService<ILoggerFactory>().CreateLogger("A2AInstallment")).GetAwaiter().GetResult();

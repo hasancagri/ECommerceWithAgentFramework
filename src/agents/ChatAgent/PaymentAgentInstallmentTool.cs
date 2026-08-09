@@ -4,7 +4,7 @@ namespace ChatAgent;
 // Kontrat-once: uzak taraf yoksa/erisilemezse fail-open -> null doner, assistant tool'suz acilir
 // (US2/FR-006). Cagri: A2ACardResolver(url, httpClient) -> card.Skills'te installment_quote
 // dogrula -> GetAIAgentAsync() -> AsAIFunction() (tek NL InvokeAgentAsync; uzak agent skill'e yonlendirir).
-public static class A2AInstallmentTool
+public static class PaymentAgentInstallmentTool
 {
     public static async Task<AITool?> TryBuildAsync(
         IConfiguration config, IHttpClientFactory httpClientFactory, ILogger logger)

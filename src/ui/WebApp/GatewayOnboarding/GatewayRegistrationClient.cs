@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using WebApp.Options;
 
 namespace WebApp.GatewayOnboarding;
 
@@ -13,7 +14,7 @@ namespace WebApp.GatewayOnboarding;
 /// merchant.write). Config: <c>DropShopGateway:{IdentityAddress,McpUrl,ClientId,ClientSecret}</c>.
 /// </summary>
 public sealed class GatewayRegistrationClient(
-    IConfiguration config, IChallengeStore store, ILogger<GatewayRegistrationClient> logger)
+    DropShopGatewayOption gateway, IChallengeStore store, ILogger<GatewayRegistrationClient> logger)
 {
     public record RegisterResult(string Status, Guid? RequestId, string? Message);
 
@@ -66,8 +67,7 @@ public sealed class GatewayRegistrationClient(
 
     private async Task<McpClient> CreateMcpClientAsync(CancellationToken ct)
     {
-        var mcpUrl = config["DropShopGateway:McpUrl"]
-                     ?? throw new InvalidOperationException("DropShopGateway:McpUrl yapılandırılmamış.");
+        var mcpUrl = gateway.McpUrl;
         var token = await GetTokenAsync(ct);
 
         var http = new HttpClient(new HttpClientHandler
@@ -90,7 +90,7 @@ public sealed class GatewayRegistrationClient(
 
     private async Task<string> GetTokenAsync(CancellationToken ct)
     {
-        var authority = config["DropShopGateway:IdentityAddress"] ?? "https://localhost:5101";
+        var authority = gateway.IdentityAddress;
         using var http = new HttpClient(new HttpClientHandler
         {
             ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
@@ -100,9 +100,8 @@ public sealed class GatewayRegistrationClient(
             new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["grant_type"] = "client_credentials",
-                ["client_id"] = config["DropShopGateway:ClientId"] ?? "ecommerce-onboarding",
-                ["client_secret"] = config["DropShopGateway:ClientSecret"]
-                                    ?? throw new InvalidOperationException("DropShopGateway:ClientSecret yapılandırılmamış."),
+                ["client_id"] = gateway.ClientId,
+                ["client_secret"] = gateway.ClientSecret,
                 ["scope"] = "merchant.read merchant.write"
             }), ct);
         resp.EnsureSuccessStatusCode();

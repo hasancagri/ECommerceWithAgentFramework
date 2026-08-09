@@ -15,6 +15,13 @@ public static class OptionsExt
             .ValidateOnStart();
 
         services.AddSingleton<GatewayOption>(sp => sp.GetRequiredService<IOptions<GatewayOption>>().Value);
+
+        // DropShop gateway (Merchant.Api /mcp + Identity) config — section "DropShopGateway".
+        services.AddOptions<DropShopGatewayOption>().BindConfiguration("DropShopGateway").ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddSingleton<DropShopGatewayOption>(sp =>
+            sp.GetRequiredService<IOptions<DropShopGatewayOption>>().Value);
         return services;
     }
 }
