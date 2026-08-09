@@ -170,9 +170,8 @@ builder.Services.AddAuthentication(configureOption =>
 
 builder.Services.AddAuthorization();
 
-// E1: DropShop gateway kayıt — challenge + merchant credential deposu (bellek-içi, dev) + otomatik
-// kayıt istemcisi (Merchant.Api /mcp submit_registration).
-builder.Services.AddSingleton<WebApp.GatewayOnboarding.IChallengeStore, WebApp.GatewayOnboarding.InMemoryChallengeStore>();
+// E1: DropShop gateway kayıt — merchant credential deposu (bellek-içi, dev) + otomatik kayıt
+// istemcisi (Merchant.Api /mcp submit_registration; 016 push-inline — challenge deposu KALDIRILDI).
 builder.Services.AddSingleton<WebApp.GatewayOnboarding.IMerchantCredentialStore, WebApp.GatewayOnboarding.InMemoryMerchantCredentialStore>();
 builder.Services.AddScoped<WebApp.GatewayOnboarding.GatewayRegistrationClient>();
 

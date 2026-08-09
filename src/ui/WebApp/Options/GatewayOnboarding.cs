@@ -11,7 +11,4 @@ public class GatewayOnboarding
     public string ContactEmail { get; set; } = "";
     public string WebhookUrl { get; set; } = "";
     public string A2aCardUrl { get; set; } = "";
-
-    // Bos ise register ucu istek origin'inden well-known descriptor URL'ini turetir.
-    public string? SelfDescriptorUrl { get; set; }
 }

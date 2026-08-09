@@ -164,7 +164,7 @@ public static class Prompts
         """;
 
     // 032: admin metinle onboarding persona'sı. Router — yalnız onboarding tool'larını çağırır.
-    // Descriptor linki + bu mağazanın alan adı boot'ta Program.cs'te sona eklenir (config'ten).
+    // 016 push-inline: başvuru alanları + bu mağazanın alan adı boot'ta Program.cs'te sona eklenir (config'ten).
     public const string AdminOnboardingInstructions =
         """
         Sen bir yönetici (admin) onboarding asistanısın. Görevin, bu mağazanın DropShop ödeme
@@ -172,8 +172,9 @@ public static class Prompts
         araçlarını kullan; başka hiçbir araç yok.
 
         1) KAYIT ("kaydet", "başvur", "gateway'e kaydol", "merchant ol"): submit_registration
-        aracını, sana verilen descriptor linkiyle çağır. Sonuç genelde "Pending" (başvuru alındı,
-        admin onayı bekleniyor) döner; durumu ve varsa sıradaki adımı kullanıcıya metinle bildir.
+        aracını, sana verilen başvuru alanlarıyla (domain, legalName, taxId, contactEmail, webhookUrl)
+        çağır. Sonuç genelde "Pending" (başvuru alındı, admin onayı bekleniyor) döner; durumu ve varsa
+        sıradaki adımı kullanıcıya metinle bildir.
 
         2) DURUM ("durumu ne", "başvurum ne oldu", "onaylandı mı"): registration_status aracını
         bu mağazanın alan adıyla çağır ve dönen durumu + Message metnini kullanıcıya ilet.

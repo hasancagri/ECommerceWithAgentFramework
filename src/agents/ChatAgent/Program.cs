@@ -46,13 +46,6 @@ builder.Services.AddOptions<PaymentGateway>().BindConfiguration(nameof(PaymentGa
     .ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptions<PaymentGateway>>().Value);
 
-// Descriptor linki (DropShop gateway bunu okur) = WebApp well-known'i; boş ise service discovery'den türet.
-var webUrl = builder.Configuration["services:ecommerce-web:https:0"]
-             ?? builder.Configuration["services:ecommerce-web:http:0"];
-var descriptorUrl = !string.IsNullOrWhiteSpace(onboarding.DescriptorUrl)
-    ? onboarding.DescriptorUrl
-    : webUrl is null ? null : $"{webUrl}/.well-known/merchant-descriptor.json";
-
 // Her agent'in toplayacagi MCP tool'lari: (server, url, baglanacagi named-client, izin verilen tool'lar).
 // Tek kaynak; delete_product hicbir listede yok. ClientName = MCP'ye ozel handler/baglanti; kendi
 // server'larimiz Identity token forward eder. Yeni bir dis MCP kendi ClientName'iyle eklenir.
@@ -145,17 +138,22 @@ var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 }, ServiceLifetime.Singleton);
 
 // 032: ADMIN agent (admin rolu, WebApp BFF admin kolu). YALNIZ onboarding tool'lari; shopper araclari YOK.
-// Descriptor linki + alan adi prompt'a boot'ta eklenir (config'ten). URL/config yok -> tool'suz acilir
-// (graceful-degrade); prompt "kullanilamiyor" der. Singleton (framework agent'lari boot'ta yakalar).
+// 016 push-inline: basvuru alanlari prompt'a boot'ta gomulur (config'ten). Gateway config yok -> tool'suz
+// acilir (graceful-degrade); prompt "kullanilamiyor" der. Singleton (framework agent'lari boot'ta yakalar).
 var adminAgent = builder.AddAIAgent("admin", (sp, name) =>
 {
     var tools = sp.GetRequiredService<IMcpToolProvider>().CollectTools(adminAgentTools);
 
-    var instructions = descriptorUrl is null
+    var instructions = dropShop is null
         ? Prompts.AdminOnboardingInstructions
         : $"{Prompts.AdminOnboardingInstructions}\n\n" +
-          $"Descriptor linki (submit_registration ile kullan): {descriptorUrl}\n" +
-          $"Bu mağazanın alan adı (registration_status ile kullan): {onboarding.Domain}";
+          "submit_registration çağrısında bu mağazanın başvuru alanlarını kullan:\n" +
+          $"- domain: {onboarding.Domain}\n" +
+          $"- legalName: {onboarding.LegalName}\n" +
+          $"- taxId: {onboarding.TaxId}\n" +
+          $"- contactEmail: {onboarding.ContactEmail}\n" +
+          $"- webhookUrl: {onboarding.WebhookUrl}\n" +
+          $"registration_status sorgusunu bu mağazanın alan adıyla ({onboarding.Domain}) yap.";
 
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), instructions, name, null, tools);
 }, ServiceLifetime.Singleton);
