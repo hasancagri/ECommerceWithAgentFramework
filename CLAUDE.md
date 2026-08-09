@@ -178,6 +178,15 @@ Endpoint'ler sonucu HTTP'ye çevirir: `result.IsSuccess ? Results.Ok(result) : R
 
 Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar (`[McpServerToolType]` / `[McpServerTool]`). **Bu tool'lar ince sarmalayıcılardır; aynı Wolverine command/query'sini `IMessageBus` üzerinden yeniden çağırır** — iş mantığı eklemezler, yalnızca LLM'e uygun bir isim + `[Description]` eklerler. MCP sunucusu `app.MapMcp("/mcp")` ile mount edilir. `ChatAgent` bunlara MCP istemcisi olarak bağlanır (kullanıcı token'ı çağrı anında enjekte edilir).
 
+- **Metin (chat) akışında MCP DOLAYLI kullanılır — elle `CallToolAsync` YOK.** Agent, uygulama-içi
+  MCP tool'larını boot'ta toplar (allowlist) ve bir işi metinle isteyen kullanıcı için **LLM prompt
+  üzerinden** uygun tool'u seçip çağırır. Bir metin-akışı işini gerçekleştirmek için C# içinde elle
+  `McpClient.CreateAsync` + `CallToolAsync` yazıp agent'ın LLM tool-seçimini atlamak **yasaktır**.
+  İş, agent'ın topladığı tool + prompt eşlemesiyle çözülür; yeni yetenek = yeni MCP tool + prompt satırı,
+  imperatif MCP-çağrı kodu değil.
+- İmperatif `CallToolAsync` yalnızca **metin-dışı yapısal yollarda** (ör. bir HTTP endpoint'in doğrudan
+  sürüşü) kabul edilir; chat/agent akışına sızmaz.
+
 ### Integration event'leri (servisler arası)
 
 Event kontratları `Shared.IntegrationEvents` içinde yaşar. Yayınlama/tüketme, Wolverine-üzerinden-RabbitMQ ile **fanout exchange**'ler kullanılarak yapılır; exchange/queue adları `RabbitMqConstants` içinde merkezileştirilmiştir. Her servis ihtiyaç duyduğu exchange/queue'ları kendi `Program.cs`'indeki `UseWolverine(...)` bloğunda tanımlar ve gelen event'leri `EventHandlers.cs`'te işler. Handler keşfi assembly taramasıyla olur; yani bir event handler'ın sadece keşfedilebilir bir `Handle`/`Consume` metodu olması yeterlidir.

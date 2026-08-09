@@ -95,6 +95,16 @@ persona deseni (public/assistant → +admin), WebApp BFF (ChatEndpoints + Razor 
 `GatewayRegistrationClient` yeniden kullanılır. **Yeni proje/csproj YOK.** WebApp MCP tool'u
 `GatewayRegistrationClient`'i sararak challenge-locality'yi çözer (register WebApp process'inde koşar).
 
+## Revizyon (implement, kullanıcı kararı)
+
+- **WebApp'te MCP YOK.** Onboarding MCP yüzeyi + `GatewayRegistrationClient.StatusAsync` iptal.
+  ChatAgent `admin` persona doğrudan **DropShop Merchant.Api `/mcp`**'yi toplar (submit_registration +
+  registration_status), makine token'ıyla (`ecommerce-onboarding` client_credentials). WebApp yalnız
+  admin ekran (`Pages/Admin/Onboarding`) + BFF kolu (`/chat/admin/stream`, admin-cookie).
+- **Challenge KALDIRILDI** (DropShop, ayrı repo): `submit` → doğrudan Pending → insan Approve/Reject.
+  Challenge-locality gerekçesi (D4) düştü; WebApp challenge REST'i (dead) coexist kalır.
+- **Metin akışında MCP dolaylı** (CLAUDE.md kuralı): elle `CallToolAsync` yok; tool + prompt.
+
 ## Complexity Tracking
 
 Yok — Constitution Check ihlalsiz geçti.

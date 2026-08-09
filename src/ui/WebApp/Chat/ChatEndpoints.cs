@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace WebApp.Chat;
@@ -61,6 +62,44 @@ public static class ChatEndpoints
             await using var upstreamStream = await upstream.Content.ReadAsStreamAsync(ct);
             await upstreamStream.CopyToAsync(http.Response.Body, ct);
         }).AllowAnonymous();
+
+        // 032: admin onboarding kolu. YALNIZ admin rolu (cookie) — anonim/normal reddedilir (S3).
+        // ChatAgent 'admin' persona'ya (/admin/v1/responses) proxy'ler; user token forward. Onboarding
+        // gateway cagrisi ChatAgent icinde makine kimligiyle yapilir (admin token gateway'e gitmez).
+        app.MapPost("/chat/admin/stream", async (
+            ChatRequest body,
+            HttpContext http,
+            IHttpClientFactory httpClientFactory,
+            CancellationToken ct) =>
+        {
+            var token = await http.GetTokenAsync(OpenIdConnectParameterNames.AccessToken)
+                        ?? throw new UnauthorizedAccessException("Access token bulunamadi.");
+
+            var payload = new Dictionary<string, object?>
+            {
+                ["model"] = "admin",
+                ["input"] = body.Message,
+                ["stream"] = true,
+            };
+            if (!string.IsNullOrWhiteSpace(body.PreviousResponseId))
+                payload["previous_response_id"] = body.PreviousResponseId;
+
+            var client = httpClientFactory.CreateClient("orchestrator");
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/admin/v1/responses");
+            request.Content = JsonContent.Create(payload);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+            using var upstream = await client.SendAsync(
+                request, HttpCompletionOption.ResponseHeadersRead, ct);
+
+            http.Response.StatusCode = (int)upstream.StatusCode;
+            http.Response.ContentType = "text/event-stream";
+            http.Response.Headers.CacheControl = "no-cache";
+
+            await using var upstreamStream = await upstream.Content.ReadAsStreamAsync(ct);
+            await upstreamStream.CopyToAsync(http.Response.Body, ct);
+        }).RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
 
         return app;
     }

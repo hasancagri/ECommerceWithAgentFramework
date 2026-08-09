@@ -9,6 +9,8 @@ public static class McpServers
     public const string Payment = "payment";
     public const string Stock = "stock";
     public const string Storefront = "storefront";
+    // 032: DropShop Merchant.Api onboarding MCP (ayri solution; makine token'iyla).
+    public const string MerchantOnboarding = "merchant-onboarding";
 }
 
 // Her MCP'nin baglanacagi named HttpClient; handler MCP'ye ozeldir, global degil.
@@ -18,6 +20,8 @@ public static class McpClients
 {
     public const string WithToken = "mcp-with-token";
     public const string NoToken = "mcp-no-token";
+    // 032: DropShop onboarding MCP'ye makine kimligi (client_credentials) forward eden named-client.
+    public const string MachineOnboarding = "mcp-machine-onboarding";
 }
 
 // 024: uzak A2A PaymentAgent (ayri solution) kontrat sabitleri (FR-007). Isimler onceden
@@ -67,6 +71,13 @@ public static class StorefrontTools
 public static class CustomerTools
 {
     public const string GetDefaultCardBin = "get_default_card_bin";
+}
+
+// 032: DropShop Merchant.Api onboarding tool'lari (admin persona toplar).
+public static class OnboardingTools
+{
+    public const string SubmitRegistration = "submit_registration";
+    public const string RegistrationStatus = "registration_status";
 }
 
 public static class Prompts
@@ -150,5 +161,28 @@ public static class Prompts
         ÖDEME / ÇEKİM (SATIN ALMA): "öde", "satın al", "kartımdan çek", "ödemeyi tamamla" gibi
         gerçek ödeme istekleri KAPSAM DIŞIdır. Bunu yapamayacağını nazikçe söyle; yalnız taksit
         BİLGİsi verebildiğini belirt. Hiçbir ödeme/çekim aracı çağırma.
+        """;
+
+    // 032: admin metinle onboarding persona'sı. Router — yalnız onboarding tool'larını çağırır.
+    // Descriptor linki + bu mağazanın alan adı boot'ta Program.cs'te sona eklenir (config'ten).
+    public const string AdminOnboardingInstructions =
+        """
+        Sen bir yönetici (admin) onboarding asistanısın. Görevin, bu mağazanın DropShop ödeme
+        gateway'ine merchant olarak kaydını metinle yönetmek. Yalnızca elindeki onboarding
+        araçlarını kullan; başka hiçbir araç yok.
+
+        1) KAYIT ("kaydet", "başvur", "gateway'e kaydol", "merchant ol"): submit_registration
+        aracını, sana verilen descriptor linkiyle çağır. Sonuç genelde "Pending" (başvuru alındı,
+        admin onayı bekleniyor) döner; durumu ve varsa sıradaki adımı kullanıcıya metinle bildir.
+
+        2) DURUM ("durumu ne", "başvurum ne oldu", "onaylandı mı"): registration_status aracını
+        bu mağazanın alan adıyla çağır ve dönen durumu + Message metnini kullanıcıya ilet.
+
+        Yalnız araçtan DÖNEN alanları göster; alan/kod/durum UYDURMA. Yanıt eksik/biçimsizse eksik
+        olduğunu söyle. Alışveriş, sepet, ürün arama, sipariş, ödeme, taksit gibi istekler KAPSAM
+        DIŞIdır — bu persona yalnızca onboarding içindir; böyle bir istek gelirse yapamayacağını söyle.
+
+        Onboarding araçların elinde YOKSA veya çağrı başarısız olursa: "onboarding şu an kullanılamıyor"
+        de; teknik hata/exception ayrıntısı verme.
         """;
 }

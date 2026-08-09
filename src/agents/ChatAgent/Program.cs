@@ -1,7 +1,9 @@
 using ChatAgent;
+using ChatAgent.Options;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Hosting;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +40,21 @@ var paymentUrl = $"{gatewayUrl}/mcp/{McpServers.Payment}";
 var stockUrl = $"{gatewayUrl}/mcp/{McpServers.Stock}";
 var storefrontUrl = $"{gatewayUrl}/mcp/{McpServers.Storefront}";
 
+// 032: DropShop onboarding gateway + onboarding config (strongly-typed; IdentityServerSettings deseni).
+// Bölüm yoksa admin persona graceful-degrade eder (tool eklenmez, boot çökmez).
+var dropShop = builder.Configuration.GetSection("DropShopGateway").Get<DropShopGatewayOption>();
+var onboarding = builder.Configuration.GetSection("Onboarding").Get<OnboardingOption>() ?? new OnboardingOption();
+if (dropShop is not null)
+    builder.Services.AddSingleton(dropShop);
+builder.Services.AddSingleton(onboarding);
+
+// Descriptor linki (DropShop gateway bunu okur) = WebApp well-known'i; boş ise service discovery'den türet.
+var webUrl = builder.Configuration["services:ecommerce-web:https:0"]
+             ?? builder.Configuration["services:ecommerce-web:http:0"];
+var descriptorUrl = !string.IsNullOrWhiteSpace(onboarding.DescriptorUrl)
+    ? onboarding.DescriptorUrl
+    : webUrl is null ? null : $"{webUrl}/.well-known/merchant-descriptor.json";
+
 // Her agent'in toplayacagi MCP tool'lari: (server, url, baglanacagi named-client, izin verilen tool'lar).
 // Tek kaynak; delete_product hicbir listede yok. ClientName = MCP'ye ozel handler/baglanti; kendi
 // server'larimiz Identity token forward eder. Yeni bir dis MCP kendi ClientName'iyle eklenir.
@@ -59,6 +76,16 @@ var storefrontUrl = $"{gatewayUrl}/mcp/{McpServers.Storefront}";
     // 024: taksit sorgusu icin default kart BIN okumasi (PAN/CVV/token asla).
     (McpServers.Customer, customerUrl, McpClients.WithToken, [CustomerTools.GetDefaultCardBin])
 ];
+// 032: admin persona YALNIZ DropShop onboarding MCP'sini toplar (submit_registration + registration_status).
+// Config yoksa bos -> CollectTools bos doner, persona tool'suz acilir (graceful-degrade).
+(string Name, string Url, string ClientName, string[] allowedTools)[] adminAgentTools = dropShop is null
+    ?
+    []
+    :
+    [
+        (McpServers.MerchantOnboarding, dropShop.McpUrl, McpClients.MachineOnboarding,
+            [OnboardingTools.SubmitRegistration, OnboardingTools.RegistrationStatus])
+    ];
 
 builder.Services.AddTransient<TokenInjectingHandler>();
 
@@ -79,6 +106,16 @@ builder.Services.AddHttpClient(McpClients.NoToken)
 // timeout akisi keser -> muaf tut + comert timeout. Auth handler YOK (merchant key ertelendi, FR-008).
 builder.Services.AddHttpClient(A2APayment.HttpClient, c => c.Timeout = TimeSpan.FromSeconds(60))
     .RemoveAllResilienceHandlers();
+
+// 032: DropShop onboarding MCP'ye makine token'i forward eden named-client (MCP uzun-omurlu SSE ->
+// resilience muaf). Handler her istege client_credentials Bearer takar (kesif ListTools dahil).
+if (dropShop is not null)
+{
+    builder.Services.AddTransient<OnboardingGatewayTokenHandler>();
+    builder.Services.AddHttpClient(McpClients.MachineOnboarding)
+        .RemoveAllResilienceHandlers()
+        .AddHttpMessageHandler<OnboardingGatewayTokenHandler>();
+}
 #pragma warning restore EXTEXP0001
 
 builder.Services.AddSingleton<IMcpToolProvider, McpToolProvider>();
@@ -109,6 +146,22 @@ var assistant = builder.AddAIAgent("assistant", (sp, name) =>
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.AssistantInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);
 
+// 032: ADMIN agent (admin rolu, WebApp BFF admin kolu). YALNIZ onboarding tool'lari; shopper araclari YOK.
+// Descriptor linki + alan adi prompt'a boot'ta eklenir (config'ten). URL/config yok -> tool'suz acilir
+// (graceful-degrade); prompt "kullanilamiyor" der. Singleton (framework agent'lari boot'ta yakalar).
+var adminAgent = builder.AddAIAgent("admin", (sp, name) =>
+{
+    var tools = sp.GetRequiredService<IMcpToolProvider>().CollectTools(adminAgentTools);
+
+    var instructions = descriptorUrl is null
+        ? Prompts.AdminOnboardingInstructions
+        : $"{Prompts.AdminOnboardingInstructions}\n\n" +
+          $"Descriptor linki (submit_registration ile kullan): {descriptorUrl}\n" +
+          $"Bu mağazanın alan adı (registration_status ile kullan): {onboarding.Domain}";
+
+    return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), instructions, name, null, tools);
+}, ServiceLifetime.Singleton);
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -120,6 +173,9 @@ app.MapOpenAIResponses(publicAgent, "/public/v1/responses");
 // Giriş yapmış kullanıcı agent'ı: POST /assistant/v1/chat/completions, /assistant/v1/responses
 app.MapOpenAIChatCompletions(assistant);
 app.MapOpenAIResponses(assistant, "/assistant/v1/responses");
+
+// 032: admin onboarding agent'ı: POST /admin/v1/responses (WebApp admin BFF kolu buraya proxy'ler).
+app.MapOpenAIResponses(adminAgent, "/admin/v1/responses");
 
 app.MapOpenAIConversations(); // POST /v1/conversations
 

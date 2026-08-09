@@ -1,0 +1,109 @@
+@page
+@model WebApp.Pages.Admin.OnboardingModel
+@{
+    ViewData["Title"] = "Merchant Onboarding";
+}
+
+<div class="container my-4" style="max-width: 720px;">
+    <h1 class="h4 mb-3">Merchant Onboarding (Metinle)</h1>
+    <p class="text-muted">
+        Mağazayı DropShop ödeme gateway'ine metinle kaydedin. Örnek: "mağazayı gateway'e kaydet",
+        "başvurum ne durumda?".
+    </p>
+
+    <div id="ob-messages" class="border rounded p-3 mb-3"
+         style="height: 380px; overflow-y: auto; background:#fafafa;"></div>
+
+    <form id="ob-form" class="d-flex gap-2">
+        <input id="ob-input" type="text" class="form-control" autocomplete="off"
+               placeholder="Bir şey yazın..." />
+        <button type="submit" class="btn btn-primary">Gönder</button>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const form = document.getElementById('ob-form');
+    const input = document.getElementById('ob-input');
+    const messages = document.getElementById('ob-messages');
+    const PREV_KEY = 'onboarding.previousResponseId';
+
+    function addBubble(text, who) {
+        const el = document.createElement('div');
+        el.className = 'mb-2';
+        el.innerHTML = '<strong>' + (who === 'user' ? 'Siz' : 'Asistan') + ':</strong> ';
+        const span = document.createElement('span');
+        span.textContent = text;
+        el.appendChild(span);
+        messages.appendChild(el);
+        messages.scrollTop = messages.scrollHeight;
+        return span;
+    }
+
+    function handleData(jsonText, botEl) {
+        if (jsonText === '[DONE]') return;
+        let obj;
+        try { obj = JSON.parse(jsonText); } catch { return; }
+        const type = typeof obj.type === 'string' ? obj.type : '';
+        const isToolOrMeta = type.indexOf('function_call') !== -1 || type.indexOf('reasoning') !== -1;
+        if (!isToolOrMeta) {
+            if (typeof obj.delta === 'string') { botEl.textContent += obj.delta; }
+            else if (obj.output_text && typeof obj.output_text === 'string') { botEl.textContent += obj.output_text; }
+        }
+        const id = (obj.response && obj.response.id) || obj.id;
+        if (id && typeof id === 'string' && id.indexOf('resp') === 0) {
+            sessionStorage.setItem(PREV_KEY, id);
+        }
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function send(message) {
+        addBubble(message, 'user');
+        const botEl = addBubble('', 'bot');
+        const previousResponseId = sessionStorage.getItem(PREV_KEY);
+
+        let resp;
+        try {
+            resp = await fetch('/chat/admin/stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, previousResponseId: previousResponseId })
+            });
+        } catch {
+            botEl.textContent = 'Üzgünüm, şu an yardımcı olamıyorum.';
+            return;
+        }
+        if (!resp.ok || !resp.body) { botEl.textContent = 'Üzgünüm, şu an yardımcı olamıyorum.'; return; }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop();
+            for (const part of parts) {
+                for (const line of part.split('\n')) {
+                    const trimmed = line.trim();
+                    if (trimmed.indexOf('data:') === 0) {
+                        handleData(trimmed.slice(5).trim(), botEl);
+                    }
+                }
+            }
+        }
+        if (botEl.textContent === '') botEl.textContent = '(boş yanıt)';
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const message = input.value.trim();
+        if (!message) return;
+        input.value = '';
+        send(message);
+    });
+})();
+</script>
+}

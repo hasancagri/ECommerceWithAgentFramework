@@ -82,3 +82,15 @@ deseniyle (diğer McpServers gibi Aspire service discovery / config) alınır.
 (mevcut `PaymentAgentInstallmentTool` fail-open deseni); ekran açılır, "onboarding kullanılamıyor" der.
 
 **Rationale**: Boot dayanıklılığı; mevcut A2A/MCP tool ekleme deseniyle tutarlı.
+
+## Revizyon (implement, kullanıcı kararı)
+
+- **D4 GEÇERSİZ:** domain-control challenge tümüyle kaldırıldı (DropShop'ta). Admin descriptor'ı
+  (legalName/taxId/contactEmail) insan olarak inceleyip onaylar; makine challenge dansı fazlalık.
+  `submit` descriptor doğrulanınca doğrudan Pending doğar → insan Approve/Reject.
+- **Challenge-locality yok → WebApp'te MCP yok.** ChatAgent `admin` persona doğrudan DropShop
+  Merchant.Api `/mcp`'yi toplar (submit_registration + registration_status), makine token'ıyla.
+  WebApp yalnız admin ekran + BFF proxy. D5 (StatusAsync) da gereksiz — status gateway MCP tool'u.
+- **Metin akışında MCP DOLAYLI:** iş elle `CallToolAsync` ile değil, agent'ın topladığı tool + prompt
+  ile yapılır (CLAUDE.md kuralı). D1 (admin rol-cookie gating), D2 (ayrı admin persona), D3
+  (Merchant.Agent kullanılmaz), D6 (Options), D7 (graceful-degrade) korunur.
