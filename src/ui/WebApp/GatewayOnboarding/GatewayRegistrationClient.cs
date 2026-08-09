@@ -8,41 +8,37 @@ namespace WebApp.GatewayOnboarding;
 
 /// <summary>
 /// E1 otomatik kayıt sürüşü: DropShop Merchant.Api <c>/mcp submit_registration</c> tool'unu çağırır
-/// (yapısal sonuç — A2A/LLM'den robust). İki-adımı otomatikler: ilk çağrı <c>ChallengeRequired</c>
-/// dönerse beklenen değeri yerel <see cref="IChallengeStore"/>'a yazar (challenge endpoint'i servis
-/// eder) ve tekrar çağırır → Pending. Token = DropShop Identity client_credentials (ecommerce-onboarding,
+/// (yapısal sonuç — A2A/LLM'den robust). 016 push-inline: başvuru alanları (domain/legalName/taxId/
+/// contactEmail/webhookUrl + merchantMail) doğrudan gönderilir — descriptor URL çekme + domain-control
+/// challenge YOK; tek çağrı → Pending. Token = DropShop Identity client_credentials (ecommerce-onboarding,
 /// merchant.write). Config: <c>DropShopGateway:{IdentityAddress,McpUrl,ClientId,ClientSecret}</c>.
 /// </summary>
 public sealed class GatewayRegistrationClient(
-    DropShopGatewayOption gateway, IChallengeStore store, ILogger<GatewayRegistrationClient> logger)
+    DropShopGatewayOption gateway, ILogger<GatewayRegistrationClient> logger)
 {
     public record RegisterResult(string Status, Guid? RequestId, string? Message);
 
-    public async Task<RegisterResult> RegisterAsync(string descriptorUrl, CancellationToken ct)
+    public async Task<RegisterResult> RegisterAsync(WebApp.Options.GatewayOnboarding site, CancellationToken ct)
     {
         var mcp = await CreateMcpClientAsync(ct);
-
-        // 1) İlk deneme.
-        var first = await CallSubmitAsync(mcp, descriptorUrl, ct);
-        if (first.Status != "ChallengeRequired")
-            return new RegisterResult(first.Status, first.RequestId, first.Message);
-
-        // 2) Gateway'in verdiği değeri yerel challenge endpoint'inde yayınla.
-        if (!string.IsNullOrWhiteSpace(first.Token) && !string.IsNullOrWhiteSpace(first.ExpectedValue))
-        {
-            store.Set(first.Token!, first.ExpectedValue!);
-            logger.LogInformation("Challenge yayınlandı: {Path}", first.PublishPath);
-        }
-
-        // 3) Tekrar çağır → doğrulanır (Pending).
-        var second = await CallSubmitAsync(mcp, descriptorUrl, ct);
-        return new RegisterResult(second.Status, second.RequestId, second.Message);
+        var dto = await CallSubmitAsync(mcp, site, ct);
+        return new RegisterResult(dto.Status, dto.RequestId, dto.Message);
     }
 
-    private async Task<SubmitDto> CallSubmitAsync(McpClient mcp, string descriptorUrl, CancellationToken ct)
+    private async Task<SubmitDto> CallSubmitAsync(
+        McpClient mcp, WebApp.Options.GatewayOnboarding site, CancellationToken ct)
     {
         var result = await mcp.CallToolAsync("submit_registration",
-            new Dictionary<string, object?> { ["descriptorUrl"] = descriptorUrl }, cancellationToken: ct);
+            new Dictionary<string, object?>
+            {
+                ["domain"] = site.Domain,
+                ["legalName"] = site.LegalName,
+                ["taxId"] = site.TaxId,
+                ["contactEmail"] = site.ContactEmail,
+                ["webhookUrl"] = site.WebhookUrl,
+                ["merchantMail"] = site.ContactEmail
+            },
+            cancellationToken: ct);
 
         var text = result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text;
         if (string.IsNullOrWhiteSpace(text))
@@ -121,9 +117,6 @@ public sealed class GatewayRegistrationClient(
     {
         public string Status { get; set; } = string.Empty;
         public Guid? RequestId { get; set; }
-        public string? Token { get; set; }
-        public string? ExpectedValue { get; set; }
-        public string? PublishPath { get; set; }
         public string? Message { get; set; }
     }
 
