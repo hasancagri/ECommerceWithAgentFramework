@@ -1,4 +1,4 @@
-# Feature Specification: Admin — Metinle Merchant Onboarding (Gateway Merchant.Agent A2A)
+# Feature Specification: Admin — Metinle Merchant Onboarding (back-end MCP routing)
 
 **Feature Branch**: `032-merchant-onboarding-a2a-admin`
 
@@ -6,160 +6,161 @@
 
 **Status**: Draft
 
-**Input**: User description: "ECommerce'in PaymentGateway'in Merchant.Agent'ına A2A üzerinden bağlanması. Yalnız yönetimin (admin) kullanacağı bir metin ekranından, doğal dille merchant onboarding başvurusu (register) ve durum sorgusu (registration_status) yapılabilsin. PaymentAgentInstallmentTool deseniyle yeni bir A2A tool; ayrı `admin` agent persona'sı; ekran RBAC ile admin-korumalı. Mevcut yapısal MCP yolu (GatewayRegistrationClient) yan yana kalır."
+**Input**: User description: "Yalnız yönetimin (admin) kullanacağı bir metin ekranından, doğal dille merchant onboarding başvurusu (register) + durum sorgusu (registration_status) yapılabilsin. Gateway ile konuşuruz ama akışı ECommerce back-end MCP routing ile kontrol eder: WebApp bir onboarding MCP yüzeyi açar (register iki-adımı + challenge yayınını kendi process'inde çözer), ChatAgent'a yeni bir `admin` agent persona'sı + kendi prompt'u eklenir ve bu MCP'ye yönlendirir. Ekran RBAC ile admin-korumalı. Mevcut GatewayRegistrationClient yapısal yolu korunur (coexist). Yeni proje YOK."
 
 ## Problem
 
-Bugün ECommerce, DropShop gateway'e onboarding başvurusunu yalnız **yapısal MCP** ile yapıyor
-(`GatewayRegistrationClient` → Merchant.Api `/mcp submit_registration`, `POST
-/gateway-onboarding/register` tetiği). Bu deterministik ama **metin/sohbet** girişi yok; gateway'in
-**Merchant.Agent** A2A host'u (agent-card + LLM router, `register`/`registration_status` skill'leri)
-hiçbir ECommerce istemcisi tarafından tüketilmiyor.
+Bugün ECommerce, DropShop gateway'e onboarding başvurusunu yalnız **yapısal MCP** ile, tek tetikle
+(`POST /gateway-onboarding/register` → `GatewayRegistrationClient`) yapıyor; **metin/sohbet** girişi
+yok. Yönetim, doğal dille ("shop.example.com'u gateway'e kaydet", "başvurum ne durumda?") onboarding
+yürütmek istiyor.
 
-Yönetim, doğal dille ("shop.example.com'u gateway'e kaydet", "başvurum ne durumda?") onboarding
-yürütmek istiyor. Bu feature, ECommerce'e **admin-only bir metin (chat) yüzeyi** ekler; bu yüzey
-gateway'in Merchant.Agent'ına **A2A** ile bağlanır (mevcut taksit tool'u `PaymentAgentInstallmentTool`
-deseni). Shopper asistanına dokunulmaz; yapısal MCP yolu otomasyon için korunur.
+Bu feature, ECommerce'e **admin-only bir metin (chat) yüzeyi** ekler. Akış **back-end MCP routing** ile
+kontrol edilir: WebApp bir **onboarding MCP yüzeyi** açar (register'ın iki-adımlı domain-control
+challenge'ını **kendi process'inde** — mevcut `GatewayRegistrationClient` + challenge store — çözer);
+ChatAgent'a yeni bir **`admin` agent persona'sı** (public/assistant gibi 3.) + kendi yönlendirici
+prompt'u eklenir ve admin'in metnini bu MCP tool'larına (`submit_registration` / `registration_status`)
+yönlendirir. Gateway'in kendi Merchant.Agent (A2A LLM router) **kullanılmaz** — router bizde.
 
 ## Clarifications
 
 ### Session 2026-08-09
 
-- Q: A2A yolu mevcut yapısal MCP kaydını (GatewayRegistrationClient) değiştirsin mi? → A: Yan yana
-  dursun (coexist). A2A metin yolu **eklenir**; yapısal MCP GatewayRegistrationClient otomasyon için kalır.
-- Q: Giriş noktası nerede? → A: ChatAgent'a **ayrı `admin` agent persona'sı** (public/assistant gibi
-  üçüncü persona) + yalnız yönetimin eriştiği korumalı metin ekranı. Onboarding tool'ları yalnız bu
-  agent'ta; shopper asistanına eklenmez (persona ayrık, mimariye uygun — agent'lar boot'ta singleton).
-- Q: Hangi skill'ler? → A: `register` + `registration_status` (ikisi de).
-- Q: Admin-gating nerede? → A: Ekran/route RBAC ile (`User.IsInRole("admin")`, 030) + agent seçimi;
-  tool-içi rol kontrolü YOK. Gateway'e giden asıl çağrı makine kimliğiyle (`ecommerce-onboarding`
-  client_credentials) gider — admin kullanıcının token'ıyla değil.
+- Q: A2A yolu mevcut yapısal MCP kaydını değiştirsin mi? → A: Coexist. Metin yolu **eklenir**;
+  `GatewayRegistrationClient` + `POST /gateway-onboarding/register` otomasyon için kalır.
+- Q: Giriş noktası nerede? → A: Ayrı **`admin` agent persona** (public/assistant gibi 3.; ChatAgent
+  agent'ları boot'ta singleton → per-user tool eklenemez, persona ayrımı doğru) + yalnız yönetimin
+  eriştiği korumalı metin ekranı. Onboarding tool'ları yalnız bu persona'da.
+- Q: Hangi skill'ler? → A: `register` (submit_registration) + `registration_status`.
+- Q: Gateway'in Merchant.Agent A2A'sı mı, yoksa back-end MCP routing mi? → A: **Back-end MCP routing.**
+  Merchant.Agent (gateway A2A LLM router) KULLANILMAZ; router ChatAgent `admin` persona'sıdır. Gateway'e
+  MCP ile konuşulur.
+- Q: register iki-adım challenge (WebApp-local) nasıl çözülür? → A: **WebApp bir onboarding MCP yüzeyi
+  açar**; `submit_registration` tool'u içeride `GatewayRegistrationClient.RegisterAsync`'i sarar
+  (iki-adım + challenge yayını aynı process'te, mevcut `IChallengeStore`). Böylece challenge-locality
+  sorunu çözülür (tool WebApp'te çalışır). ChatAgent yalnız router; MCP'ye yönlendirir.
+- Q: Admin-gating nerede? → A: WebApp ekranı/BFF proxy'si **admin rolü** ile (cookie-UI, mevcut
+  `_Layout` `User.IsInRole("admin")` deseni); WebApp onboarding MCP yüzeyi admin ile korunur. Gateway'e
+  giden asıl çağrı **makine kimliğiyle** (`ecommerce-onboarding` client_credentials, RBAC-dışı).
+- Q: Yeni proje mi? → A: Hayır. `admin` persona → mevcut ChatAgent; MCP yüzeyi + ekran + proxy → mevcut
+  WebApp. Sıfır yeni csproj.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Admin metinle başvuru yapar (Priority: P1)
 
-Admin rolündeki bir yönetici, admin-korumalı onboarding ekranındaki metin kutusuna doğal dille
-başvuru yazar (ör. "shop.example.com'u gateway'e kaydet"). Mesaj `admin` agent'a gider; agent
-gateway Merchant.Agent'ına A2A ile bağlanır, LLM router `register` skill'ini seçer, başvuru açılır ve
-sonuç (durum + varsa challenge adımı) metinle döner.
+Admin rolündeki yönetici, admin-korumalı onboarding ekranındaki metin kutusuna doğal dille başvuru
+yazar ("shop.example.com'u gateway'e kaydet"). Mesaj `admin` persona'ya gider; persona LLM'i WebApp
+onboarding MCP'sinin `submit_registration` tool'unu seçer; tool WebApp içinde `GatewayRegistrationClient`
+ile iki-adımı (challenge dahil) çözer; sonuç (Pending / durum) metinle döner.
 
-**Why this priority**: Feature'ın çekirdeği — metinle onboarding. Tek başına teslim edilebilir
-(yalnız register) ve değer üretir.
+**Why this priority**: Feature'ın çekirdeği. Tek başına teslim edilebilir, değer üretir.
 
-**Independent Test**: Admin ekranına "X sitesini kaydet" yaz → admin agent A2A ile Merchant.Agent'ı
-çağırır → başvuru açılır, yanıt metinle döner. Admin olmayan kullanıcı ekrana/endpoint'e erişemez.
+**Independent Test**: Admin ekranına "X sitesini kaydet" yaz → `admin` persona `submit_registration`
+MCP tool'unu çağırır → WebApp iki-adımı çözer → başvuru Pending, yanıt metinle döner. Admin olmayan
+ekrana/MCP'ye erişemez.
 
 **Acceptance Scenarios**:
 
-1. **Given** admin rolünde giriş yapmış kullanıcı, **When** onboarding ekranına doğal dille başvuru
-   yazar, **Then** `admin` agent Merchant.Agent'ı A2A ile çağırır, `register` skill'i tetiklenir ve
-   başvuru sonucu (durum + sıradaki adım) metinle döner.
-2. **Given** gateway Merchant.Agent erişilemez/agent-card alınamaz, **When** admin başvuru yazar,
-   **Then** ekran çökmez; kullanıcıya durumun alınamadığı nazikçe metinle bildirilir (fail-open,
-   `PaymentAgentInstallmentTool` graceful-degrade deseni).
-3. **Given** admin OLMAYAN (veya anonim) kullanıcı, **When** onboarding ekranına/endpoint'ine
-   erişmeye çalışır, **Then** RBAC ile reddedilir (ekran görünmez / endpoint 403).
+1. **Given** admin rolünde giriş yapmış kullanıcı, **When** ekrana doğal dille başvuru yazar, **Then**
+   `admin` persona `submit_registration` MCP tool'unu çağırır, WebApp iki-adımlı challenge'ı yerelde
+   çözer ve sonuç (Pending + varsa mesaj) metinle döner.
+2. **Given** gateway erişilemez, **When** admin başvuru yazar, **Then** ekran çökmez; kullanıcıya durum
+   nazikçe metinle bildirilir (graceful-degrade).
+3. **Given** admin OLMAYAN/anonim kullanıcı, **When** onboarding ekranına/MCP yüzeyine erişmeye çalışır,
+   **Then** reddedilir (ekran görünmez / MCP yüzeyi yetkisiz).
 
 ---
 
 ### User Story 2 - Admin başvuru durumunu sorar (Priority: P2)
 
-Admin, aynı metin ekranından "shop.example.com başvurum ne durumda?" yazar; `admin` agent
-Merchant.Agent'ın `registration_status` skill'ini seçer ve güncel durum + sıradaki adım metinle döner.
+Admin aynı ekrandan "shop.example.com başvurum ne durumda?" yazar; `admin` persona
+`registration_status` MCP tool'unu seçer; WebApp gateway'in `registration_status`'ını çağırır; güncel
+durum + sıradaki adım metinle döner.
 
-**Why this priority**: Başvuruyu tamamlayan takip yeteneği; register'dan bağımsız test edilebilir.
+**Why this priority**: Takip yeteneği; register'dan bağımsız test edilebilir.
 
-**Independent Test**: Var olan bir domain için "durumu ne?" yaz → `registration_status` çağrılır →
-durum metni döner.
+**Independent Test**: Var olan domain için "durumu ne?" yaz → `registration_status` çağrılır → durum
+metni döner.
 
 **Acceptance Scenarios**:
 
-1. **Given** daha önce açılmış bir başvuru, **When** admin domain ile durum sorar, **Then**
-   `registration_status` tetiklenir ve güncel durum (AwaitingDomainControl/Pending/Approved/Rejected)
-   + sıradaki adım metinle döner.
-2. **Given** hiç başvurusu olmayan domain, **When** admin durum sorar, **Then** "başvuru bulunamadı"
-   benzeri açık metin döner (hata gibi gösterilmez).
+1. **Given** açılmış başvuru, **When** admin domain ile durum sorar, **Then** `registration_status`
+   tetiklenir ve güncel durum (AwaitingDomainControl/Pending/Approved/Rejected) + sıradaki adım metinle döner.
+2. **Given** başvurusu olmayan domain, **When** durum sorar, **Then** "bulunamadı" benzeri açık metin döner.
 
 ---
 
 ### Edge Cases
 
-- **Persona sızıntısı**: `admin` agent yalnız onboarding tool'larını taşır; shopper araçları (sepet,
-  ürün, taksit) burada OLMAZ ve shopper asistanına onboarding tool'u SIZMAZ.
-- **Config eksik**: Merchant.Agent A2A url yoksa onboarding tool eklenmez (graceful-degrade); admin
-  ekranı yine açılır ama "onboarding şu an kullanılamıyor" der.
-- **Yetki**: Ekran/route yalnız `admin` rolüne açık; token yoksa/anonimse erişim yok.
-- **Gateway auth**: A2A ile gateway'e giden asıl işlem makine kimliğiyle (client_credentials); admin
-  kullanıcı token'ı gateway'e taşınmaz.
+- **Persona sızıntısı**: onboarding MCP tool'ları yalnız `admin` persona'nın tool setinde; shopper
+  (`assistant`) / anonim (`public`) persona'larına sızmaz; `admin` persona'da shopper araçları yok.
+- **Config eksik**: WebApp onboarding MCP url'i yoksa `admin` persona tool eklenmez (graceful-degrade);
+  ekran açılır, "onboarding kullanılamıyor" der.
+- **Yetki**: ekran + BFF proxy + WebApp MCP yüzeyi yalnız admin'e açık; anonim/normal kullanıcı erişemez.
+- **Gateway auth**: WebApp→gateway çağrısı makine kimliğiyle; admin kullanıcı token'ı gateway'e taşınmaz.
+- **Challenge locality**: register tool'u WebApp process'inde çalışır (challenge store orada) → iki-adım
+  bir process içinde tamamlanır; ChatAgent'a challenge state taşınmaz.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: ECommerce, gateway **Merchant.Agent**'ına **A2A** ile bağlanan bir onboarding tool'u
-  SUNMALIDIR; bağlanma `PaymentAgentInstallmentTool` deseniyle olur (agent-card resolve → skill
-  doğrula → `AsAIFunction`). Uzak taraf yok/erişilemezse fail-open (tool eklenmez, boot çökmez).
-- **FR-002**: Onboarding tool'u Merchant.Agent'ın **`register`** ve **`registration_status`**
-  skill'lerini kullanmalıdır (agent-card'da skill doğrulaması; yoksa ilgili tool eklenmez).
-- **FR-003**: ChatAgent'ta **`admin`** adında üçüncü bir agent persona'sı (public/assistant deseni,
-  `AddAIAgent("admin")`) OLMALIDIR; onboarding tool(lar)ı YALNIZ bu persona'ya bağlanır. Shopper
-  (`assistant`) ve anonim (`public`) persona'larına onboarding tool'u EKLENMEZ.
-- **FR-004**: `admin` persona'sının kendi yönlendirici talimatı (prompt) OLMALIDIR — onboarding
-  odaklı; shopper (sepet/ürün/taksit) talimatı taşımaz.
-- **FR-005**: Yalnız yönetimin eriştiği bir **metin (chat) ekranı** OLMALIDIR; bu ekran ve onu
-  besleyen BFF proxy ucu **`admin` rolüyle** korunur (`User.IsInRole("admin")`, RBAC 030). Admin
-  olmayan/anonim erişim reddedilir.
-- **FR-006**: BFF proxy (ChatEndpoints deseni), admin ekranından gelen mesajı **`admin` agent'a**
-  yönlendirmelidir (mevcut public/assistant seçimine admin kolu eklenir veya ayrı admin ucu).
-- **FR-007**: Gateway Merchant.Agent A2A adresi (ve gerekli kontrat sabitleri) **Options pattern** ile
-  strongly-typed okunur (magic-string `config[...]` YASAK; `DropShopGatewayOption`/`GatewayOption`
-  house-style — BindConfiguration + ValidateOnStart, düz POCO enjekte).
-- **FR-008**: Mevcut **yapısal MCP yolu** (`GatewayRegistrationClient` + `POST
-  /gateway-onboarding/register`) DEĞİŞMEDEN korunur (coexist); bu feature onun yerini almaz.
-- **FR-009**: Gateway'e giden onboarding çağrısı **makine kimliğiyle** (`ecommerce-onboarding`
+- **FR-001**: WebApp, bir **onboarding MCP yüzeyi** SUNMALIDIR; iki tool: `submit_registration`
+  (içeride `GatewayRegistrationClient.RegisterAsync` — iki-adım + challenge yayını aynı process) ve
+  `registration_status` (gateway `registration_status`'ını çağırır). Yüzey **admin** ile korunur.
+- **FR-002**: `submit_registration` MCP tool'u iki-adımlı domain-control challenge'ı **WebApp içinde**
+  (`IChallengeStore` + `GatewayRegistrationClient`) çözmelidir; challenge state ChatAgent'a taşınmaz.
+- **FR-003**: ChatAgent'ta **`admin`** adında 3. agent persona'sı (`AddAIAgent("admin")`, public/assistant
+  deseni) OLMALIDIR; tool seti = WebApp onboarding MCP (`submit_registration` + `registration_status`).
+  Onboarding tool'ları shopper/anonim persona'ya EKLENMEZ.
+- **FR-004**: `admin` persona'sının **kendi yönlendirici prompt'u** OLMALIDIR (ör.
+  `Prompts.AdminOnboardingInstructions`) — onboarding odaklı; shopper (sepet/ürün/taksit) talimatı taşımaz;
+  register/status niyetini ilgili tool'a yönlendirir, sonucu metinle döner, alan uydurmaz.
+- **FR-005**: Yalnız yönetimin eriştiği bir **metin (chat) ekranı** OLMALIDIR; ekran ve BFF proxy ucu
+  **admin rolüyle** korunur (`User.IsInRole("admin")`, mevcut cookie-UI deseni). Admin olmayan/anonim erişim reddedilir.
+- **FR-006**: BFF proxy (ChatEndpoints deseni), admin ekranından geleni **`admin` persona'ya**
+  yönlendirmelidir (public/assistant seçimine admin kolu, veya ayrı admin ucu).
+- **FR-007**: WebApp onboarding MCP url'i (ChatAgent'ın erişmesi için) ve DropShop gateway bağlantısı
+  **Options pattern** ile strongly-typed okunur (magic-string `config[...]` YASAK; house-style
+  `OptionsExt` + `BindConfiguration` + `ValidateOnStart`, düz POCO enjekte). `DropShopGatewayOption`
+  (mevcut, 032-prep) yeniden kullanılır.
+- **FR-008**: Mevcut yapısal yol (`GatewayRegistrationClient` + `POST /gateway-onboarding/register`)
+  DEĞİŞMEDEN korunur (coexist); MCP tool onu SARAR, kaldırmaz.
+- **FR-009**: WebApp→gateway onboarding çağrısı **makine kimliğiyle** (`ecommerce-onboarding`
   client_credentials) gider; admin kullanıcının kişisel token'ı gateway'e TAŞINMAZ.
 
 ### Key Entities
 
-- **`admin` agent persona** (yeni): ChatAgent'ta onboarding odaklı üçüncü agent; tool seti = onboarding
-  A2A tool(lar)ı; prompt = onboarding yönlendirici.
-- **Onboarding A2A tool** (yeni): Merchant.Agent'a bağlanan tool (`PaymentAgentInstallmentTool`
-  muadili); `register` + `registration_status` skill'leri.
-- **Admin onboarding ekranı** (yeni): RBAC-korumalı Razor sayfası + metin kutusu; BFF proxy ile `admin`
-  agent'a SSE.
-- **Merchant.Agent A2A config** (yeni Options alanı): agent url + kontrat sabitleri (skill id'leri,
-  named HttpClient).
-- **GatewayRegistrationClient** (değişmez): yapısal MCP yolu, coexist.
+- **`admin` agent persona** (yeni, ChatAgent): onboarding odaklı 3. agent; tool = WebApp onboarding MCP;
+  prompt = `AdminOnboardingInstructions`.
+- **WebApp onboarding MCP yüzeyi** (yeni, WebApp): `submit_registration` (GatewayRegistrationClient sarar)
+  + `registration_status` tool'ları; admin-korumalı.
+- **Admin onboarding ekranı** (yeni, WebApp): RBAC-korumalı Razor sayfası + metin kutusu; BFF proxy ile
+  `admin` persona'ya SSE.
+- **GatewayRegistrationClient** (mevcut, WebApp): iki-adım register (challenge dahil); MCP tool tarafından
+  sarılır; `POST /gateway-onboarding/register` coexist. (registration_status için yeni bir çağrı metodu eklenir.)
+- **Config Options** (mevcut/genişler): `DropShopGatewayOption` + WebApp MCP url'i.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Admin, onboarding ekranına doğal dille yazarak (kod/URL elle girmeden başka bir şey
-  yapmadan) bir başvuru açabilir ve durumunu sorabilir; ikisi de metin yanıtla döner.
-- **SC-002**: Onboarding tool(lar)ı YALNIZ `admin` persona'sında görünür; shopper/anonim
-  asistanlarda onboarding aracı YOKTUR (persona izolasyonu).
-- **SC-003**: Onboarding ekranı/endpoint'i admin olmayan veya anonim erişimde reddedilir (403 /
-  görünmez).
-- **SC-004**: Gateway Merchant.Agent erişilemezken ekran açılır ve dostça "kullanılamıyor" der; boot
-  çökmez (graceful-degrade).
-- **SC-005**: Mevcut yapısal MCP onboarding (`POST /gateway-onboarding/register`) davranışı
-  değişmeden çalışır (coexist).
-- **SC-006**: Çözüm sıfır derleme hatasıyla derlenir; config Merchant.Agent A2A url'i Options POCO ile
-  okunur (magic-string yok).
+- **SC-001**: Admin, ekrana doğal dille yazarak bir başvuru açabilir ve durumunu sorabilir; ikisi de metin yanıtla döner.
+- **SC-002**: Onboarding MCP tool'ları YALNIZ `admin` persona'da görünür; shopper/anonim'de yoktur.
+- **SC-003**: Ekran/BFF proxy/MCP yüzeyi admin olmayan veya anonim erişimde reddedilir.
+- **SC-004**: Gateway erişilemezken ekran açılır ve dostça "kullanılamıyor" der; boot çökmez.
+- **SC-005**: Mevcut yapısal onboarding (`POST /gateway-onboarding/register`) davranışı değişmeden çalışır (coexist).
+- **SC-006**: Çözüm sıfır derleme hatasıyla derlenir; WebApp MCP url + gateway bağlantısı Options POCO ile okunur (magic-string yok).
 
 ## Assumptions
 
-- **Merchant.Agent hazır**: Gateway tarafında Merchant.Agent A2A host'u + `register`/
-  `registration_status` skill'leri + agent-card mevcut (PaymentGateway 013/015). Bu feature yalnız
-  ECommerce **istemci** tarafını ekler.
-- **RBAC 030 admin rolü**: `admin` rolü + `User.IsInRole("admin")` mevcut (030); yeni rol modeli
-  kurulmaz, var olan kullanılır.
-- **Agent framework A2A deseni**: `A2ACardResolver` → `GetAIAgentAsync` → `AsAIFunction` deseni
-  (`PaymentAgentInstallmentTool`) yeniden kullanılır; yeni A2A altyapısı icat edilmez.
-- **Options pattern**: Config house-style (`OptionsExt` + BindConfiguration + ValidateOnStart, düz
-  POCO enjekte) — `DropShopGatewayOption`/`IdentityServerSettings` referans.
-- **Coexist**: Yapısal MCP yolu (024/013 E1) korunur; A2A yolu alternatif metin yüzeyidir.
-- **Kapsam dışı**: Charge/ödeme (G5), MerchantKey teslimi akışı değişikliği, gerçek A2A mesaj
-  şemasının genişletilmesi (mevcut skill'ler yeterli), gateway tarafı değişiklikleri.
+- **Gateway hazır**: Merchant.Api `/mcp` `submit_registration` + `registration_status` mevcut (PaymentGateway
+  013/015). Merchant.Agent (gateway A2A LLM router) BU FEATURE'DA KULLANILMAZ.
+- **RBAC admin rolü**: `admin` rolü + `User.IsInRole("admin")` mevcut (030); yeni rol kurulmaz.
+- **MCP altyapısı**: WebApp'te MCP server barındırma + ChatAgent'ta named MCP client (`McpClients.WithToken`)
+  deseni mevcut; yeniden kullanılır (yeni altyapı icat edilmez).
+- **Options pattern**: house-style (`OptionsExt` + BindConfiguration + ValidateOnStart, düz POCO); 032-prep
+  `DropShopGatewayOption` mevcut.
+- **Coexist**: `GatewayRegistrationClient` + `POST /gateway-onboarding/register` korunur.
+- **Kapsam dışı**: charge/ödeme (G5), MerchantKey teslim akışı, gateway tarafı değişiklikleri, yeni proje/csproj.
