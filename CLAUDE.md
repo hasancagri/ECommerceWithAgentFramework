@@ -288,12 +288,17 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
   Namespace `<Service>.Constants`, `GlobalUsings.cs`'e eklenir. Hata kodları için sahiplik kuralı Result Pattern bölümünde (her servis kendi kodlarına sahip).
 - **DI kaydı Scrutor ile otomatiktir:** `Common.Dependencies` içindeki `ITransientDependency` / `IScopedDependency` / `ISingletonDependency` marker arayüzlerinden birini implemente et; `AddAllDependencies()` onu otomatik kaydeder. Bunları `Program.cs`'te elle kaydetme.
 - Agent / agent framework tipleri **Singleton**'dır — framework bunları başlangıçta yakalar; kullanıcıya özel davranış, agent'ı scope'lamakla değil, kullanıcının token'ını çağrı anında enjekte ederek sağlanır.
-- **Config — Options pattern (strongly-typed).** Bir config bölümü magic-string `config["A:B"]`
-  ile OKUNMAZ; `Options/` altında bir POCO tanımlanır ve `AddOptionsExt` uzantısında bağlanır:
+- **Config — Options pattern (strongly-typed).** `IConfiguration`'dan DOĞRUDAN değer okunmaz —
+  `config["A:B"]`, `GetValue<T>`, `GetSection(...).Value`, ad-hoc `Get<T>()` dahil hepsi YASAK.
+  Her config bölümü `Options/` altında bir POCO'ya bağlanır (`AddOptionsExt`), tüketici POCO'yu enjekte
+  eder; `IConfiguration`/`IConfigurationSection` hiçbir handler/servis ctor'una girmez. Bağlama:
   `AddOptions<T>().BindConfiguration(nameof(T)).ValidateDataAnnotations().ValidateOnStart()`.
   Tüketici `IOptions<T>` değil **düz POCO `T`**'yi ctor'dan enjekte eder (POCO'yu unwrap eden
   Singleton kaydı). Section adı tip adıyla eşleşir; zorunlu alan DataAnnotations, türetilmiş değer
   computed property. Referans: `WebApp/Extensions/OptionsExt.cs`, `IdentityServerSettings`/`GatewayOption`.
+  **İstisna (sabit POCO'ya map olmayan):** Aspire service-discovery anahtarları
+  (`config["services:<ad>:http:0"]`) ve dinamik-keyed lookup (ör. `Clients:{clientId}:Secret`) doğrudan
+  okunabilir — biri Aspire enjekte eder, öteki çalışma-anı anahtarı; ikisi de statik section değildir.
 
 ## Kod standartları
 
