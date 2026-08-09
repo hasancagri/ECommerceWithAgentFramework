@@ -20,6 +20,8 @@ public class Product : AggregateRoot
     {
     }
 
+    /// <summary>Verilen alanlarla yeni bir Product aggregate'i oluşturur.</summary>
+    /// <remarks>Handler: CreateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public static Product Create(string name, string description, decimal price, string sku,
         Guid brandId, Guid categoryId, string? imageUrl)
     {
@@ -36,6 +38,8 @@ public class Product : AggregateRoot
         return product;
     }
 
+    /// <summary>Ürünün tüm temel alanlarını (ad, açıklama, fiyat, sku, marka, kategori, görsel) günceller.</summary>
+    /// <remarks>Handler: UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain Update(string name, string description, decimal price, string sku,
         Guid brandId, Guid categoryId, string? imageUrl)
     {
@@ -47,21 +51,6 @@ public class Product : AggregateRoot
         CategoryId = categoryId;
         ImageUrl = imageUrl;
         return ResultDomain.Ok();
-    }
-
-    public void UpdateImageUrl(string imageUrl)
-    {
-        ImageUrl = imageUrl;
-    }
-
-    public void Activate()
-    {
-        IsActive = true;
-    }
-
-    public void Deactivate()
-    {
-        IsActive = false;
     }
 
     // 016 (kullanıcı kararı): ürün silme yolu tamamen kaldırıldı — eklenen ürün silinemez.

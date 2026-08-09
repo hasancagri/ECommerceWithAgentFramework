@@ -1,6 +1,3 @@
-using Catalog.Api.Domains.Products;
-using Shouldly;
-using Xunit;
 
 namespace Catalog.Api.Tests;
 

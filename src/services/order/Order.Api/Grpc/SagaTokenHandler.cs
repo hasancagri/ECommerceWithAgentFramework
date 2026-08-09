@@ -3,7 +3,7 @@ namespace Order.Api.Grpc;
 // 028: saga arka planda kosar (HttpContext yok) — kullanici bearer'i tasinamaz. gRPC adimlarina
 // Duende client-credentials makine token'i (order-saga; stock.reserve + basket.write) ekler.
 // Token static cache'lenir; suresine 30 sn kala yenilenir (restart sonrasi da sorunsuz).
-public sealed class SagaTokenHandler(IConfiguration config) : DelegatingHandler
+public sealed class SagaTokenHandler(IdentityOption identity, SagaAuth sagaAuth) : DelegatingHandler
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static string? _token;
@@ -28,14 +28,14 @@ public sealed class SagaTokenHandler(IConfiguration config) : DelegatingHandler
             if (_token is not null && DateTimeOffset.UtcNow < _expiresAt.AddSeconds(-30))
                 return _token;
 
-            var authority = config["IdentityOption:Address"]!;
+            var authority = identity.Address;
             using var http = new HttpClient();
             using var response = await http.PostAsync($"{authority}/connect/token",
                 new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["grant_type"] = "client_credentials",
-                    ["client_id"] = config["SagaAuth:ClientId"]!,
-                    ["client_secret"] = config["SagaAuth:ClientSecret"]!,
+                    ["client_id"] = sagaAuth.ClientId,
+                    ["client_secret"] = sagaAuth.ClientSecret,
                     ["scope"] = $"{AuthorizationScopes.StockReserve} {AuthorizationScopes.BasketWrite}"
                 }), ct);
             response.EnsureSuccessStatusCode();

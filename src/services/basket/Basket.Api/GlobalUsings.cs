@@ -3,7 +3,7 @@ global using Asp.Versioning;
 global using Basket.Api.Dependencies;
 global using Basket.Api.Constants;
 global using Basket.Api.Domains.Baskets.Entities;
-global using Basket.Api.Domains.Baskets.Features.Agent;
+global using Basket.Api.Domains.Baskets.Features.Agents;
 global using Basket.Api.Domains.Baskets.Features.Commands;
 global using Basket.Api.Domains.Baskets.Features.Queries;
 global using Basket.Api.Domains.Baskets;
@@ -34,3 +34,6 @@ global using Basket.Api.Grpc;
 global using System.ComponentModel;
 global using ModelContextProtocol.Server;
 global using Common.Results;
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Common.Dependencies;
+global using Shared.Grpc.Basket;

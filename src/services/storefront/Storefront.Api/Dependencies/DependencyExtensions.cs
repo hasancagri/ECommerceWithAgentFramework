@@ -1,4 +1,3 @@
-using Common.Dependencies;
 
 namespace Storefront.Api.Dependencies;
 

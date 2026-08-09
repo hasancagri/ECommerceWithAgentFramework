@@ -1,5 +1,3 @@
-using Customer.Api.Domains.Wallets.Features.Commands;
-using Customer.Api.Domains.Wallets.Features.Queries;
 
 namespace Customer.Api.Domains.Wallets;
 

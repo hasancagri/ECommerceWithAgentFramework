@@ -13,7 +13,7 @@ global using Newtonsoft.Json;
 global using Shared;
 global using Stock.Api.Constants;
 global using Stock.Api.Dependencies;
-global using Stock.Api.Domains.Stocks.Features.Agent;
+global using Stock.Api.Domains.Stocks.Features.Agents;
 global using Stock.Api.Domains.Stocks.Features.Commands;
 global using Stock.Api.Domains.Stocks.Features.Scheduled;
 global using Stock.Api.Domains.Stocks.Features.Queries;
@@ -37,3 +37,6 @@ global using ModelContextProtocol.Server;
 global using Shared.Utils.Constants;
 global using Grpc.Core;
 global using Shared.Grpc.Stock;
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Common.Dependencies;
+global using Stock.Api.Grpc;

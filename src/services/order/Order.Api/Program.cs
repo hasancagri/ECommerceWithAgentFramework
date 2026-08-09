@@ -56,6 +56,17 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// House-style Options: appsettings section'lari tip'li POCO'ya bagla (config[...] magic-string yasak).
+builder.Services.AddOptions<IdentityOption>().BindConfiguration(nameof(IdentityOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<IdentityOption>(sp => sp.GetRequiredService<IOptions<IdentityOption>>().Value);
+builder.Services.AddOptions<SagaAuth>().BindConfiguration(nameof(SagaAuth))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<SagaAuth>(sp => sp.GetRequiredService<IOptions<SagaAuth>>().Value);
+builder.Services.AddOptions<Checkout>().BindConfiguration(nameof(Checkout))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<Checkout>(sp => sp.GetRequiredService<IOptions<Checkout>>().Value);
+
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
     builder.AddRedisDistributedCache("redis");

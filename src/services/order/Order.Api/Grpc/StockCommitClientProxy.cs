@@ -1,4 +1,3 @@
-using Grpc.Core;
 
 namespace Order.Api.Grpc;
 

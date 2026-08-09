@@ -15,7 +15,7 @@ global using Shared;
 global using Storefront.Api.Constants;
 global using Storefront.Api.Dependencies;
 global using Storefront.Api.Domains.StorefrontView.Features.Queries;
-global using Storefront.Api.Domains.StorefrontView.Features.Agent;
+global using Storefront.Api.Domains.StorefrontView.Features.Agents;
 global using Storefront.Api.Domains.StorefrontView;
 global using Marten.PgVector;
 global using Microsoft.Extensions.AI;
@@ -33,3 +33,9 @@ global using Common.Utils.Authorization;
 global using System.ComponentModel;
 global using ModelContextProtocol.Server;
 global using Shared.Utils.Constants;
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Common.Dependencies;
+global using Npgsql;
+global using NpgsqlTypes;
+global using System.Data;
+global using System.Globalization;

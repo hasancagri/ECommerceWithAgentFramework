@@ -1,4 +1,3 @@
-using Common.Dependencies;
 
 namespace Stock.Api.Dependencies;
 

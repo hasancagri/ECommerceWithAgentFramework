@@ -1,10 +1,3 @@
-using ChatAgent;
-using ChatAgent.Options;
-using Microsoft.Agents.AI;
-using Microsoft.Agents.AI.Hosting;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Options;
-using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +40,11 @@ var onboarding = builder.Configuration.GetSection("Onboarding").Get<OnboardingOp
 if (dropShop is not null)
     builder.Services.AddSingleton(dropShop);
 builder.Services.AddSingleton(onboarding);
+
+// 024: A2A PaymentAgent config — section "PaymentGateway" (house-style Options; config[...] yerine).
+builder.Services.AddOptions<PaymentGateway>().BindConfiguration(nameof(PaymentGateway))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptions<PaymentGateway>>().Value);
 
 // Descriptor linki (DropShop gateway bunu okur) = WebApp well-known'i; boş ise service discovery'den türet.
 var webUrl = builder.Configuration["services:ecommerce-web:https:0"]
@@ -137,7 +135,7 @@ var assistant = builder.AddAIAgent("assistant", (sp, name) =>
     // 024: uzak A2A PaymentAgent taksit tool'u. Url yok/erisilemezse null -> eklenmez
     // (graceful-degrade, US2). Boot'ta bir kez kurulur (Singleton factory), MCP CollectTools gibi bloklar.
     var a2aTool = PaymentAgentInstallmentTool.TryBuildAsync(
-        sp.GetRequiredService<IConfiguration>(),
+        sp.GetRequiredService<PaymentGateway>(),
         sp.GetRequiredService<IHttpClientFactory>(),
         sp.GetRequiredService<ILoggerFactory>().CreateLogger("A2AInstallment")).GetAwaiter().GetResult();
     if (a2aTool is not null)

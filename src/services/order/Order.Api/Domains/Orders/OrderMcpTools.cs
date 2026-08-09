@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using ModelContextProtocol.Server;
 
 namespace Order.Api.Domains.Orders;
 

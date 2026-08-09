@@ -7,3 +7,6 @@ global using Shared;
 global using Supplier.Api.Dependencies;
 global using Supplier.Api.Domains.Feeds;
 global using System;
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Common.Dependencies;
+global using System.Text.Json;

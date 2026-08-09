@@ -128,7 +128,7 @@ Domains/<Aggregate>/
   Features/
     Commands/<Name>.cs            # yazma (write) slice'ları
     Queries/<Name>.cs             # okuma (read) slice'ları
-    Agent/<Name>.cs               # agent'a açık slice'lar (MCP üzerinden expose edilir)
+    Agents/<Name>ForAgent.cs      # agent'a açık slice'lar (klasör ÇOĞUL "Agents"; MCP expose eder)
 ```
 
 **Bir feature = bir static class**; ihtiyaç duyduğu her şeyi içine gömer: `record` command/query, `Response`, `Handler` (`Handle` metodu olan düz bir sınıf) ve endpoint-extension `static class`'ı. Örnek şekil:
@@ -176,7 +176,10 @@ Endpoint'ler sonucu HTTP'ye çevirir: `result.IsSuccess ? Results.Ok(result) : R
 
 ### MCP tool'ları
 
-Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar (`[McpServerToolType]` / `[McpServerTool]`). **Bu tool'lar ince sarmalayıcılardır; aynı Wolverine command/query'sini `IMessageBus` üzerinden yeniden çağırır** — iş mantığı eklemezler, yalnızca LLM'e uygun bir isim + `[Description]` eklerler. MCP sunucusu `app.MapMcp("/mcp")` ile mount edilir. `ChatAgent` bunlara MCP istemcisi olarak bağlanır (kullanıcı token'ı çağrı anında enjekte edilir).
+Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar (`[McpServerToolType]` / `[McpServerTool]`). **MCP tool YALNIZ bir Agent slice'ını (`Features/Agents/<X>ForAgent`) çağırır** — LLM'e uygun isim + `[Description]` ekler, iş mantığı taşımaz. MCP sunucusu `app.MapMcp("/mcp")` ile mount edilir. `ChatAgent` bunlara MCP istemcisi olarak bağlanır (kullanıcı token'ı çağrı anında enjekte edilir).
+
+- **Agent/MCP yüzeyi izole.** Agent'a açık işlem `Domains/<Aggregate>/Features/Agents/` (klasör ÇOĞUL) altında; slice adı `<X>ForAgent` (ör. `SubmitRegistrationForAgent`, `GetMerchantForAgent`).
+- **Agent slice `Features/Commands/` veya `Features/Queries/` class'larına ASLA gitmez — `IMessageBus` ile bile değil.** Kendi Query/Command + Response + Handler'ını taşır; okumayı/işlemi `IDocumentSession` ile doğrudan yapar (kod tekrarı bilinçli).
 
 - **Metin (chat) akışında MCP DOLAYLI kullanılır — elle `CallToolAsync` YOK.** Agent, uygulama-içi
   MCP tool'larını boot'ta toplar (allowlist) ve bir işi metinle isteyen kullanıcı için **LLM prompt
@@ -285,6 +288,17 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
   Namespace `<Service>.Constants`, `GlobalUsings.cs`'e eklenir. Hata kodları için sahiplik kuralı Result Pattern bölümünde (her servis kendi kodlarına sahip).
 - **DI kaydı Scrutor ile otomatiktir:** `Common.Dependencies` içindeki `ITransientDependency` / `IScopedDependency` / `ISingletonDependency` marker arayüzlerinden birini implemente et; `AddAllDependencies()` onu otomatik kaydeder. Bunları `Program.cs`'te elle kaydetme.
 - Agent / agent framework tipleri **Singleton**'dır — framework bunları başlangıçta yakalar; kullanıcıya özel davranış, agent'ı scope'lamakla değil, kullanıcının token'ını çağrı anında enjekte ederek sağlanır.
+- **Config — Options pattern (strongly-typed).** `IConfiguration`'dan DOĞRUDAN değer okunmaz —
+  `config["A:B"]`, `GetValue<T>`, `GetSection(...).Value`, ad-hoc `Get<T>()` dahil hepsi YASAK.
+  Her config bölümü `Options/` altında bir POCO'ya bağlanır (`AddOptionsExt`), tüketici POCO'yu enjekte
+  eder; `IConfiguration`/`IConfigurationSection` hiçbir handler/servis ctor'una girmez. Bağlama:
+  `AddOptions<T>().BindConfiguration(nameof(T)).ValidateDataAnnotations().ValidateOnStart()`.
+  Tüketici `IOptions<T>` değil **düz POCO `T`**'yi ctor'dan enjekte eder (POCO'yu unwrap eden
+  Singleton kaydı). Section adı tip adıyla eşleşir; zorunlu alan DataAnnotations, türetilmiş değer
+  computed property. Referans: `WebApp/Extensions/OptionsExt.cs`, `IdentityServerSettings`/`GatewayOption`.
+  **İstisna (sabit POCO'ya map olmayan):** Aspire service-discovery anahtarları
+  (`config["services:<ad>:http:0"]`) ve dinamik-keyed lookup (ör. `Clients:{clientId}:Secret`) doğrudan
+  okunabilir — biri Aspire enjekte eder, öteki çalışma-anı anahtarı; ikisi de statik section değildir.
 
 ## Kod standartları
 
@@ -302,3 +316,10 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
   aynı BC içinde ayrı yerleşebilir (aggregate değildir).
 - **ValueObjects.** Bir aggregate'e bağlı standalone value object `<Aggregate>/ValueObjects/`
   altına konur (ör. `AddressBooks/ValueObjects/Address`), aggregate kökünde durmaz.
+- **Aggregate — private helper YOK.** Ortak mantık private metoda çıkarılıp çağrılmaz,
+  **inline** yazılır (kod tekrarı bilinçli). **VO MUAF** (VO'da private helper serbest).
+- **Aggregate metodu yalnız handler'dan çağrılır.** Başka aggregate metodundan (factory
+  dahil) ÇAĞRILMAZ; domain-içi tek çağrılan metot gövdesi çağırana inline edilir. **VO MUAF**.
+- **Aggregate public metoduna iki not.** (1) `/// <summary>` metodun ne işe yaradığını yazar;
+  (2) `/// <remarks>Handler: <Ad></remarks>` onu çağıran Handler tipini gösterir (çoklu handler
+  virgülle; saga/event-handler de sayılır). Dış slice rename etkilemez. **VO MUAF**.

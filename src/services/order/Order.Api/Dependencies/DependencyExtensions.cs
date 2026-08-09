@@ -1,5 +1,4 @@
 
-using Common.Dependencies;
 
 namespace Order.Api.Dependencies;
 

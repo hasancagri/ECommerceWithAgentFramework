@@ -31,6 +31,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 
 builder.Services.AddScoped<ApiKeyService>();
 
+// House-style Options: appsettings section'lari tip'li POCO'ya bagla (config[...] magic-string yasak).
+builder.Services.AddOptions<Identity.Server.Options.BootstrapAdmin>().BindConfiguration(nameof(Identity.Server.Options.BootstrapAdmin))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<Identity.Server.Options.BootstrapAdmin>(sp =>
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Identity.Server.Options.BootstrapAdmin>>().Value);
+builder.Services.AddOptions<Identity.Server.Options.ApiKeyAuth>().BindConfiguration(nameof(Identity.Server.Options.ApiKeyAuth))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<Identity.Server.Options.ApiKeyAuth>(sp =>
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Identity.Server.Options.ApiKeyAuth>>().Value);
+
 // 030 RBAC: token verme yolunda rol→scope demeti + admin yönetim servisi.
 builder.Services.AddScoped<Identity.Server.Rbac.RoleScopeQuery>();
 builder.Services.AddScoped<Identity.Server.Rbac.RoleAssignmentService>();

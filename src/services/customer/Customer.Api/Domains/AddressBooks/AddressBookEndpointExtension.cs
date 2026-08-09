@@ -1,5 +1,3 @@
-using Customer.Api.Domains.AddressBooks.Features.Commands;
-using Customer.Api.Domains.AddressBooks.Features.Queries;
 
 namespace Customer.Api.Domains.AddressBooks;
 

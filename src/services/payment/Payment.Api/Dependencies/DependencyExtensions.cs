@@ -1,5 +1,4 @@
 
-using Common.Dependencies;
 
 namespace Payment.Api.Dependencies;
 

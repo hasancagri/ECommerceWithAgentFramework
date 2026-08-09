@@ -1,5 +1,3 @@
-using Grpc.Core;
-using Shared.Grpc.Basket;
 
 namespace Order.Api.Grpc;
 

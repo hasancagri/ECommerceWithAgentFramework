@@ -1,4 +1,3 @@
-using Hangfire.Dashboard;
 
 namespace Supplier.Gateway;
 
