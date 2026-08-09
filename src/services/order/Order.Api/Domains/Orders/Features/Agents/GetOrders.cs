@@ -1,4 +1,4 @@
-namespace Order.Api.Domains.Orders.Features.Agent;
+namespace Order.Api.Domains.Orders.Features.Agents;
 
 public static class GetOrdersForAgent
 {

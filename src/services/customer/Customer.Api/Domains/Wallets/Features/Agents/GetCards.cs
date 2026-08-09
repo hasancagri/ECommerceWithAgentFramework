@@ -1,4 +1,4 @@
-namespace Customer.Api.Domains.Wallets.Features.Agent;
+namespace Customer.Api.Domains.Wallets.Features.Agents;
 
 // MCP (okuma-yalniz) icin kart listeleme slice'i. list_cards tool'u bunu IMessageBus ile sarar.
 // SC-002: token/PAN/CVV asla donmez — yalniz marka+son4+expiry+etiket.

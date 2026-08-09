@@ -1,6 +1,4 @@
-using Common.Utils.Constants;
-using Storefront.Api.Domains.StorefrontView.Features.Agent;
-using static Storefront.Api.Domains.StorefrontView.Features.Agent.SearchStorefrontProductsForAgent;
+using static Storefront.Api.Domains.StorefrontView.Features.Agents.SearchStorefrontProductsForAgent;
 
 namespace Storefront.Api.Tests;
 

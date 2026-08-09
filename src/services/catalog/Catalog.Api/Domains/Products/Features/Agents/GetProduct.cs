@@ -1,4 +1,4 @@
-namespace Catalog.Api.Domains.Products.Features.Agent;
+namespace Catalog.Api.Domains.Products.Features.Agents;
 
 public static class GetProductForAgent
 {

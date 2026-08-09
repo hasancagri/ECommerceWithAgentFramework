@@ -1,4 +1,4 @@
-namespace Basket.Api.Domains.Baskets.Features.Agent;
+namespace Basket.Api.Domains.Baskets.Features.Agents;
 
 public static class GetBasketForAgent
 {

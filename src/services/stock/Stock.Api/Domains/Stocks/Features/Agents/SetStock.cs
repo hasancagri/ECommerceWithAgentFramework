@@ -1,4 +1,4 @@
-namespace Stock.Api.Domains.Stocks.Features.Agent;
+namespace Stock.Api.Domains.Stocks.Features.Agents;
 
 // Agent'a açık mutlak stok atama yüzü (005-supplier-ingestion). Rule 5 (2026-08-09): Agent slice
 // Commands/Queries'e gitmez — mutlak stok yazımı KENDİ İÇİNDE yapılır (Commands.SetStock kopyası,

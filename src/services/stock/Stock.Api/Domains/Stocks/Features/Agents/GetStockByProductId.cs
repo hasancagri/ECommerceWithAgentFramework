@@ -1,4 +1,4 @@
-namespace Stock.Api.Domains.Stocks.Features.Agent;
+namespace Stock.Api.Domains.Stocks.Features.Agents;
 
 public static class GetStockByProductIdForAgent
 {

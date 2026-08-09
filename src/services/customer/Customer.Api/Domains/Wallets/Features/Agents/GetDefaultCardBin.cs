@@ -1,4 +1,4 @@
-namespace Customer.Api.Domains.Wallets.Features.Agent;
+namespace Customer.Api.Domains.Wallets.Features.Agents;
 
 // 024: MCP (okuma-yalniz) — kullanicinin DEFAULT kartinin BIN'ini (ilk 6 hane) doner. Taksit
 // sorgusu icin uzak A2A agent'a girdi. HASSAS DEGIL. PAN/CVV/token ASLA donmez. Default kart

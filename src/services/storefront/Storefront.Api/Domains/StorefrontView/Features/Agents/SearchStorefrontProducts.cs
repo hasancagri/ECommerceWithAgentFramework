@@ -1,9 +1,5 @@
-using System.Data;
-using System.Globalization;
-using Npgsql;
-using NpgsqlTypes;
 
-namespace Storefront.Api.Domains.StorefrontView.Features.Agent;
+namespace Storefront.Api.Domains.StorefrontView.Features.Agents;
 
 // 019: hibrit arama — tek slice, iki yol. SearchText yoksa Marten LINQ + saf in-memory cekirdek
 // (FR-008, deterministik Name ASC). SearchText varsa ham SQL: view ⋈ embedding join, kosinus

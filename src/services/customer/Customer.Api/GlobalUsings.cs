@@ -2,10 +2,10 @@ global using Asp.Versioning.Builder;
 global using Asp.Versioning;
 global using Customer.Api.Dependencies;
 global using Customer.Api.Domains.AddressBooks;
-global using Customer.Api.Domains.AddressBooks.Features.Agent;
+global using Customer.Api.Domains.AddressBooks.Features.Agents;
 global using Customer.Api.Domains.AddressBooks.ValueObjects;
 global using Customer.Api.Domains.Wallets;
-global using Customer.Api.Domains.Wallets.Features.Agent;
+global using Customer.Api.Domains.Wallets.Features.Agents;
 global using Customer.Api.Domains.Wallets.Tokenization;
 global using Common.Domains;
 global using Common.Dependencies;
@@ -32,3 +32,9 @@ global using Shared.Utils.Constants;
 global using Customer.Api.Domains.AddressBooks.Entities;
 global using System.ComponentModel;
 global using ModelContextProtocol.Server;
+
+// --- hoisted (sade using'ler dosyalardan taşındı) ---
+global using Customer.Api.Domains.AddressBooks.Features.Commands;
+global using Customer.Api.Domains.AddressBooks.Features.Queries;
+global using Customer.Api.Domains.Wallets.Features.Commands;
+global using Customer.Api.Domains.Wallets.Features.Queries;

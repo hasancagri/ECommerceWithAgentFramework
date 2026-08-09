@@ -1,4 +1,4 @@
-namespace Catalog.Api.Domains.Products.Features.Agent;
+namespace Catalog.Api.Domains.Products.Features.Agents;
 
 // Agent'a açık TEK yazma yüzü (005): SKU-anahtarlı upsert. Create/update kararı LLM'de değil,
 // burada deterministik koddadır — SKU varsa güncelle, yoksa oluştur. Retry doğal yakınsar:

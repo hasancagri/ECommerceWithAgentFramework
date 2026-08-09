@@ -1,4 +1,4 @@
-namespace Catalog.Api.Domains.Brands.Features.Agent;
+namespace Catalog.Api.Domains.Brands.Features.Agents;
 
 // 016: get-or-create — normalize adla sorgula, yoksa oluştur (R4). Deterministik koddur; LLM karar vermez.
 // [Transactional] YOK: unique ihlalini yakalayıp mevcut kaydı okuyabilmek için commit handler içindedir.

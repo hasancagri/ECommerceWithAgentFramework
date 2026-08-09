@@ -128,7 +128,7 @@ Domains/<Aggregate>/
   Features/
     Commands/<Name>.cs            # yazma (write) slice'ları
     Queries/<Name>.cs             # okuma (read) slice'ları
-    Agent/<Name>.cs               # agent'a açık slice'lar (MCP üzerinden expose edilir)
+    Agents/<Name>ForAgent.cs      # agent'a açık slice'lar (klasör ÇOĞUL "Agents"; MCP expose eder)
 ```
 
 **Bir feature = bir static class**; ihtiyaç duyduğu her şeyi içine gömer: `record` command/query, `Response`, `Handler` (`Handle` metodu olan düz bir sınıf) ve endpoint-extension `static class`'ı. Örnek şekil:
@@ -176,9 +176,9 @@ Endpoint'ler sonucu HTTP'ye çevirir: `result.IsSuccess ? Results.Ok(result) : R
 
 ### MCP tool'ları
 
-Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar (`[McpServerToolType]` / `[McpServerTool]`). **MCP tool YALNIZ bir Agent slice'ını (`Features/Agent/<X>ForAgent`) çağırır** — LLM'e uygun isim + `[Description]` ekler, iş mantığı taşımaz. MCP sunucusu `app.MapMcp("/mcp")` ile mount edilir. `ChatAgent` bunlara MCP istemcisi olarak bağlanır (kullanıcı token'ı çağrı anında enjekte edilir).
+Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar (`[McpServerToolType]` / `[McpServerTool]`). **MCP tool YALNIZ bir Agent slice'ını (`Features/Agents/<X>ForAgent`) çağırır** — LLM'e uygun isim + `[Description]` ekler, iş mantığı taşımaz. MCP sunucusu `app.MapMcp("/mcp")` ile mount edilir. `ChatAgent` bunlara MCP istemcisi olarak bağlanır (kullanıcı token'ı çağrı anında enjekte edilir).
 
-- **Agent/MCP yüzeyi izole.** Agent'a açık işlem `Domains/<Aggregate>/Features/Agent/` altında; slice adı `<X>ForAgent` (ör. `SubmitRegistrationForAgent`, `GetMerchantForAgent`).
+- **Agent/MCP yüzeyi izole.** Agent'a açık işlem `Domains/<Aggregate>/Features/Agents/` (klasör ÇOĞUL) altında; slice adı `<X>ForAgent` (ör. `SubmitRegistrationForAgent`, `GetMerchantForAgent`).
 - **Agent slice `Features/Commands/` veya `Features/Queries/` class'larına ASLA gitmez — `IMessageBus` ile bile değil.** Kendi Query/Command + Response + Handler'ını taşır; okumayı/işlemi `IDocumentSession` ile doğrudan yapar (kod tekrarı bilinçli).
 
 - **Metin (chat) akışında MCP DOLAYLI kullanılır — elle `CallToolAsync` YOK.** Agent, uygulama-içi
