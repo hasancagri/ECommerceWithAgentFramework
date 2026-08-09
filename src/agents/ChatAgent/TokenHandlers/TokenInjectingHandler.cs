@@ -1,4 +1,4 @@
-namespace ChatAgent;
+namespace ChatAgent.TokenHandlers;
 
 // MCP'ye giden her istege, o anki isteğin Authorization header'ini forward eder.
 // Token'i WebApp BFF saglar (anonim: ecommerce.bff client_credentials; login: user token).

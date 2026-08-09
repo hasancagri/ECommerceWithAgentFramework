@@ -53,27 +53,6 @@ public class Product : AggregateRoot
         return ResultDomain.Ok();
     }
 
-    /// <summary>Ürünün görsel URL'sini günceller.</summary>
-    /// <remarks>Handler: — (çağrılmıyor)</remarks>
-    public void UpdateImageUrl(string imageUrl)
-    {
-        ImageUrl = imageUrl;
-    }
-
-    /// <summary>Ürünü aktif duruma getirir (IsActive = true).</summary>
-    /// <remarks>Handler: — (çağrılmıyor)</remarks>
-    public void Activate()
-    {
-        IsActive = true;
-    }
-
-    /// <summary>Ürünü pasif duruma getirir (IsActive = false).</summary>
-    /// <remarks>Handler: — (çağrılmıyor)</remarks>
-    public void Deactivate()
-    {
-        IsActive = false;
-    }
-
     // 016 (kullanıcı kararı): ürün silme yolu tamamen kaldırıldı — eklenen ürün silinemez.
     // IsDeleted alanı/filtreleri ve event'teki IsDeleted kontrat gereği durur; Catalog artık true yayınlamaz.
 }

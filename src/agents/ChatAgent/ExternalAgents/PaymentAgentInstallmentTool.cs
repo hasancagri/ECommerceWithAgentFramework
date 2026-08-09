@@ -1,4 +1,4 @@
-namespace ChatAgent;
+namespace ChatAgent.ExternalAgents;
 
 // 024: uzak A2A PaymentAgent'i (ayri solution) assistant'a taksit-sorgu tool'u olarak baglar.
 // Kontrat-once: uzak taraf yoksa/erisilemezse fail-open -> null doner, assistant tool'suz acilir
@@ -7,9 +7,9 @@ namespace ChatAgent;
 public static class PaymentAgentInstallmentTool
 {
     public static async Task<AITool?> TryBuildAsync(
-        IConfiguration config, IHttpClientFactory httpClientFactory, ILogger logger)
+        PaymentGateway paymentGateway, IHttpClientFactory httpClientFactory, ILogger logger)
     {
-        var url = config[A2APayment.A2AUrlConfigKey];
+        var url = paymentGateway.A2AUrl;
         if (string.IsNullOrWhiteSpace(url))
         {
             logger.LogInformation("A2A PaymentAgent url yok -> taksit tool'u eklenmedi (graceful-degrade).");
@@ -32,7 +32,7 @@ public static class PaymentAgentInstallmentTool
                 return null;
             }
 
-            AIAgent remote = await resolver.GetAIAgentAsync();
+            var remote = await resolver.GetAIAgentAsync();
             logger.LogInformation("A2A PaymentAgent baglandi ({Url}) -> taksit tool'u eklendi.", url);
             return remote.AsAIFunction();
         }

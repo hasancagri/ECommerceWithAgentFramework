@@ -1,4 +1,4 @@
-namespace ChatAgent;
+namespace ChatAgent.InternalMCPs;
 
 // MCP tool'larini boot'ta bir kez ANONIM keşfeder (ListTools) ve allowlist'e gore filtreler; her
 // sema icin bir PerUserMcpTool uretir. Keşif token okumaz (transport acik, allowlist statik). Asil

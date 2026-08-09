@@ -1,9 +1,5 @@
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Order.Api.Grpc;
-using Wolverine.Persistence.Sagas;
 
-namespace Order.Api.Domains.Orders;
+namespace Order.Api.Sagas;
 
 // --- 028: saga mesajlari (Order BC ici, durable local queue; RabbitMQ'ya cikmaz) ---
 
@@ -150,7 +146,7 @@ public class CheckoutSaga : Saga
     public static async Task<CheckoutSaga> Start(
         StartCheckout message,
         IMessageBus bus,
-        IConfiguration config)
+        Checkout checkout)
     {
         var saga = new CheckoutSaga
         {
@@ -161,8 +157,7 @@ public class CheckoutSaga : Saga
 
         await bus.PublishAsync(new CommitNextItem(message.OrderId));
 
-        var watchdogSeconds = config.GetValue("Checkout:WatchdogSeconds", 120);
-        await bus.ScheduleAsync(new CheckoutTimedOut(message.OrderId), TimeSpan.FromSeconds(watchdogSeconds));
+        await bus.ScheduleAsync(new CheckoutTimedOut(message.OrderId), TimeSpan.FromSeconds(checkout.WatchdogSeconds));
 
         return saga;
     }
@@ -231,7 +226,7 @@ public class CheckoutSaga : Saga
         CancellationToken ct)
     {
         // Pivot: Confirm sepet temizliginden ONCE yazilir (idempotent — zaten Confirmed ise gecilir).
-        var order = await session.LoadAsync<Order>(Id, ct);
+        var order = await session.LoadAsync<Domains.Orders.Order>(Id, ct);
         if (order is not null && order.Status == OrderStatus.Pending)
         {
             order.Confirm();
@@ -293,7 +288,7 @@ public class CheckoutSaga : Saga
 
         if (step.CancelWithReason is { } reason && session is not null)
         {
-            var order = await session.LoadAsync<Order>(Id, ct);
+            var order = await session.LoadAsync<Domains.Orders.Order>(Id, ct);
             if (order is null)
                 logger.LogError("Checkout {OrderId}: iptal edilecek siparis bulunamadi.", Id);
             else if (order.Cancel(reason).IsSuccess)

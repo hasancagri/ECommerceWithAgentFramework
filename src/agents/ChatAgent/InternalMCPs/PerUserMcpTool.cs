@@ -1,4 +1,4 @@
-namespace ChatAgent;
+namespace ChatAgent.InternalMCPs;
 
 public sealed class PerUserMcpTool : AIFunction
 {

@@ -1,8 +1,5 @@
-using System.Net.Http.Headers;
-using System.Text.Json;
-using ChatAgent.Options;
 
-namespace ChatAgent;
+namespace ChatAgent.TokenHandlers;
 
 // 032: DropShop Merchant.Api /mcp yüzeyi merchant.write ister; ChatAgent oraya MAKİNE kimliğiyle bağlanır
 // (client_credentials, ecommerce-onboarding). Kullanıcı token'ı gateway'e taşınmaz. Token DropShop
