@@ -41,6 +41,3 @@ global using Customer.Api.Domains.Wallets.Features.Queries;
 global using Customer.Api.Domains.MerchantInformations;
 global using Customer.Api.Domains.MerchantInformations.Features.Commands;
 global using Customer.Api.Extensions;
-global using Customer.Api.Domains.MerchantInformations;
-global using Customer.Api.Domains.MerchantInformations.Features.Commands;
-global using Customer.Api.Extensions;
