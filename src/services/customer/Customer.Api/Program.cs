@@ -12,6 +12,8 @@ builder.Services.AddMarten(opts =>
         // 022: iki aggregate root, ikisi de UserId ile keyli (kullanici basina tek cuzdan/defter).
         opts.Schema.For<Customer.Api.Domains.Wallets.Wallet>().Index(x => x.UserId);
         opts.Schema.For<Customer.Api.Domains.AddressBooks.AddressBook>().Index(x => x.UserId);
+        // Vault: DropShop merchant kimliği (tekil kayıt) — vault token'ı bundan mint edilir.
+        opts.Schema.For<Customer.Api.Domains.MerchantInformations.MerchantInformation>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -41,9 +43,20 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
     AuthorizationScopes.CustomerRead,
-    AuthorizationScopes.CustomerWrite);
+    AuthorizationScopes.CustomerWrite,
+    // Vault merchant kimliği yönetimi (admin-only capability).
+    AuthorizationScopes.MerchantCredentialsWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
+
+// Vault: DropShop bağlantı config'i (section "DropShopVault") + gateway HTTP client.
+builder.Services.AddOptionsExt();
+// Dev: gateway self-signed sertifikasını kabul et (Aspire https). PROD'da kaldırılır.
+builder.Services.AddHttpClient("dropshop-vault")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -71,6 +84,7 @@ app.UseAuthorization();
 
 app.AddAddressBookGroupEndpointExtension(apiVersionSet);
 app.AddWalletGroupEndpointExtension(apiVersionSet);
+app.AddMerchantInformationGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
 
