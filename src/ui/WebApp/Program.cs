@@ -10,7 +10,6 @@ using WebApp.Services.Refit;
 using WebApp.Authentication;
 using WebApp.Chat;
 using WebApp.Extensions;
-using WebApp.GatewayOnboarding;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -61,6 +60,7 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StockService>();
 builder.Services.AddScoped<StorefrontService>();
 builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<MerchantInformationService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
@@ -147,6 +147,9 @@ builder.Services.AddAuthentication(configureOption =>
         // 022: kayitli kart + adres defteri.
         options.Scope.Add("customer.read");
         options.Scope.Add("customer.write");
+        // 033: merchant kimligi ekrani. Talep herkese, verilme role bagli (030): granted =
+        // requested ∩ rol demeti — customer demetinde yok, yalniz admin token'ina biner.
+        options.Scope.Add("merchant.credentials.write");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // 030 RBAC: MapInboundClaims (default true) gelen "role"u ClaimTypes.Role (uzun URI)'ye
@@ -170,10 +173,8 @@ builder.Services.AddAuthentication(configureOption =>
 
 builder.Services.AddAuthorization();
 
-// E1: DropShop gateway kayıt — merchant credential deposu (bellek-içi, dev) + otomatik kayıt
-// istemcisi (Merchant.Api /mcp submit_registration; 016 push-inline — challenge deposu KALDIRILDI).
-builder.Services.AddSingleton<WebApp.GatewayOnboarding.IMerchantCredentialStore, WebApp.GatewayOnboarding.InMemoryMerchantCredentialStore>();
-builder.Services.AddScoped<WebApp.GatewayOnboarding.GatewayRegistrationClient>();
+// 033: DropShop kayıt istemcisi (imperatif MCP) + bellek-içi credential deposu KALDIRILDI —
+// MCP yalnız agent yüzeyi; kayıt ChatAgent'la, kimlik Customer.Api'de kalıcı.
 
 var app = builder.Build();
 
@@ -204,9 +205,6 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.MapChatProxy();
-
-// E1: DropShop gateway kayıt yüzeyi (descriptor + challenge + dev challenge-set).
-app.MapGatewayOnboarding();
 
 // Urun gorseli proxy'si: DB'deki gateway-goreli /file/images/{name} yolunu ayni origin'den servis
 // eder. file-api ic servis oldugundan (browser 'http://file-api'yi cozemez) WebApp sunucu tarafinda

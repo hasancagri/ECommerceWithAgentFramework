@@ -19,6 +19,54 @@
                placeholder="Bir şey yazın..." />
         <button type="submit" class="btn btn-primary">Gönder</button>
     </form>
+
+    <hr class="my-4" />
+
+    <h2 class="h5 mb-2">Merchant Kimliği</h2>
+    <p class="text-muted">
+        DropShop onayı sonrası aktivasyon sayfasında bir kez gösterilen merchantId + MerchantKey'i
+        buraya girin. Key kaydedildikten sonra bir daha görüntülenmez.
+    </p>
+
+    @if (Model.StatusLoadFailed)
+    {
+        <div class="alert alert-warning py-2">Merchant kimliği durumu alınamadı.</div>
+    }
+    else if (Model.Current is null)
+    {
+        <div class="alert alert-secondary py-2">Kayıtlı merchant kimliği yok.</div>
+    }
+    else
+    {
+        <div class="alert alert-info py-2">
+            Kayıtlı merchant: <code>@Model.Current.MerchantId</code>
+            @if (Model.Current.UpdatedTime is not null)
+            {
+                <span> · Son güncelleme: @Model.Current.UpdatedTime.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+            }
+        </div>
+    }
+
+    @if (Model.MerchantKeyMessage is not null)
+    {
+        <div class="alert @(Model.MerchantKeySuccess ? "alert-success" : "alert-danger") py-2">
+            @Model.MerchantKeyMessage
+        </div>
+    }
+
+    <form method="post" asp-page-handler="SaveMerchantKey" autocomplete="off">
+        <div class="mb-2">
+            <label class="form-label" asp-for="MerchantKeyForm.MerchantId">MerchantId</label>
+            <input class="form-control" asp-for="MerchantKeyForm.MerchantId"
+                   placeholder="00000000-0000-0000-0000-000000000000" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="MerchantKeyForm.MerchantKey">MerchantKey</label>
+            <input class="form-control" asp-for="MerchantKeyForm.MerchantKey" type="password"
+                   placeholder="mk_..." value="" />
+        </div>
+        <button type="submit" class="btn btn-outline-primary">Kaydet</button>
+    </form>
 </div>
 
 @section Scripts {

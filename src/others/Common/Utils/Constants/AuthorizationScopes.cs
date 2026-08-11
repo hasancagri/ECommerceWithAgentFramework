@@ -31,6 +31,9 @@ public static class AuthorizationScopes
     // customer.api (022): kayitli kart (Wallet) + adres defteri (AddressBook)
     public const string CustomerRead = "customer.read";
     public const string CustomerWrite = "customer.write";
+    // DropShop vault merchant kimligi (merchantId+key) yonetimi — admin-only capability (customer HARIC).
+    // Audience customer.api (endpoint Customer.Api'de). Onboarding'de admin'e verilen kimligi girer.
+    public const string MerchantCredentialsWrite = "merchant.credentials.write";
 
     // identity (030 RBAC): IdP rol/scope/kullanici yonetim yuzeyi. Downstream servis zorlamaz;
     // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.

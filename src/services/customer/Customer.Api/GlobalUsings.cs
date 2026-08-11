@@ -38,3 +38,6 @@ global using Customer.Api.Domains.AddressBooks.Features.Commands;
 global using Customer.Api.Domains.AddressBooks.Features.Queries;
 global using Customer.Api.Domains.Wallets.Features.Commands;
 global using Customer.Api.Domains.Wallets.Features.Queries;
+global using Customer.Api.Domains.MerchantInformations;
+global using Customer.Api.Domains.MerchantInformations.Features.Commands;
+global using Customer.Api.Extensions;

@@ -10,8 +10,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
     <PackageReference Include="Refit.HttpClientFactory" />
       <PackageReference Include="Duende.IdentityModel" />
-    <!-- E1: DropShop gateway Merchant.Api /mcp submit_registration otomatik sürüşü. -->
-    <PackageReference Include="ModelContextProtocol.Core" />
   </ItemGroup>
 
   <ItemGroup>
