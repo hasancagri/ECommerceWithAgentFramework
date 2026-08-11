@@ -1,6 +1,6 @@
 namespace Order.Api.Domains.Orders.Entities;
 
-public class OrderItem : BaseModel
+public class OrderItem
 {
     public Guid ProductId { get; private set; }
     public string ProductName { get; private set; } = null!;
