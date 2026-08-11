@@ -187,8 +187,8 @@ Her servis agent'ın çağırabileceği tool'ları `*McpTools.cs` içinde açar 
   `McpClient.CreateAsync` + `CallToolAsync` yazıp agent'ın LLM tool-seçimini atlamak **yasaktır**.
   İş, agent'ın topladığı tool + prompt eşlemesiyle çözülür; yeni yetenek = yeni MCP tool + prompt satırı,
   imperatif MCP-çağrı kodu değil.
-- İmperatif `CallToolAsync` yalnızca **metin-dışı yapısal yollarda** (ör. bir HTTP endpoint'in doğrudan
-  sürüşü) kabul edilir; chat/agent akışına sızmaz.
+- **MCP'yi yalnız agent'lar tüketir (anayasa v1.8.1).** Agent olmayan kod (WebApp, servisler)
+  imperatif `CallToolAsync` ile MCP süremez; yapısal (LLM'siz) ihtiyaç REST/gRPC ile karşılanır.
 
 ### Integration event'leri (servisler arası)
 

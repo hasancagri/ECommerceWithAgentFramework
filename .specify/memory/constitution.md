@@ -43,6 +43,9 @@ kendi Postgres veritabanı, kendi Marten şeması ve kendi domain modeli vardır
   Örnekler: stok rezervasyonu (012) Basket/Order→Stock gRPC (request/response zorunlu; async
   event anlık karar veremez); checkout saga adımları (028) Order→Stock/Basket gRPC (hedefli
   komut + telafi, süreç bilgisi yalnız saga'da).
+- **MCP'yi yalnız agent'lar tüketir** (v1.8.1): MCP tool'ları LLM tool-seçim yüzeyidir;
+  agent olmayan kod (WebApp, servisler) imperatif `CallToolAsync` ile MCP süremez.
+  Yapısal (LLM'siz) servisler-arası ihtiyaç REST/gRPC sözleşmesiyle karşılanır.
 
 ### II. Zengin Aggregate, İçeride Korunan Invariant'lar
 
@@ -237,7 +240,11 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.8.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-07
+**Version**: 1.8.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-11
+
+<!-- v1.8.1 (2026-08-11, PATCH): İlke I'e netleştirme — MCP'yi yalnız agent'lar tüketir; agent
+     olmayan koddan imperatif CallToolAsync yasak (WebApp GatewayRegistrationClient bu kuralla
+     silindi, 033). Yapısal ihtiyaç REST/gRPC. -->
 
 <!-- v1.8.0 (2026-08-07, MINOR): Yeni bölüm — "E2E Testing (Playwright)". Kullanıcıya-dönük kritik
      akışlar (anonim vitrin, sepet/checkout-saga, RBAC admin, kritik hatalar) Microsoft.Playwright +

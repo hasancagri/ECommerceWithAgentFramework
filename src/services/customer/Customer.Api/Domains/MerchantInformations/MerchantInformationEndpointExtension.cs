@@ -1,4 +1,5 @@
 using Customer.Api.Domains.MerchantInformations.Features.Commands;
+using Customer.Api.Domains.MerchantInformations.Features.Queries;
 
 namespace Customer.Api.Domains.MerchantInformations;
 
@@ -10,6 +11,7 @@ public static class MerchantInformationEndpointExtension
             .WithTags("MerchantInformation")
             .WithApiVersionSet(apiVersionSet)
             .SetMerchantInformationGroupItemEndpoint()
+            .GetMerchantInformationGroupItemEndpoint()
             .RequireAuthorization();
     }
 }

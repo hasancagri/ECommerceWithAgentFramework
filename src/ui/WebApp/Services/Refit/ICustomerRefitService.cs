@@ -1,5 +1,6 @@
 using Refit;
 using WebApp.Pages.Account.Dto;
+using WebApp.Pages.Admin.Dto;
 
 namespace WebApp.Services.Refit;
 
@@ -35,4 +36,11 @@ public interface ICustomerRefitService
 
     [Post("/api/v1/cards/{id}/default")]
     Task<ApiResponse<object>> SetDefaultCardAsync(Guid id);
+
+    // MerchantInformation (033): yalniz admin (merchant.credentials.write); key yalniz yazma yonunde tasinir.
+    [Get("/api/v1/merchant-information")]
+    Task<ApiResponse<ObjectResult<MerchantInformationStatusDto>>> GetMerchantInformationAsync();
+
+    [Post("/api/v1/merchant-information")]
+    Task<ApiResponse<object>> SetMerchantInformationAsync(SetMerchantInformationRequest request);
 }
