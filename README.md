@@ -217,34 +217,33 @@ Domains/<Aggregate>/
     Agent/                        # agent-facing slices (exposed via MCP)
 ```
 
-## DropShop payment-gateway onboarding (E1)
+## DropShop payment-gateway integration (032/033 + vault)
 
-This storefront can register itself as a merchant with the external **DropShop** payment gateway
-(a separate solution, consumed as a contract — never a shared DB/model). Everything lives under
-`src/ui/WebApp/GatewayOnboarding/` and is additive; the storefront is the merchant's public face,
-so it hosts the public `/.well-known` discovery files.
+This storefront registers itself as a merchant with the external **DropShop** payment gateway
+(a separate solution, consumed as a contract — never a shared DB/model) and then uses the
+gateway's **card vault** for PCI-safe card storage. The earlier `GatewayOnboarding/` module
+(descriptor + HTTP-01 challenge + in-memory stores) was **removed** — the gateway switched to
+push-inline registration and human admin review, so the flow is now chat-driven:
 
-- **Descriptor** — `GET /.well-known/merchant-descriptor.json`: public, secret-free identity
-  declaration built from config (`GatewayOnboarding` section: legalName, taxId, contactEmail,
-  webhookUrl). The gateway reads this to learn who is applying.
-- **Domain-control challenge** — `GET /.well-known/merchant-challenge/{token}`: serves the
-  expected value the gateway issued (HTTP-01 style proof of domain ownership). Kept in an
-  in-memory `IChallengeStore` (dev).
-- **Automated registration** — `POST /gateway-onboarding/register`: `GatewayRegistrationClient`
-  calls the gateway's Merchant.Api `/mcp submit_registration` tool (structured MCP call, robust vs
-  A2A/LLM text parsing) and drives the two-step challenge automatically (get `ChallengeRequired` →
-  publish the value locally → call again → `Pending`). Auth is a DropShop-Identity
-  `client_credentials` token (`ecommerce-onboarding`, `merchant.write`); config lives under
-  `DropShopGateway` (Identity address, `McpUrl`, client id/secret).
-- **MerchantKey handling** — after admin approval the gateway shows the **MerchantKey** once on its
-  activation page; a human copies it into `POST /gateway-onboarding/merchant-key` which stores
-  `{merchantId, merchantKey}` in an in-memory `IMerchantCredentialStore` (dev). The key is the
-  gateway OAuth `client_secret` (`client_id = merchantId`); it only ever goes to the gateway's
-  `connect/token`. Actually *using* it (token acquisition + charge calls) is a later feature (G5) —
-  today it is only stored.
-
-> Dev shortcuts (to harden for prod): in-memory stores → secret store / persistence; fixed-port
-> gateway URLs (`DropShopGateway:McpUrl`) → service discovery; dev-cert acceptance.
+- **Admin onboarding via chat (032)** — an admin-only Razor page (`Pages/Admin/Onboarding`) talks
+  to the ChatAgent **`admin` persona** through the BFF SSE proxy (`/chat/admin/stream`, role-gated).
+  The persona's tool set is a WebApp-hosted onboarding MCP surface that wraps the gateway calls:
+  `submit_registration` (pushes domain/legalName/taxId/contactEmail/webhookUrl straight to the
+  gateway's Merchant.Api `/mcp`) and `registration_status`. Gateway calls run with the machine
+  identity (`ecommerce-onboarding` client_credentials) — the admin's user token never leaves this
+  system.
+- **MerchantKey handling (033)** — after gateway-side approval, the gateway's activation page shows
+  the **MerchantKey** once; the admin pastes `{merchantId, merchantKey}` into the same Onboarding
+  page, which persists it in **Customer.Api** (`MerchantInformation` aggregate — no more in-memory
+  store). The key is the gateway OAuth `client_secret` (`client_id = merchantId`) and only ever
+  goes to the gateway's `connect/token`.
+- **Card vault client (017 consumer)** — Customer.Api's Wallet tokenizer now calls the gateway's
+  vault (`merchants/{merchantId}/vault/cards`, scope `cards.write`, merchant-scoped token acquired
+  with the stored MerchantKey): raw PAN goes straight to the gateway, only `card_…` token + brand +
+  last4 + BIN are kept locally. Config via `DropShopVaultOption` (Options pattern).
+- **Commission negotiation counterpart** — merchant-side commission decisions stay on the gateway's
+  anonymous decision links (mailed accept/reject pages); this system does not call the gateway's
+  commission API.
 
 ## Notes
 
