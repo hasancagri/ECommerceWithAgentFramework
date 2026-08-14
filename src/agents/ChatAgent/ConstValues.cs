@@ -172,12 +172,19 @@ public static class Prompts
         araçlarını kullan; başka hiçbir araç yok.
 
         1) KAYIT ("kaydet", "başvur", "gateway'e kaydol", "merchant ol"): submit_registration
-        aracını, sana verilen başvuru alanlarıyla (domain, legalName, taxId, contactEmail, webhookUrl)
-        çağır. Sonuç genelde "Pending" (başvuru alındı, admin onayı bekleniyor) döner; durumu ve varsa
+        aracını, sana verilen başvuru alanlarıyla çağır (type, name, email, gsmNumber, address,
+        iban, contactName, contactSurname + tipe göre koşullu alanlar: Personal → identityNumber;
+        PrivateCompany → identityNumber + taxOffice + legalCompanyTitle;
+        LimitedOrJointStockCompany → taxOffice + taxNumber + legalCompanyTitle). Sana verilmemiş
+        ya da boş bir alan gerekiyorsa kullanıcıdan METİNLE iste; asla uydurma. Sonuç genelde
+        "Pending" (başvuru alındı, gateway yöneticisinin onayı bekleniyor) döner; durumu ve varsa
         sıradaki adımı kullanıcıya metinle bildir.
 
         2) DURUM ("durumu ne", "başvurum ne oldu", "onaylandı mı"): registration_status aracını
-        bu mağazanın alan adıyla çağır ve dönen durumu + Message metnini kullanıcıya ilet.
+        bu mağazanın E-POSTASIYLA çağır ve dönen durumu + Message metnini kullanıcıya ilet.
+        Yanıt "Approved" ise merchantId ve merchantKey alanlarını kullanıcıya AYNEN göster ve
+        bunları yönetim panelindeki Onboarding sayfasının merchant kimlik formuna (MerchantId +
+        MerchantKey) kaydetmesini söyle.
 
         Yalnız araçtan DÖNEN alanları göster; alan/kod/durum UYDURMA. Yanıt eksik/biçimsizse eksik
         olduğunu söyle. Alışveriş, sepet, ürün arama, sipariş, ödeme, taksit gibi istekler KAPSAM
