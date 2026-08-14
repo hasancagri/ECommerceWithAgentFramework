@@ -144,16 +144,25 @@ var adminAgent = builder.AddAIAgent("admin", (sp, name) =>
 {
     var tools = sp.GetRequiredService<IMcpToolProvider>().CollectTools(adminAgentTools);
 
+    // 029: alan seti gateway'in 023 Merchant sözleşmesi (tip + tip-uyum matrisi alanları).
     var instructions = dropShop is null
         ? Prompts.AdminOnboardingInstructions
         : $"{Prompts.AdminOnboardingInstructions}\n\n" +
           "submit_registration çağrısında bu mağazanın başvuru alanlarını kullan:\n" +
-          $"- domain: {onboarding.Domain}\n" +
-          $"- legalName: {onboarding.LegalName}\n" +
-          $"- taxId: {onboarding.TaxId}\n" +
-          $"- contactEmail: {onboarding.ContactEmail}\n" +
-          $"- webhookUrl: {onboarding.WebhookUrl}\n" +
-          $"registration_status sorgusunu bu mağazanın alan adıyla ({onboarding.Domain}) yap.";
+          $"- type: {onboarding.Type}\n" +
+          $"- name: {onboarding.Name}\n" +
+          $"- email: {onboarding.Email}\n" +
+          $"- gsmNumber: {onboarding.GsmNumber}\n" +
+          $"- address: {onboarding.Address}\n" +
+          $"- iban: {onboarding.Iban}\n" +
+          $"- contactName: {onboarding.ContactName}\n" +
+          $"- contactSurname: {onboarding.ContactSurname}\n" +
+          $"- identityNumber: {onboarding.IdentityNumber}\n" +
+          $"- taxOffice: {onboarding.TaxOffice}\n" +
+          $"- taxNumber: {onboarding.TaxNumber}\n" +
+          $"- legalCompanyTitle: {onboarding.LegalCompanyTitle}\n" +
+          "Boş görünen opsiyonel alanları çağrıya HİÇ gönderme (uydurma değer üretme).\n" +
+          $"registration_status sorgusunu bu mağazanın e-postasıyla ({onboarding.Email}) yap.";
 
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), instructions, name, null, tools);
 }, ServiceLifetime.Singleton);
