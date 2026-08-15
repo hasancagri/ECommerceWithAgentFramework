@@ -5,7 +5,8 @@ namespace Customer.Api.Domains.Wallets.Tokenization;
 
 /// <summary>
 /// DropShop merchant OAuth token sağlayıcı: client_credentials (client_id=merchantId,
-/// client_secret=MerchantKey, scope <c>cards.write</c>) → gateway Identity connect/token. Token
+/// client_secret=MerchantKey, scope <c>cards.write payment.charge</c>) → gateway Identity connect/token.
+/// Tek token vault (kart saklama) + 033 çekim/taksit için ortak kullanılır (superset scope). Token
 /// bellek-içi cache'lenir (exp − 30 sn yenile). State tutar → Singleton. Dönen token'da
 /// <c>merchant_id</c> claim'i route ile eşleşir (gateway MerchantScoped fail-closed).
 /// </summary>
@@ -47,7 +48,7 @@ public sealed class MerchantTokenProvider : IMerchantTokenProvider, ISingletonDe
                     ["grant_type"] = "client_credentials",
                     ["client_id"] = merchantId.ToString(),
                     ["client_secret"] = merchantKey,
-                    ["scope"] = "cards.write"
+                    ["scope"] = "cards.write payment.charge"
                 }), ct);
             resp.EnsureSuccessStatusCode();
 
