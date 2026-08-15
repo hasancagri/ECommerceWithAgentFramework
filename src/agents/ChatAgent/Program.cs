@@ -64,8 +64,10 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
     (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders]),
     (McpServers.Payment, paymentUrl, McpClients.WithToken, [PaymentTools.GetMyPayments]),
     (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock]),
-    // 024: taksit sorgusu icin default kart BIN okumasi (PAN/CVV/token asla).
-    (McpServers.Customer, customerUrl, McpClients.WithToken, [CustomerTools.GetDefaultCardBin])
+    // 024: default kart BIN okumasi (PAN/CVV/token asla). 033: kayitli kartla taksit sorgusu +
+    // GERCEK cekim (kart cozumu + gateway cagrisi Customer.Api'de; token disari sizmaz).
+    (McpServers.Customer, customerUrl, McpClients.WithToken,
+        [CustomerTools.GetDefaultCardBin, CustomerTools.GetCardInstallments, CustomerTools.ChargeDefaultCard])
 ];
 // 032: admin persona YALNIZ DropShop onboarding MCP'sini toplar (submit_registration + registration_status).
 // Config yoksa bos -> CollectTools bos doner, persona tool'suz acilir (graceful-degrade).
@@ -122,17 +124,10 @@ var publicAgent = builder.AddAIAgent("public", (sp, name) =>
 // ASSISTANT agent (login): catalog + basket.
 var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 {
+    // 033: taksit sorgusu + kayitli kartla cekim artik Customer.Api MCP tool'lariyla (gercek gateway
+    // US1/US2 uclari); eski uzak A2A PaymentAgent taksit yolu emekliye ayrildi (tek tutarli yol).
     var tools = sp.GetRequiredService<IMcpToolProvider>()
         .CollectTools(assistantAgentTools);
-
-    // 024: uzak A2A PaymentAgent taksit tool'u. Url yok/erisilemezse null -> eklenmez
-    // (graceful-degrade, US2). Boot'ta bir kez kurulur (Singleton factory), MCP CollectTools gibi bloklar.
-    var a2aTool = PaymentAgentInstallmentTool.TryBuildAsync(
-        sp.GetRequiredService<PaymentGateway>(),
-        sp.GetRequiredService<IHttpClientFactory>(),
-        sp.GetRequiredService<ILoggerFactory>().CreateLogger("A2AInstallment")).GetAwaiter().GetResult();
-    if (a2aTool is not null)
-        tools.Add(a2aTool);
 
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.AssistantInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);

@@ -71,6 +71,9 @@ public static class StorefrontTools
 public static class CustomerTools
 {
     public const string GetDefaultCardBin = "get_default_card_bin";
+    // 033: kayitli kartla odeme (Customer.Api MCP; vault token/PAN LLM'e donmez).
+    public const string GetCardInstallments = "get_card_installments";
+    public const string ChargeDefaultCard = "charge_default_card";
 }
 
 // 032: DropShop Merchant.Api onboarding tool'lari (admin persona toplar).
@@ -141,26 +144,33 @@ public static class Prompts
         7) ÖDEMELERİM ("ödemelerim", "ödeme geçmişim"): get_my_payments aracını çağır ve sonucu
         kullanıcıya özetle.
 
-        8) TAKSİT SORGUSU ("taksitleri getir", "default kartımla taksitler", "sepet tutarına
+        8) TAKSİT SORGUSU ("taksitleri getir", "kayıtlı kartımla taksitler", "sepet tutarına
         taksit"): (a) get_basket ile sepet toplamını al. Sepet BOŞSA taksit aracını çağırma; önce
-        sepete ürün eklemesini iste. Sepet toplamı ALINAMAZSA (araç hata döner) taksit aracını
-        çağırma; durumu kullanıcıya açıkça söyle. (b) get_default_card_bin ile varsayılan kartın
-        BIN'ini al; varsa BIN'i, yoksa BIN'siz devam et. (c) Uzak ödeme agent'ının taksit aracını
-        sepet toplamı + para birimi (TRY) + (varsa) BIN ile çağır. Dönen taksit seçeneklerini
-        (banka, taksit sayısı, taksit başına tutar, komisyon) listele. Yalnız dönen alanları göster,
-        ASLA alan UYDURMA; yanıt eksik/biçimsizse eksik olduğunu söyle. Hiç taksit seçeneği yoksa
-        "uygun taksit seçeneği yok" de. NOT: BU YALNIZ BİLGİdir; ödeme/çekim YAPMA.
+        sepete ürün eklemesini iste. Sepet toplamı ALINAMAZSA (araç hata döner) çağırma; durumu
+        açıkça söyle. (b) get_card_installments aracını sepet toplamı (amount) ile çağır; araç
+        kullanıcının VARSAYILAN kayıtlı kartını ve BIN'ini KENDİ çözer (sen kart/BIN gönderme).
+        Dönen seçenekleri (taksit sayısı + toplam tutar) numaralı liste hâlinde göster; tek çekim =
+        installmentNumber 1. Yalnız dönen alanları göster, ASLA alan UYDURMA. Varsayılan kart yoksa
+        kullanıcıdan önce kart eklemesini/varsayılan seçmesini iste. Hiç seçenek yoksa "uygun taksit
+        seçeneği yok" de. NOT: bu YALNIZ BİLGİdir, henüz çekim yapma.
+
+        9) ÖDEME / SATIN ALMA ("öde", "satın al", "kartımdan çek", "ödemeyi tamamla", "N taksit
+        yap"): kayıtlı kartla GERÇEK çekim. (a) Sepet toplamını bil (get_basket) ve kullanıcının
+        SEÇTİĞİ taksit sayısını netleştir; belirsizse önce 8. adımla seçenekleri göster ve hangi
+        taksiti istediğini SOR. (b) Çekim GERÇEK paradır: charge_default_card'ı çağırmadan ÖNCE
+        kullanıcıdan açık onay al ("X TL'yi N taksitle kayıtlı kartınızdan çekiyorum, onaylıyor
+        musunuz?"). (c) Onaydan sonra charge_default_card'ı çağır: amount=sepet toplamı,
+        installment=seçilen taksit sayısı (tek çekim için 1), paidPrice=o taksitin toplam tutarı
+        (get_card_installments'tan; tek çekimde amount ile aynı). (d) Başarılıysa dönen paymentId ve
+        durumu kullanıcıya ilet; başarısızsa "ödeme alınamadı" de (teknik ayrıntı verme).
+        Kullanıcı onaylamadan ASLA çekim yapma; alan/tutar UYDURMA.
 
         Önemli: "var mı", "mevcut mu" gibi bulunurluk soruları bir EKLEME İSTEĞİ DEĞİLDİR;
         kullanıcı açıkça "ekle/at" demedikçe sepete asla ekleme yapma.
         Bir ürün bulunamazsa veya bir işlem başarısız olursa durumu kullanıcıya açıkça söyle.
 
-        Taksit aracı ELİNDE YOKSA veya çağrı başarısız olursa: kullanıcıya "taksit bilgisi şu an
-        alınamıyor" de; teknik hata/exception ayrıntısı verme, sohbetin geri kalanı normal çalışır.
-
-        ÖDEME / ÇEKİM (SATIN ALMA): "öde", "satın al", "kartımdan çek", "ödemeyi tamamla" gibi
-        gerçek ödeme istekleri KAPSAM DIŞIdır. Bunu yapamayacağını nazikçe söyle; yalnız taksit
-        BİLGİsi verebildiğini belirt. Hiçbir ödeme/çekim aracı çağırma.
+        Taksit/ödeme aracı ELİNDE YOKSA veya çağrı başarısız olursa: kullanıcıya "bu işlem şu an
+        yapılamıyor" de; teknik hata/exception ayrıntısı verme, sohbetin geri kalanı normal çalışır.
         """;
 
     // 032: admin metinle onboarding persona'sı. Router — yalnız onboarding tool'larını çağırır.
