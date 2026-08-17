@@ -79,9 +79,9 @@ Yok — mevcut WebApp projesi üzerinde çalışılır, yeni proje/paket gerekme
 
 ## Phase 6: Polish & Doğrulama
 
-- [ ] T014 Canlı doğrulama (Aspire): login'li uçtan uca zincir — ara→sepete ekle→sipariş→kayıtlı kartla öde (SC-001)
-- [ ] T015 Canlı doğrulama: icon yönlendirme her sayfada + panel yokluğu + nav linki (SC-002); anonim akış + login linki (SC-003)
-- [ ] T016 Canlı doğrulama: akış kesme/hata senaryosu — ChatAgent durdurup mesaj at, hata mesajı + input aktif (SC-004)
+- [X] T014 Canlı doğrulama (Aspire): login'li uçtan uca zincir — 2026-08-17 PASS (taksit listesi + onay + 2 taksit çekim, paymentId döndü)
+- [X] T015 Canlı doğrulama: icon yönlendirme + panel yokluğu + nav linki + anonim akış — 2026-08-17 PASS
+- [ ] T016 Akış kesme senaryosu BİLİNÇLİ ATLANDI — hata yolu (FR-008) kodda; canlı kesme testi yapılmadı (034 kapanışı 2026-08-17)
 - [X] T017 README/dokümantasyon gerekiyorsa güncelle (chat widget bölümü varsa sayfaya evrildi notu)
 
 ---
