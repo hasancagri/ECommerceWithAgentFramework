@@ -1,0 +1,36 @@
+@page "/musteri-hizmetleri"
+@model MusteriHizmetleriModel
+@{
+    ViewData["Title"] = "Müşteri Hizmetleri";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+<link rel="stylesheet" href="~/css/chat-page.css" asp-append-version="true"/>
+
+@* 034: tam-sayfa chat; akış mevcut /chat/stream BFF'i üzerinden (login → assistant, anonim → public). *@
+<div id="chat-page" data-authenticated="@(isAuthenticated ? "true" : "false")">
+    <div id="chat-page-header">
+        <h1 class="h4 mb-0">Müşteri Hizmetleri</h1>
+        <span class="text-muted small">Ürün arayın, sepetinizi yönetin, sipariş verin — hepsi yazışarak.</span>
+    </div>
+
+    @if (!isAuthenticated)
+    {
+        @* US3 / FR-007: anonim bilgilendirme + mevcut giriş ekranına link. *@
+        <div class="alert alert-info py-2 mb-2" role="alert">
+            Giriş yapmadınız — şu an yalnızca ürün arayabilirsiniz. Sepet, sipariş ve ödeme için
+            <a asp-page="/Auth/SignIn">giriş yapın</a>.
+        </div>
+    }
+
+    <div id="chat-page-messages"></div>
+
+    <form id="chat-page-form">
+        <input id="chat-page-input" type="text" autocomplete="off"
+               placeholder="Bir şey sor..."/>
+        <button id="chat-page-send" type="submit">Gönder</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/chat-page.js" asp-append-version="true"></script>
+}
