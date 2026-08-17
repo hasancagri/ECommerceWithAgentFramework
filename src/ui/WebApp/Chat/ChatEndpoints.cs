@@ -5,12 +5,26 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace WebApp.Chat;
 
-// Tarayicidaki chat widget'i ile ChatAgent arasindaki BFF proxy.
+// Tarayicidaki chat sayfasi ile ChatAgent arasindaki BFF proxy.
 // Token HttpOnly cookie'de oldugundan tarayici orchestrator'a dogrudan erisemez;
 // burada auth durumuna gore agent + token secilir, SSE pass-through edilir.
+// Cok turlu gecmis STATELESS tasinir: istemci transkripti gonderir, input mesaj dizisi olur.
+// (MAF Hosting.OpenAI previous_response_id/conversation'i COZMUYOR — store write-only,
+// github.com/microsoft/agent-framework#3971; o yol olu, kullanma.)
 public static class ChatEndpoints
 {
-    public sealed record ChatRequest(string Message, string? PreviousResponseId);
+    public sealed record ChatHistoryItem(string Role, string Content);
+    public sealed record ChatRequest(string Message, List<ChatHistoryItem>? History);
+
+    private static List<object> BuildInput(ChatRequest body)
+    {
+        var input = new List<object>();
+        foreach (var h in body.History ?? [])
+            if (h.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(h.Content))
+                input.Add(new { role = h.Role, content = h.Content });
+        input.Add(new { role = "user", content = body.Message });
+        return input;
+    }
 
     public static IEndpointRouteBuilder MapChatProxy(this IEndpointRouteBuilder app)
     {
@@ -34,16 +48,13 @@ public static class ChatEndpoints
                   ?? throw new UnauthorizedAccessException("Access token bulunamadi.")
                 : null;
 
-            // OpenAI Responses govdesi. Cok turlu gecmis previous_response_id ile zincirlenir
-            // (orchestrator tarafinda RAM'de tutulur).
+            // OpenAI Responses govdesi. Gecmis + yeni mesaj tek input dizisinde (stateless).
             var payload = new Dictionary<string, object?>
             {
                 ["model"] = agentName,
-                ["input"] = body.Message,
+                ["input"] = BuildInput(body),
                 ["stream"] = true,
             };
-            if (!string.IsNullOrWhiteSpace(body.PreviousResponseId))
-                payload["previous_response_id"] = body.PreviousResponseId;
 
             var client = httpClientFactory.CreateClient("orchestrator");
             using var request = new HttpRequestMessage(HttpMethod.Post, agentPath);
@@ -78,11 +89,9 @@ public static class ChatEndpoints
             var payload = new Dictionary<string, object?>
             {
                 ["model"] = "admin",
-                ["input"] = body.Message,
+                ["input"] = BuildInput(body),
                 ["stream"] = true,
             };
-            if (!string.IsNullOrWhiteSpace(body.PreviousResponseId))
-                payload["previous_response_id"] = body.PreviousResponseId;
 
             var client = httpClientFactory.CreateClient("orchestrator");
             using var request = new HttpRequestMessage(HttpMethod.Post, "/admin/v1/responses");
