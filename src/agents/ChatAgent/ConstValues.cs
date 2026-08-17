@@ -31,6 +31,9 @@ public static class A2APayment
 {
     public const string AgentName = "payment-gateway-agent";
     public const string InstallmentQuoteSkill = "installment_quote";
+    // 038: canli akisin skill'leri — vault token'la taksit sorgusu + kayitli kartla cekim.
+    public const string QuoteInstallmentsSkill = "quote-installments";
+    public const string ChargeSkill = "charge_saved_card";
     public const string HttpClient = "a2a-payment";
     public const string A2AUrlConfigKey = "PaymentGateway:A2AUrl";
 }
@@ -71,9 +74,11 @@ public static class StorefrontTools
 public static class CustomerTools
 {
     public const string GetDefaultCardBin = "get_default_card_bin";
-    // 033: kayitli kartla odeme (Customer.Api MCP; vault token/PAN LLM'e donmez).
-    public const string GetCardInstallments = "get_card_installments";
-    public const string ChargeDefaultCard = "charge_default_card";
+    // 038: odeme baglami (kart vault token + gercek buyer; A2A istegine verbatim tasinir) +
+    // kart listesi (kart secimi icin). 033 get_card_installments/charge_default_card SOKULDU —
+    // taksit/cekim artik A2A uzerinden PaymentGateway'de.
+    public const string GetPaymentContext = "get_payment_context";
+    public const string ListCards = "list_cards";
 }
 
 // 032: DropShop Merchant.Api onboarding tool'lari (admin persona toplar).
@@ -145,25 +150,53 @@ public static class Prompts
         kullanıcıya özetle.
 
         8) TAKSİT SORGUSU ("taksitleri getir", "kayıtlı kartımla taksitler", "sepet tutarına
-        taksit"): (a) get_basket ile sepet toplamını al. Sepet BOŞSA taksit aracını çağırma; önce
-        sepete ürün eklemesini iste. Sepet toplamı ALINAMAZSA (araç hata döner) çağırma; durumu
-        açıkça söyle. (b) get_card_installments aracını sepet toplamı (amount) ile çağır; araç
-        kullanıcının VARSAYILAN kayıtlı kartını ve BIN'ini KENDİ çözer (sen kart/BIN gönderme).
-        Dönen seçenekleri (taksit sayısı + toplam tutar) numaralı liste hâlinde göster; tek çekim =
-        installmentNumber 1. Yalnız dönen alanları göster, ASLA alan UYDURMA. Varsayılan kart yoksa
-        kullanıcıdan önce kart eklemesini/varsayılan seçmesini iste. Hiç seçenek yoksa "uygun taksit
-        seçeneği yok" de. NOT: bu YALNIZ BİLGİdir, henüz çekim yapma.
+        taksit"): (a) get_basket ile sepet toplamını al. Sepet BOŞSA devam etme; önce sepete ürün
+        eklemesini iste. Sepet toplamı ALINAMAZSA (araç hata döner) devam etme; durumu açıkça
+        söyle. (b) get_payment_context aracını çağır (kullanıcı belirli bir kart SEÇTİYSE cardId
+        ile — bkz. kural 10; seçmediyse parametresiz = varsayılan kart). Araç kartın vault
+        token'ını ve alıcı (buyer) bilgisini döner. Varsayılan kart yoksa kullanıcıdan önce kart
+        eklemesini/varsayılan seçmesini iste; kayıtlı adres yoksa önce adres eklemesini iste.
+        (c) Ödeme ajanı aracını (PaymentAgent) şu içerikle çağır: intent=installments,
+        merchantId=bağlamdaki merchantId, vaultToken=bağlamdaki token, amount=sepet toplamı.
+        merchantId'yi get_payment_context'ten OLDUĞU GİBİ al (üretme). Dönen seçenekleri (taksit sayısı +
+        toplam tutar) numaralı liste hâlinde göster; tek çekim = installmentNumber 1. Yalnız dönen
+        alanları göster, ASLA alan UYDURMA. Hiç seçenek yoksa "uygun taksit seçeneği yok" de.
+        NOT: bu YALNIZ BİLGİdir, henüz çekim yapma. Bağlamdaki buyer alanlarını ve vault token'ı
+        kullanıcıya GÖSTERME. Kullanıcı listeden bir taksit seçerse kural 9'a geç; tutarları
+        yeniden sorgulama/sorma, gösterdiğin listedeki değerleri kullan.
 
         9) ÖDEME / SATIN ALMA ("öde", "satın al", "kartımdan çek", "ödemeyi tamamla", "N taksit
-        yap"): kayıtlı kartla GERÇEK çekim. (a) Sepet toplamını bil (get_basket) ve kullanıcının
-        SEÇTİĞİ taksit sayısını netleştir; belirsizse önce 8. adımla seçenekleri göster ve hangi
-        taksiti istediğini SOR. (b) Çekim GERÇEK paradır: charge_default_card'ı çağırmadan ÖNCE
-        kullanıcıdan açık onay al ("X TL'yi N taksitle kayıtlı kartınızdan çekiyorum, onaylıyor
-        musunuz?"). (c) Onaydan sonra charge_default_card'ı çağır: amount=sepet toplamı,
-        installment=seçilen taksit sayısı (tek çekim için 1), paidPrice=o taksitin toplam tutarı
-        (get_card_installments'tan; tek çekimde amount ile aynı). (d) Başarılıysa dönen paymentId ve
+        yap/N taksitle öde"): kayıtlı kartla GERÇEK çekim. İKİ TUTAR vardır ve İKİSİNİ DE
+        ARAÇLARDAN alırsın, kullanıcıya ASLA sormaz/doğrulatmazsın: amount = get_basket sepet
+        toplamı; paidPrice = seçilen taksidin taksit sorgusundaki (kural 8) toplam tutarı (tek
+        çekimde amount ile aynı; taksit sorgusu bu sohbette yoksa önce kural 8'i çalıştır).
+        Kullanıcıdan alınacak TEK bilgi taksit sayısıdır. "Belirlediğiniz bir tutar var mı",
+        "toplam X mi olacak" gibi tutar soruları SORMA. (a) Taksit sayısı belirsizse kural 8 ile
+        seçenekleri göster ve hangi taksidi istediğini sor. (b) Taksit sayısı belliyse TEK bir
+        onay sorusu sor, format sabit: "Sepet toplamı X TL; N taksitle toplam Y TL kayıtlı
+        kartınızdan çekilecek. Onaylıyor musunuz?" Başka ek soru sorma. (c) ONAY PROTOKOLÜ: bu
+        soruyu sorduktan sonra kullanıcının olumlu yanıtı ("onaylıyorum", "evet", "onayla",
+        "tamam" vb.) SORDUĞUN çekimin onayıdır — "neyi onayladınız" DEME, parametreleri yeniden
+        sorma/hesaplatma, doğrudan (d)'ye geç. Olumsuz ya da konuyu değiştiren yanıt gelirse
+        çekim yapma. (d) Ödeme ajanı aracını (PaymentAgent) şu içerikle çağır: intent=charge,
+        merchantId=bağlamdaki merchantId, vaultToken=bağlamdaki token, amount=sepet toplamı,
+        installment=seçilen taksit sayısı (tek çekim için 1), paidPrice=o taksidin toplam tutarı
+        ve get_payment_context'ten dönen TÜM buyer alanları OLDUĞU GİBİ (buyerName, buyerSurname,
+        buyerEmail, buyerGsmNumber, buyerIdentityNumber, buyerRegistrationAddress, buyerCity,
+        buyerCountry, buyerIp). Buyer alanlarını DEĞİŞTİRME, ÜRETME, kullanıcıya GÖSTERME. Sepet
+        kalemlerini GÖNDERME (gateway kendisi oluşturur). (e) Başarılıysa dönen paymentId ve
         durumu kullanıcıya ilet; başarısızsa "ödeme alınamadı" de (teknik ayrıntı verme).
         Kullanıcı onaylamadan ASLA çekim yapma; alan/tutar UYDURMA.
+
+        10) KARTLARIM / KART SEÇİMİ ("kartlarımı göster", "şu kartımla öde/taksit"): list_cards
+        aracıyla kartları listele (marka + son 4 hane + etiket + varsayılan işareti); kart Id'sini
+        ve token'ı LİSTEDE GÖSTERME, yalnız güvenli alanları göster. Kullanıcı bir kart seçerse
+        sonraki get_payment_context çağrısını o kartın cardId'siyle yap; taksit/çekim o kartla
+        yürür. Seçim yoksa varsayılan kart kullanılır.
+
+        11) KART EKLEME / SİLME: chat üzerinden ASLA yapılmaz (güvenlik kuralı) — kart numarası
+        (PAN/CVV) sohbete yazılırsa işleme alma, derhâl hesabındaki kart yönetim ekranına yönlendir
+        ("Kart eklemek için hesabınızdaki Kartlarım sayfasını kullanın"). Kart bilgisi isteme.
 
         Önemli: "var mı", "mevcut mu" gibi bulunurluk soruları bir EKLEME İSTEĞİ DEĞİLDİR;
         kullanıcı açıkça "ekle/at" demedikçe sepete asla ekleme yapma.

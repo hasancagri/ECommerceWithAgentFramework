@@ -64,10 +64,11 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
     (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders]),
     (McpServers.Payment, paymentUrl, McpClients.WithToken, [PaymentTools.GetMyPayments]),
     (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock]),
-    // 024: default kart BIN okumasi (PAN/CVV/token asla). 033: kayitli kartla taksit sorgusu +
-    // GERCEK cekim (kart cozumu + gateway cagrisi Customer.Api'de; token disari sizmaz).
+    // 024: default kart BIN okumasi (PAN/CVV asla). 038: odeme baglami (kart vault token +
+    // gercek buyer — A2A istegine verbatim) + kart listesi (kart secimi). 033 taksit/cekim
+    // tool'lari SOKULDU — taksit sorgusu ve cekim A2A -> PaymentGateway zinciriyle.
     (McpServers.Customer, customerUrl, McpClients.WithToken,
-        [CustomerTools.GetDefaultCardBin, CustomerTools.GetCardInstallments, CustomerTools.ChargeDefaultCard])
+        [CustomerTools.GetDefaultCardBin, CustomerTools.GetPaymentContext, CustomerTools.ListCards])
 ];
 // 032: admin persona YALNIZ DropShop onboarding MCP'sini toplar (submit_registration + registration_status).
 // Config yoksa bos -> CollectTools bos doner, persona tool'suz acilir (graceful-degrade).
@@ -121,13 +122,23 @@ var publicAgent = builder.AddAIAgent("public", (sp, name) =>
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.PublicInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);
 
-// ASSISTANT agent (login): catalog + basket.
+// ASSISTANT agent (login): catalog + basket + odeme (A2A).
 var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 {
-    // 033: taksit sorgusu + kayitli kartla cekim artik Customer.Api MCP tool'lariyla (gercek gateway
-    // US1/US2 uclari); eski uzak A2A PaymentAgent taksit yolu emekliye ayrildi (tek tutarli yol).
+    // 038: taksit sorgusu + kayitli kartla cekim A2A uzerinden PaymentGateway Payment.Agent'a
+    // devredildi (033'un Customer.Api MCP odeme yolu SOKULDU — tek yol A2A). Odeme baglami
+    // (vault token + buyer) Customer.Api get_payment_context'ten gelir, A2A istegine verbatim.
     var tools = sp.GetRequiredService<IMcpToolProvider>()
         .CollectTools(assistantAgentTools);
+
+    var a2aLogger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("ChatAgent.A2APayment");
+    var paymentAgentTool = ChatAgent.ExternalAgents.PaymentAgentInstallmentTool.TryBuildAsync(
+            sp.GetRequiredService<PaymentGateway>(),
+            sp.GetRequiredService<IHttpClientFactory>(),
+            a2aLogger)
+        .GetAwaiter().GetResult();
+    if (paymentAgentTool is not null)
+        tools.Add(paymentAgentTool);
 
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.AssistantInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);

@@ -75,7 +75,11 @@
     const form = document.getElementById('ob-form');
     const input = document.getElementById('ob-input');
     const messages = document.getElementById('ob-messages');
-    const PREV_KEY = 'onboarding.previousResponseId';
+    // Cok turlu gecmis STATELESS: transkript sayfa-ici degiskende, her istekle gider
+    // (sunucu previous_response_id cozmuyor — MAF hosting sinirlamasi, bkz. ChatEndpoints).
+    // Sayfa yuklemesi = temiz oturum.
+    const HIST_MAX = 40;
+    let chatHistory = [];
 
     function addBubble(text, who) {
         const el = document.createElement('div');
@@ -99,24 +103,19 @@
             if (typeof obj.delta === 'string') { botEl.textContent += obj.delta; }
             else if (obj.output_text && typeof obj.output_text === 'string') { botEl.textContent += obj.output_text; }
         }
-        const id = (obj.response && obj.response.id) || obj.id;
-        if (id && typeof id === 'string' && id.indexOf('resp') === 0) {
-            sessionStorage.setItem(PREV_KEY, id);
-        }
         messages.scrollTop = messages.scrollHeight;
     }
 
     async function send(message) {
         addBubble(message, 'user');
         const botEl = addBubble('', 'bot');
-        const previousResponseId = sessionStorage.getItem(PREV_KEY);
 
         let resp;
         try {
             resp = await fetch('/chat/admin/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message, previousResponseId: previousResponseId })
+                body: JSON.stringify({ message: message, history: chatHistory })
             });
         } catch {
             botEl.textContent = 'Üzgünüm, şu an yardımcı olamıyorum.';
@@ -143,6 +142,11 @@
             }
         }
         if (botEl.textContent === '') botEl.textContent = '(boş yanıt)';
+
+        // Turu transkripte isle — sonraki istek gecmisi tasir.
+        chatHistory.push({ role: 'user', content: message });
+        chatHistory.push({ role: 'assistant', content: botEl.textContent });
+        chatHistory = chatHistory.slice(-HIST_MAX);
     }
 
     form.addEventListener('submit', function (e) {

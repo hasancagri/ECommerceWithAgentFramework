@@ -44,7 +44,7 @@ It's a portfolio / learning project built to demonstrate how far you can push **
 ```mermaid
 flowchart TB
     subgraph Client
-        Web["WebApp (Blazor UI + chat widget)"]
+        Web["WebApp (Blazor UI + customer-service chat page)"]
     end
 
     Web -->|HTTP| GW["Gateway (YARP)"]
@@ -131,7 +131,7 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | `identity-server` | OpenIddict + ASP.NET Identity — OIDC/OAuth authority |
 | `chat-agent` | AI shopping assistant — MCP client over the gateway + A2A client to the remote payment agent (installment quotes) |
 | `ingestion-agent` | Stateless supplier-ingestion consumer (per-message Agent Framework Workflow, four LLM writer agents over MCP, no database) |
-| `ecommerce-web` | Blazor storefront UI with an embedded chat widget |
+| `ecommerce-web` | Blazor storefront UI with a full-page customer-service chat (`/musteri-hizmetleri`) |
 
 Shared foundations live under `src/others`: `Common` (domain building blocks, results, caching), `Shared` (integration-event contracts), and `Identity.Server`.
 

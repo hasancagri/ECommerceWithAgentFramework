@@ -1,19 +1,8 @@
-@using System.Security.Claims
-@{
-    var isAuthenticated = User.Identity?.IsAuthenticated == true;
-}
-<div id="chat-widget" data-authenticated="@(isAuthenticated ? "true" : "false")">
-    <button id="chat-toggle" type="button" aria-label="Yardım">💬</button>
-    <div id="chat-panel" class="chat-hidden">
-        <div id="chat-header">
-            <span>Asistan</span>
-            <button id="chat-close" type="button" aria-label="Kapat">×</button>
-        </div>
-        <div id="chat-messages"></div>
-        <form id="chat-form">
-            <input id="chat-input" type="text" autocomplete="off"
-                   placeholder="Bir şey sor..." />
-            <button type="submit">Gönder</button>
-        </form>
+@* 034: acilir panel kaldirildi; icon Müşteri Hizmetleri sayfasina yonlendirir (FR-002/FR-003).
+   Sayfanin kendisinde gizlenir — sayfa kendini isaret etmesin (US2 senaryo 2). *@
+@if (!Context.Request.Path.StartsWithSegments("/musteri-hizmetleri"))
+{
+    <div id="chat-widget">
+        <a id="chat-toggle" href="/musteri-hizmetleri" aria-label="Müşteri Hizmetleri">💬</a>
     </div>
-</div>
+}

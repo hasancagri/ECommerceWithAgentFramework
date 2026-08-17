@@ -2,46 +2,31 @@ using Customer.Api.Domains.Wallets.Features.Agents;
 
 namespace Customer.Api.Domains.Wallets;
 
-// 033: kayitli kartla odeme MCP yuzeyi (assistant persona). get_card_installments = BILGI (default
-// kart + tutar -> taksit secenekleri, cekim YAPMAZ); charge_default_card = ISLEM (GERCEK cekim,
-// yalniz kullanici onayindan sonra). Vault token/PAN/CVV LLM'e ASLA donmez; yalniz taksit/tutar +
-// paymentId. Kart cozumu + gateway cagrisi Customer.Api'de (token dis dunyaya sizmaz).
+// 038: odeme baglami MCP yuzeyi (assistant persona). 033'un get_card_installments +
+// charge_default_card tool'lari ve gateway HTTP koprusu SOKULDU (tek yol = A2A): taksit sorgusu
+// ve cekim artik ChatAgent -> A2A -> PaymentGateway Payment.Agent -> gateway /mcp zinciriyle
+// yurur. Bu yuzey yalniz CEKIM BAGLAMINI verir: kart vault token'i (varsayilan veya secilen) +
+// gercek buyer bilgisi (profil + varsayilan adres). ChatAgent bu ciktiyi A2A istegine VERBATIM
+// koyar. Kart EKLEME/SILME bu yuzeyde YOK (guvenlik karari — yalniz ekran yolu).
 [McpServerToolType]
-public static class CardInstallmentsMcpTool
+public static class PaymentContextMcpTool
 {
-    [McpServerTool(Name = "get_card_installments")]
-    [Description("Kullanicinin varsayilan kayitli karti ve verilen tutar icin taksit seceneklerini (taksit sayisi + toplam odenecek tutar) doner. Odeme oncesi BILGIdir, cekim yapmaz. Varsayilan kart yoksa veya kartin BIN'i yoksa bulunamaz.")]
-    public static Task<FeatureObjectResultModel<GetCardInstallmentsForAgent.InstallmentOptionsView>> GetCardInstallmentsAsync(
-        [Description("Odenecek tutar (sepet toplami), TRY. Ornek: 1500.00")] decimal amount,
+    [McpServerTool(Name = "get_payment_context")]
+    [Description("Odeme (taksit sorgusu/cekim) icin baglami doner: gateway merchantId + secilen ya da " +
+                 "varsayilan kartin vault token'i + alici (buyer) bilgisi (ad, soyad, e-posta, GSM, " +
+                 "kayitli varsayilan adres). cardId verilirse o kart, verilmezse varsayilan kart secilir. " +
+                 "Varsayilan adres ya da merchant kaydi yoksa bulunamaz doner. PAN/CVV asla donmez. Bu " +
+                 "bilgi (merchantId + token dahil) odeme istegine OLDUGU GIBI tasinir; kullaniciya gosterilmez.")]
+    public static Task<FeatureObjectResultModel<GetPaymentContextForAgent.PaymentContextView>> GetPaymentContextAsync(
         IMessageBus bus,
         IHttpContextAccessor http,
         ICurrentUser currentUser,
-        CancellationToken ct)
-    {
-        var userId = currentUser.Load(http.HttpContext!.User).Id;
-        return bus.InvokeAsync<FeatureObjectResultModel<GetCardInstallmentsForAgent.InstallmentOptionsView>>(
-            new GetCardInstallmentsForAgent.GetCardInstallmentsQuery(userId, amount), ct);
-    }
-}
-
-[McpServerToolType]
-public static class ChargeDefaultCardMcpTool
-{
-    [McpServerTool(Name = "charge_default_card")]
-    [Description("Kullanicinin varsayilan kayitli kartindan GERCEK odeme ceker. YALNIZCA kullanici odemeyi acikca onayladiktan sonra cagir. amount=sepet tutari; installment=secilen taksit sayisi (tek cekim icin 1); paidPrice=o taksitin toplam odenecek tutari (get_card_installments'tan; tek cekimde amount ile ayni). Basarida paymentId + durum doner. PAN/token asla donmez.")]
-    public static Task<FeatureObjectResultModel<ChargeDefaultCardForAgent.ChargeResultView>> ChargeDefaultCardAsync(
-        [Description("Sepet tutari (temel fiyat), TRY")] decimal amount,
-        [Description("Secilen taksit sayisi; tek cekim icin 1")] int installment,
-        [Description("Secilen taksitin toplam odenecek tutari (get_card_installments'tan). Tek cekimde amount ile ayni.")] decimal paidPrice,
-        IMessageBus bus,
-        IHttpContextAccessor http,
-        ICurrentUser currentUser,
-        CancellationToken ct)
+        CancellationToken ct,
+        [Description("Secilen kartin Id'si (list_cards'tan); verilmezse varsayilan kart")] Guid? cardId = null)
     {
         var user = currentUser.Load(http.HttpContext!.User);
-        return bus.InvokeAsync<FeatureObjectResultModel<ChargeDefaultCardForAgent.ChargeResultView>>(
-            new ChargeDefaultCardForAgent.ChargeDefaultCardCommand(
-                user.Id, user.Name, user.Email, user.Phone,
-                amount, paidPrice, installment <= 0 ? 1 : installment), ct);
+        return bus.InvokeAsync<FeatureObjectResultModel<GetPaymentContextForAgent.PaymentContextView>>(
+            new GetPaymentContextForAgent.GetPaymentContextQuery(
+                user.Id, user.Name, user.Email, user.Phone, cardId), ct);
     }
 }
