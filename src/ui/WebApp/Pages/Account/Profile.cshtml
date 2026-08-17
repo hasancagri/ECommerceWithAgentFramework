@@ -9,7 +9,8 @@
 
     var displayName = ClaimValue(ClaimTypes.Name, "name", "preferred_username") ?? User.Identity?.Name;
     var email = ClaimValue(ClaimTypes.Email, "email");
-    var userName = ClaimValue("preferred_username", ClaimTypes.NameIdentifier, "sub");
+    @* sub/NameIdentifier fallback'i GUID gosteriyordu; gercek kullanici adi yoksa satir gizlenir. *@
+    var userName = ClaimValue("preferred_username");
 }
 
 <h2 class="mb-4">Profilim</h2>

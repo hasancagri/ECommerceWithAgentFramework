@@ -5,6 +5,15 @@
 }
 
 @* 025: sepet rezervasyon bilgisi/geri sayimi tamamen layout header'inda; sepet sayfasinda banner yok. *@
+@if (!Model.Basket.HasItem)
+{
+    <div class="text-center py-5">
+        <p class="mb-3">Sepetinde ürün yok.</p>
+        <a asp-page="/Index" class="btn btn-primary">Alışverişe Başla</a>
+    </div>
+    return;
+}
+
 <table class="table table-striped">
     <thead class="table-dark">
     <tr>
@@ -17,14 +26,6 @@
     </tr>
     </thead>
     <tbody>
-
-    @if (!Model.Basket.HasItem)
-    {
-        <tr>
-            <td colspan="6" class="text-center">Sepetinde ürün yok.</td>
-        </tr>
-    }
-
 
     @foreach (var basketItem in Model.Basket.Items)
     {
@@ -83,12 +84,6 @@
 
     </tbody>
 </table>
-
-
-@if (!Model.Basket.HasItem)
-{
-    return;
-}
 
 <a asp-page="/order/Create" class="btn btn-success w-100 mt-3 text-center">
     <i class="fa-solid fa-credit-card"></i> Ödeme Adımına Geç
