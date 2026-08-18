@@ -246,6 +246,33 @@ push-inline registration and human admin review, so the flow is now chat-driven:
   anonymous decision links (mailed accept/reject pages); this system does not call the gateway's
   commission API.
 
+## Chat payment + order completion (038/039)
+
+A shopper can pay and place an order **end-to-end from chat**, never touching a screen — but payment
+trust is never handed to the LLM. Two complementary paths:
+
+- **Installment quote (038, A2A)** — "list my installments" goes ChatAgent → **A2A** → the gateway's
+  remote `Payment.Agent` → gateway `/mcp`. Read-only; the LLM shows returned options verbatim, never
+  invents amounts. The buyer/vault-token come from Customer.Api `get_payment_context` and are passed
+  **verbatim** into the A2A request (the cart line is synthesized gateway-side).
+- **Order completion (039, server orchestration)** — on user confirmation the LLM only picks the tool
+  and passes `cardId?` + `installment`; **everything else is server-side**. The `place_order` MCP tool
+  (Order.Api) reads the cart (Basket `GetBasketItems` gRPC, server-authoritative), the payment context
+  (Customer `/internal/payment-context` REST), derives a **correlation-key** (HMAC of
+  userId+cart+installment — ownership + idempotency), then charges PaymentGateway over **structural
+  REST** (Principle I: non-agent code cannot drive A2A/MCP) and starts the Order + CheckoutSaga.
+
+Why the charge moved off the LLM-A2A step: `paymentId` is not proof of success, and a hallucinated
+"success" would mean a free order. So the charge + verify are **structural server-to-server**; the LLM
+only triggers. The flow is a durable `PaymentAttempt` (Marten doc, sync charge outcome +
+`ScheduleAsync` bounded reconcile) so a lost response is recovered by re-deriving the same
+correlation-key and retrieving from the gateway — never a double charge. Card add/remove is **refused
+in chat** (FR-013, security); only card *selection* is allowed and the PAN never reaches the LLM.
+
+The gateway side of this (idempotent structural charge + retrieve, X-Api-Key auth) lives in the
+separate **PaymentGateway** repo (feature `039-structural-charge-retrieve`) and is consumed here as a
+contract via `PaymentGatewayClient` (`PaymentGatewayOption`: base url + merchant API key).
+
 ## Notes
 
 - **Central Package Management** is enabled — package versions live in `Directory.Packages.props`, not individual `.csproj` files.
