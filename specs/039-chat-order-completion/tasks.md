@@ -106,7 +106,7 @@ US1-US4 sırasında PG uçları hazır olmalı; değilse geçici test-stub ile i
 - [X] T024 [US1] Saga Succeeded → `Order.Create(userId, address, paymentId)` + AddOrderItem'ler +
   `StartCheckout` publish (028 CheckoutSaga tetiklenir)
 - [X] T025 [US1] Handler yanıtı `created` + orderCode + özet; boş sepet/context yok → `rejected`
-- [ ] T026 [US1] Canlı doğrulama (quickstart S1): Aspire ile uçtan uca; Confirmed + sepet boş + stok düştü
+- [X] T026 [US1] Canlı doğrulama (quickstart S1): Aspire ile uçtan uca; Confirmed + sepet boş + stok düştü (PASS 2026-08-18)
 
 **Checkpoint**: MVP çalışır — chat'ten uçtan uca mutlu-yol sipariş.
 
@@ -176,7 +176,7 @@ kesin ama sipariş adımı transient fail ederse idempotent retry.
 
 - [X] T042 [US5] Mevcut `get_orders` MCP tool'unun yeni siparişi yansıttığını doğrula; gerekiyorsa
   AssistantInstructions'a "sipariş sonrası durum sorma" ipucu satırı
-- [ ] T043 [US5] Canlı doğrulama — sipariş sonrası "siparişlerim" listesi
+- [X] T043 [US5] Canlı doğrulama — sipariş sonrası "siparişlerim" listesi (chat get_orders + ekran PASS 2026-08-18)
 
 ---
 
