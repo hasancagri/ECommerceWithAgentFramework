@@ -183,7 +183,7 @@ kesin ama sipariş adımı transient fail ederse idempotent retry.
 ## Phase 8: Polish & Cross-Cutting
 
 - [ ] T044 [P] Fail-closed davranış: Basket/Customer/PG erişilemez → sipariş yok (S5) canlı doğrula
-- [ ] T045 [P] Kart ekleme/silme chat'ten reddi (FR-013) — prompt guard doğrula
+- [X] T045 [P] Kart ekleme/silme chat'ten reddi (FR-013) — prompt guard doğrula (canlı PASS 2026-08-18)
 - [X] T046 [P] Tüm domain testleri yeşil (`dotnet test tests/Order.Api.Tests`); `dotnet build` temiz
 - [ ] T047 quickstart S1-S5 tam geçiş + spec Success Criteria (SC-001..006) kontrol
 - [ ] T048 README/docs — implement + canlı doğrulama SONRASI 038+039 "chat ödeme+sipariş" bölümü
