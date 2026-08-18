@@ -125,4 +125,8 @@ app.MapMcp("/mcp");
 app.MapGrpcService<Basket.Api.Grpc.BasketClearGrpcService>()
     .RequireAuthorization(AuthorizationScopes.BasketWrite);
 
+// 039: GetBasketItems gRPC ucu (Order.Api chat siparis tamamlama; makine token'i basket.read).
+app.MapGrpcService<Basket.Api.Grpc.BasketItemsGrpcService>()
+    .RequireAuthorization(AuthorizationScopes.BasketRead);
+
 await app.RunAsync();

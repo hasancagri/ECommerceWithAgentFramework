@@ -12,4 +12,11 @@ public static class OrderResourceConstants
     public static readonly string ORDER_INVALID_STATUS_TRANSITION = "ORDER_INVALID_STATUS_TRANSITION";
     public static readonly string ORDER_TIMEOUT = "ORDER_TIMEOUT";
     public static readonly string ORDER_STOCK_STEP_FAILED = "ORDER_STOCK_STEP_FAILED";
+
+    // 039: chat uzerinden uctan uca siparis tamamlama (place_order + PaymentAttempt).
+    public static readonly string ORDER_PAYMENT_CHARGE_FAILED = "ORDER_PAYMENT_CHARGE_FAILED";
+    public static readonly string ORDER_PAYMENT_VERIFY_FAILED = "ORDER_PAYMENT_VERIFY_FAILED";
+    public static readonly string ORDER_PAYMENT_PENDING = "ORDER_PAYMENT_PENDING";
+    public static readonly string ORDER_BASKET_EMPTY = "ORDER_BASKET_EMPTY";
+    public static readonly string ORDER_PAYMENT_CONTEXT_MISSING = "ORDER_PAYMENT_CONTEXT_MISSING";
 }

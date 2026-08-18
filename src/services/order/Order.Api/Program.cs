@@ -67,6 +67,18 @@ builder.Services.AddOptions<Checkout>().BindConfiguration(nameof(Checkout))
     .ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddSingleton<Checkout>(sp => sp.GetRequiredService<IOptions<Checkout>>().Value);
 
+// 039: chat siparis tamamlama option'lari (PG cekim, Customer baglami, reconcile, correlation HMAC).
+builder.Services.AddOptions<PaymentGatewayOption>().BindConfiguration(nameof(PaymentGatewayOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<PaymentGatewayOption>(sp => sp.GetRequiredService<IOptions<PaymentGatewayOption>>().Value);
+builder.Services.AddOptions<CustomerContextOption>().BindConfiguration(nameof(CustomerContextOption));
+builder.Services.AddSingleton<CustomerContextOption>(sp => sp.GetRequiredService<IOptions<CustomerContextOption>>().Value);
+builder.Services.AddOptions<CheckoutReconcile>().BindConfiguration(nameof(CheckoutReconcile));
+builder.Services.AddSingleton<CheckoutReconcile>(sp => sp.GetRequiredService<IOptions<CheckoutReconcile>>().Value);
+builder.Services.AddOptions<CorrelationKeyOption>().BindConfiguration(nameof(CorrelationKeyOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<CorrelationKeyOption>(sp => sp.GetRequiredService<IOptions<CorrelationKeyOption>>().Value);
+
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
     builder.AddRedisDistributedCache("redis");
@@ -97,6 +109,29 @@ builder.Services
     .AddGrpcClient<Shared.Grpc.Basket.BasketClear.BasketClearClient>(o => o.Address = new Uri(basketGrpcAddress))
     .AddHttpMessageHandler<SagaTokenHandler>();
 builder.Services.AddScoped<BasketClearClientProxy>();
+
+// 039: GetBasketItems gRPC istemcisi (place_order kalem sentezi; makine token'i basket.read).
+builder.Services
+    .AddGrpcClient<Shared.Grpc.Basket.BasketQuery.BasketQueryClient>(o => o.Address = new Uri(basketGrpcAddress))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+builder.Services.AddScoped<BasketItemsClientProxy>();
+
+// 039: Customer yapisal odeme-baglami HTTP istemcisi (makine token'i customer.read; SagaTokenHandler).
+var customerHttpAddress = builder.Configuration["services:customer-api:https:0"]
+    ?? builder.Configuration["services:customer-api:http:0"]
+    ?? "https://customer-api";
+builder.Services
+    .AddHttpClient<CustomerPaymentContextClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+
+// 039: PaymentGateway (dis repo) cekim/retrieve HTTP istemcisi — auth merchant API key (kullanici JWT degil).
+builder.Services.AddHttpClient<PaymentGatewayClient>((sp, c) =>
+{
+    var pg = sp.GetRequiredService<PaymentGatewayOption>();
+    c.BaseAddress = new Uri(pg.BaseUrl.TrimEnd('/') + "/");
+    c.DefaultRequestHeaders.Add(PaymentGatewayClient.ApiKeyHeader, pg.ApiKey);
+    c.Timeout = TimeSpan.FromSeconds(60);
+});
 
 builder.Services
     .AddMcpServer()

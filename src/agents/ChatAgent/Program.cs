@@ -61,7 +61,7 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
     (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
     (McpServers.Basket, basketUrl, McpClients.WithToken,
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem]),
-    (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders]),
+    (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders, OrderTools.PlaceOrder]),
     (McpServers.Payment, paymentUrl, McpClients.WithToken, [PaymentTools.GetMyPayments]),
     (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock]),
     // 024: default kart BIN okumasi (PAN/CVV asla). 038: odeme baglami (kart vault token +

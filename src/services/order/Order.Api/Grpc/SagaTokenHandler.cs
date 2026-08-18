@@ -36,7 +36,10 @@ public sealed class SagaTokenHandler(IdentityOption identity, SagaAuth sagaAuth)
                     ["grant_type"] = "client_credentials",
                     ["client_id"] = sagaAuth.ClientId,
                     ["client_secret"] = sagaAuth.ClientSecret,
-                    ["scope"] = $"{AuthorizationScopes.StockReserve} {AuthorizationScopes.BasketWrite}"
+                    // 028: stock.reserve + basket.write (checkout saga); 039: basket.read (kalem okuma)
+                    // + customer.read (odeme baglami) — tek makine token'i, superset scope.
+                    ["scope"] = $"{AuthorizationScopes.StockReserve} {AuthorizationScopes.BasketWrite} " +
+                                $"{AuthorizationScopes.BasketRead} {AuthorizationScopes.CustomerRead}"
                 }), ct);
             response.EnsureSuccessStatusCode();
 

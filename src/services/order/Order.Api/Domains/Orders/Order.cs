@@ -1,13 +1,5 @@
 namespace Order.Api.Domains.Orders;
 
-// 028: int degerler eski adlarla birebir (1/2/3) — mevcut dev kayitlari migration'siz okunur.
-public enum OrderStatus
-{
-    Pending = 1,
-    Confirmed = 2,
-    Cancelled = 3
-}
-
 public class Order : AggregateRoot
 {
     public string Code { get; private set; } = null!;
@@ -102,4 +94,12 @@ public class Order : AggregateRoot
         var random = new Random();
         return string.Concat(Enumerable.Range(0, 10).Select(_ => random.Next(0, 10)));
     }
+}
+
+// 028: int degerler eski adlarla birebir (1/2/3) — mevcut dev kayitlari migration'siz okunur.
+public enum OrderStatus
+{
+    Pending = 1,
+    Confirmed = 2,
+    Cancelled = 3
 }
