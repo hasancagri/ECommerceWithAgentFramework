@@ -54,6 +54,8 @@ public static class BasketTools
 public static class OrderTools
 {
     public const string GetOrders = "get_orders";
+    // 039: chat'ten uctan uca siparis tamamlama (sunucu orkestrasyonu; cardId?/installment).
+    public const string PlaceOrder = "place_order";
 }
 
 public static class PaymentTools
@@ -165,28 +167,26 @@ public static class Prompts
         kullanıcıya GÖSTERME. Kullanıcı listeden bir taksit seçerse kural 9'a geç; tutarları
         yeniden sorgulama/sorma, gösterdiğin listedeki değerleri kullan.
 
-        9) ÖDEME / SATIN ALMA ("öde", "satın al", "kartımdan çek", "ödemeyi tamamla", "N taksit
-        yap/N taksitle öde"): kayıtlı kartla GERÇEK çekim. İKİ TUTAR vardır ve İKİSİNİ DE
-        ARAÇLARDAN alırsın, kullanıcıya ASLA sormaz/doğrulatmazsın: amount = get_basket sepet
-        toplamı; paidPrice = seçilen taksidin taksit sorgusundaki (kural 8) toplam tutarı (tek
-        çekimde amount ile aynı; taksit sorgusu bu sohbette yoksa önce kural 8'i çalıştır).
-        Kullanıcıdan alınacak TEK bilgi taksit sayısıdır. "Belirlediğiniz bir tutar var mı",
-        "toplam X mi olacak" gibi tutar soruları SORMA. (a) Taksit sayısı belirsizse kural 8 ile
-        seçenekleri göster ve hangi taksidi istediğini sor. (b) Taksit sayısı belliyse TEK bir
-        onay sorusu sor, format sabit: "Sepet toplamı X TL; N taksitle toplam Y TL kayıtlı
-        kartınızdan çekilecek. Onaylıyor musunuz?" Başka ek soru sorma. (c) ONAY PROTOKOLÜ: bu
-        soruyu sorduktan sonra kullanıcının olumlu yanıtı ("onaylıyorum", "evet", "onayla",
-        "tamam" vb.) SORDUĞUN çekimin onayıdır — "neyi onayladınız" DEME, parametreleri yeniden
-        sorma/hesaplatma, doğrudan (d)'ye geç. Olumsuz ya da konuyu değiştiren yanıt gelirse
-        çekim yapma. (d) Ödeme ajanı aracını (PaymentAgent) şu içerikle çağır: intent=charge,
-        merchantId=bağlamdaki merchantId, vaultToken=bağlamdaki token, amount=sepet toplamı,
-        installment=seçilen taksit sayısı (tek çekim için 1), paidPrice=o taksidin toplam tutarı
-        ve get_payment_context'ten dönen TÜM buyer alanları OLDUĞU GİBİ (buyerName, buyerSurname,
-        buyerEmail, buyerGsmNumber, buyerIdentityNumber, buyerRegistrationAddress, buyerCity,
-        buyerCountry, buyerIp). Buyer alanlarını DEĞİŞTİRME, ÜRETME, kullanıcıya GÖSTERME. Sepet
-        kalemlerini GÖNDERME (gateway kendisi oluşturur). (e) Başarılıysa dönen paymentId ve
-        durumu kullanıcıya ilet; başarısızsa "ödeme alınamadı" de (teknik ayrıntı verme).
-        Kullanıcı onaylamadan ASLA çekim yapma; alan/tutar UYDURMA.
+        9) ÖDEME / SİPARİŞİ TAMAMLAMA ("öde", "satın al", "siparişi tamamla", "kartımdan çek",
+        "N taksitle öde"): kayıtlı kartla GERÇEK çekim + siparişin oluşturulması TEK adımda. Bu işi
+        SUNUCU yürütür (place_order aracı); sen yalnız seçilen kartı (varsa) ve taksit sayısını
+        iletirsin. Kullanıcıdan alınacak TEK bilgi taksit sayısıdır; tutar/alıcı/adres/ürün SORMA
+        ve HESAPLATMA — sunucu belirler. (a) Taksit sayısı belirsizse kural 8 ile seçenekleri
+        göster ve hangi taksidi istediğini sor. (b) Taksit sayısı belliyse TEK onay sorusu sor,
+        format sabit: "Sepet toplamı X TL; N taksitle toplam Y TL kayıtlı kartınızdan çekilecek ve
+        siparişiniz oluşturulacak. Onaylıyor musunuz?" Tutarları kural 8'deki taksit sorgusundan
+        al; taksit sorgusu bu sohbette yoksa önce kural 8'i çalıştır. (c) ONAY PROTOKOLÜ: olumlu
+        yanıt ("onaylıyorum", "evet", "onayla", "tamam" vb.) SORDUĞUN işlemin onayıdır — "neyi
+        onayladınız" DEME, parametreleri yeniden sorma/hesaplatma, doğrudan (d)'ye geç. Olumsuz ya
+        da konuyu değiştiren yanıtta işlem yapma. (d) place_order aracını çağır: installment=seçilen
+        taksit sayısı (tek çekim için 1); cardId=kullanıcı bir kart SEÇTİYSE onun cardId'si (kural
+        10; seçmediyse cardId VERME = varsayılan kart). BAŞKA parametre VERME — tutar, alıcı
+        (buyer), adres, sepet kalemleri, vaultToken sunucuda oluşur, place_order'a GÖNDERİLMEZ.
+        (e) Aracın yanıtındaki 'message' alanını kullanıcıya OLDUĞU GİBİ ilet: outcome=created ise
+        sipariş kodunu da söyle; outcome=pending ise ödemenin kontrol edildiğini (kesin başarısız
+        DEME); outcome=payment_failed ise ödemenin alınamadığını; outcome=rejected ise mesajdaki
+        nedeni. Kullanıcı onaylamadan ASLA place_order çağırma; alan/tutar UYDURMA. Aynı sepet+taksit
+        için tekrar çağırmak güvenlidir (sunucu çift çekim/çift sipariş yapmaz).
 
         10) KARTLARIM / KART SEÇİMİ ("kartlarımı göster", "şu kartımla öde/taksit"): list_cards
         aracıyla kartları listele (marka + son 4 hane + etiket + varsayılan işareti); kart Id'sini

@@ -26,13 +26,13 @@ US1-US4 sırasında PG uçları hazır olmalı; değilse geçici test-stub ile i
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 [P] Order.Api `Constants/OrderResourceConstants.cs`'e yeni hata kodları ekle
+- [X] T001 [P] Order.Api `Constants/OrderResourceConstants.cs`'e yeni hata kodları ekle
   (ORDER_PAYMENT_CHARGE_FAILED, _VERIFY_FAILED, _PENDING, ORDER_BASKET_EMPTY, _PAYMENT_CONTEXT_MISSING)
-- [ ] T002 [P] Order.Api `Options/PaymentGatewayOption.cs` (base url + api key) — Options pattern + Bind
-- [ ] T003 [P] Order.Api `Options/CustomerContextOption.cs` + `Options/CheckoutReconcile.cs`
+- [X] T002 [P] Order.Api `Options/PaymentGatewayOption.cs` (base url + api key) — Options pattern + Bind
+- [X] T003 [P] Order.Api `Options/CustomerContextOption.cs` + `Options/CheckoutReconcile.cs`
   (backoff adımları + DeadlineSeconds) + `Options/CorrelationKeyOption.cs` (HMAC serverSecret) — Options pattern
-- [ ] T004 [P] Order.Api `GlobalUsings.cs` yeni namespace'leri (Http, Domains.PaymentAttempts) ekle
-- [ ] T005 [P] `Directory.Packages.props` gerekli paket sürümü (Grpc/HTTP resilience) — eksikse ekle
+- [X] T004 [P] Order.Api `GlobalUsings.cs` yeni namespace'leri (Http, Domains.PaymentAttempts) ekle
+- [X] T005 [P] `Directory.Packages.props` gerekli paket sürümü (Grpc/HTTP resilience) — eksikse ekle
 
 ---
 
@@ -42,50 +42,50 @@ US1-US4 sırasında PG uçları hazır olmalı; değilse geçici test-stub ile i
 
 ### Sepet okuma (Basket GetBasketItems gRPC)
 
-- [ ] T006 `src/others/Shared/Protos/basket_items.proto` — BasketQuery.GetBasketItems RPC + mesajlar
+- [X] T006 `src/others/Shared/Protos/basket_items.proto` — BasketQuery.GetBasketItems RPC + mesajlar
   (contracts/basket-get-items-grpc.md)
-- [ ] T007 Basket.Api `Grpc/BasketItemsGrpcService.cs` — GetBasket query'sini IMessageBus ile sarar;
+- [X] T007 Basket.Api `Grpc/BasketItemsGrpcService.cs` — GetBasket query'sini IMessageBus ile sarar;
   scope guard (basket.read); GrpcServices=Server csproj
-- [ ] T008 [P] Order.Api `Grpc/BasketItemsClientProxy.cs` — deadline'lı client; OrderItemDto + contentHash'e eşler
+- [X] T008 [P] Order.Api `Grpc/BasketItemsClientProxy.cs` — deadline'lı client; OrderItemDto + contentHash'e eşler
 
 ### Ödeme bağlamı (Order→Customer yapısal)
 
-- [ ] T009 Customer.Api — mevcut `GetPaymentContextForAgent` mantığına yapısal uç (gRPC/REST);
+- [X] T009 Customer.Api — mevcut `GetPaymentContextForAgent` mantığına yapısal uç (gRPC/REST);
   makine kimliği + okuma scope (contracts/order-customer-payment-context.md)
-- [ ] T010 [P] Order.Api `Http/CustomerPaymentContextClient.cs` — PaymentContextView çeker; adres yoksa
+- [X] T010 [P] Order.Api `Http/CustomerPaymentContextClient.cs` — PaymentContextView çeker; adres yoksa
   NotFound → sipariş reddi eşlemesi
 
 ### PG çekim/verify (Order→PaymentGateway REST)
 
-- [ ] T011 [P] Order.Api `Http/PaymentGatewayClient.cs` — charge(correlationKey,...) + retrieve(key/id);
+- [X] T011 [P] Order.Api `Http/PaymentGatewayClient.cs` — charge(correlationKey,...) + retrieve(key/id);
   merchant api key; PaymentGatewayOption; 60s timeout (contracts/paymentgateway-charge-verify.md)
 - [ ] T012 [P] (geçici) PG uçları hazır değilse test-stub/mock çekim yanıtı — yerel S1-S4 için
 
 ### Makine yetkisi
 
-- [ ] T013 Order.Api makine token'ı (client-credentials) Basket.read + Customer okuma scope'ları için
+- [X] T013 Order.Api makine token'ı (client-credentials) Basket.read + Customer okuma scope'ları için
   (028 order-saga deseni) — `Grpc`/`Http` çağrılarına enjeksiyon handler
 
 ### CorrelationKey (VO — DOMAIN, test-first)
 
-- [ ] T014 [P] TEST `tests/Order.Api.Tests/CorrelationKeyTests.cs` — aynı sepet+taksit → aynı key;
+- [X] T014 [P] TEST `tests/Order.Api.Tests/CorrelationKeyTests.cs` — aynı sepet+taksit → aynı key;
   sepet/taksit değişince farklı; **farklı userId → farklı key (sahiplik)**; deterministik yeniden hesap;
   aynı secret zorunlu (xUnit + Shouldly)
-- [ ] T015 Order.Api `Domains/PaymentAttempts/ValueObjects/CorrelationKey.cs` — record + private ctor
+- [X] T015 Order.Api `Domains/PaymentAttempts/ValueObjects/CorrelationKey.cs` — record + private ctor
   + `Create(userId, basketId, contentHash, installment)`; **HMAC(serverSecret, ...)** üretim
   (CorrelationKeyOption); T014'ü geçir
 
 ### PaymentAttemptSaga iskeleti + place_order yüzeyi
 
-- [ ] T016 Order.Api `Sagas/PaymentAttemptSaga.cs` — Wolverine saga state (Id=CorrelationKey,
+- [X] T016 Order.Api `Sagas/PaymentAttemptSaga.cs` — Wolverine saga state (Id=CorrelationKey,
   data-model.md alanları) + Start giriş noktası (henüz On* boş)
-- [ ] T017 Order.Api `Domains/Orders/Features/Agents/PlaceOrderForAgent.cs` — agent slice iskeleti
+- [X] T017 Order.Api `Domains/Orders/Features/Agents/PlaceOrderForAgent.cs` — agent slice iskeleti
   (command: cardId?/installment; response: outcome/orderCode/...); izole (Commands reuse YOK)
-- [ ] T018 Order.Api `Domains/Orders/OrderMcpTools.cs` — `place_order` MCP tool ekle (get_orders yanına);
+- [X] T018 Order.Api `Domains/Orders/OrderMcpTools.cs` — `place_order` MCP tool ekle (get_orders yanına);
   order.write scope
-- [ ] T019 [P] ChatAgent `ConstValues.cs` — `OrderTools.PlaceOrder="place_order"` + assistantAgentTools
+- [X] T019 [P] ChatAgent `ConstValues.cs` — `OrderTools.PlaceOrder="place_order"` + assistantAgentTools
   allowlist entry (Order MCP, WithToken)
-- [ ] T020 [P] ChatAgent `AssistantInstructions` prompt'a "SİPARİŞ VERME" kuralı — onayda place_order;
+- [X] T020 [P] ChatAgent `AssistantInstructions` prompt'a "SİPARİŞ VERME" kuralı — onayda place_order;
   amount/buyer/kalem VERME; yalnız cardId?+installment
 
 **Checkpoint**: kanallar + saga iskeleti + tool yüzeyi hazır; henüz karar mantığı yok.
@@ -98,14 +98,14 @@ US1-US4 sırasında PG uçları hazır olmalı; değilse geçici test-stub ile i
 
 **Independent Test**: quickstart S1 — sepet+kart var, "siparişi tamamla" → Confirmed sipariş + boş sepet.
 
-- [ ] T021 [US1] TEST `PaymentAttemptSagaTests` — `OnChargeResult(success, paymentId)` → Succeeded
+- [X] T021 [US1] TEST `PaymentAttemptSagaTests` — `OnChargeResult(success, paymentId)` → Succeeded
   geçişi (saf `On*`, mock'suz)
-- [ ] T022 [US1] PaymentAttemptSaga `OnChargeResult` success dalı → Succeeded; T021'i geçir
-- [ ] T023 [US1] PlaceOrderForAgent handler orkestrasyonu: GetBasketItems → CustomerContext →
+- [X] T022 [US1] PaymentAttemptSaga `OnChargeResult` success dalı → Succeeded; T021'i geçir
+- [X] T023 [US1] PlaceOrderForAgent handler orkestrasyonu: GetBasketItems → CustomerContext →
   CorrelationKey → saga.Start → PG charge (mutlu yol)
-- [ ] T024 [US1] Saga Succeeded → `Order.Create(userId, address, paymentId)` + AddOrderItem'ler +
+- [X] T024 [US1] Saga Succeeded → `Order.Create(userId, address, paymentId)` + AddOrderItem'ler +
   `StartCheckout` publish (028 CheckoutSaga tetiklenir)
-- [ ] T025 [US1] Handler yanıtı `created` + orderCode + özet; boş sepet/context yok → `rejected`
+- [X] T025 [US1] Handler yanıtı `created` + orderCode + özet; boş sepet/context yok → `rejected`
 - [ ] T026 [US1] Canlı doğrulama (quickstart S1): Aspire ile uçtan uca; Confirmed + sepet boş + stok düştü
 
 **Checkpoint**: MVP çalışır — chat'ten uçtan uca mutlu-yol sipariş.
@@ -118,11 +118,11 @@ US1-US4 sırasında PG uçları hazır olmalı; değilse geçici test-stub ile i
 
 **Independent Test**: quickstart S2a/b/c — başarısız/tutar-uyuşmaz/başka-kullanıcı → sipariş oluşmaz.
 
-- [ ] T027 [US2] TEST PaymentAttemptSaga verify kararı — success değilse / tutar / sahip uyuşmazsa
+- [X] T027 [US2] TEST PaymentAttemptSaga verify kararı — success değilse / tutar / sahip uyuşmazsa
   Succeeded'a GEÇMEZ (Failed/red)
-- [ ] T028 [US2] Saga/handler verify geçidi: PG charge/retrieve sonucunda status+price+buyer eşleşme;
+- [X] T028 [US2] Saga/handler verify geçidi: PG charge/retrieve sonucunda status+price+buyer eşleşme;
   uyuşmazsa ORDER_PAYMENT_VERIFY_FAILED, sipariş yok; T027'yi geçir
-- [ ] T029 [US2] Sahiplik: PG retrieve **yalnız çağıranın userId'sinden yeniden hesaplanan HMAC
+- [X] T029 [US2] Sahiplik: PG retrieve **yalnız çağıranın userId'sinden yeniden hesaplanan HMAC
   correlation-key ile** yapılır (ayrı buyerRef YOK — F1 çözümü). Başka userId anahtarı üretemez →
   başkasının ödemesi görülemez. PG'nin anahtarı persist+indeks etmesine dayanır (dış bağımlılık)
 - [ ] T030 [US2] Canlı doğrulama S2a/b/c
@@ -136,12 +136,12 @@ kesin ama sipariş adımı transient fail ederse idempotent retry.
 
 **Independent Test**: quickstart S3 — iki kez tetikle → tek çekim + tek sipariş.
 
-- [ ] T031 [US3] TEST PaymentAttemptSaga idempotent re-entry — aynı Id(key) ikinci Start yeni çekim
+- [X] T031 [US3] TEST PaymentAttemptSaga idempotent re-entry — aynı Id(key) ikinci Start yeni çekim
   başlatmaz, var olanı ilerletir
-- [ ] T032 [US3] Saga Id=CorrelationKey tekliği + PlaceOrder handler var-olan-saga bulma; T031'i geçir
-- [ ] T033 [US3] Order oluşturma paymentId idempotency (mevcut CreateOrder check'iyle hizala) —
+- [X] T032 [US3] Saga Id=CorrelationKey tekliği + PlaceOrder handler var-olan-saga bulma; T031'i geçir
+- [X] T033 [US3] Order oluşturma paymentId idempotency (mevcut CreateOrder check'iyle hizala) —
   çift sipariş yok
-- [ ] T049 [US3] (FR-008) Saga Succeeded→Order.Create adımı transient fail ederse **Wolverine idempotent
+- [X] T049 [US3] (FR-008) Saga Succeeded→Order.Create adımı transient fail ederse **Wolverine idempotent
   retry** (paymentId dedupe çift siparişi önler); kullanıcıya "tamamlanıyor" — sıra: T034'ten önce
 - [ ] T034 [US3] Canlı doğrulama S3 (çift tetik → tek çekim + tek sipariş) + T049 retry yolu
 
@@ -153,16 +153,16 @@ kesin ama sipariş adımı transient fail ederse idempotent retry.
 
 **Independent Test**: quickstart S4/S4b — yanıt kaybı → reconcile → tek sipariş; deadline → terminal.
 
-- [ ] T035 [US4] TEST PaymentAttemptSaga `OnChargeResult(ambiguous)` → Unknown + tick zamanlama kararı
-- [ ] T036 [US4] TEST `OnReconcileTick` — success→Succeeded, failed→Failed, pending→backoff reschedule,
+- [X] T035 [US4] TEST PaymentAttemptSaga `OnChargeResult(ambiguous)` → Unknown + tick zamanlama kararı
+- [X] T036 [US4] TEST `OnReconcileTick` — success→Succeeded, failed→Failed, pending→backoff reschedule,
   now>=Deadline→NeedsReconciliation (saf `On*`, mock'suz)
-- [ ] T037 [US4] Saga `OnChargeResult(ambiguous)`→Unknown + Wolverine `ScheduleAsync(ReconcileTick)`;
+- [X] T037 [US4] Saga `OnChargeResult(ambiguous)`→Unknown + Wolverine `ScheduleAsync(ReconcileTick)`;
   T035'i geçir
-- [ ] T038 [US4] Saga `OnReconcileTick`: PG retrieve(key) → geçişler + backoff (CheckoutReconcile config)
+- [X] T038 [US4] Saga `OnReconcileTick`: PG retrieve(key) → geçişler + backoff (CheckoutReconcile config)
   + deadline terminal; T036'yı geçir
-- [ ] T039 [US4] On-demand: kullanıcı chat'te tekrar sorunca place_order var-olan saga'yı bulur + hemen
+- [X] T039 [US4] On-demand: kullanıcı chat'te tekrar sorunca place_order var-olan saga'yı bulur + hemen
   tick (arka plan schedule'ı beklemez)
-- [ ] T040 [US4] Belirsizde kullanıcı mesajı `pending` — "ödemen alınmış olabilir, kontrol ediliyor";
+- [X] T040 [US4] Belirsizde kullanıcı mesajı `pending` — "ödemen alınmış olabilir, kontrol ediliyor";
   terminal NeedsReconciliation → ops log/kuyruk görünürlük
 - [ ] T041 [US4] Canlı doğrulama S4 (yanıt kaybı → kurtarma) + S4b (deadline → terminal)
 
@@ -174,7 +174,7 @@ kesin ama sipariş adımı transient fail ederse idempotent retry.
 
 **Independent Test**: quickstart — sipariş sonrası "siparişlerim" → listede Confirmed.
 
-- [ ] T042 [US5] Mevcut `get_orders` MCP tool'unun yeni siparişi yansıttığını doğrula; gerekiyorsa
+- [X] T042 [US5] Mevcut `get_orders` MCP tool'unun yeni siparişi yansıttığını doğrula; gerekiyorsa
   AssistantInstructions'a "sipariş sonrası durum sorma" ipucu satırı
 - [ ] T043 [US5] Canlı doğrulama — sipariş sonrası "siparişlerim" listesi
 
@@ -184,7 +184,7 @@ kesin ama sipariş adımı transient fail ederse idempotent retry.
 
 - [ ] T044 [P] Fail-closed davranış: Basket/Customer/PG erişilemez → sipariş yok (S5) canlı doğrula
 - [ ] T045 [P] Kart ekleme/silme chat'ten reddi (FR-013) — prompt guard doğrula
-- [ ] T046 [P] Tüm domain testleri yeşil (`dotnet test tests/Order.Api.Tests`); `dotnet build` temiz
+- [X] T046 [P] Tüm domain testleri yeşil (`dotnet test tests/Order.Api.Tests`); `dotnet build` temiz
 - [ ] T047 quickstart S1-S5 tam geçiş + spec Success Criteria (SC-001..006) kontrol
 - [ ] T048 README/docs — implement + canlı doğrulama SONRASI 038+039 "chat ödeme+sipariş" bölümü
   (şimdi DEĞİL; feature kapanınca)

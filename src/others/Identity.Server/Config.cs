@@ -104,7 +104,8 @@ public static class Config
             ClientSecret = "order-saga-secret",
             DisplayName = "Checkout saga (m2m)",
             AllowClientCredentials = true,
-            Scopes = ["stock.reserve", "basket.write"],
+            // 028: stock.reserve + basket.write; 039: basket.read (kalem okuma) + customer.read (odeme baglami).
+            Scopes = ["stock.reserve", "basket.write", "basket.read", "customer.read"],
         },
         // 030: ingestion agent m2m — feed yazımları (Catalog+Stock) için statik scope; RBAC dışı.
         new ClientSeed

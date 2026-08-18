@@ -106,6 +106,10 @@ var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
     .WaitFor(identityServer)
     .WaitFor(redis);
 
+// 039: chat siparis tamamlama — Order.Api odeme baglamini (buyer+vaultToken+adres) Customer'dan
+// yapisal REST ile ceker (customerApi orderApi'den SONRA tanimli oldugu icin referans burada eklenir).
+orderApi.WithReference(customerApi).WaitFor(customerApi);
+
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)

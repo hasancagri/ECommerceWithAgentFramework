@@ -42,3 +42,9 @@ global using Wolverine.Persistence.Sagas;
 global using Common.Options;
 global using Order.Api.Options;
 global using Microsoft.Extensions.Options;
+
+// --- 039: chat siparis tamamlama ---
+global using Order.Api.Http;
+global using Order.Api.Domains.PaymentAttempts;
+global using Order.Api.Domains.PaymentAttempts.ValueObjects;
+global using Common.Utils.Authorization;
