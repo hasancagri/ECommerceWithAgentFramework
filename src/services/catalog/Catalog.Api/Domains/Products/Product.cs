@@ -95,7 +95,7 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Fiziksel ölçüleri günceller (040: feed'den dolmaz, Empty varsayılanla yaşar).</summary>
-    /// <remarks>Handler: (henüz yok — 040'ta akış bağlanmadı)</remarks>
+    /// <remarks>Handler: SetProductDimensionsCommandHandler</remarks>
     public ResultDomain SetDimensions(ProductDimensions dimensions)
     {
         Dimensions = dimensions;
@@ -103,7 +103,7 @@ public class Product : AggregateRoot
     }
 
     /// <summary>SEO meta verisini günceller (040: feed'den dolmaz, Empty varsayılanla yaşar).</summary>
-    /// <remarks>Handler: (henüz yok — 040'ta akış bağlanmadı)</remarks>
+    /// <remarks>Handler: SetProductSeoCommandHandler</remarks>
     public ResultDomain SetSeo(SeoMetadata seo)
     {
         Seo = seo;
@@ -111,7 +111,7 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürünü satışa/vitrine açar (FR-007: vitrin kararı Published bayrağında).</summary>
-    /// <remarks>Handler: CreateProductCommandHandler, UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
+    /// <remarks>Handler: CreateProductCommandHandler, UpdateProductCommandHandler, UpsertProductCommandHandler, SetProductPublishedCommandHandler</remarks>
     public ResultDomain Publish()
     {
         Published = true;
@@ -119,7 +119,7 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürünü vitrinden gizler (silmez). 040'ta akış bağlanmaz; 041 buy-box kullanacak.</summary>
-    /// <remarks>Handler: (henüz yok — 041 kullanacak)</remarks>
+    /// <remarks>Handler: SetProductPublishedCommandHandler (041 event yolu da kullanacak)</remarks>
     public ResultDomain Unpublish()
     {
         Published = false;
@@ -150,7 +150,7 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürüne etiket ekler (idempotent — zaten varsa sessiz geçer).</summary>
-    /// <remarks>Handler: (henüz yok — K9: besleyen akış 040'ta bağlanmadı)</remarks>
+    /// <remarks>Handler: AssignTagToProductCommandHandler</remarks>
     public ResultDomain AddTag(Guid tagId)
     {
         if (!_tagIds.Contains(tagId))
@@ -159,7 +159,7 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Üründen etiket çıkarır (idempotent).</summary>
-    /// <remarks>Handler: (henüz yok — K9: besleyen akış 040'ta bağlanmadı)</remarks>
+    /// <remarks>Handler: RemoveTagFromProductCommandHandler</remarks>
     public ResultDomain RemoveTag(Guid tagId)
     {
         _tagIds.Remove(tagId);

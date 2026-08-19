@@ -4,7 +4,7 @@ namespace Catalog.Api.Domains.ProductTags;
 /// Ürün etiketi — Catalog BC'nin küçük aggregate kökü (ör. "yeni-sezon", "outlet"). Ürünle çok-a-çok;
 /// eşlemenin sahibi Product tarafıdır (<see cref="Products.Product.TagIds"/>). Etiket yalnız kendi
 /// kimliğini + adını + SEO'sunu yönetir (nopCommerce ProductTag paritesi).
-/// 040 K9: dış yüzey (endpoint/MCP) YOK; feed etiket vermez — yalnız domain + birim test.
+/// REST yüzeyi VAR (2026-08-19 kararı: aggregate = dışa açılan pencere); MCP yüzeyi ve feed beslemesi YOK.
 /// </summary>
 public class ProductTag : AggregateRoot
 {
@@ -16,14 +16,14 @@ public class ProductTag : AggregateRoot
     }
 
     /// <summary>Yeni etiket oluşturur. Ad zorunluluğu handler'da denetlenir (factory düz aggregate döner).</summary>
-    /// <remarks>Handler: (henüz yok — K9: besleyen akış 040'ta bağlanmadı)</remarks>
+    /// <remarks>Handler: CreateProductTagCommandHandler</remarks>
     public static ProductTag Create(string name)
     {
         return new ProductTag { Name = name };
     }
 
     /// <summary>Etiket adını değiştirir.</summary>
-    /// <remarks>Handler: (henüz yok — K9: besleyen akış 040'ta bağlanmadı)</remarks>
+    /// <remarks>Handler: RenameProductTagCommandHandler</remarks>
     public ResultDomain Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

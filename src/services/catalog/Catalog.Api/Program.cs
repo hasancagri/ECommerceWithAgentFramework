@@ -108,6 +108,9 @@ app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 app.AddProductGroupEndpointExtension(apiVersionSet);
+app.AddProductTagGroupEndpointExtension(apiVersionSet);
+app.AddCategoryGroupEndpointExtension(apiVersionSet);
+app.AddBrandGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
 

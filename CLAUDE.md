@@ -170,6 +170,11 @@ Bu desenden doğan temel kurallar:
 - **CQRS:** yazma ve okuma ayrı slice'lardır. Durumu değiştiren işlemler `Features/Commands/` altında (`IDocumentSession` ile yazar, handler `[Transactional]`), yalnızca veri döndürenler `Features/Queries/` altında (yalnızca okur) yer alır. Yeni bir feature eklerken önce onu command mı query mi diye ayır ve doğru klasöre koy; ikisini tek slice'ta birleştirme.
 - **Repository yok.** Handler'lar kalıcılık için doğrudan Marten'ın `IDocumentSession`'ını, başka bir slice'ı çağırmak için `IMessageBus`'ı alır. Yazma handler'ları `[Transactional]` ile işaretlenir.
 - **Endpoint'ler Minimal API'dir**; `*EndpointExtension` metotları üzerinden map'lenir ve `Program.cs`'ten çağrılır. Kullanıcıyı `CurrentUser.Load(httpContext.User)` ile çözer, handler'ı `IMessageBus.InvokeAsync` ile çağırır ve `.RequireAuthorization(AuthorizationScopes.Xxx)` ile korur.
+- **Her aggregate REST penceresi açar (2026-08-19).** Aggregate'in public davranış metotları (factory dahil)
+  karşılık gelen Command/Query slice'ları + endpoint'lerle dışa açılır; en az bir okuma ucu eşlik eder
+  (emsal: ProductTag — Create/Rename/List). **İstisna:** sahibi saga, gRPC, event-handler veya Hangfire olan
+  metot REST'e AÇILMAZ (ör. `ProductStock.Commit`, saga telafi adımları) — akış sahibi kanal tek giriştir.
+  MCP yüzeyi bu kuralın dışındadır (Agents slice ayrı ihtiyaçla açılır, otomatik değil).
 - Handler'lar `FeatureObjectResultModel<T>` / `FeatureResultModel` döner (`Common.Results` içinde); endpoint `IsSuccess`'i `Ok`/`BadRequest`'e çevirir.
 - **API sürümleme** URL-segment tabanlıdır (`v1`), her serviste ayrı yapılandırılır; dokümanlar Scalar ile uygulama kökünde sunulur.
 
