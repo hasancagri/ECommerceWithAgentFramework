@@ -39,6 +39,8 @@ public static class UpsertCategoryForAgent
             if (!created.IsSuccess)
                 return FeatureObjectResultModel<UpsertCategoryResponse>.Error(created.Messages!);
 
+            // 040 K8: ingestion yazımı kategoriyi publish eder (bugünkü "yazılan vitrindedir" davranışı).
+            created.Data!.SetPublished(true);
             session.Store(created.Data!);
             try
             {

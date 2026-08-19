@@ -109,12 +109,29 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 
 **Domain yapı taşları** (`Common.Domains` içindeki ortak temeller):
 
-- **Aggregate Root** — `AggregateRoot` (→ `BaseUserTrackModel` → `BaseModel`) sınıfından türer; `Id`, denetim alanları (`CreatedTime`/`UpdatedTime`, soft-delete için `IsDeleted`, kullanıcı izleri `CreatedUserId`...) hazır gelir. **Her servis tek BC'dir; bir BC gerektiği kadar zengin aggregate root içerebilir, hepsi `AggregateRoot`'tan türer** (ör. `Basket`, `Order`, `Payment`, `ProductStock`; Catalog: `Product`+`Category`+`Brand`). Anemik (davranışsız) aggregate yasaktır; aynı BC içindeki aggregate'ler birbirine Id ile referans verir. Aggregate root **tutarlılık sınırıdır** — dış dünya aggregate'i yalnızca kök üzerinden değiştirir.
-- **Entity** — aggregate içinde kimliği (`Id`) olan, ama bağımsız yaşamayan nesne. İki türlüdür: kimlik + denetim alanlarına ihtiyaç duyan entity `BaseModel`'den türer (ör. `OrderItem`); ihtiyaç duymayan sade entity ise base sınıf almaz (ör. `BasketItem`). Her iki durumda da private setter + davranış metotları kullanılır ve entity aggregate'e aittir. **`BaseModel`, aggregate root olmayan ama `Id`/denetim alanları gereken sınıflar için temeldir; `AggregateRoot`'u yalnızca aggregate kökleri için kullan.**
-- **Value Object** — kimliği olmayan, değeriyle tanımlanan nesne; `record` olarak, private ctor + statik `Create` fabrikasıyla yazılır (`Address`).
-- **Enumeration** — tip-güvenli enum'lar için `Enumeration` temel sınıfı (int enum yerine).
+- **Aggregate Root** — `AggregateRoot` sınıfından türer; bağımsız TEK sınıftır (ara base yok):
+  `Id` + denetim alanları (`CreatedTime`/`UpdatedTime`/`DeletedTime`, `IsActive`, soft-delete için `IsDeleted`) doğrudan üstündedir.
+  **Her servis tek BC'dir; bir BC gerektiği kadar zengin aggregate root içerebilir, hepsi `AggregateRoot`'tan türer**
+  (ör. `Basket`, `Order`, `Payment`, `ProductStock`; Catalog: `Product`+`Category`+`Brand`+`ProductTag`).
+  Anemik (davranışsız) aggregate yasaktır; aynı BC içindeki aggregate'ler birbirine Id ile referans verir.
+  Aggregate root **tutarlılık sınırıdır** — dış dünya aggregate'i yalnızca kök üzerinden değiştirir.
+- **Entity** — aggregate içinde kimliği (`Id`) olan, ama bağımsız yaşamayan nesne; base sınıf ALMAZ
+  (ör. `OrderItem`, `BasketItem`). Private setter + davranış metotları kullanılır; entity aggregate'e aittir.
+  `AggregateRoot`'u yalnızca aggregate kökleri için kullan.
+- **Value Object** — kimliği olmayan, değeriyle tanımlanan nesne; `record` olarak, private ctor + statik `Create` fabrikasıyla yazılır (`Address`, `Money`).
+- **Enum** — düz C# enum kullanılır; repo'da `Enumeration` temel sınıfı YOKTUR. **Aggregate'e ait enum
+  aggregate'in DOSYASINDA tanımlanır, ayrı dosya açılmaz** (ör. `OrderStatus` → `Order.cs`,
+  `PaymentStatus` → `Payment.cs`, `ProductType` → `Product.cs`).
 
 **Invariant'lar (değişmezler) aggregate'in içinde korunur.** Koleksiyonlar private tutulur ve yalnızca okunur olarak expose edilir (`_items` → `IReadOnlyList<BasketItem> Items`); mutasyon yalnızca aggregate metotlarından geçer (`AddItem`, `SetItem`...). Kural ihlali handler'da değil, aggregate'te yakalanır — ör. `Order.AddOrderItem` boş ürün adında hata Result'ı döner. **Yeni bir kural eklerken önce aggregate metoduna bak; iş mantığını handler'a değil aggregate'e koy.**
+
+### Catalog zengin modeli (040)
+
+- Product staging'den (`src/otherProjects/CustomNopCommerce`) extract edildi: `Money` fiyat VO, Sku/Gtin/MPN, `ProductType`, Dimensions/Seo, `Published`.
+- Kategori ilişkisi çoklu atamadır (`ProductCategoryAssignment` listesi); ingestion TEK kategori atar, `Categories[0]` = primary.
+- Dış kontratlar SABİT: `ProductChangedEvent` decimal fiyat = `Price.Amount`, kategori = primary atama; MCP tool + REST imzaları değişmedi.
+- Gtin hep boş (041 buy-box dolduracak); `ProductTag` dış yüzeysiz (yalnız domain); Grouped/Dimensions/Seo pasif alanlar.
+- Yazım yolları publish eder: yazılan ürün/kategori vitrindedir; agent okuma sorguları `Published` ile filtreler.
 
 ### Vertical Slice + DDD
 
@@ -316,6 +333,8 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
   aynı BC içinde ayrı yerleşebilir (aggregate değildir).
 - **ValueObjects.** Bir aggregate'e bağlı standalone value object `<Aggregate>/ValueObjects/`
   altına konur (ör. `AddressBooks/ValueObjects/Address`), aggregate kökünde durmaz.
+  **Aggregate'in TÜM VO'ları tek dosyada toplanır: `ValueObjects/<Aggregate>ValueObjects.cs`**
+  (ör. `Products/ValueObjects/ProductValueObjects.cs`); VO başına ayrı dosya açılmaz.
 - **Aggregate — private helper YOK.** Ortak mantık private metoda çıkarılıp çağrılmaz,
   **inline** yazılır (kod tekrarı bilinçli). **VO MUAF** (VO'da private helper serbest).
 - **Aggregate metodu yalnız handler'dan çağrılır.** Başka aggregate metodundan (factory

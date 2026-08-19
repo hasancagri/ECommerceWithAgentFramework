@@ -53,29 +53,69 @@ public static class UpsertProductForAgent
             var existing = await session.Query<Product>()
                 .FirstOrDefaultAsync(x => x.Sku == cmd.Sku && !x.IsDeleted, ct);
 
+            // 040: ad/SKU zorunluluğu handler'da, fiyat guard'ı Money VO'da (staging konvansiyonu).
+            if (string.IsNullOrWhiteSpace(cmd.Name))
+                return FeatureObjectResultModel<UpsertProductResponse>.Error(new MessageItem
+                {
+                    Property = nameof(cmd.Name),
+                    Code = CatalogResourceConstants.PRODUCT_NAME_REQUIRED
+                });
+            if (string.IsNullOrWhiteSpace(cmd.Sku))
+                return FeatureObjectResultModel<UpsertProductResponse>.Error(new MessageItem
+                {
+                    Property = nameof(cmd.Sku),
+                    Code = CatalogResourceConstants.PRODUCT_SKU_REQUIRED
+                });
+
+            var price = Money.Create(cmd.Price);
+            if (price is null)
+                return FeatureObjectResultModel<UpsertProductResponse>.Error(new MessageItem
+                {
+                    Property = nameof(cmd.Price),
+                    Code = CatalogResourceConstants.PRODUCT_PRICE_NEGATIVE
+                });
+
             Product product;
             string action;
             if (existing is null)
             {
-                product = Product.Create(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
-                    cmd.BrandId, cmd.CategoryId, cmd.ImageUrl);
+                // Feed → model eşlemesi (data-model): Description iki alana aynı değerle yazılır.
+                product = Product.Create(cmd.Name, cmd.Sku, ProductType.Simple, price,
+                    cmd.Description, cmd.Description);
                 action = "created";
             }
             else
             {
-                var update = existing.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
-                    cmd.BrandId, cmd.CategoryId, cmd.ImageUrl);
-                if (!update.IsSuccess)
-                    return FeatureObjectResultModel<UpsertProductResponse>.Error(update.Messages);
+                var rename = existing.Rename(cmd.Name);
+                if (!rename.IsSuccess)
+                    return FeatureObjectResultModel<UpsertProductResponse>.Error(rename.Messages);
+                existing.UpdateDescriptions(cmd.Description, cmd.Description);
+                existing.SetPrice(price);
                 product = existing;
                 action = "updated";
             }
+
+            product.SetBrand(cmd.BrandId);
+            product.SetImage(cmd.ImageUrl);
+
+            // K4: dış kontrat tek kategori görür — hedef atanmamışsa eskiler sökülür, yeni primary olur.
+            if (product.Categories.All(c => c.CategoryId != cmd.CategoryId))
+            {
+                foreach (var link in product.Categories.ToList())
+                    product.RemoveFromCategory(link.CategoryId);
+                var assign = product.AssignToCategory(cmd.CategoryId, isFeatured: false, displayOrder: 0);
+                if (!assign.IsSuccess)
+                    return FeatureObjectResultModel<UpsertProductResponse>.Error(assign.Messages);
+            }
+
+            product.Publish(); // K8: yazılan ürün vitrindedir (Published bayrağıyla parity)
             session.Store(product);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
             // 016: fat event kimlik + adı birlikte taşır (R7); tüketici Catalog'a lookup yapmaz.
+            // 040 K2/K4: kontrat SABİT — decimal fiyat = Price.Amount, kategori = primary atama.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
-                product.Id, product.Name, product.Description, product.Price,
+                product.Id, product.Name, product.FullDescription, product.Price.Amount,
                 brand.Id, brand.Name, category.Id, category.Name,
                 product.ImageUrl, IsDeleted: false));
 

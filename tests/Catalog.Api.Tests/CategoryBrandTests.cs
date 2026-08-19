@@ -56,6 +56,93 @@ public class CategoryBrandTests
         a.Id.ShouldNotBe(b.Id);
     }
 
+    // --- 040 T010: staging Category davranışları (Rename/SetParent/Reorder/SetPublished) ---
+
+    [Fact]
+    public void CategoryCreate_StagingFields_CarriesHierarchyAndOrder()
+    {
+        var parentId = Guid.NewGuid();
+
+        var result = Category.Create("Telefon", "Akıllı telefonlar", parentId, displayOrder: 3);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Data!.Description.ShouldBe("Akıllı telefonlar");
+        result.Data.ParentCategoryId.ShouldBe(parentId);
+        result.Data.DisplayOrder.ShouldBe(3);
+        result.Data.Published.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CategoryRename_ValidName_UpdatesNameAndNormalizedKey()
+    {
+        var category = Category.Create("Elektronik").Data!;
+
+        category.Rename("  Ev   Aletleri ").IsSuccess.ShouldBeTrue();
+
+        category.Name.ShouldBe("Ev   Aletleri");
+        category.NormalizedName.ShouldBe("EV ALETLERI"); // dedup anahtarı adla birlikte güncellenir (K5)
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void CategoryRename_EmptyName_ReturnsError(string name)
+    {
+        var category = Category.Create("Elektronik").Data!;
+
+        var result = category.Rename(name);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages!.ShouldContain(m => m.Code == CatalogResourceConstants.CATEGORY_NAME_REQUIRED);
+        category.Name.ShouldBe("Elektronik");
+    }
+
+    [Fact]
+    public void CategorySetParent_SelfParent_ReturnsError()
+    {
+        var category = Category.Create("Elektronik").Data!;
+
+        var result = category.SetParent(category.Id);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages!.ShouldContain(m => m.Code == CatalogResourceConstants.CATEGORY_SELF_PARENT);
+        category.ParentCategoryId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void CategorySetParent_OtherCategory_AssignsAndClears()
+    {
+        var category = Category.Create("Telefon").Data!;
+        var parentId = Guid.NewGuid();
+
+        category.SetParent(parentId).IsSuccess.ShouldBeTrue();
+        category.ParentCategoryId.ShouldBe(parentId);
+
+        category.SetParent(null).IsSuccess.ShouldBeTrue();
+        category.ParentCategoryId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void CategoryReorder_ChangesDisplayOrder()
+    {
+        var category = Category.Create("Elektronik").Data!;
+
+        category.Reorder(7).IsSuccess.ShouldBeTrue();
+        category.DisplayOrder.ShouldBe(7);
+    }
+
+    [Fact]
+    public void CategorySetPublished_TogglesFlag()
+    {
+        var category = Category.Create("Elektronik").Data!;
+
+        category.SetPublished(true).IsSuccess.ShouldBeTrue();
+        category.Published.ShouldBeTrue();
+
+        category.SetPublished(false).IsSuccess.ShouldBeTrue();
+        category.Published.ShouldBeFalse();
+    }
+
     // --- Brand.Create (aynı desen) ---
 
     [Fact]

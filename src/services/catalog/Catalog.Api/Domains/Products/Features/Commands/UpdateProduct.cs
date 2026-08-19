@@ -46,16 +46,47 @@ public static class UpdateProduct
                     Code = CatalogResourceConstants.RECORD_NOT_FOUND
                 });
 
-            var update = product.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Sku,
-                cmd.BrandId, cmd.CategoryId, cmd.ImageUrl);
-            if (!update.IsSuccess)
-                return FeatureObjectResultModel<UpdateProductResponse>.Error(update.Messages);
+            // 040: eski tek-Update yerine davranış metotları zinciri; ilk hata Result'ı döner.
+            var price = Money.Create(cmd.Price);
+            if (price is null)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
+                {
+                    Property = nameof(cmd.Price),
+                    Code = CatalogResourceConstants.PRODUCT_PRICE_NEGATIVE
+                });
+
+            var rename = product.Rename(cmd.Name);
+            if (!rename.IsSuccess)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(rename.Messages);
+
+            var identifiers = product.SetIdentifiers(cmd.Sku, product.Gtin, product.ManufacturerPartNumber);
+            if (!identifiers.IsSuccess)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(identifiers.Messages);
+
+            product.UpdateDescriptions(cmd.Description, cmd.Description);
+            product.SetPrice(price);
+            product.SetBrand(cmd.BrandId);
+            product.SetImage(cmd.ImageUrl);
+
+            // K4: dış kontrat tek kategori görür — hedef kategori atanmamışsa eski atamalar sökülüp
+            // yenisi primary yazılır (bugünkü "kategori değiştir" davranışının çoklu-model karşılığı).
+            if (product.Categories.All(c => c.CategoryId != cmd.CategoryId))
+            {
+                foreach (var link in product.Categories.ToList())
+                    product.RemoveFromCategory(link.CategoryId);
+                var assign = product.AssignToCategory(cmd.CategoryId, isFeatured: false, displayOrder: 0);
+                if (!assign.IsSuccess)
+                    return FeatureObjectResultModel<UpdateProductResponse>.Error(assign.Messages);
+            }
+
+            product.Publish(); // K8: yazım yolu publish eder (parity: yazılan ürün vitrindedir)
             session.Store(product);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
             // 016: fat event kimlik + adı birlikte taşır (R7).
+            // 040 K2/K4: kontrat SABİT — decimal fiyat = Price.Amount, kategori = primary atama.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
-                product.Id, product.Name, product.Description, product.Price,
+                product.Id, product.Name, product.FullDescription, product.Price.Amount,
                 brand.Id, brand.Name, category.Id, category.Name,
                 product.ImageUrl, IsDeleted: false));
 

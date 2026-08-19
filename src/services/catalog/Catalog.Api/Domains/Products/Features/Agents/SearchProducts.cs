@@ -17,8 +17,9 @@ public static class SearchProductsForAgent
             IDocumentSession session,
             CancellationToken ct)
         {
+            // 040 FR-007: vitrin kararı Published bayrağında.
             var products = session.Query<Product>()
-                .Where(x => !x.IsDeleted && x.IsActive &&
+                .Where(x => !x.IsDeleted && x.Published &&
                             x.Name.Contains(query.Name, StringComparison.OrdinalIgnoreCase));
 
             if (!string.IsNullOrWhiteSpace(query.Category))
@@ -29,7 +30,12 @@ public static class SearchProductsForAgent
                 if (category is null)
                     return FeatureObjectResultModel<SearchProductResponse>.Ok(null); // bilinmeyen kategori → sonuç yok
 
-                products = products.Where(x => x.CategoryId == category.Id);
+                // 040 K4: kategori artık çoklu atama koleksiyonudur. LINQ Categories.Any(...) KULLANMA:
+                // Newtonsoft koleksiyonu $type/$values sarmalayıcısıyla yazar, Marten'ın containment
+                // çevirisi düz dizi bekler → 0 eşleşme (canlıda kanıtlandı). Ham JSONB predicate şart.
+                products = products.Where(x => x.MatchesSql(
+                    "d.data -> 'Categories' -> '$values' @> CAST(? as jsonb)",
+                    $"[{{\"CategoryId\": \"{category.Id}\"}}]"));
             }
 
             if (!string.IsNullOrWhiteSpace(query.Brand))
