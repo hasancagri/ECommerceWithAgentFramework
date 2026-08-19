@@ -373,6 +373,104 @@ public class PoolProductTests
         product.MarkDelisted(Guid.NewGuid()).IsSuccess.ShouldBeTrue(); // bilinmeyen tedarikçi sessiz geçer
     }
 
+    // --- US3: ApplyEnrichment (T041) ---
+
+    private static readonly IReadOnlyList<CanonicalCategoryPair> Canon =
+    [
+        CanonicalCategoryPair.Create("Elektronik", "Telefon"),
+        CanonicalCategoryPair.Create("Moda", "Çanta"),
+    ];
+
+    [Fact]
+    public void ApplyEnrichment_FillsOnlyMissingContentFields()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, 1, Row(description: null, rawCategory: null,
+            canonicalCategory: null, canonicalSubCategory: null, price: 100m, stock: 5));
+        product.RebuildCanonical();
+
+        var result = EnrichmentResult.Create(product.MergedContentHash!,
+            "AI açıklaması", "Elektronik", "Telefon");
+        var apply = product.ApplyEnrichment(result, Canon);
+
+        apply.IsSuccess.ShouldBeTrue();
+        product.Status.ShouldBe(PoolProductStatus.Enriched);
+        product.Canonical!.Description.ShouldBe("AI açıklaması");
+        product.Canonical.Category.ShouldBe("Elektronik");
+        product.Canonical.SubCategory.ShouldBe("Telefon");
+        product.Canonical.IsComplete.ShouldBeTrue();
+        // Barkod/ölçü/fiyat/stok DOKUNULMAZ (FR-010): listing değerleri aynen durur.
+        product.Barcode.ShouldBe("8690000000001");
+        product.Listings.Single().Price.ShouldBe(100m);
+        product.Listings.Single().Stock.ShouldBe(5);
+        product.Canonical.Dimensions.ShouldBe(RowDimensions.Create(0.5m, 15m, 7m, 1m));
+    }
+
+    [Fact]
+    public void ApplyEnrichment_DoesNotOverrideExistingContent()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, 1, Row(description: "Feed açıklaması"));
+        product.RebuildCanonical();
+
+        var result = EnrichmentResult.Create(product.MergedContentHash!,
+            "AI açıklaması", "Moda", "Çanta");
+        product.ApplyEnrichment(result, Canon);
+
+        product.Canonical!.Description.ShouldBe("Feed açıklaması"); // merge her zaman önceliklidir
+        product.Canonical.Category.ShouldBe("Elektronik"); // feed'in eşlenen kategorisi kalır
+    }
+
+    [Fact]
+    public void ApplyEnrichment_NonCanonicalCategory_Fails()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, 1, Row(rawCategory: null, canonicalCategory: null, canonicalSubCategory: null));
+        product.RebuildCanonical();
+
+        var result = EnrichmentResult.Create(product.MergedContentHash!,
+            null, "Uydurma Kategori", "Uydurma Alt");
+        var apply = product.ApplyEnrichment(result, Canon);
+
+        apply.IsSuccess.ShouldBeFalse();
+        apply.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.ENRICHMENT_CATEGORY_NOT_CANONICAL);
+        product.Enrichment.ShouldBeNull(); // reddedilen sonuç saklanmaz
+    }
+
+    [Fact]
+    public void Enrichment_SourceHashCache_SameInputSkips()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, 1, Row(description: null));
+        product.RebuildCanonical();
+        product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
+            "AI açıklaması", null, null), Canon);
+
+        product.HasFreshEnrichment.ShouldBeTrue(); // aynı girdi → AI tekrar çağrılmaz (komut bu getter'la atlar)
+
+        // Listing içeriği değişirse merge hash'i değişir → cache düşer, enrich yeniden gerekebilir.
+        product.UpsertListing(SupplierA, 1, Row(name: "Yeni Ad", description: null));
+        product.RebuildCanonical();
+        product.HasFreshEnrichment.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Enrichment_SurvivesRebuild_OverlayReapplied()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, 1, Row(description: null, price: 100m));
+        product.RebuildCanonical();
+        product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
+            "AI açıklaması", null, null), Canon);
+
+        // Fiyat değişimi rebuild tetikler; saklı enrich sonucu overlay'de yeniden uygulanır (FR-009).
+        product.UpsertListing(SupplierA, 1, Row(description: null, price: 90m));
+        product.RebuildCanonical();
+
+        product.Canonical!.Description.ShouldBe("AI açıklaması");
+        product.Canonical.IsComplete.ShouldBeTrue();
+    }
+
     [Fact]
     public void SameListingAgain_UnchangedAndNoPublish()
     {

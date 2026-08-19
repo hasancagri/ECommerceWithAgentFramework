@@ -25,5 +25,6 @@ global using System.Reflection;
 global using Weasel.Core;
 global using Wolverine;
 global using Wolverine.Attributes;
+global using Wolverine.ErrorHandling;
 global using Wolverine.Marten;
 global using Wolverine.RabbitMQ;

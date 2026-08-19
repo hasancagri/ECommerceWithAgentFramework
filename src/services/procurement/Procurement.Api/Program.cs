@@ -1,3 +1,5 @@
+using Procurement.Api.Domains.PoolProducts.Features.Commands;
+using Procurement.Api.Infrastructure.Enrichment;
 using Procurement.Api.Infrastructure.Feeds;
 using Procurement.Api.Seeding;
 
@@ -50,6 +52,14 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.BuyBoxChanged>()
         .ToRabbitExchange(RabbitMqConstants.BuyBoxChanged.Exchange);
 
+    // Enrich lokal durable kuyruğu (R5): feed işleme hızı AI gecikmesine bağlanmaz; mesajlar
+    // havuz yazımıyla aynı tx'te outbox'lanır. Hata: kademeli retry → error queue (DLQ deseni).
+    opts.PublishMessage<EnrichPoolProduct.EnrichPoolProductCommand>()
+        .ToLocalQueue(EnrichPoolProduct.QueueName);
+    opts.OnException<EnrichmentException>()
+        .RetryWithCooldown(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60))
+        .Then.MoveToErrorQueue();
+
     opts.Policies.UseDurableLocalQueues();
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
 });
@@ -70,6 +80,9 @@ builder.Services.AddAllDependencies();
 builder.Services.AddHttpClient(SupplierFeedClient.HttpClientName);
 builder.Services.AddSingleton<SupplierFeedClient>();
 builder.Services.AddSingleton<FeedPullJob>();
+
+// Enrich agent Singleton'dır (konvansiyon); model config'i EnrichmentOptions'la fail-fast doğrulanır.
+builder.Services.AddSingleton<EnrichmentAgent>();
 
 // Seed: supplier-a/b (Priority 1/2) + kategori eşleme tabloları (idempotent).
 builder.Services.AddHostedService<ProcurementSeedHostedService>();

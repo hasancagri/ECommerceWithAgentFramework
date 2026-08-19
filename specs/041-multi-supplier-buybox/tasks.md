@@ -124,15 +124,15 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
 
 **Independent Test**: quickstart 2 (3000 + AI yalnız eksikte) + 6 (DLQ senaryosu).
 
-- [ ] T041 [US3] ApplyEnrichment testleri (test-first): `tests/Procurement.Api.Tests/PoolProductTests.cs` ekle
+- [X] T041 [US3] ApplyEnrichment testleri (test-first): `tests/Procurement.Api.Tests/PoolProductTests.cs` ekle
       (yalnız içerik alanları dolar; barkod/ölçü/fiyat/stok denemesi Error; SourceHash cache: aynı girdi → atla;
       kategori kanonik listeden — liste dışı Error)
-- [ ] T042 [US3] EnrichmentAgent: `Procurement.Api/Infrastructure/Enrichment/EnrichmentAgent.cs` (Singleton
+- [X] T042 [US3] EnrichmentAgent: `Procurement.Api/Infrastructure/Enrichment/EnrichmentAgent.cs` (Singleton
       ChatClientAgent, Temperature=0, structured JSON; girdi: mevcut içerik+eksik alanlar+kanonik kategori listesi;
       EnrichmentOptions fail-fast Program.cs)
-- [ ] T043 [US3] EnrichPoolProduct command: `Domains/PoolProducts/Features/Commands/EnrichPoolProduct.cs` —
+- [X] T043 [US3] EnrichPoolProduct command: `Domains/PoolProducts/Features/Commands/EnrichPoolProduct.cs` —
       lokal durable kuyruk `procurement.enrich`, retry 10s/30s/60s → error queue; ApplyEnrichment + publish zinciri
-- [ ] T044 [US3] Pull akışına enrich tetiği: eksik kanonik → kuyruğa `EnrichPoolProduct{Barcode}` (hash değişmediyse
+- [X] T044 [US3] Pull akışına enrich tetiği: eksik kanonik → kuyruğa `EnrichPoolProduct{Barcode}` (hash değişmediyse
       tetiklenmez): `Features/Commands/PullSupplierFeed.cs`
 - [ ] T045 [US3] Canlı: temiz DB + pull → vitrin TAM 3000; loglarda AI yalnız eksik satırlarda; bozuk key ile DLQ
       senaryosu + replay (quickstart 2 + 6)

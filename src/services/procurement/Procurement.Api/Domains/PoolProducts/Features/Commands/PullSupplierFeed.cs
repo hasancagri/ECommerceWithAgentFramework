@@ -117,9 +117,28 @@ public static class PullSupplierFeed
                 changedBarcodes.Add(product.Barcode);
             }
 
-            // Yayın kararları commit-sonrası işlenir (durable lokal kuyruk — outbox aynı tx'te yazar).
+            // Yayın + enrich kararları commit-sonrası işlenir (durable lokal kuyruk — outbox aynı tx'te yazar).
+            // Enrich tetiği yalnız DEĞİŞEN ve eksik kalan barkodlar için; taze cache varsa AI'ya gidilmez (FR-009).
+            var enrichCount = 0;
             foreach (var barcode in changedBarcodes.Distinct())
+            {
+                var product = existing.TryGetValue(barcode, out var p)
+                    ? p
+                    : supplierProducts.First(sp => sp.Barcode == barcode);
+                if (product.NeedsEnrichment)
+                {
+                    if (!product.HasFreshEnrichment)
+                    {
+                        await bus.PublishAsync(new EnrichPoolProduct.EnrichPoolProductCommand(barcode));
+                        enrichCount++;
+                    }
+                    continue; // eksik içerik yayınlanmaz (FR-011); yayını enrich zinciri tetikler
+                }
+
                 await bus.PublishAsync(new PublishPoolProduct.PublishPoolProductCommand(barcode));
+            }
+            if (enrichCount > 0)
+                logger.LogInformation("Enrich kuyruğuna {Count} barkod verildi (yalnız eksik satırlar)", enrichCount);
 
             logger.LogInformation(
                 "Pull {SupplierCode}: {Processed} işlendi, {Changed} değişti, {Delisted} delist, {Rejected} red",
