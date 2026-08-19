@@ -29,19 +29,19 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
 
 ## Phase 2B: Foundational (yeni iskelet — tüm story'leri bloklar)
 
-- [ ] T011 Shared ekler: `CanonicalProductUpserted` + `BuyBoxChanged` + `ProductLinked` event'leri
+- [X] T011 Shared ekler: `CanonicalProductUpserted` + `BuyBoxChanged` + `ProductLinked` event'leri
       (`src/others/Shared/IntegrationEvents.cs`) + exchange/queue sabitleri (`RabbitMqConstants.cs`)
       — contracts/integration-events.md birebir
-- [ ] T012 [P] `SchemaConstants.ProcurementSchemaName` = "procurementManagement": `src/others/Shared/Utils/Constants/SchemaConstants.cs`
-- [ ] T013 Procurement.Api proje iskeleti: `src/services/procurement/Procurement.Api/` (csproj net10.0, GlobalUsings,
+- [X] T012 [P] `SchemaConstants.ProcurementSchemaName` = "procurementManagement": `src/others/Shared/Utils/Constants/SchemaConstants.cs`
+- [X] T013 Procurement.Api proje iskeleti: `src/services/procurement/Procurement.Api/` (csproj net10.0, GlobalUsings,
       Program.cs: Marten+Newtonsoft+Wolverine+RabbitMQ autoprovision+versioning+Scalar+AddAllDependencies) + slnx kaydı
-- [ ] T014 [P] Hata kodları: `Procurement.Api/Constants/ProcurementResourceConstants.cs` (barkodsuz satır, eşlenemeyen
+- [X] T014 [P] Hata kodları: `Procurement.Api/Constants/ProcurementResourceConstants.cs` (barkodsuz satır, eşlenemeyen
       kategori, negatif fiyat/stok, enrich hataları)
-- [ ] T015 [P] Options: `Procurement.Api/Options/FeedPullOptions.cs` (PullCron, FirstPullDelaySeconds) +
+- [X] T015 [P] Options: `Procurement.Api/Options/FeedPullOptions.cs` (PullCron, FirstPullDelaySeconds) +
       `EnrichmentOptions.cs` (OpenAI ApiKey/Model — fail-fast) — Options pattern (POCO unwrap)
-- [ ] T016 AppHost: `procurementDb` + `procurement-api` resource (refs: procurementDb, rabbit, supplier-api;
+- [X] T016 AppHost: `procurementDb` + `procurement-api` resource (refs: procurementDb, rabbit, supplier-api;
       WaitFor catalog-api + stock-api — tüketici kuyrukları publisher'dan önce bağlansın): `AppHost.cs`
-- [ ] T017 [P] Test projesi: `tests/Procurement.Api.Tests/Procurement.Api.Tests.csproj` (xUnit+Shouldly) + slnx kaydı
+- [X] T017 [P] Test projesi: `tests/Procurement.Api.Tests/Procurement.Api.Tests.csproj` (xUnit+Shouldly) + slnx kaydı
 
 **Checkpoint**: Boş Procurement servisi Aspire'da kalkar; event kontratları derlenir.
 
@@ -52,43 +52,43 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
 **Independent Test**: pull sonrası vitrinde eksiksiz satırlardan gelen ürünler; çakışan barkodda stoklu en ucuz fiyat.
 (3000'in TAMAMI US3'te — eksik ~%10 satır enrich ister; bu fazın sonunda ~2700 beklenir.)
 
-- [ ] T018 [P] [US1] FeedGenerator testleri (test-first): `tests/Procurement.Api.Tests/` DEĞİL —
-      `tests/Supplier.Api.Tests/FeedGeneratorTests.cs` YENİ proje (determinizm: aynı girdi=aynı çıktı; A=1800,
-      B=1700, çakışan=500, benzersiz=3000; ~%10 eksik alan; barkod hep dolu) + slnx kaydı
-- [ ] T019 [US1] FeedGenerator: `src/services/supplier/Supplier.Api/Domains/Feeds/FeedGenerator.cs`
-      (saf `f(supplierCode, rev)`; contracts/mock-feed-api.md dağılımları) — testleri yeşile çek
-- [ ] T020 [US1] Mock uçlar: `GET /v1/feeds/{supplierCode}` + `POST /v1/feeds/{supplierCode}/advance`
-      (bellek-içi rev): `Supplier.Api/Domains/Feeds/FeedEndpointExtension.cs`
-- [ ] T021 [P] [US1] Supplier aggregate testleri (test-first, kırmızı): `tests/Procurement.Api.Tests/SupplierTests.cs`
+- [X] T018 [P] [US1] Dataset kontrat testleri (test-first): `tests/Supplier.Api.Tests/FeedDatasetTests.cs`
+      YENİ proje (A=1800, B=1700, çakışan=500, benzersiz=3000; ~%10 eksik alan; barkod hep dolu;
+      rev2 yalnız fiyat/stok değiştirir) + slnx kaydı
+- [X] T019 [US1] JSON dataset'ler: `Supplier.Api/Datasets/supplier-{a,b}.rev{1,2}.json`
+      (script-üretimli, commit'li; contracts/mock-feed-api.md dağılımları) — testleri yeşile çek
+- [X] T020 [US1] Mock uçlar: `GET /v1/feeds/{supplierCode}` + `POST /v1/feeds/{supplierCode}/advance`
+      (bellek-içi rev → rev dosyası seçimi): `Supplier.Api/Domains/Feeds/FeedEndpointExtension.cs`
+- [X] T021 [P] [US1] Supplier aggregate testleri (test-first, kırmızı): `tests/Procurement.Api.Tests/SupplierTests.cs`
       (Create guard'ları, ResolveCategory: eşleşme/eşleşmeme)
-- [ ] T022 [P] [US1] PoolProduct testleri (test-first, kırmızı): `tests/Procurement.Api.Tests/PoolProductTests.cs`
+- [X] T022 [P] [US1] PoolProduct testleri (test-first, kırmızı): `tests/Procurement.Api.Tests/PoolProductTests.cs`
       (UpsertListing hash Unchanged/Added/Updated + guard'lar; RebuildCanonical Priority-merge + sıra-bağımsızlık;
       EvaluateBuyBox: en ucuz/eşitlikte düşük Priority/tek offer; TryTakePublish: complete+değişim koşulu, NoChange)
-- [ ] T023 [US1] Supplier aggregate + VO: `Procurement.Api/Domains/Suppliers/Supplier.cs` +
+- [X] T023 [US1] Supplier aggregate + VO: `Procurement.Api/Domains/Suppliers/Supplier.cs` +
       `ValueObjects/SupplierValueObjects.cs` (CategoryMapping) — data-model.md; testler yeşil
-- [ ] T024 [US1] PoolProduct aggregate + entity + VO'lar: `Domains/PoolProducts/PoolProduct.cs`,
+- [X] T024 [US1] PoolProduct aggregate + entity + VO'lar: `Domains/PoolProducts/PoolProduct.cs`,
       `Entities/SupplierListing.cs`, `ValueObjects/PoolProductValueObjects.cs` (durum enum'u PoolProduct.cs'te);
       aggregate kuralları (helper yok, summary+remarks) — testler yeşil
-- [ ] T025 [US1] Marten kayıtları: PoolProduct (string Id=barkod) + Supplier + şema: `Procurement.Api/Program.cs`
-- [ ] T026 [P] [US1] Procurement seed: `Procurement.Api/Seeding/ProcurementSeedHostedService.cs` (supplier-a/b
+- [X] T025 [US1] Marten kayıtları: PoolProduct (string Id=barkod) + Supplier + şema: `Procurement.Api/Program.cs`
+- [X] T026 [P] [US1] Procurement seed: `Procurement.Api/Seeding/ProcurementSeedHostedService.cs` (supplier-a/b
       Priority 1/2 + kanonik taksonomi kopyası + tedarikçi başına kategori eşleme tabloları; idempotent)
-- [ ] T027 [P] [US1] Catalog taksonomi seed: `Catalog.Api/Seeding/CatalogTaxonomySeedHostedService.cs`
+- [X] T027 [P] [US1] Catalog taksonomi seed: `Catalog.Api/Seeding/CatalogTaxonomySeedHostedService.cs`
       (kanonik Category>SubCategory ağacı, ParentCategoryId ile; idempotent get-or-create)
-- [ ] T028 [US1] Feed pull: `Procurement.Api/Infrastructure/Feeds/SupplierFeedClient.cs` (service discovery) +
+- [X] T028 [US1] Feed pull: `Procurement.Api/Infrastructure/Feeds/SupplierFeedClient.cs` (service discovery) +
       `FeedPullJob.cs` (Hangfire cron + SemaphoreSlim) + `Domains/PoolProducts/Features/Commands/PullSupplierFeed.cs`
       (satır başına PoolProduct upsert: barkodsuz reddet+logla; kategori eşle; hash-diff) + Hangfire wiring Program.cs
-- [ ] T029 [US1] Manuel tetik ucu: `POST /v1/feeds/pull`: `Domains/PoolProducts/PoolProductEndpointExtension.cs` (anonim)
-- [ ] T030 [US1] Okuma pencereleri (CLAUDE.md "her aggregate REST penceresi" kuralı):
+- [X] T029 [US1] Manuel tetik ucu: `POST /v1/feeds/pull`: `Domains/PoolProducts/PoolProductEndpointExtension.cs` (anonim)
+- [X] T030 [US1] Okuma pencereleri (CLAUDE.md "her aggregate REST penceresi" kuralı):
       `GET /v1/suppliers` + `GET /v1/pool-products/{barcode}` (+durum filtreli liste) —
       `Domains/Suppliers/Features/Queries/GetSuppliers.cs` + `SupplierEndpointExtension.cs`,
       `Domains/PoolProducts/Features/Queries/GetPoolProduct.cs` (endpoint'ler PoolProductEndpointExtension'a eklenir)
-- [ ] T031 [US1] Yayın: `Features/Commands/PublishPoolProduct.cs` — TryTakePublish → `CanonicalProductUpserted`
+- [X] T031 [US1] Yayın: `Features/Commands/PublishPoolProduct.cs` — TryTakePublish → `CanonicalProductUpserted`
       (buy-box Price+Stock dahil) publish; Wolverine outbox + exchange wiring Program.cs
-- [ ] T032 [US1] Catalog tüketici: `Catalog.Api/ProcurementEventHandlers.cs` — CanonicalProductUpserted:
+- [X] T032 [US1] Catalog tüketici: `Catalog.Api/ProcurementEventHandlers.cs` — CanonicalProductUpserted:
       Gtin upsert (yeni/mevcut), Brand get-or-create, kategori NormalizedName çözümü (çözülemezse error),
       ölçü/Sku/SEO yazımı, `ProductChangedEvent` + yeni üründe `ProductLinked{InitialStock}`;
       kuyruk `catalog.procurement-events` Sequential + Gtin index: `Catalog.Api/Program.cs`
-- [ ] T033 [US1] Stock tüketici: `Stock.Api/ProcurementEventHandlers.cs` — ProductLinked: `BarcodeLink` doc
+- [X] T033 [US1] Stock tüketici: `Stock.Api/ProcurementEventHandlers.cs` — ProductLinked: `BarcodeLink` doc
       (`Domains/Stocks/BarcodeLink.cs`) upsert + ProductStock `SetQuantity(InitialStock)` + `StockChangedEvent`;
       kuyruk `stock.procurement-events` + Marten kaydı: `Stock.Api/Program.cs`
 - [ ] T034 [US1] Derleme + tüm testler + canlı smoke: pull → vitrin eksiksiz ürünler (~2700), çakışan barkodda

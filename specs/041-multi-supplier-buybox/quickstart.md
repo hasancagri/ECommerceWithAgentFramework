@@ -24,7 +24,7 @@ curl -X POST http://localhost:<procurement>/v1/feeds/pull   # veya Hangfire cron
 
 ## 3. Buy-box fiyat kontrolü (SC-003)
 
-- Çakışan barkod seç (8690000001801..2300 arası), Procurement havuzunda iki listing'i gör (pgAdmin →
+- Çakışan barkod seç (8690000002501..3000 arası), Procurement havuzunda iki listing'i gör (pgAdmin →
   `procurementManagement.mt_doc_poolproduct`), vitrin fiyatının stoklu en ucuzla eşleştiğini doğrula.
 - Eşit fiyatlı örnekte kazanan = Priority 1 (supplier-a).
 

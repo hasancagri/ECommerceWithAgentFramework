@@ -62,4 +62,46 @@ public static class RabbitMqConstants
             public const string Basket = "basket.reservation-expired";
         }
     }
+
+    // 041: tüketici başına TEK sıralı kuyruk (storefront.events emsali) — aynı barkodun
+    // event'leri sıralı işlenir. Catalog iki exchange'i, Stock iki exchange'i aynı kuyruğa bağlar.
+    public static class ProcurementEvents
+    {
+        public const string CatalogQueue = "catalog.procurement-events";
+        public const string StockQueue = "stock.procurement-events";
+    }
+
+    // 041: Procurement yayınlar, Catalog tüketir (eksiksiz kanonik ürün, fat).
+    public static class CanonicalProduct
+    {
+        public const string Exchange = "procurement.canonical-product";
+
+        public static class Queues
+        {
+            public const string Catalog = ProcurementEvents.CatalogQueue;
+        }
+    }
+
+    // 041: Procurement yayınlar, Catalog (fiyat) + Stock (OnHand) tüketir.
+    public static class BuyBoxChanged
+    {
+        public const string Exchange = "procurement.buybox-changed";
+
+        public static class Queues
+        {
+            public const string Catalog = ProcurementEvents.CatalogQueue;
+            public const string Stock = ProcurementEvents.StockQueue;
+        }
+    }
+
+    // 041: Catalog yeni üründe yayınlar, Stock barkod↔ProductId eşlemesini kurar.
+    public static class ProductLinked
+    {
+        public const string Exchange = "catalog.product-linked";
+
+        public static class Queues
+        {
+            public const string Stock = ProcurementEvents.StockQueue;
+        }
+    }
 }

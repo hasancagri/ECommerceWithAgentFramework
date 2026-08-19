@@ -142,8 +142,21 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(web)
     .WaitFor(gateway);
 
-// Tedarikçi simülatörü: DB'siz mock — deterministik feed üretir (041: iki tedarikçi + rev).
+// Tedarikçi simülatörü: DB'siz mock — rev başına JSON dataset döner (041: iki tedarikçi + advance).
 var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
+
+// 041: Procurement BC — havuz + buy-box + enrich. WaitFor catalog/stock: tüketici kuyrukları
+// publisher'dan önce bağlansın (soğuk açılışta binding'siz fanout = sessiz kayıp — 007/012 dersi).
+var procurementDb = postgres.AddDatabase("procurementDb");
+builder.AddProject<Projects.Procurement_Api>("procurement-api")
+    .WithReference(procurementDb)
+    .WithReference(rabbit)
+    .WithReference(supplierApi)
+    .WaitFor(procurementDb)
+    .WaitFor(rabbit)
+    .WaitFor(supplierApi)
+    .WaitFor(catalogApi)
+    .WaitFor(stockApi);
 
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);

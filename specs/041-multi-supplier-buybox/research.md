@@ -60,20 +60,22 @@ Tüm NEEDS CLARIFICATION spec/clarify oturumunda kapandı; buradaki kararlar tas
 - **Alternatives**: Senkron enrich (pull sırasında) — 300 satır × LLM gecikmesi pull'u kilitler; red.
   MCP üzerinden Catalog'a yazan agent (015 deseni) — sökülen desenin geri gelişi; red.
 
-## R6 — Mock feed: deterministik üretici + rev mekanizması
+## R6 — Mock feed: rev başına statik JSON dataset (kullanıcı kararı 2026-08-19)
 
-- **Decision**: `FeedGenerator` saf fonksiyon: `f(supplierCode, rev) → satırlar` (sabit seed'li, her çağrıda aynı).
-  Kimlik uzayı: BARCODE-0001..3000; A = 1..1300 benzersiz + 1801..2300 çakışan, B = 1301..1800 benzersiz +
-  1801..2300 çakışan → A=1800, B=1700, çakışan=500, benzersiz toplam=3000. Çakışanlarda deterministik dağılım:
-  fiyat kimi A kimi B ucuz, ~%10 eşit; ~%10 stok 0; ad/açıklama hafif farklı; iki tedarikçi FARKLI kategori adları.
-  ~%10 satırda açıklama ve/veya kategori eksik. Ölçü ürün türüne uygun sabit bantlardan. `rev` (varsayılan 1)
-  fiyat/stokta deterministik sapma üretir (SC-004 kazanan değişimi testi). Supplier.Api tedarikçi başına bellek-içi
-  güncel rev tutar: `GET /v1/feeds/{supplier}` güncel rev'i döner, `POST /v1/feeds/{supplier}/advance` rev'i artırır.
-  Eski `GET /v1/feeds` + `products.json` SİLİNİR.
-- **Rationale**: Determinizm = idempotency (SC-007) ve sıra-bağımsızlık (SC-008) canlı doğrulanabilir; rev = canlı
-  senaryoda "feed değişti"yi tek POST'la simüle etmek.
-- **Alternatives**: Statik JSON dosyaları — 3500 satır elde bakım + rev senaryosu yok; red. Zaman-bazlı rastgelelik —
-  determinizm ölür; red.
+- **Decision**: Veri `Datasets/supplier-{kod}.rev{N}.json` dosyalarında yaşar (script-üretimli, commit'li,
+  elle düzenlenebilir). Endpoint dosyayı istek anında okur (değişiklik restart'sız yansır — 005/R12 mirası).
+  Kimlik uzayı: 8690000000001..3000; A = 1..1300 benzersiz + 2501..3000 çakışan (1800 satır), B = 1301..2500
+  benzersiz + 2501..3000 çakışan (1700 satır) → çakışan=500, benzersiz toplam=3000. Çakışanlarda dağılım:
+  fiyat ~%45 A / ~%45 B ucuz, ~%10 eşit; ~%10'unda en ucuz aday stok 0; ad/açıklama hafif farklı; iki tedarikçi
+  FARKLI kategori adları. ~%10 satırda açıklama ve/veya kategori eksik. Ölçü ürün türüne uygun sabit bantlar.
+  `rev` başına AYRI dosya: rev2 yalnız fiyat/stok sapması taşır (içerik alanları rev1 ile birebir; SC-004).
+  Supplier.Api tedarikçi başına bellek-içi güncel rev tutar: `GET /v1/feeds/{supplier}` güncel rev dosyasını döner,
+  `POST /v1/feeds/{supplier}/advance` rev'i artırır (dosyası olmayan rev mevcut en yükseğe düşer).
+  Eski `GET /v1/feeds` + `products.json` SİLİNİR. Dataset kontratı test-first doğrulanır (FeedDatasetTests).
+- **Rationale**: Statik dosya = determinizm bedava (idempotency SC-007, sıra-bağımsızlık SC-008); veri gözle
+  görülür/elle düzenlenebilir (kullanıcı tercihi); rev = "feed değişti"yi tek POST'la simüle etmek.
+- **Alternatives**: Kod-içi deterministik üretici — kullanıcı örnek veriyi JSON dosyası olarak istedi; red.
+  Zaman-bazlı rastgelelik — determinizm ölür; red.
 
 ## R7 — Söküm kapsamı
 
