@@ -31,4 +31,33 @@ public class ProcurementEventHandlers
         session.Store(stock);
         await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(evt.ProductId, stock.Quantity));
     }
+
+    // US2: kazananın stoğu MUTLAK yazılır; kazanansız karar stok 0 getirir (satın alınamaz, FR-015).
+    // Eşleme (BarcodeLink) yoksa YOK SAY — ilk değer ProductLinked'le taşınır (yarış edge'i, R4).
+    public async Task Handle(
+        IntegrationEvents.BuyBoxChanged evt,
+        IDocumentSession session,
+        IMessageBus bus,
+        CancellationToken ct)
+    {
+        var link = await session.LoadAsync<BarcodeLink>(evt.Barcode, ct);
+        if (link is null)
+            return;
+
+        var stock = await session.Query<ProductStock>()
+            .FirstOrDefaultAsync(s => s.ProductId == link.ProductId, ct);
+        if (stock is null)
+        {
+            stock = ProductStock.Create(link.ProductId, evt.Stock);
+        }
+        else
+        {
+            var set = stock.SetQuantity(evt.Stock);
+            if (!set.IsSuccess)
+                return;
+        }
+
+        session.Store(stock);
+        await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(link.ProductId, stock.Quantity));
+    }
 }

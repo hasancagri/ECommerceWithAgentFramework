@@ -102,16 +102,16 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
 
 **Independent Test**: advance + pull → fiyat/stok/kazanan güncellenir; değişmeyen feed sessiz (quickstart 4-5).
 
-- [ ] T035 [US2] PoolProduct değişim testleri (test-first): `tests/Procurement.Api.Tests/PoolProductTests.cs` ekle
+- [X] T035 [US2] PoolProduct değişim testleri (test-first): `tests/Procurement.Api.Tests/PoolProductTests.cs` ekle
       (kazanan devri; kazanan stoksuz → sonraki; hepsi stoksuz → kazanansız Stock 0; MarkDelisted yarıştan çıkarır;
       aynı listing tekrar → NoChange/yayınsız)
-- [ ] T036 [US2] `BuyBoxChanged` yayını: PullSupplierFeed/PublishPoolProduct akışında karar değişiminde publish
+- [X] T036 [US2] `BuyBoxChanged` yayını: PullSupplierFeed/PublishPoolProduct akışında karar değişiminde publish
       (yalnız BuyBoxDecision değişince); testleri yeşile çek
-- [ ] T037 [US2] MarkDelisted: pull'da o tedarikçinin feed'inde görünmeyen barkodlar işaretlenir:
+- [X] T037 [US2] MarkDelisted: pull'da o tedarikçinin feed'inde görünmeyen barkodlar işaretlenir:
       `Features/Commands/PullSupplierFeed.cs`
-- [ ] T038 [P] [US2] Catalog BuyBoxChanged handler: Gtin lookup → SetPrice → ProductChangedEvent; bilinmeyen Gtin
+- [X] T038 [P] [US2] Catalog BuyBoxChanged handler: Gtin lookup → SetPrice → ProductChangedEvent; bilinmeyen Gtin
       YOK SAY: `Catalog.Api/ProcurementEventHandlers.cs`
-- [ ] T039 [P] [US2] Stock BuyBoxChanged handler: BarcodeLink lookup → SetQuantity → StockChangedEvent; link yoksa
+- [X] T039 [P] [US2] Stock BuyBoxChanged handler: BarcodeLink lookup → SetQuantity → StockChangedEvent; link yoksa
       YOK SAY: `Stock.Api/ProcurementEventHandlers.cs`
 - [ ] T040 [US2] Canlı: `advance supplier-a` + pull → kazanan devri vitrine yansır; kazanansız örnek vitrinde
       stok 0 + sepete eklenemez; tekrar pull sessiz (quickstart 4 + 5 ilk madde)

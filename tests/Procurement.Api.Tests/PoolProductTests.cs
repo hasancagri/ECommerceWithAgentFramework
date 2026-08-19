@@ -291,4 +291,98 @@ public class PoolProductTests
         result.Data.PublishBuyBox.ShouldBeFalse();
         product.Status.ShouldBe(PoolProductStatus.Pending);
     }
+
+    // --- US2: buy-box değişimi (T035) ---
+
+    private static PoolProduct PublishedProduct(out BuyBoxDecision published)
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 5));
+        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 120m, stock: 8));
+        product.RebuildCanonical();
+        published = product.EvaluateBuyBox().Data!;
+        product.TryTakePublish(published);
+        return product;
+    }
+
+    [Fact]
+    public void BuyBox_RivalUndercuts_WinnerHandsOver_OnlyBuyBoxPublished()
+    {
+        var product = PublishedProduct(out _);
+
+        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 90m, stock: 8));
+        product.RebuildCanonical();
+        var decision = product.EvaluateBuyBox().Data!;
+        var publish = product.TryTakePublish(decision);
+
+        decision.SupplierId.ShouldBe(SupplierB); // kazanan devri
+        decision.Price.ShouldBe(90m);
+        publish.Data!.PublishBuyBox.ShouldBeTrue();
+        publish.Data.PublishCanonical.ShouldBeFalse(); // fiyat içerik hash'ine girmez
+    }
+
+    [Fact]
+    public void BuyBox_WinnerOutOfStock_NextCheapestWins()
+    {
+        var product = PublishedProduct(out _);
+
+        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 0));
+        var decision = product.EvaluateBuyBox().Data!;
+
+        decision.SupplierId.ShouldBe(SupplierB); // stoksuz kazanan yarıştan düşer
+        decision.Price.ShouldBe(120m);
+        decision.Stock.ShouldBe(8);
+    }
+
+    [Fact]
+    public void BuyBox_AllOutOfStock_NoWinnerStockZeroPriceKept()
+    {
+        var product = PublishedProduct(out var published);
+
+        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 0));
+        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 120m, stock: 0));
+        var decision = product.EvaluateBuyBox().Data!;
+        var publish = product.TryTakePublish(decision);
+
+        decision.SupplierId.ShouldBeNull();
+        decision.Stock.ShouldBe(0);
+        decision.Price.ShouldBe(published.Price); // son bilinen fiyat vitrinde kalır
+        publish.Data!.PublishBuyBox.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void MarkDelisted_RemovesListingFromRace()
+    {
+        var product = PublishedProduct(out _);
+
+        product.MarkDelisted(SupplierA);
+        product.RebuildCanonical();
+        var decision = product.EvaluateBuyBox().Data!;
+
+        decision.SupplierId.ShouldBe(SupplierB); // delisted satır yarışa girmez
+        product.Canonical!.Name.ShouldBe("Telefon X"); // merge de delisted'i atlar (B'nin adı)
+    }
+
+    [Fact]
+    public void MarkDelisted_IsIdempotent()
+    {
+        var product = PublishedProduct(out _);
+
+        product.MarkDelisted(SupplierA).IsSuccess.ShouldBeTrue();
+        product.MarkDelisted(SupplierA).IsSuccess.ShouldBeTrue();
+        product.MarkDelisted(Guid.NewGuid()).IsSuccess.ShouldBeTrue(); // bilinmeyen tedarikçi sessiz geçer
+    }
+
+    [Fact]
+    public void SameListingAgain_UnchangedAndNoPublish()
+    {
+        var product = PublishedProduct(out _);
+
+        var upsert = product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 5));
+        var publish = product.TryTakePublish(product.EvaluateBuyBox().Data!);
+
+        upsert.Data.ShouldBe(ListingChange.Unchanged);
+        publish.Data!.PublishCanonical.ShouldBeFalse();
+        publish.Data.PublishBuyBox.ShouldBeFalse(); // değişmeyen feed sessizdir (SC-007)
+    }
 }
