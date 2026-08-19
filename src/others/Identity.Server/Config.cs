@@ -107,15 +107,8 @@ public static class Config
             // 028: stock.reserve + basket.write; 039: basket.read (kalem okuma) + customer.read (odeme baglami).
             Scopes = ["stock.reserve", "basket.write", "basket.read", "customer.read"],
         },
-        // 030: ingestion agent m2m — feed yazımları (Catalog+Stock) için statik scope; RBAC dışı.
-        new ClientSeed
-        {
-            ClientId = "ingestion-agent",
-            ClientSecret = "ingestion-agent-secret",
-            DisplayName = "Ingestion agent (m2m)",
-            AllowClientCredentials = true,
-            Scopes = ["catalog.write", "stock.write"],
-        },
+        // 041: ingestion-agent m2m istemcisi söküldü (IngestionAgent projesiyle birlikte) —
+        // Procurement yazım yolu event'lidir, token gerektirmez.
         // WebApp (Razor Pages BFF): yalnız kullanıcı login'i (code+PKCE+refresh, confidential).
         // 031: anonim okuma artık gerçekten anonim (storefront AllowAnonymous) → client_credentials KALKTI.
         new ClientSeed

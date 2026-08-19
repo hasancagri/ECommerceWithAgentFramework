@@ -76,29 +76,42 @@ dotnet test --filter "FullyQualifiedName~BasketTests.AddItem_AddsItemToBasket"
 
 ## Mimari
 
-Mikroservisler `src/services/{basket,catalog,file,order,payment,stock,storefront,supplier}`
+Mikroservisler `src/services/{basket,catalog,file,order,payment,procurement,stock,storefront,supplier}`
 altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Shared`, `Identity.Server`),
-`src/aspire` (`AppHost`, `ServiceDefaults`), `src/agents` (`ChatAgent`, `IngestionAgent`) ve
+`src/aspire` (`AppHost`, `ServiceDefaults`), `src/agents` (`ChatAgent`) ve
 `src/ui` (`WebApp`). Fiziksel klasörler solution klasörleriyle birebir örtüşür.
 
 **Her servis kendi Postgres veritabanına sahiptir** (`catalogDb`, `basketDb`, …; `AppHost.cs`'te bağlanır) ve kendi Marten şemasına (`SchemaConstants`). Servisler asla veritabanı paylaşmaz.
 
-### Tedarikçi ingestion akışı (007)
+### Çok-tedarikçi Procurement akışı (041; 007/015 söküldü)
 
-- `Supplier.Api` dış dünya maketidir (DB'siz feed ucu); `Supplier.Gateway` sınır bileşenidir:
-  feed'i çeker, kanonikleştirir, SON yayınlanan snapshot'la kıyaslar (`supplierGatewayDb`).
-- Yalnız yeni/değişen kayıt `SupplierProductSnapshotReceived` event'iyle yayınlanır; sıra
-  önce publish sonra save'dir (çökmede kayıp yerine tekrar; yazımlar idempotent).
-- `IngestionAgent` DB'siz, state'siz tüketicidir: mesaj başına MAF workflow
-  (BrandWrite → CategoryWrite → CatalogWrite → StockWrite, 016/018) koşar; her adım
-  kendi servisine scope'lu bir LLM agent'ıyla (ChatClientAgent) MCP tool'larını çağırır (015).
-  Kimlikler (BrandId/CategoryId/ProductId) tipli sonuçlarla adımlar arasında KOD ile taşınır;
-  kategori zorunludur (boş kategori CategoryWrite'ta kesilir). Short-circuit conditional
-  edge'lerdedir; her yol terminal collector'dan geçer. Model config'i (`OpenAI:ApiKey`+`Model`)
-  zorunludur, açılışta fail-fast.
-- Hata yolu: başarısız yazım `IngestionWriteException`'a çevrilir → kademeli sınırlı retry,
-  tükenince mesaj içeriğiyle DLQ (`ingestion.supplier-product-snapshot.dlq`). Run API'si yok;
-  görünürlük kuyruk derinliği + DLQ + loglardır.
+- **041 (2026-08-19): Supplier.Gateway + IngestionAgent (015 LLM yazıcı zinciri) TAMAMEN söküldü.**
+  `SupplierProductSnapshotReceived` kontratı, `supplierGatewayDb`, Catalog `upsert_*` + Stock
+  `set_stock` MCP tool'ları ve `IngestionWriteException` da gitti. Tek yazım yolu Procurement event'leri.
+- `Supplier.Api` dış dünya maketidir: rev başına statik JSON dataset döner
+  (`Datasets/supplier-{a,b}.rev{N}.json`, commit'li; `GET /v1/feeds/{kod}` + `POST .../advance`).
+  Mock veri KOD'la üretilmez — örnek veri her zaman elle düzenlenebilir JSON dosyasıdır.
+- **Procurement BC** (`procurementDb`/`procurementManagement`): feed'leri Hangfire cron'la çeker
+  (`FeedPullOptions`; manuel tetik `POST /v1/feeds/pull`, anonim dev aracı), ham satırları
+  barkod-anahtarlı **PoolProduct** aggregate'inde toplar (Marten Identity = Barcode; listing
+  hash-diff, silme yerine Delisted), kanonik içeriği **Priority-merge** ile birleştirir (alan
+  bazında düşük Priority'nin dolu değeri kazanır — sıra-bağımsız), **buy-box** hesaplar (stok>0
+  en ucuz; eşitlikte düşük Priority; aday yoksa kazanansız: stok 0 + son bilinen fiyat).
+- Supplier kayıtları + kanonik taksonomi + tedarikçi kategori-eşleme tabloları seed'lidir;
+  yeni kategori feed'den DOĞMAZ. Kanonik taksonomi İKİ BC'de ayrı seed edilir (Procurement
+  `CanonicalTaxonomy`, Catalog `CatalogTaxonomySeedHostedService`) — sözleşme AD'dır, bilinçli tekrar.
+- Eksik içerik (açıklama/kategori) **EnrichmentAgent** ile tamamlanır: in-process Singleton
+  ChatClientAgent (Temperature=0, structured JSON, MCP'siz), lokal durable kuyruk
+  `procurement.enrich`, retry 10s/30s/60s → error queue. AI yalnız EKSİK satırda çalışır
+  (SourceHash cache); barkod/ölçü/fiyat/stok ASLA üretmez (aggregate guard'ı da reddeder).
+  `OpenAI:ApiKey`+`Model` zorunlu, açılışta fail-fast (`EnrichmentOptions`).
+- Yayın: yalnız EKSİKSİZ kanonik + değişim varsa. `CanonicalProductUpserted` (fat: içerik+Sku+ölçü+
+  buy-box fiyat/stok) → Catalog Gtin ile upsert + `ProductChangedEvent` + yeni üründe
+  `ProductLinked{InitialStock}` → Stock `BarcodeLink` kurar + OnHand yazar. `BuyBoxChanged`
+  yalnız karar değişince → Catalog fiyat, Stock OnHand (mutlak). Bilinmeyen barkod YOK SAYILIR.
+- Tüketici başına TEK sıralı kuyruk: `catalog.procurement-events` + `stock.procurement-events`
+  (Sequential — aynı barkod sıralı işlenir); binding'i tüketici kurar (007 dersi sürer).
+- Saga YOK; dayanıklılık idempotent upsert + hash-diff + sınırlı retry + error queue iledir.
 
 ### DDD ve Bounded Context
 
@@ -130,7 +143,8 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Product staging'den (`src/otherProjects/CustomNopCommerce`) extract edildi: `Money` fiyat VO, Sku/Gtin/MPN, `ProductType`, Dimensions/Seo, `Published`.
 - Kategori ilişkisi çoklu atamadır (`ProductCategoryAssignment` listesi); ingestion TEK kategori atar, `Categories[0]` = primary.
 - Dış kontratlar SABİT: `ProductChangedEvent` decimal fiyat = `Price.Amount`, kategori = primary atama; MCP tool + REST imzaları değişmedi.
-- Gtin hep boş (041 buy-box dolduracak); `ProductTag` dış yüzeysiz (yalnız domain); Grouped/Dimensions/Seo pasif alanlar.
+- Gtin = barkod (041 doldurur; Procurement upsert anahtarı, Marten index'li); `ProductTag` dış
+  yüzeysiz (yalnız domain); Grouped pasif; Dimensions/Seo 041 kanonik yayınıyla dolar.
 - Yazım yolları publish eder: yazılan ürün/kategori vitrindedir; agent okuma sorguları `Published` ile filtreler.
 
 ### Vertical Slice + DDD
@@ -231,8 +245,9 @@ API'sine erişir. Şu an tek kullanım **stok rezervasyonu**: `Basket`/`Order` �
 - **Rezervasyon modeli (Model B):** sepete ekleme `SetReservedQuantity` (idempotent, sabit
   TTL) ile rezervasyon tutar; sipariş `Commit` ile `OnHand`'i kalıcı düşürür; TTL dolunca
   Hangfire sweep `PurgeExpired` + `ReservationExpired` event'iyle sepet satırını temizler.
-- **014 (Model C tersine döndü):** tedarikçi feed'i stoğun **tek otoritesidir**; IngestionAgent
-  StockWrite geri geldi ve `OnHand`'i mutlak ezer. `OnHand` ayrıca sipariş Commit'iyle düşer.
+- **014 (Model C tersine döndü):** tedarikçi feed'i stoğun **tek otoritesidir**; 041 ile yazım
+  kanalı buy-box event'leridir (`ProductLinked`/`BuyBoxChanged` → `OnHand` mutlak yazılır,
+  kazananın stoğu — toplam değil). `OnHand` ayrıca sipariş Commit'iyle düşer.
 - Fail-closed: Stock erişilemezse sepete **eklenmez** (oversell yasak).
 
 ### Checkout Saga — orchestration (028)
@@ -295,7 +310,7 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
 - **DİKKAT (`ScopeClaimArrayHandler`):** `context.TokenType` URN'dir (`TokenTypeIdentifiers.AccessToken`), kısa hint `TokenTypeHints.AccessToken` DEĞİL. Guard'ı hint'le kıyaslarsan handler no-op olur; scope tek string kalır → 403 → WebApp sepet redirect döngüsü.
 - **Rol = token verme anındaki scope demeti (030).** Kullanıcı TEK rol taşır; `AuthorizeEndpoint` granted scope'ları `ScopeResolver` ile `requested ∩ rol demeti`ne süzer (`RoleScopeQuery` DB'den rol scope'larını okur). Downstream servisler rolü GÖRMEZ — rol yalnız id_token'a biner (UI), access token'a girmez.
 - **KnownScopes** (`Rbac/KnownScopes.cs`) kod-sahipli kapalı registry; rol→scope yazımı `AssignableScopeValidator` ile bu listeye kısıtlı (serbest metin yasak). Rol + rol→scope map DB'de (`RoleScope` tablosu), admin `/Admin/*` Razor Pages'ten yönetir (cookie admin-rol guard, İlke V IdP istisnası). Giriş: WebApp header koşullu "Yönetim" linki.
-- **Register** otomatik `customer` rolü atar (direkt login, aktivasyon yok). **Seed** (`SeedHostedService`) idempotent: admin+customer + rol→scope map + bootstrap admin (config'ten parola) + `ingestion-agent` client. Makine kimlikleri (agent/saga) client_credentials + statik scope, RBAC dışı.
+- **Register** otomatik `customer` rolü atar (direkt login, aktivasyon yok). **Seed** (`SeedHostedService`) idempotent: admin+customer + rol→scope map + bootstrap admin (config'ten parola). Makine kimlikleri (saga) client_credentials + statik scope, RBAC dışı (`ingestion-agent` client 041'de söküldü).
 - Scope zorlaması **Wolverine mesaj handler'larına da** uygulanır: `[RequiredScope]` taşıyan her mesaj tipi için bir `ScopeAuthorizationMiddleware` çalışır.
 - `Identity.Server` **HTTPS** üzerinden çalışmak zorundadır (`SameSite=None; Secure` cookie'leri düz HTTP'de sonsuz döngüye girer ve tüm servislerin `Authority` değeri issuer ile eşleşmelidir).
 
