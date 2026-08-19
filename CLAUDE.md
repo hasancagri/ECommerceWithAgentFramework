@@ -119,7 +119,9 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
   (ör. `OrderItem`, `BasketItem`). Private setter + davranış metotları kullanılır; entity aggregate'e aittir.
   `AggregateRoot`'u yalnızca aggregate kökleri için kullan.
 - **Value Object** — kimliği olmayan, değeriyle tanımlanan nesne; `record` olarak, private ctor + statik `Create` fabrikasıyla yazılır (`Address`, `Money`).
-- **Enum** — düz C# enum kullanılır (ör. `ProductType`); repo'da `Enumeration` temel sınıfı YOKTUR.
+- **Enum** — düz C# enum kullanılır; repo'da `Enumeration` temel sınıfı YOKTUR. **Aggregate'e ait enum
+  aggregate'in DOSYASINDA tanımlanır, ayrı dosya açılmaz** (ör. `OrderStatus` → `Order.cs`,
+  `PaymentStatus` → `Payment.cs`, `ProductType` → `Product.cs`).
 
 **Invariant'lar (değişmezler) aggregate'in içinde korunur.** Koleksiyonlar private tutulur ve yalnızca okunur olarak expose edilir (`_items` → `IReadOnlyList<BasketItem> Items`); mutasyon yalnızca aggregate metotlarından geçer (`AddItem`, `SetItem`...). Kural ihlali handler'da değil, aggregate'te yakalanır — ör. `Order.AddOrderItem` boş ürün adında hata Result'ı döner. **Yeni bir kural eklerken önce aggregate metoduna bak; iş mantığını handler'a değil aggregate'e koy.**
 

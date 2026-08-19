@@ -74,7 +74,10 @@
 
 ## Final Phase: Polish & Doğrulama
 
-- [ ] T027 Canlı doğrulama: quickstart.md adımları (DB reset → Aspire → feed → vitrin → arama → checkout → chat)
+- [x] T027 Canlı doğrulama PASS (2026-08-19): DB reset → Aspire → feed 120/120 (DLQ 0) → vitrin →
+      hybrid arama → MCP get/search (kategori filtresi dahil) → chat ürün sorgusu. Checkout bilinçli
+      atlandı (kullanıcı kararı: 040 Basket/Order'a dokunmadı, akış extract öncesi canlıda doğruluydu).
+      Bulunan+düzeltilen: kategori filtreli arama ($type/$values sarmalayıcısı → MatchesSql).
 - [x] T028 [P] CLAUDE.md güncelle: Catalog zengin model + 040 özeti (150 karakter kuralına uy)
 - [ ] T029 PR aç: `040-catalog-domain-extract` → master (özet + canlı doğrulama kanıtları)
 

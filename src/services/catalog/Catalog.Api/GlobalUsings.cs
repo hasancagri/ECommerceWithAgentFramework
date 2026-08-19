@@ -40,3 +40,4 @@ global using Common.Dependencies;
 // 040: zengin model — VO'lar + ProductTag aggregate'i.
 global using Catalog.Api.Domains.Products.ValueObjects;
 global using Catalog.Api.Domains.ProductTags;
+global using Marten.Linq.MatchesSql;

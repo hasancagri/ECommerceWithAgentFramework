@@ -30,8 +30,12 @@ public static class SearchProductsForAgent
                 if (category is null)
                     return FeatureObjectResultModel<SearchProductResponse>.Ok(null); // bilinmeyen kategori → sonuç yok
 
-                // 040 K4: kategori artık çoklu atama koleksiyonudur; filtre atamalar üzerinde.
-                products = products.Where(x => x.Categories.Any(c => c.CategoryId == category.Id));
+                // 040 K4: kategori artık çoklu atama koleksiyonudur. LINQ Categories.Any(...) KULLANMA:
+                // Newtonsoft koleksiyonu $type/$values sarmalayıcısıyla yazar, Marten'ın containment
+                // çevirisi düz dizi bekler → 0 eşleşme (canlıda kanıtlandı). Ham JSONB predicate şart.
+                products = products.Where(x => x.MatchesSql(
+                    "d.data -> 'Categories' -> '$values' @> CAST(? as jsonb)",
+                    $"[{{\"CategoryId\": \"{category.Id}\"}}]"));
             }
 
             if (!string.IsNullOrWhiteSpace(query.Brand))
