@@ -19,15 +19,16 @@ public static class GetProductForAgent
             IDocumentSession session,
             CancellationToken ct)
         {
+            // 040 FR-007: vitrin kararı Published bayrağında; fiyat dışa decimal görünür (K2).
             var product = await session.Query<Product>()
-                .Where(x => !x.IsDeleted && x.IsActive &&
+                .Where(x => !x.IsDeleted && x.Published &&
                             x.Name.Contains(query.Name, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.Name)
                 .Select(x => new GetProductResponse
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Price = x.Price,
+                    Price = x.Price.Amount,
                     ImageUrl = x.ImageUrl
                 })
                 .FirstOrDefaultAsync(ct);

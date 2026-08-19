@@ -3,6 +3,8 @@ global using Catalog.Api.Constants;
 global using Catalog.Api.Domains.Brands;
 global using Catalog.Api.Domains.Categories;
 global using Catalog.Api.Domains.Products;
+global using Catalog.Api.Domains.Products.ValueObjects;
+global using Catalog.Api.Domains.ProductTags;
 global using Catalog.Api.Domains;
 global using Common.Utils.Caching;
 global using Common.Utils.Constants;
