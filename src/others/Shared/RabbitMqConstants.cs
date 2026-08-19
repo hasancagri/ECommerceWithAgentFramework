@@ -62,16 +62,4 @@ public static class RabbitMqConstants
             public const string Basket = "basket.reservation-expired";
         }
     }
-
-    // 007: Supplier.Gateway yayınlar, IngestionAgent tüketir; retry tükenince DLQ'ya düşer.
-    public static class SupplierProductSnapshot
-    {
-        public const string Exchange = "supplier.product-snapshot";
-        public const string DeadLetter = "ingestion.supplier-product-snapshot.dlq";
-
-        public static class Queues
-        {
-            public const string Ingestion = "ingestion.supplier-product-snapshot";
-        }
-    }
 }

@@ -18,10 +18,4 @@
       <ProjectReference Include="..\..\..\others\Shared\Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Update="Datasets\*.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
 </Project>

@@ -2,7 +2,6 @@
   <Folder Name="/src/" />
   <Folder Name="/src/agents/">
     <Project Path="src/agents/ChatAgent/ChatAgent.csproj" />
-    <Project Path="src/agents/IngestionAgent/IngestionAgent.csproj" />
   </Folder>
   <Folder Name="/src/aspire/">
     <Project Path="src/aspire/AppHost/AppHost.csproj" />
@@ -24,7 +23,6 @@
     <Project Path="src/services/stock/Stock.Api/Stock.Api.csproj" />
     <Project Path="src/services/storefront/Storefront.Api/Storefront.Api.csproj" />
     <Project Path="src/services/supplier/Supplier.Api/Supplier.Api.csproj" />
-    <Project Path="src/services/supplier/Supplier.Gateway/Supplier.Gateway.csproj" />
   </Folder>
   <Folder Name="/src/ui/">
     <Project Path="src/ui/WebApp/WebApp.csproj" />
@@ -35,11 +33,9 @@
     <Project Path="tests/Customer.Api.Tests/Customer.Api.Tests.csproj" />
     <Project Path="tests/Common.Tests/Common.Tests.csproj" />
     <Project Path="tests/Identity.Server.Tests/Identity.Server.Tests.csproj" />
-    <Project Path="tests/IngestionAgent.Tests/IngestionAgent.Tests.csproj" />
     <Project Path="tests/Order.Api.Tests/Order.Api.Tests.csproj" />
     <Project Path="tests/Payment.Api.Tests/Payment.Api.Tests.csproj" />
     <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />
     <Project Path="tests/Storefront.Api.Tests/Storefront.Api.Tests.csproj" />
-    <Project Path="tests/Supplier.Gateway.Tests/Supplier.Gateway.Tests.csproj" />
   </Folder>
 </Solution>

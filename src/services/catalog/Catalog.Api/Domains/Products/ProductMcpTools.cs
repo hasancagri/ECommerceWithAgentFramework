@@ -29,25 +29,3 @@ public static class GetProductByNameMcpTool
         => bus.InvokeAsync<FeatureObjectResultModel<SearchProductsForAgent.SearchProductResponse>>(
             new SearchProductsForAgent.SearchProductsQuery(name, category, brand), ct);
 }
-
-// 005-supplier-ingestion: ingestion katalog yazicisinin TEK yazma tool'u (FR-019).
-// Upsert: create/update karari LLM'de degil Catalog'un deterministik kodundadir (SKU anahtar).
-[McpServerToolType]
-public static class UpsertProductMcpTool
-{
-    [McpServerTool(Name = "upsert_product")]
-    [Description("Urunu SKU anahtariyla olusturur veya gunceller; productId ve yapilan islemi (created/updated) doner.")]
-    public static Task<FeatureObjectResultModel<UpsertProductForAgent.UpsertProductResponse>> UpsertProductAsync(
-        [Description("Urun adi")] string name,
-        [Description("Urun aciklamasi")] string description,
-        [Description("Fiyat (nokta ondalik)")] decimal price,
-        [Description("Stok tutma birimi (SKU) — tedarikci harici kimligi")] string sku,
-        [Description("Marka kimligi (upsert_brand'in dondugu brandId, Guid)")] Guid brandId,
-        [Description("Kategori kimligi (upsert_category'nin dondugu categoryId, Guid) — ZORUNLU")] Guid categoryId,
-        IMessageBus bus,
-        CancellationToken ct,
-        [Description("Opsiyonel gorsel URL'i")] string? imageUrl = null)
-        => bus.InvokeAsync<FeatureObjectResultModel<UpsertProductForAgent.UpsertProductResponse>>(
-            new UpsertProductForAgent.UpsertProductCommand(
-                name, description, price, sku, brandId, categoryId, imageUrl), ct);
-}

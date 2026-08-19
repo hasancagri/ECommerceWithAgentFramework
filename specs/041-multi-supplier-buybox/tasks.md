@@ -7,23 +7,23 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
 
 ## Phase 1: Setup
 
-- [ ] T001 Branch doğrula: `041-multi-supplier-buybox` aktif; working tree'deki " 2" kopya temizliği commit'e dahil
+- [X] T001 Branch doğrula: `041-multi-supplier-buybox` aktif; working tree'deki " 2" kopya temizliği commit'e dahil
 
 ## Phase 2A: Söküm (foundational — eski ingest yolu gider)
 
-- [ ] T002 IngestionAgent projesini sil: `src/agents/IngestionAgent/` + `ECommerceWithAgentFramework.slnx` kaydı
-- [ ] T003 Supplier.Gateway projesini sil: `src/services/supplier/Supplier.Gateway/` + slnx kaydı
-- [ ] T004 AppHost temizliği: `ingestion-agent` + `supplier-gateway` resource'ları + `supplierGatewayDb`:
+- [X] T002 IngestionAgent projesini sil: `src/agents/IngestionAgent/` + `ECommerceWithAgentFramework.slnx` kaydı
+- [X] T003 Supplier.Gateway projesini sil: `src/services/supplier/Supplier.Gateway/` + slnx kaydı
+- [X] T004 AppHost temizliği: `ingestion-agent` + `supplier-gateway` resource'ları + `supplierGatewayDb`:
       `src/aspire/AppHost/AppHost.cs`
-- [ ] T005 [P] Shared söküm: `SupplierProductSnapshotReceived` (`src/others/Shared/IntegrationEvents.cs`) +
+- [X] T005 [P] Shared söküm: `SupplierProductSnapshotReceived` (`src/others/Shared/IntegrationEvents.cs`) +
       `SupplierProductSnapshot` bloğu (`src/others/Shared/RabbitMqConstants.cs`)
-- [ ] T006 [P] Catalog agent-yazım yüzeyi sil: `Domains/Brands/Features/Agents/UpsertBrandForAgent.cs`,
+- [X] T006 [P] Catalog agent-yazım yüzeyi sil: `Domains/Brands/Features/Agents/UpsertBrandForAgent.cs`,
       `Domains/Categories/Features/Agents/UpsertCategory.cs`, `Domains/Products/Features/Agents/UpsertProduct.cs` +
       ilgili `*McpTools.cs` tool metotları (okuma tool'ları KALIR)
-- [ ] T007 [P] Stock agent-yazım yüzeyi sil: `Domains/Stocks/Features/Agents/SetStock.cs` + McpTools kaydı
-- [ ] T008 [P] `IngestionWriteException` sil: `src/others/Common/Exceptions/IngestionWriteException.cs`
-- [ ] T009 [P] Supplier.Api eski uç + veri sil: `Domains/Feeds/FeedEndpointExtension.cs` eski GET + `Datasets/products.json`
-- [ ] T010 Söküm sonrası derleme + testler: `dotnet build && dotnet test` (ingest'e bağlı test kalmadıysa yeşil)
+- [X] T007 [P] Stock agent-yazım yüzeyi sil: `Domains/Stocks/Features/Agents/SetStock.cs` + McpTools kaydı
+- [X] T008 [P] `IngestionWriteException` sil: `src/others/Common/Exceptions/IngestionWriteException.cs`
+- [X] T009 [P] Supplier.Api eski uç + veri sil: `Domains/Feeds/FeedEndpointExtension.cs` eski GET + `Datasets/products.json`
+- [X] T010 Söküm sonrası derleme + testler: `dotnet build && dotnet test` (ingest'e bağlı test kalmadıysa yeşil)
 
 **Checkpoint**: Sistem ingest'siz ama sağlıklı; vitrin/sepet/checkout eski veriyle çalışır durumda derlenir.
 
