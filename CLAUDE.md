@@ -333,6 +333,8 @@ Cache kuralları (ne cache'lenir, kim boşaltır):
   aynı BC içinde ayrı yerleşebilir (aggregate değildir).
 - **ValueObjects.** Bir aggregate'e bağlı standalone value object `<Aggregate>/ValueObjects/`
   altına konur (ör. `AddressBooks/ValueObjects/Address`), aggregate kökünde durmaz.
+  **Aggregate'in TÜM VO'ları tek dosyada toplanır: `ValueObjects/<Aggregate>ValueObjects.cs`**
+  (ör. `Products/ValueObjects/ProductValueObjects.cs`); VO başına ayrı dosya açılmaz.
 - **Aggregate — private helper YOK.** Ortak mantık private metoda çıkarılıp çağrılmaz,
   **inline** yazılır (kod tekrarı bilinçli). **VO MUAF** (VO'da private helper serbest).
 - **Aggregate metodu yalnız handler'dan çağrılır.** Başka aggregate metodundan (factory
