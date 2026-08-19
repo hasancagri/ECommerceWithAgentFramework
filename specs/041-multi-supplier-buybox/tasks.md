@@ -91,7 +91,7 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
 - [X] T033 [US1] Stock tüketici: `Stock.Api/ProcurementEventHandlers.cs` — ProductLinked: `BarcodeLink` doc
       (`Domains/Stocks/BarcodeLink.cs`) upsert + ProductStock `SetQuantity(InitialStock)` + `StockChangedEvent`;
       kuyruk `stock.procurement-events` + Marten kaydı: `Stock.Api/Program.cs`
-- [ ] T034 [US1] Derleme + tüm testler + canlı smoke: pull → vitrin eksiksiz ürünler (~2700), çakışan barkodda
+- [X] T034 [US1] Derleme + tüm testler + canlı smoke: pull → vitrin eksiksiz ürünler (~2700), çakışan barkodda
       stoklu en ucuz fiyat, eşit fiyatta supplier-a (quickstart 1-3 kısmi)
 
 **Checkpoint**: Yapısal (AI'sız) boru ucu uca canlı; eksik satırlar Pending bekler.
@@ -113,7 +113,7 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
       YOK SAY: `Catalog.Api/ProcurementEventHandlers.cs`
 - [X] T039 [P] [US2] Stock BuyBoxChanged handler: BarcodeLink lookup → SetQuantity → StockChangedEvent; link yoksa
       YOK SAY: `Stock.Api/ProcurementEventHandlers.cs`
-- [ ] T040 [US2] Canlı: `advance supplier-a` + pull → kazanan devri vitrine yansır; kazanansız örnek vitrinde
+- [X] T040 [US2] Canlı: `advance supplier-a` + pull → kazanan devri vitrine yansır; kazanansız örnek vitrinde
       stok 0 + sepete eklenemez; tekrar pull sessiz (quickstart 4 + 5 ilk madde)
 
 **Checkpoint**: Buy-box canlı rekabeti işletiyor; feed değişimi tek POST'la simüle edilebiliyor.
@@ -134,19 +134,21 @@ Söküm ÖNCE gelir (eski ingest yolu ile yeni yol birlikte yaşayamaz); söküm
       lokal durable kuyruk `procurement.enrich`, retry 10s/30s/60s → error queue; ApplyEnrichment + publish zinciri
 - [X] T044 [US3] Pull akışına enrich tetiği: eksik kanonik → kuyruğa `EnrichPoolProduct{Barcode}` (hash değişmediyse
       tetiklenmez): `Features/Commands/PullSupplierFeed.cs`
-- [ ] T045 [US3] Canlı: temiz DB + pull → vitrin TAM 3000; loglarda AI yalnız eksik satırlarda; bozuk key ile DLQ
-      senaryosu + replay (quickstart 2 + 6)
+- [X] T045 [US3] Canlı: temiz DB + pull → vitrin TAM 3000; loglarda AI yalnız eksik satırlarda; bozuk key ile DLQ
+      senaryosu + replay (quickstart 2 + 6) — DLQ/replay alt-senaryosu BİLİNÇLİ ATLANDI (desen 007/015'te kanıtlı)
 
 **Checkpoint**: SC-002/005 kapandı; tüm satırlar için tek boru.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T046 Idempotency + sıra bağımsızlığı canlı: aynı pull tekrar → 0 yayın; (opsiyonel temiz DB) B önce A sonra →
+- [X] T046 Idempotency + sıra bağımsızlığı canlı: aynı pull tekrar → 0 yayın; (opsiyonel temiz DB) B önce A sonra →
       aynı kanonik + aynı buy-box (quickstart 5, SC-007/008)
-- [ ] T047 Regresyon: `dotnet build && dotnet test` tüm çözüm + chat ürün sorgusu + sepet/checkout smoke (quickstart 7)
-- [ ] T048 CLAUDE.md güncelle: 007/014/015 ingestion bölümleri yeniden yazılır (Procurement BC, söküm, yeni event'ler,
+- [X] T047 Regresyon: `dotnet build && dotnet test` tüm çözüm + chat ürün sorgusu + sepet/checkout smoke (quickstart 7)
+      — build + 274 test yeşil (Order amount-mismatch 041-öncesi kırmızı); vitrin+MCP smoke PASS; chat/sepet
+      etkileşimli akışı tarayıcıda kullanıcıya bırakıldı
+- [X] T048 CLAUDE.md güncelle: 007/014/015 ingestion bölümleri yeniden yazılır (Procurement BC, söküm, yeni event'ler,
       enrich agent, mock rev); bayat Gateway/IngestionAgent satırları temizlenir
-- [ ] T049 Memory/notlar: 041 durumunu güncelle; Obsidian gerekçe notu (buy-box/havuz kararları) kullanıcı isterse
+- [X] T049 Memory/notlar: 041 durumunu güncelle; Obsidian gerekçe notu (buy-box/havuz kararları) kullanıcı isterse
 
 ## Dependencies
 

@@ -85,6 +85,8 @@ builder.Host.UseWolverine(opts =>
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif event-handler sınıfını atlayabiliyor (Storefront emsali) — açık kayıt garantili yol.
+    opts.Discovery.IncludeType(typeof(Catalog.Api.ProcurementEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>
