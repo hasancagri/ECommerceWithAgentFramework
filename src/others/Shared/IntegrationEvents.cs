@@ -24,17 +24,37 @@ public static class IntegrationEvents
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
     public record ReservationExpired(Guid ProductId, Guid UserId);
 
-    // 007-supplier-gateway: kaydın tedarikçideki GÜNCEL hali (snapshot, diff değil).
-    // Tedarikçi kimliği tip değil alandır (SupplierCode).
-    // 016: Category dış veri olduğundan nullable taşınır; ancak kategori ZORUNLUDUR — boş/eksik
-    // gelen kayıt ingestion CategoryWrite adımında kesilir (retry/DLQ), kataloğa yazılmaz.
-    public record SupplierProductSnapshotReceived(
-        string SupplierCode,
-        string ExternalId,
+    // 041: Procurement → Catalog. Eksiksiz kanonik ürün (fat — yayın anındaki buy-box Price+Stock dahil,
+    // fiyatsız pencere olmaz). Yayın koşulu: kanonik complete VE (içerik hash veya buy-box değişti).
+    // Kategori adları kanonik seed ağacından çözülür (NormalizedName); ölçüde 0 = bilinmiyor.
+    public record CanonicalProductUpserted(
+        string Barcode,
         string Name,
         string Description,
         string Brand,
-        string? Category,
+        string Category,
+        string SubCategory,
+        string Sku,
+        decimal Weight,
+        decimal Length,
+        decimal Width,
+        decimal Height,
         decimal Price,
-        int StockQuantity);
+        int Stock);
+
+    // 041: Procurement → Catalog + Stock. Yalnız BuyBoxDecision değişince yayınlanır (value-eşitlik).
+    // SupplierId null = kazanan yok (tüm offer'lar stoksuz/delisted): fiyat son bilinen, stok 0.
+    // Bilinmeyen Barcode iki tüketicide de YOK SAYILIR (ilk değerler CanonicalProductUpserted'da taşındı).
+    public record BuyBoxChanged(
+        string Barcode,
+        Guid? SupplierId,
+        decimal Price,
+        int Stock);
+
+    // 041: Catalog → Stock. Yalnız YENİ ürün oluşunca yayınlanır; Stock BarcodeLink eşlemesini kurar
+    // ve OnHand'i InitialStock (CanonicalProductUpserted.Stock) ile mutlak yazar.
+    public record ProductLinked(
+        string Barcode,
+        Guid ProductId,
+        int InitialStock);
 }

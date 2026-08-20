@@ -13,7 +13,8 @@ builder.Services.AddMarten(opts =>
                 s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
         
-        opts.Schema.For<Product>();
+        // 041: Gtin (barkod) Procurement upsert anahtarıdır — lookup index'i.
+        opts.Schema.For<Product>().Index(x => x.Gtin);
 
         // 040 K9: ProductTag yeni aggregate — dış yüzeyi yok, şemada yaşar (besleyen akış 041+).
         opts.Schema.For<ProductTag>();
@@ -55,6 +56,28 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ProductChangedEvent>()
         .ToRabbitExchange(RabbitMqConstants.ProductChanged.Exchange);
 
+    // 041: Procurement yayınlarının tüketicisi — TEK sıralı kuyruk (aynı barkod sıralı işlenir).
+    // Binding'i TÜKETİCİ kurar (007 dersi); iki exchange de aynı kuyruğa bağlanır.
+    rabbit.DeclareExchange(RabbitMqConstants.CanonicalProduct.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.CanonicalProduct.Queues.Catalog);
+    });
+    rabbit.DeclareExchange(RabbitMqConstants.BuyBoxChanged.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.BuyBoxChanged.Queues.Catalog);
+    });
+    opts.ListenToRabbitQueue(RabbitMqConstants.ProcurementEvents.CatalogQueue).Sequential();
+
+    // 041: yeni üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
+    rabbit.DeclareExchange(RabbitMqConstants.ProductLinked.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+    });
+    opts.PublishMessage<Shared.IntegrationEvents.ProductLinked>()
+        .ToRabbitExchange(RabbitMqConstants.ProductLinked.Exchange);
+
     opts.ListenToRabbitQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
 
     opts.Policies.UseDurableLocalQueues();
@@ -62,6 +85,8 @@ builder.Host.UseWolverine(opts =>
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif event-handler sınıfını atlayabiliyor (Storefront emsali) — açık kayıt garantili yol.
+    opts.Discovery.IncludeType(typeof(Catalog.Api.ProcurementEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>
@@ -77,6 +102,9 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     AuthorizationScopes.CatalogWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
+
+// 041: kanonik Category>SubCategory ağacı (Procurement kopyasıyla ad-hizalı; idempotent).
+builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogTaxonomySeedHostedService>();
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -108,6 +136,9 @@ app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 app.AddProductGroupEndpointExtension(apiVersionSet);
+app.AddProductTagGroupEndpointExtension(apiVersionSet);
+app.AddCategoryGroupEndpointExtension(apiVersionSet);
+app.AddBrandGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
 

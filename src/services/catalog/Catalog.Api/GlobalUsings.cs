@@ -29,10 +29,15 @@ global using Microsoft.AspNetCore.Mvc;
 global using Wolverine.Attributes;
 global using System.ComponentModel;
 global using Catalog.Api.Domains.Products.Features.Commands;
+global using Catalog.Api.Domains.ProductTags.Features.Commands;
+global using Catalog.Api.Domains.ProductTags.Features.Queries;
+global using Catalog.Api.Domains.Products.Features.Queries;
+global using Catalog.Api.Domains.Categories.Features.Commands;
+global using Catalog.Api.Domains.Categories.Features.Queries;
+global using Catalog.Api.Domains.Brands.Features.Commands;
+global using Catalog.Api.Domains.Brands.Features.Queries;
 global using ModelContextProtocol.Server;
 global using Catalog.Api.Domains.Products.Features.Agents;
-global using Catalog.Api.Domains.Brands.Features.Agents;
-global using Catalog.Api.Domains.Categories.Features.Agents;
 
 // --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Common.Dependencies;

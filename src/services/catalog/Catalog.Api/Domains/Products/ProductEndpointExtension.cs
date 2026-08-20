@@ -4,9 +4,15 @@ public static class ProductEndpointExtension
 {
     public static void AddProductGroupEndpointExtension(this WebApplication app, ApiVersionSet apiVersionSet)
     {
-        // REST okuma uçları silindi: UI vitrini (Storefront) okur, agent MCP'den gider (bus-level).
+        // Vitrin okuması Storefront'tadır; buradaki GET, aggregate'in yönetim penceresidir (2026-08-19 kuralı).
         app.MapGroup("api/v{version:apiVersion}/products").WithTags("Products").WithApiVersionSet(apiVersionSet)
             .CreateProductGroupItemEndpoint()
-            .UpdateProductGroupItemEndpoint();
+            .UpdateProductGroupItemEndpoint()
+            .SetProductDimensionsGroupItemEndpoint()
+            .SetProductSeoGroupItemEndpoint()
+            .SetProductPublishedGroupItemEndpoint()
+            .AssignTagToProductGroupItemEndpoint()
+            .RemoveTagFromProductGroupItemEndpoint()
+            .GetProductByIdGroupItemEndpoint();
     }
 }

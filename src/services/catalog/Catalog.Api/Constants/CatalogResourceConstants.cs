@@ -15,4 +15,10 @@ public static class CatalogResourceConstants
     public static readonly string CATEGORY_NAME_REQUIRED = "CATALOG_CATEGORY_NAME_REQUIRED";
     public static readonly string CATEGORY_SELF_PARENT = "CATALOG_CATEGORY_SELF_PARENT";
     public static readonly string TAG_NAME_REQUIRED = "CATALOG_TAG_NAME_REQUIRED";
+
+    // 2026-08-19: "her aggregate REST penceresi" kuralıyla açılan uçların guard'ları.
+    public static readonly string CATEGORY_ALREADY_EXISTS = "CATALOG_CATEGORY_ALREADY_EXISTS";
+    public static readonly string CATEGORY_PARENT_CYCLE = "CATALOG_CATEGORY_PARENT_CYCLE";
+    public static readonly string BRAND_ALREADY_EXISTS = "CATALOG_BRAND_ALREADY_EXISTS";
+    public static readonly string PRODUCT_DIMENSIONS_INVALID = "CATALOG_PRODUCT_DIMENSIONS_INVALID";
 }

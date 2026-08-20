@@ -63,15 +63,45 @@ public static class RabbitMqConstants
         }
     }
 
-    // 007: Supplier.Gateway yayınlar, IngestionAgent tüketir; retry tükenince DLQ'ya düşer.
-    public static class SupplierProductSnapshot
+    // 041: tüketici başına TEK sıralı kuyruk (storefront.events emsali) — aynı barkodun
+    // event'leri sıralı işlenir. Catalog iki exchange'i, Stock iki exchange'i aynı kuyruğa bağlar.
+    public static class ProcurementEvents
     {
-        public const string Exchange = "supplier.product-snapshot";
-        public const string DeadLetter = "ingestion.supplier-product-snapshot.dlq";
+        public const string CatalogQueue = "catalog.procurement-events";
+        public const string StockQueue = "stock.procurement-events";
+    }
+
+    // 041: Procurement yayınlar, Catalog tüketir (eksiksiz kanonik ürün, fat).
+    public static class CanonicalProduct
+    {
+        public const string Exchange = "procurement.canonical-product";
 
         public static class Queues
         {
-            public const string Ingestion = "ingestion.supplier-product-snapshot";
+            public const string Catalog = ProcurementEvents.CatalogQueue;
+        }
+    }
+
+    // 041: Procurement yayınlar, Catalog (fiyat) + Stock (OnHand) tüketir.
+    public static class BuyBoxChanged
+    {
+        public const string Exchange = "procurement.buybox-changed";
+
+        public static class Queues
+        {
+            public const string Catalog = ProcurementEvents.CatalogQueue;
+            public const string Stock = ProcurementEvents.StockQueue;
+        }
+    }
+
+    // 041: Catalog yeni üründe yayınlar, Stock barkod↔ProductId eşlemesini kurar.
+    public static class ProductLinked
+    {
+        public const string Exchange = "catalog.product-linked";
+
+        public static class Queues
+        {
+            public const string Stock = ProcurementEvents.StockQueue;
         }
     }
 }

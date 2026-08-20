@@ -12,6 +12,9 @@ builder.Services.AddMarten(opts =>
             configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
         // 012: son-urun yarisi optimistic concurrency ile cozulur (cift satis yok / SC-001).
         opts.Schema.For<ProductStock>().Index(x => x.ProductId).UseOptimisticConcurrency(true);
+
+        // 041: barkod ↔ ProductId eşlemesi (ProductLinked yazar, BuyBoxChanged çözer).
+        opts.Schema.For<BarcodeLink>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -44,6 +47,19 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ReservationExpired>()
         .ToRabbitExchange(RabbitMqConstants.ReservationExpired.Exchange);
 
+    // 041: Procurement/Catalog yayınlarının tüketicisi — TEK sıralı kuyruk (binding'i tüketici kurar).
+    rabbit.DeclareExchange(RabbitMqConstants.ProductLinked.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.ProductLinked.Queues.Stock);
+    });
+    rabbit.DeclareExchange(RabbitMqConstants.BuyBoxChanged.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.BuyBoxChanged.Queues.Stock);
+    });
+    opts.ListenToRabbitQueue(RabbitMqConstants.ProcurementEvents.StockQueue).Sequential();
+
     opts.Policies.UseDurableLocalQueues();
     // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.
     // REST + MCP ortak yetki noktasi.
@@ -51,6 +67,8 @@ builder.Host.UseWolverine(opts =>
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif event-handler sınıfını atlayabiliyor (Storefront emsali) — açık kayıt garantili yol.
+    opts.Discovery.IncludeType(typeof(Stock.Api.ProcurementEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>

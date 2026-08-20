@@ -25,7 +25,6 @@ var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
-var supplierGatewayDb = postgres.AddDatabase("supplierGatewayDb");
 var customerDb = postgres.AddDatabase("customerDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
@@ -143,30 +142,21 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(web)
     .WaitFor(gateway);
 
-// Tedarikçi simülatörü: DB'siz (dataset dosyalarını istek anında okur — 005/R12).
+// Tedarikçi simülatörü: DB'siz mock — rev başına JSON dataset döner (041: iki tedarikçi + advance).
 var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
 
-// Ingestion (007): DB'siz saf tüketici — kuyruktan okur, MCP ile domain servislerine yazar.
-// Kuyruk + binding'i (DLQ argümanlı) provision eden TARAF budur; gateway bunu bekler (aşağıda).
-var ingestionAgent = builder.AddProject<Projects.IngestionAgent>("ingestion-agent")
+// 041: Procurement BC — havuz + buy-box + enrich. WaitFor catalog/stock: tüketici kuyrukları
+// publisher'dan önce bağlansın (soğuk açılışta binding'siz fanout = sessiz kayıp — 007/012 dersi).
+var procurementDb = postgres.AddDatabase("procurementDb");
+builder.AddProject<Projects.Procurement_Api>("procurement-api")
+    .WithReference(procurementDb)
     .WithReference(rabbit)
-    .WithReference(catalogApi)
-    .WithReference(stockApi)
+    .WithReference(supplierApi)
+    .WaitFor(procurementDb)
     .WaitFor(rabbit)
+    .WaitFor(supplierApi)
     .WaitFor(catalogApi)
     .WaitFor(stockApi);
-
-// Sınır bileşeni (007): feed'i çeker, değişiklik kapısından geçen kaydı kanonik event'le yayınlar.
-// 012: WaitFor(ingestionAgent) — tüketici kuyruğu provision etmeden feed yayınlanmasın; yoksa
-// soğuk açılışta ilk publish bağlı-kuyruksuz fanout'a düşer (sessiz kayıp → snapshot dolu, Catalog boş).
-builder.AddProject<Projects.Supplier_Gateway>("supplier-gateway")
-    .WithReference(supplierGatewayDb)
-    .WithReference(supplierApi)
-    .WithReference(rabbit)
-    .WaitFor(supplierGatewayDb)
-    .WaitFor(supplierApi)
-    .WaitFor(rabbit)
-    .WaitFor(ingestionAgent);
 
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
