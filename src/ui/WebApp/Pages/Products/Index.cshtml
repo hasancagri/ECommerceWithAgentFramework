@@ -32,10 +32,37 @@
                 }
             </select>
         </div>
-        @if (Model.SelectedCategoryId is not null || Model.SelectedBrandId is not null)
+        @if (Model.SelectedCategoryId is not null || Model.SelectedBrandId is not null || Model.SelectedSpecs.Count > 0)
         {
             <div class="col-auto">
                 <a class="btn btn-outline-secondary" href="/Products">Temizle</a>
+            </div>
+        }
+
+        @* 043 US1: spec facet'leri — aynı özellik içi OR, özellikler arası AND; seçim yeni GET ile gider. *@
+        @if (Model.FilterOptions.Specifications.Count > 0)
+        {
+            <div class="col-12">
+                <div class="row g-3 mt-1">
+                    @foreach (var facet in Model.FilterOptions.Specifications)
+                    {
+                        <div class="col-auto">
+                            <div class="fw-semibold small mb-1">@facet.Name</div>
+                            @foreach (var option in facet.Options)
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="spec"
+                                           value="@option.Key" id="spec-@option.Key.GetHashCode()"
+                                           checked="@Model.SelectedSpecs.Contains(option.Key)"
+                                           onchange="this.form.submit()"/>
+                                    <label class="form-check-label small" for="spec-@option.Key.GetHashCode()">
+                                        @option.Name (@option.Count)
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         }
     </form>

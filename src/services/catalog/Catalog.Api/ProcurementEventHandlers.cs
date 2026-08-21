@@ -73,15 +73,43 @@ public class ProcurementEventHandlers
         if (product.Categories.All(c => c.CategoryId != category.Id))
             product.AssignToCategory(category.Id, isFeatured: false, displayOrder: 0);
 
+        // 043: kanonik spec adları registry'den Id'ye çözülür; bilinmeyen ad YOK SAYILIR (spec
+        // opsiyonel içerik — kategori gibi exception ATILMAZ, satır spec'siz ilerler).
+        var registry = await session.Query<Domains.SpecificationAttributes.SpecificationAttribute>()
+            .Where(a => !a.IsDeleted).ToListAsync(ct);
+        var assignments = new List<ProductSpecificationAssignment>();
+        foreach (var spec in evt.Specs ?? [])
+        {
+            var attribute = registry.FirstOrDefault(a =>
+                a.NormalizedName == NameNormalization.Normalize(spec.Attribute));
+            var option = attribute?.Options.FirstOrDefault(o =>
+                NameNormalization.Normalize(o.Name) == NameNormalization.Normalize(spec.Option));
+            if (attribute is null || option is null)
+            {
+                logger.LogWarning("Bilinmeyen spec yok sayıldı: {Attribute}={Option} ({Barcode})",
+                    spec.Attribute, spec.Option, evt.Barcode);
+                continue;
+            }
+
+            assignments.Add(ProductSpecificationAssignment.Create(attribute.Id, option.Id));
+        }
+
+        var specsResult = product.SetSpecifications(assignments);
+        if (!specsResult.IsSuccess)
+            logger.LogWarning("Spec ataması reddedildi ({Barcode}): {Code}", evt.Barcode,
+                specsResult.Messages.FirstOrDefault()?.Code);
+
         // K8: yazım yolu publish eder — kanonik ürün vitrindedir.
         product.Publish();
         session.Store(product);
 
         // Dış kontrat SABİT (040): decimal fiyat = Price.Amount, kategori = primary atama.
+        // 043: Specs adlarla taşınır (Id event'e çıkmaz) — atamalar registry'den geri çözülür.
         await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
             product.Id, product.Name, product.FullDescription, product.Price.Amount,
             brand.Id, brand.Name, category.Id, category.Name,
-            product.ImageUrl, IsDeleted: false));
+            product.ImageUrl, IsDeleted: false,
+            Specs: ResolveSpecNames(product, registry)));
 
         // Yalnız YENİ üründe: Stock barkod eşlemesini kurar + ilk OnHand'i yazar (yarış edge'i kapanır — R4).
         if (isNew)
@@ -123,9 +151,32 @@ public class ProcurementEventHandlers
             return;
         }
 
+        // 043: fat kontrat spec adlarını da taşır — Storefront satırı eksik yazılmasın.
+        var registry = await session.Query<Domains.SpecificationAttributes.SpecificationAttribute>()
+            .Where(a => !a.IsDeleted).ToListAsync(ct);
+
         await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
             product.Id, product.Name, product.FullDescription, product.Price.Amount,
             brand.Id, brand.Name, category.Id, category.Name,
-            product.ImageUrl, IsDeleted: false));
+            product.ImageUrl, IsDeleted: false,
+            Specs: ResolveSpecNames(product, registry)));
+    }
+
+    // 043: atama Id'lerini kanonik adlara çevirir (event sözleşmesi = AD). Registry'de artık
+    // bulunmayan atama sessizce düşer (seed değişimi — telemetri değil, kayıp kabul).
+    private static List<IntegrationEvents.ProductSpec> ResolveSpecNames(
+        Product product,
+        IReadOnlyList<Domains.SpecificationAttributes.SpecificationAttribute> registry)
+    {
+        var specs = new List<IntegrationEvents.ProductSpec>();
+        foreach (var assignment in product.Specifications)
+        {
+            var attribute = registry.FirstOrDefault(a => a.Id == assignment.AttributeId);
+            var option = attribute?.Options.FirstOrDefault(o => o.Id == assignment.OptionId);
+            if (attribute is not null && option is not null)
+                specs.Add(new IntegrationEvents.ProductSpec(attribute.Name, option.Name));
+        }
+
+        return specs;
     }
 }

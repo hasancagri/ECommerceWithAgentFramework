@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 namespace Supplier.Api.Domains.Feeds;
 
 // 041 mock feed satırı (contracts/mock-feed-api.md). Barkod zorunlu kimliktir; dataset her satırda taşır.
+// 043: attributes — ham tedarikçi özellik sözlüğü (opsiyonel; eski rev dosyaları alansız geçerli).
 public record SupplierFeedRow(
     string Barcode,
     string SupplierSku,
@@ -15,7 +16,8 @@ public record SupplierFeedRow(
     decimal Weight,
     decimal Length,
     decimal Width,
-    decimal Height);
+    decimal Height,
+    Dictionary<string, string>? Attributes = null);
 
 // 041: tedarikçi-kodlu mock uçlar. Veri Datasets/supplier-{kod}.rev{N}.json dosyalarından istek
 // anında okunur (dosya değişikliği restart'sız yansır — 005/R12 mirası). Rev başına AYRI dosya:

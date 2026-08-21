@@ -21,4 +21,12 @@ public static class CatalogResourceConstants
     public static readonly string CATEGORY_PARENT_CYCLE = "CATALOG_CATEGORY_PARENT_CYCLE";
     public static readonly string BRAND_ALREADY_EXISTS = "CATALOG_BRAND_ALREADY_EXISTS";
     public static readonly string PRODUCT_DIMENSIONS_INVALID = "CATALOG_PRODUCT_DIMENSIONS_INVALID";
+
+    // 043: özellik (specification) tanımları + atama guard'ları.
+    public static readonly string SPEC_NAME_REQUIRED = "CATALOG_SPEC_NAME_REQUIRED";
+    public static readonly string SPEC_OPTION_NAME_REQUIRED = "CATALOG_SPEC_OPTION_NAME_REQUIRED";
+    public static readonly string SPEC_OPTION_ALREADY_EXISTS = "CATALOG_SPEC_OPTION_ALREADY_EXISTS";
+    public static readonly string SPEC_ALREADY_EXISTS = "CATALOG_SPEC_ALREADY_EXISTS";
+    public static readonly string SPEC_NOT_FOUND = "CATALOG_SPEC_NOT_FOUND";
+    public static readonly string SPEC_DUPLICATE_ATTRIBUTE = "CATALOG_SPEC_DUPLICATE_ATTRIBUTE";
 }

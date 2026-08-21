@@ -23,12 +23,20 @@ public record ListingRow
     public int Stock { get; private init; }
     public RowDimensions? Dimensions { get; private init; }
 
+    // 043: ham tedarikçi attribute'ları (hash-diff girdisi) + handler'da kanonikleştirilmiş çiftler
+    // (kategori deseni: eşleme handler'da, row temiz değeri taşır; eşlenemeyen ham anahtar yok sayılır).
+    public IReadOnlyDictionary<string, string> RawAttributes { get; private init; } =
+        new Dictionary<string, string>();
+    public IReadOnlyList<SpecValue> CanonicalSpecs { get; private init; } = [];
+
     private ListingRow() { }
 
     public static ListingRow Create(
         string supplierSku, string name, string? description, string brand,
         string? rawCategoryName, string? canonicalCategory, string? canonicalSubCategory,
-        decimal price, int stock, RowDimensions? dimensions)
+        decimal price, int stock, RowDimensions? dimensions,
+        IReadOnlyDictionary<string, string>? rawAttributes = null,
+        IReadOnlyList<SpecValue>? canonicalSpecs = null)
         => new()
         {
             SupplierSku = supplierSku,
@@ -41,6 +49,8 @@ public record ListingRow
             Price = price,
             Stock = stock,
             Dimensions = dimensions,
+            RawAttributes = rawAttributes ?? new Dictionary<string, string>(),
+            CanonicalSpecs = canonicalSpecs ?? [],
         };
 
     /// <summary>Satırın deterministik içerik hash'i (SHA256, invariant-culture). Fiyat + stok dahil:
@@ -54,9 +64,28 @@ public record ListingRow
             Dimensions?.Weight.ToString(CultureInfo.InvariantCulture) ?? "",
             Dimensions?.Length.ToString(CultureInfo.InvariantCulture) ?? "",
             Dimensions?.Width.ToString(CultureInfo.InvariantCulture) ?? "",
-            Dimensions?.Height.ToString(CultureInfo.InvariantCulture) ?? "");
+            Dimensions?.Height.ToString(CultureInfo.InvariantCulture) ?? "",
+            string.Join('\u001e', RawAttributes.OrderBy(kv => kv.Key, StringComparer.Ordinal)
+                .Select(kv => $"{kv.Key}={kv.Value}")),
+            string.Join('\u001e', CanonicalSpecs.OrderBy(x => x.Attribute, StringComparer.Ordinal)
+                .Select(x => $"{x.Attribute}={x.Option}")));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
     }
+}
+
+/// <summary>
+/// Kanonik özellik çifti (043; ör. Renk=Siyah). Registry adlarıyla taşınır — event sözleşmesi AD.
+/// Record value-eşitliği merge/filtre karşılaştırmalarını verir.
+/// </summary>
+public record SpecValue
+{
+    public string Attribute { get; private init; } = default!;
+    public string Option { get; private init; } = default!;
+
+    private SpecValue() { }
+
+    public static SpecValue Create(string attribute, string option)
+        => new() { Attribute = attribute, Option = option };
 }
 
 /// <summary>
@@ -95,11 +124,14 @@ public record CanonicalContent
     public string Sku { get; private init; } = string.Empty;
     public RowDimensions? Dimensions { get; private init; }
 
+    // 043: kanonik özellikler — IsComplete HESABINA GİRMEZ (FR-005: spec eksikliği yayını bloklamaz).
+    public IReadOnlyList<SpecValue> Specs { get; private init; } = [];
+
     private CanonicalContent() { }
 
     public static CanonicalContent Create(
         string name, string description, string brand, string category, string subCategory,
-        string sku, RowDimensions? dimensions)
+        string sku, RowDimensions? dimensions, IReadOnlyList<SpecValue>? specs = null)
         => new()
         {
             Name = name,
@@ -109,12 +141,25 @@ public record CanonicalContent
             SubCategory = subCategory,
             Sku = sku,
             Dimensions = dimensions,
+            Specs = specs ?? [],
         };
 
     public bool IsComplete =>
         !string.IsNullOrWhiteSpace(Name) &&
-        !string.IsNullOrWhiteSpace(Description) &&
-        !string.IsNullOrWhiteSpace(Category);
+        !string.IsNullOrWhiteSpace(Category) &&
+        !string.IsNullOrWhiteSpace(Description);
+
+    // Record eşitliği liste alanında referans karşılaştırır — Specs değer-eşitliğine çevrilir
+    // (RebuildCanonical sıra-bağımsızlık sözleşmesi record kıyasıyla test edilir).
+    public virtual bool Equals(CanonicalContent? other) =>
+        other is not null &&
+        Name == other.Name && Description == other.Description && Brand == other.Brand &&
+        Category == other.Category && SubCategory == other.SubCategory && Sku == other.Sku &&
+        Equals(Dimensions, other.Dimensions) &&
+        Specs.OrderBy(x => x.Attribute).SequenceEqual(other.Specs.OrderBy(x => x.Attribute));
+
+    public override int GetHashCode() =>
+        HashCode.Combine(Name, Description, Brand, Category, SubCategory, Sku, Dimensions);
 
     /// <summary>Kanonik içeriğin deterministik hash'i — tekrar-yayın kesici (PublishedContentHash).</summary>
     public string ComputeHash()
@@ -124,7 +169,9 @@ public record CanonicalContent
             Dimensions?.Weight.ToString(CultureInfo.InvariantCulture) ?? "",
             Dimensions?.Length.ToString(CultureInfo.InvariantCulture) ?? "",
             Dimensions?.Width.ToString(CultureInfo.InvariantCulture) ?? "",
-            Dimensions?.Height.ToString(CultureInfo.InvariantCulture) ?? "");
+            Dimensions?.Height.ToString(CultureInfo.InvariantCulture) ?? "",
+            string.Join('\u001e', Specs.OrderBy(x => x.Attribute, StringComparer.Ordinal)
+                .Select(x => $"{x.Attribute}={x.Option}")));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
     }
 }
@@ -158,17 +205,21 @@ public record EnrichmentResult
     public string? Description { get; private init; }
     public string? Category { get; private init; }
     public string? SubCategory { get; private init; }
+    // 043: AI'ın kapalı listeden seçtiği çiftler (guard'dan geçmiş hali saklanır).
+    public IReadOnlyList<SpecValue> Specs { get; private init; } = [];
     public DateTime EnrichedAtUtc { get; private init; }
 
     private EnrichmentResult() { }
 
-    public static EnrichmentResult Create(string sourceHash, string? description, string? category, string? subCategory)
+    public static EnrichmentResult Create(string sourceHash, string? description, string? category,
+        string? subCategory, IReadOnlyList<SpecValue>? specs = null)
         => new()
         {
             SourceHash = sourceHash,
             Description = description,
             Category = category,
             SubCategory = subCategory,
+            Specs = specs ?? [],
             EnrichedAtUtc = DateTime.UtcNow,
         };
 }

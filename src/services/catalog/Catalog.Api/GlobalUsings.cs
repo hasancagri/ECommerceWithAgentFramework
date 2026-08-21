@@ -18,6 +18,7 @@ global using Catalog.Api.Domains;
 global using Catalog.Api.Domains.Products;
 global using Catalog.Api.Domains.Categories;
 global using Catalog.Api.Domains.Brands;
+global using Catalog.Api.Domains.SpecificationAttributes;
 global using Common.Results;
 global using Wolverine.Marten.Publishing;
 global using Common.Utils.Authorization;

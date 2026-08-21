@@ -8,6 +8,10 @@ public static class IntegrationEvents
     // 006-home-storefront-list: Description/Price/Brand eklendi.
     // 016-category-brand: kimlik + ad birlikte taşınır (R7); Id opak değerdir, tüketici lookup yapmaz.
     // Kategori zorunludur (kullanıcı kararı 2026-07-27): kategorisiz ürün domain'de yoktur.
+    // 043: Specs — kanonik özellik AD çiftleri (Id taşınmaz; sözleşme=AD, taksonomi deseni).
+    // Additive + opsiyonel: eski yayıncı/tüketici kırılmaz; null = özellik bilgisi yok (boş sayılır).
+    public record ProductSpec(string Attribute, string Option);
+
     public record ProductChangedEvent(
         Guid ProductId,
         string Name,
@@ -18,7 +22,8 @@ public static class IntegrationEvents
         Guid CategoryId,
         string Category,
         string? ImageUrl,
-        bool IsDeleted);
+        bool IsDeleted,
+        List<ProductSpec>? Specs = null);
     public record StockChangedEvent(Guid ProductId, int Quantity);
 
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
@@ -40,7 +45,9 @@ public static class IntegrationEvents
         decimal Width,
         decimal Height,
         decimal Price,
-        int Stock);
+        int Stock,
+        // 043: kanonik özellikler (attribute-başına merge + kapalı-liste enrich sonrası adlar).
+        List<ProductSpec>? Specs = null);
 
     // 041: Procurement → Catalog + Stock. Yalnız BuyBoxDecision değişince yayınlanır (value-eşitlik).
     // SupplierId null = kazanan yok (tüm offer'lar stoksuz/delisted): fiyat son bilinen, stok 0.

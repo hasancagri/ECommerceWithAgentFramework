@@ -23,6 +23,10 @@ builder.Services.AddMarten(opts =>
         // Legacy Brand migrasyonu YOK (kullanıcı kararı): DB sıfırlanarak başlatılır, katalog feed'den dolar.
         opts.Schema.For<Category>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
         opts.Schema.For<Brand>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+
+        // 043: özellik registry'si — NormalizedName teklik anahtarı (seed get-or-create güvencesi).
+        opts.Schema.For<Catalog.Api.Domains.SpecificationAttributes.SpecificationAttribute>()
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -106,6 +110,9 @@ builder.Services.AddAllDependencies();
 // 041: kanonik Category>SubCategory ağacı (Procurement kopyasıyla ad-hizalı; idempotent).
 builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogTaxonomySeedHostedService>();
 
+// 043: kanonik özellik registry'si (Procurement CanonicalSpecs ile ad-hizalı; idempotent).
+builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogSpecSeedHostedService>();
+
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
     builder.AddRedisDistributedCache("redis");
@@ -139,6 +146,7 @@ app.AddProductGroupEndpointExtension(apiVersionSet);
 app.AddProductTagGroupEndpointExtension(apiVersionSet);
 app.AddCategoryGroupEndpointExtension(apiVersionSet);
 app.AddBrandGroupEndpointExtension(apiVersionSet);
+app.AddSpecificationAttributeGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
 

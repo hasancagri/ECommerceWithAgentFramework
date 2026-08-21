@@ -14,7 +14,9 @@ public static class GetStorefrontProductList
         Guid? CategoryId = null,
         string? Category = null,
         Guid? BrandId = null,
-        string? Brand = null)
+        string? Brand = null,
+        // 043: "Attribute|Option" anahtarları; aynı attribute OR, farklı attribute AND (FR-008).
+        string[]? Specs = null)
     {
         // 011 FR-005: 1'den küçük değerler 1. sayfaya/varsayılan boyuta normalize edilir.
         public static int NormalizePageNumber(int pageNumber) => pageNumber < 1 ? 1 : pageNumber;
@@ -36,6 +38,37 @@ public static class GetStorefrontProductList
         else if (!string.IsNullOrWhiteSpace(brand))
             source = source.Where(x => x.Brand == brand);
 
+        return source;
+    }
+
+    // 043: "Attribute|Option" anahtarlarını attribute-gruplarına ayırır; geçersiz girdi yok sayılır
+    // (kontrat: storefront-filter-api.md). Sıra korunur (deterministik SQL üretimi).
+    public static Dictionary<string, string[]> ParseSpecGroups(IReadOnlyList<string> specs)
+    {
+        return specs
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => (Raw: s, Parts: s.Split('|')))
+            .Where(x => x.Parts.Length == 2
+                        && !string.IsNullOrWhiteSpace(x.Parts[0])
+                        && !string.IsNullOrWhiteSpace(x.Parts[1]))
+            .GroupBy(x => x.Parts[0])
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Raw).Distinct().ToArray());
+    }
+
+    // 043: bellek-içi semantik çekirdeği (birim testin sözleşmesi) — grup içi OR, gruplar arası AND.
+    // SQL yolu (aşağıda MatchesSql jsonb ?|) aynı semantiği Postgres'te uygular; canlı doğrulama eşler.
+    public static bool MatchesSpecFilters(StorefrontView view, Dictionary<string, string[]> groups) =>
+        groups.Values.All(keys => keys.Any(k => view.SpecKeys.Contains(k)));
+
+    // 043 R6: attribute-grubu başına jsonb ?| (herhangi biri) — LINQ iç-içe Any/OR kompozisyonu
+    // yerine MatchesSql (040 dersi). Gruplar zincirli Where ile AND'lenir.
+    // '^' placeholder şart: Weasel '??' kaçışını desteklemez, düz '?' operatörle çakışır (canlıda kanıtlandı).
+    // (object) cast şart: string[] params-dizisine yayılırsa tek text[] yerine N ayrı text parametresi biner.
+    public static IQueryable<StorefrontView> ApplySpecFilters(
+        IQueryable<StorefrontView> source, Dictionary<string, string[]> groups)
+    {
+        foreach (var keys in groups.Values)
+            source = source.Where(x => x.MatchesSql('^', "d.data -> 'SpecKeys' ?| ^", (object)keys));
         return source;
     }
 
@@ -87,6 +120,9 @@ public static class GetStorefrontProductList
                     .Where(x => !x.IsDeleted && x.Name != null && x.Price != null),
                 query.CategoryId, query.Category, query.BrandId, query.Brand);
 
+            // 043: spec kesişimi — grup içi OR, gruplar arası AND (FR-008).
+            filtered = ApplySpecFilters(filtered, ParseSpecGroups(query.Specs ?? []));
+
             // Sayfa sayısı filtreli sonuca göre hesaplanır (US1-2/SC-005).
             var totalCount = await filtered.CountAsync(ct);
 
@@ -115,11 +151,13 @@ public static class GetStorefrontProductListEndpoint
                 Guid? categoryId = null,
                 string? category = null,
                 Guid? brandId = null,
-                string? brand = null) =>
+                string? brand = null,
+                // 043: çoklu spec anahtarı (?spec=Renk|Siyah&spec=Materyal|Çelik)
+                [FromQuery(Name = "spec")] string[]? spec = null) =>
             {
                 var result = await bus.InvokeAsync<FeaturePagedResultModel<GetStorefrontProductList.StorefrontProductResponse>>(
                     new GetStorefrontProductList.GetStorefrontProductListQuery(
-                        page, pageSize, categoryId, category, brandId, brand));
+                        page, pageSize, categoryId, category, brandId, brand, spec));
 
                 // Sayfa meta'sı (toplam kayıt/sayfa) istemciye lazım; Data yerine result'ın tamamı döner.
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);

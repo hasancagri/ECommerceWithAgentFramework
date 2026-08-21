@@ -13,4 +13,8 @@ public record StorefrontProductDetailDto(
     string? ImageUrl,
     bool IsDeleted,
     int? StockQuantity,
-    bool? IsInStock);
+    bool? IsInStock,
+    List<ProductSpecDto>? Specs);
+
+// 043: detay spec tablosu satiri (kanonik adlar).
+public record ProductSpecDto(string Attribute, string Option);

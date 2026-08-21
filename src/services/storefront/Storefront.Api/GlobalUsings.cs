@@ -8,6 +8,7 @@ global using Common.Utils.Constants;
 global using Common;
 global using Marten.Newtonsoft;
 global using Marten;
+global using Marten.Linq.MatchesSql;
 global using Microsoft.AspNetCore.Mvc;
 global using Newtonsoft.Json;
 global using PagedList.Core;

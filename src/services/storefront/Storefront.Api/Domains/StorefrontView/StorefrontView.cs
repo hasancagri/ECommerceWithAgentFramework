@@ -25,6 +25,11 @@ public class StorefrontView
     public string? ImageUrl { get; private set; }
     public bool IsDeleted { get; private set; }
 
+    // 043: kanonik ozellikler (ad ciftleri — facet + detay) ve sorgu anahtarlari ("Attribute|Option").
+    // SpecKeys, Specs'ten TURETILIR (ApplyCatalog) — jsonb ?| kesisim sorgusunun duz anahtari (R6).
+    public List<SpecPair> Specs { get; private set; } = [];
+    public string[] SpecKeys { get; private set; } = [];
+
     // Stock kaynagi — null = henuz raporlamadi ("bilinmiyor"). In-stock bu adetten turetilir.
     public int? StockQuantity { get; private set; }
 
@@ -36,7 +41,7 @@ public class StorefrontView
 
     public void ApplyCatalog(string name, string description, decimal price,
         Guid brandId, string brand, Guid categoryId, string category,
-        string? imageUrl, bool isDeleted)
+        string? imageUrl, bool isDeleted, IReadOnlyList<SpecPair>? specs = null)
     {
         Name = name;
         Description = description;
@@ -47,7 +52,23 @@ public class StorefrontView
         Category = category;
         ImageUrl = imageUrl;
         IsDeleted = isDeleted;
+        Specs = specs?.ToList() ?? [];
+        SpecKeys = Specs.Select(s => s.Key).ToArray();
     }
 
     public void ApplyStock(int quantity) => StockQuantity = quantity;
+}
+
+// 043: satirdaki tek ozellik cifti (kanonik ADlar — event sozlesmesi). Key = "Attribute|Option".
+public record SpecPair
+{
+    public string Attribute { get; private init; } = default!;
+    public string Option { get; private init; } = default!;
+
+    public string Key => $"{Attribute}|{Option}";
+
+    private SpecPair() { }
+
+    public static SpecPair Create(string attribute, string option) =>
+        new() { Attribute = attribute, Option = option };
 }
