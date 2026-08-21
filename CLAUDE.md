@@ -76,12 +76,28 @@ dotnet test --filter "FullyQualifiedName~BasketTests.AddItem_AddsItemToBasket"
 
 ## Mimari
 
-Mikroservisler `src/services/{basket,catalog,file,order,payment,procurement,stock,storefront,supplier}`
+Mikroservisler `src/services/{basket,catalog,file,order,payment,personalization,procurement,stock,storefront,supplier}`
 altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Shared`, `Identity.Server`),
 `src/aspire` (`AppHost`, `ServiceDefaults`), `src/agents` (`ChatAgent`) ve
-`src/ui` (`WebApp`). Fiziksel klasörler solution klasörleriyle birebir örtüşür.
+`src/ui` (`WebApp`). Fiziksel klasörler solution klasörleriyle birebir örtüşür
+(`personalization` Python'dur, çözüm dosyasına girmez).
 
 **Her servis kendi Postgres veritabanına sahiptir** (`catalogDb`, `basketDb`, …; `AppHost.cs`'te bağlanır) ve kendi Marten şemasına (`SchemaConstants`). Servisler asla veritabanı paylaşmaz.
+
+### Personalization BC (042) — davranış-bazlı öneri (Python)
+
+- Sistemin ilk .NET-dışı BC'si: `src/services/personalization` (Python/FastAPI, Aspire
+  `AddPythonApp` resource'u, `.venv` ile koşar). `personalizationDb`'nin TEK sahibi — .NET bağlanmaz.
+- Kanal: WebApp `BehaviorLogWriter` gezinti sinyallerini (`ProductViewed`/`ListShown`/
+  `BasketItemAdded`/`SearchPerformed`) JSONL dosyasına yazar (`artifacts/behavior-logs/`,
+  AppHost env ile kablolar). Integration event DEĞİL — kayıp-toleranslı telemetri (anayasa
+  v1.9.0 İlke I istisnası: UI/BFF→tek-tüketicili BC; ikinci tüketici doğarsa event'e terfi). Kontrat:
+  `specs/042-behavior-personalization/contracts/behavior-log-line.md` (versiyonlu, camelCase).
+- Python tarafı: offset-takipli idempotent ingest (UNIQUE source_file+line_no) → implicit ALS
+  eğitimi (view=1, sepet=3; impression matrise girmez) → `GET /v1/recommendations`
+  (personal→session→popular zinciri, asla boş dönmez). Dev tetikleri: `POST /v1/admin/{ingest,train}`.
+- Kimlik: `pz_aid` (kalıcı anonim) + `pz_sid` (oturum) çerezleri; login'liye ek UserId. Stitching
+  yok; davranış satırında kişisel veri YASAK. UI gösterimi ("Sana önerilenler") AYRI feature.
 
 ### Çok-tedarikçi Procurement akışı (041; 007/015 söküldü)
 
