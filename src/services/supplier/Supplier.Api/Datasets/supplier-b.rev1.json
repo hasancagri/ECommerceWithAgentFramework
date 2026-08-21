@@ -16811,7 +16811,11 @@
     "weight": 0.6,
     "length": 28,
     "width": 10,
-    "height": 24
+    "height": 24,
+    "attributes": {
+      "Color": "White",
+      "Material": "Glass"
+    }
   },
   {
     "barcode": "8690000002502",
@@ -16825,7 +16829,11 @@
     "weight": 1.1,
     "length": 62,
     "width": 15,
-    "height": 15
+    "height": 15,
+    "attributes": {
+      "Color": "Black",
+      "Warranty": "1 Year"
+    }
   },
   {
     "barcode": "8690000002503",
@@ -16839,7 +16847,11 @@
     "weight": 5.0,
     "length": 30,
     "width": 14,
-    "height": 14
+    "height": 14,
+    "attributes": {
+      "Energy Class": "B",
+      "Bilinmeyen-Anahtar": "X"
+    }
   },
   {
     "barcode": "8690000002504",

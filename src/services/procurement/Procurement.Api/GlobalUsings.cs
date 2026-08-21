@@ -1,3 +1,4 @@
+global using Procurement.Api.Seeding;
 global using Asp.Versioning;
 global using Asp.Versioning.Builder;
 global using Common;

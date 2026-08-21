@@ -39,6 +39,24 @@
                     </p>
                     <hr>
 
+                    @* 043 US2: kanonik ozellik tablosu — ozelliksiz urunde bolum hic gorunmez. *@
+                    @if (Model.Product.Specs is { Count: > 0 })
+                    {
+                        <h5 class="card-title">Özellikler</h5>
+                        <table class="table table-sm mb-3">
+                            <tbody>
+                            @foreach (var spec in Model.Product.Specs)
+                            {
+                                <tr>
+                                    <th scope="row" class="fw-semibold w-50">@spec.Attribute</th>
+                                    <td>@spec.Option</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                        <hr>
+                    }
+
                     <h5 class="card-title">Stok</h5>
                     <p class="card-text">
                         @* 012 (US5): Available'dan turetilmis stok rozeti — az kaldiginda "son N adet". *@

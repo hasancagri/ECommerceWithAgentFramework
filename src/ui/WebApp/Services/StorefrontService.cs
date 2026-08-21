@@ -10,9 +10,11 @@ public class StorefrontService(
     ILogger<StorefrontService> logger)
 {
     public async Task<ServiceResult<PagedProductListViewModel>> GetProductsAsync(
-        int pageNumber = 1, int pageSize = 12, Guid? categoryId = null, Guid? brandId = null)
+        int pageNumber = 1, int pageSize = 12, Guid? categoryId = null, Guid? brandId = null,
+        string[]? specs = null)
     {
-        var productsAsResult = await storefrontRefitService.GetProducts(pageNumber, pageSize, categoryId, brandId);
+        var productsAsResult = await storefrontRefitService.GetProducts(pageNumber, pageSize, categoryId, brandId,
+            specs is { Length: > 0 } ? specs : null);
 
         // 011 FR-006: boş vitrin / aralık dışı sayfa API'de NotFound(400) döner; UI boş durum gösterir.
         if (productsAsResult.StatusCode == HttpStatusCode.BadRequest)
@@ -50,7 +52,10 @@ public class StorefrontService(
         var content = response.Content!;
         return new FilterOptionsViewModel(
             content.Categories.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
-            content.Brands.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList());
+            content.Brands.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
+            (content.Specifications ?? []).Select(s => new SpecFacetViewModel(s.Name,
+                s.Options.Select(o => new SpecFacetOptionViewModel(o.Name, o.Count, $"{s.Name}|{o.Name}"))
+                    .ToList())).ToList());
     }
 
     // Ürün detayı vitrinden (read model) okunur — Catalog'a gidilmez. Kısmi satır (Name/Price
@@ -70,6 +75,7 @@ public class StorefrontService(
         return ServiceResult<StorefrontProductViewModel>.Success(new StorefrontProductViewModel(
             p.ProductId, p.Name, p.Description ?? string.Empty, p.Brand ?? string.Empty,
             p.Price.Value, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
-            p.CategoryId, p.BrandId));
+            p.CategoryId, p.BrandId,
+            (p.Specs ?? []).Select(s => new ProductSpecViewModel(s.Attribute, s.Option)).ToList()));
     }
 }

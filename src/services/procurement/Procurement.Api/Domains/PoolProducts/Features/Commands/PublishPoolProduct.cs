@@ -40,7 +40,9 @@ public static class PublishPoolProduct
                     product.Barcode, c.Name, c.Description, c.Brand, c.Category, c.SubCategory, c.Sku,
                     c.Dimensions?.Weight ?? 0, c.Dimensions?.Length ?? 0,
                     c.Dimensions?.Width ?? 0, c.Dimensions?.Height ?? 0,
-                    buyBox.Price ?? 0, buyBox.Stock));
+                    buyBox.Price ?? 0, buyBox.Stock,
+                    // 043: kanonik spec adları (merge + kapalı-liste enrich sonrası).
+                    c.Specs.Select(s => new IntegrationEvents.ProductSpec(s.Attribute, s.Option)).ToList()));
                 logger.LogInformation("Kanonik yayın: {Barcode} ({Name})", product.Barcode, c.Name);
             }
 

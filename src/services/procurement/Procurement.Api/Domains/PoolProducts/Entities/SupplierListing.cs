@@ -19,6 +19,11 @@ public class SupplierListing
     public decimal Price { get; private set; }
     public int Stock { get; private set; }
     public RowDimensions? Dimensions { get; private set; }
+
+    // 043: ham attribute'lar (debug/yeniden-eşleme) + kanonikleşmiş çiftler (merge girdisi).
+    public Dictionary<string, string> RawAttributes { get; private set; } = new();
+    public List<SpecValue> CanonicalSpecs { get; private set; } = [];
+
     public string ContentHash { get; private set; } = default!;
     public bool IsDelisted { get; private set; }
     public DateTime LastSeenUtc { get; private set; }
@@ -48,6 +53,8 @@ public class SupplierListing
         Price = row.Price;
         Stock = row.Stock;
         Dimensions = row.Dimensions;
+        RawAttributes = new Dictionary<string, string>(row.RawAttributes);
+        CanonicalSpecs = row.CanonicalSpecs.ToList();
         ContentHash = row.ComputeContentHash();
         IsDelisted = false;
         LastSeenUtc = DateTime.UtcNow;

@@ -14,10 +14,12 @@ public class IndexModel(StorefrontService storefrontService, BehaviorLogWriter b
     public FilterOptionsViewModel FilterOptions { get; set; } = FilterOptionsViewModel.Empty;
     public Guid? SelectedCategoryId { get; set; }
     public Guid? SelectedBrandId { get; set; }
+    // 043: seçili spec anahtarları ("Attribute|Option") — checkbox durumu + query taşınması.
+    public HashSet<string> SelectedSpecs { get; set; } = [];
     public int PageNumber { get; set; } = 1;
     public int PageCount { get; set; }
 
-    // Pager linklerine eklenen hazır query eki — yalnız Guid'lerden kurulur (encode gerekmez).
+    // Pager linklerine eklenen hazır query eki — Guid'ler + encode'lu spec anahtarları (043).
     public string? FilterQuery { get; set; }
 
     public async Task<IActionResult> OnGet(Guid? categoryId, Guid? brandId)
@@ -30,12 +32,18 @@ public class IndexModel(StorefrontService storefrontService, BehaviorLogWriter b
 
         SelectedCategoryId = categoryId;
         SelectedBrandId = brandId;
+        // 043: çoklu ?spec= değerleri (boşlar atılır); geçersiz biçimi Storefront zaten yok sayar.
+        SelectedSpecs = Request.Query["spec"]
+            .Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s!).ToHashSet();
+
         var filterQuery = (categoryId is null ? "" : $"&categoryId={categoryId}")
-                        + (brandId is null ? "" : $"&brandId={brandId}");
+                        + (brandId is null ? "" : $"&brandId={brandId}")
+                        + string.Concat(SelectedSpecs.Select(s => $"&spec={Uri.EscapeDataString(s)}"));
         FilterQuery = filterQuery.Length > 0 ? filterQuery : null;
 
         FilterOptions = await storefrontService.GetFilterOptionsAsync();
-        var productsAsResult = await storefrontService.GetProductsAsync(pageNumber, categoryId: categoryId, brandId: brandId);
+        var productsAsResult = await storefrontService.GetProductsAsync(pageNumber, categoryId: categoryId,
+            brandId: brandId, specs: SelectedSpecs.ToArray());
 
         if (productsAsResult.IsFail) return ErrorPage(productsAsResult);
 

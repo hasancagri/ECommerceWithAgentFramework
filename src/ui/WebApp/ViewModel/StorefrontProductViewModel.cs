@@ -1,5 +1,8 @@
 namespace WebApp.ViewModel;
 
+// 043: detay spec tablosu satiri.
+public record ProductSpecViewModel(string Attribute, string Option);
+
 // 006: ana sayfa kartı vitrin satırından çizilir; stok null ise rozet yok (FR-009).
 public record StorefrontProductViewModel(
     Guid ProductId,
@@ -12,7 +15,8 @@ public record StorefrontProductViewModel(
     bool? IsInStock,
     string? Category,
     Guid? CategoryId,
-    Guid? BrandId)
+    Guid? BrandId,
+    List<ProductSpecViewModel>? Specs = null)
 {
     public string TruncateDescription(int maxLength)
     {

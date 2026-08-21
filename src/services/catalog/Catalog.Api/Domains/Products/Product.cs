@@ -41,6 +41,10 @@ public class Product : AggregateRoot
     private readonly List<Guid> _tagIds = new();
     public IReadOnlyList<Guid> TagIds => _tagIds;
 
+    // 043: kanonik özellik atamaları (Renk=Siyah...); upsert tam-değiştirme ile yazar.
+    private readonly List<ProductSpecificationAssignment> _specifications = new();
+    public IReadOnlyList<ProductSpecificationAssignment> Specifications => _specifications;
+
     // ⊕ Ana repo işlevleri: marka ilişkisi (016 düzeni) + görsel (File.Api topolojisi).
     public Guid BrandId { get; private set; }
     public string? ImageUrl { get; private set; }
@@ -163,6 +167,20 @@ public class Product : AggregateRoot
     public ResultDomain RemoveTag(Guid tagId)
     {
         _tagIds.Remove(tagId);
+        return ResultDomain.Ok();
+    }
+
+    /// <summary>Özellik atamalarını TAM-DEĞİŞTİRME ile yazar (043; boş liste = temizleme). Aynı
+    /// attribute'un birden çok değeri reddedilir; hatada mevcut atamalar değişmez.</summary>
+    /// <remarks>Handler: ProcurementEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
+    public ResultDomain SetSpecifications(IReadOnlyList<ProductSpecificationAssignment> assignments)
+    {
+        if (assignments.GroupBy(a => a.AttributeId).Any(g => g.Count() > 1))
+            return ResultDomain.Error(new MessageItem
+            { Property = nameof(assignments), Code = CatalogResourceConstants.SPEC_DUPLICATE_ATTRIBUTE });
+
+        _specifications.Clear();
+        _specifications.AddRange(assignments);
         return ResultDomain.Ok();
     }
 

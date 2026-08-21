@@ -24,6 +24,15 @@ public static class GetProductStorefrontView
         public int? StockQuantity { get; set; }
         public bool? IsInStock { get; set; }
 
+        // 043 US2: detay spec tablosu — kanonik (attribute, option) ciftleri; bos liste mesru.
+        public List<ProductSpecResponse> Specs { get; set; } = [];
+
+        public class ProductSpecResponse
+        {
+            public string Attribute { get; set; } = null!;
+            public string Option { get; set; } = null!;
+        }
+
         public static ProductStorefrontViewResponse From(StorefrontView view) => new()
         {
             ProductId = view.ProductId,
@@ -37,7 +46,10 @@ public static class GetProductStorefrontView
             CategoryId = view.CategoryId,
             Category = view.Category,
             StockQuantity = view.StockQuantity,
-            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null
+            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null,
+            Specs = view.Specs
+                .Select(s => new ProductSpecResponse { Attribute = s.Attribute, Option = s.Option })
+                .ToList()
         };
     }
 

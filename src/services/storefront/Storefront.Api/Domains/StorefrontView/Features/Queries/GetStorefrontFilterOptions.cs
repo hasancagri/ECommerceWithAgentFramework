@@ -20,6 +20,21 @@ public static class GetStorefrontFilterOptions
     {
         public List<FilterOptionResponse> Categories { get; set; } = [];
         public List<FilterOptionResponse> Brands { get; set; } = [];
+
+        // 043: spec facet'leri — Name + option'lar + ürün sayısı (count birebirlik SC-006).
+        public List<SpecFacetResponse> Specifications { get; set; } = [];
+    }
+
+    public class SpecFacetResponse
+    {
+        public string Name { get; set; } = null!;
+        public List<SpecFacetOptionResponse> Options { get; set; } = [];
+    }
+
+    public class SpecFacetOptionResponse
+    {
+        public string Name { get; set; } = null!;
+        public int Count { get; set; }
     }
 
     // Saf, test edilebilir çekirdek: Distinct kimlik+ad çiftleri, ada göre sıralı.
@@ -41,7 +56,24 @@ public static class GetStorefrontFilterOptions
             .OrderBy(x => x.Name)
             .ToList();
 
-        return new StorefrontFilterOptionsResponse { Categories = categories, Brands = brands };
+        // 043: spec facet'leri satırlardaki ad çiftlerinden türetilir; count = çifti taşıyan satır
+        // sayısı (SC-006 — filtre sonucuyla birebir, aynı satılabilir küme).
+        var specifications = rows
+            .SelectMany(x => x.Specs)
+            .GroupBy(s => s.Attribute)
+            .Select(g => new SpecFacetResponse
+            {
+                Name = g.Key,
+                Options = g.GroupBy(s => s.Option)
+                    .Select(o => new SpecFacetOptionResponse { Name = o.Key, Count = o.Count() })
+                    .OrderBy(o => o.Name)
+                    .ToList(),
+            })
+            .OrderBy(s => s.Name)
+            .ToList();
+
+        return new StorefrontFilterOptionsResponse
+        { Categories = categories, Brands = brands, Specifications = specifications };
     }
 
     public class GetStorefrontFilterOptionsQueryHandler

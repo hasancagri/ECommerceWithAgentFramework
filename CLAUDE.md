@@ -128,6 +128,12 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Tüketici başına TEK sıralı kuyruk: `catalog.procurement-events` + `stock.procurement-events`
   (Sequential — aynı barkod sıralı işlenir); binding'i tüketici kurar (007 dersi sürer).
 - Saga YOK; dayanıklılık idempotent upsert + hash-diff + sınırlı retry + error queue iledir.
+- **Özellikler (043):** feed satırı opsiyonel `attributes` sözlüğü taşır; spec registry +
+  tedarikçi değer-eşlemeleri seed'lidir (`Seeding/CanonicalSpecs.cs`) — eşlenemeyen anahtar YOK SAYILIR.
+- Spec merge attribute-başına Priority ile (sıra-bağımsız); Specs kanonik `Status`'a GİRMEZ —
+  spec'siz ürün de yayınlanır. Enrich yalnız KAPALI listeden seçer (registry guard reddeder).
+- `CanonicalProductUpserted`/`ProductChangedEvent` `Specs` listesi taşır (additive, default boş);
+  kontrat ad-tabanlıdır (Attribute+Option string), Id'ler BC-içi kalır.
 
 ### DDD ve Bounded Context
 
@@ -162,6 +168,11 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Gtin = barkod (041 doldurur; Procurement upsert anahtarı, Marten index'li); `ProductTag` dış
   yüzeysiz (yalnız domain); Grouped pasif; Dimensions/Seo 041 kanonik yayınıyla dolar.
 - Yazım yolları publish eder: yazılan ürün/kategori vitrindedir; agent okuma sorguları `Published` ile filtreler.
+- **Özellikler (043):** `SpecificationAttribute` aggregate (Options child, NormalizedName unique) +
+  `Product.SetSpecifications` (tam-değiştirme, VO listesi). Registry İKİ BC'de ayrı seed edilir
+  (Catalog `CatalogSpecSeedHostedService`, Procurement `CanonicalSpecs`) — sözleşme AD'dır, bilinçli tekrar.
+- Storefront facet: `StorefrontView.SpecKeys[]` ("Attribute|Option") + liste sorgusunda attribute-grubu
+  `MatchesSql` jsonb `?|` (grup içi OR, gruplar arası AND); filtre yanıtında count birebirdir.
 
 ### Vertical Slice + DDD
 

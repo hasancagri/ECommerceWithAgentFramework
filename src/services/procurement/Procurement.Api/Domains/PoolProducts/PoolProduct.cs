@@ -34,6 +34,9 @@ public class PoolProduct : AggregateRoot
     public bool NeedsEnrichment => Canonical is not null && !Canonical.IsComplete;
     public bool HasFreshEnrichment => Enrichment is not null && Enrichment.SourceHash == MergedContentHash;
 
+    // 043: hiç spec'i olmayan kanonik enrich adayıdır — ama yayını BLOKLAMAZ (FR-005).
+    public bool NeedsSpecEnrichment => Canonical is not null && Canonical.Specs.Count == 0;
+
     // JasperFxIgnore: statik Create fabrikası event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
     /// <summary>Havuza yeni barkod açar. Boş barkod reddedilir (AI barkod ÜRETMEZ — FR-010).</summary>
@@ -114,7 +117,14 @@ public class PoolProduct : AggregateRoot
         var sku = active[0].SupplierSku; // öncelikli tedarikçinin SKU'su
         var dimensions = active.Select(l => l.Dimensions).FirstOrDefault(d => d is not null);
 
-        var merged = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions);
+        // 043: attribute-başına merge — Priority sırasında ilk veren kazanır (sıra-bağımsız; R3).
+        var specs = active
+            .SelectMany(l => l.CanonicalSpecs)
+            .GroupBy(s => s.Attribute)
+            .Select(g => g.First())
+            .ToList();
+
+        var merged = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs);
         MergedContentHash = merged.ComputeHash();
 
         // Enrich overlay: yalnız hâlâ eksik içerik alanları saklı AI sonucundan dolar (FR-009).
@@ -126,7 +136,13 @@ public class PoolProduct : AggregateRoot
             subCategory = Enrichment.SubCategory ?? string.Empty;
         }
 
-        Canonical = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions);
+        // 043 overlay: merge'in vermediği attribute'lar AI seçiminden dolar (merge daima önce).
+        if (Enrichment is not null)
+            specs = specs.Concat(Enrichment.Specs
+                    .Where(e => specs.All(s => s.Attribute != e.Attribute)))
+                .ToList();
+
+        Canonical = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs);
         if (!Canonical.IsComplete)
             Status = PoolProductStatus.Pending;
 
@@ -135,14 +151,26 @@ public class PoolProduct : AggregateRoot
     }
 
     /// <summary>Enrich sonucunu uygular: yalnız eksik İÇERİK alanları dolar (kategori kanonik listeden
-    /// olmak zorunda); barkod/ölçü/fiyat/stok'a dokunuş yapısal olarak imkânsızdır (FR-010).</summary>
+    /// olmak zorunda); barkod/ölçü/fiyat/stok'a dokunuş yapısal olarak imkânsızdır (FR-010).
+    /// 043: AI spec çiftleri kapalı listeye süzülür — liste-dışı çift DÜŞER, akış durmaz (FR-004).</summary>
     /// <remarks>Handler: EnrichPoolProductCommandHandler</remarks>
-    public ResultDomain ApplyEnrichment(EnrichmentResult result, IReadOnlyCollection<CanonicalCategoryPair> canonicalCategories)
+    public ResultDomain ApplyEnrichment(EnrichmentResult result,
+        IReadOnlyCollection<CanonicalCategoryPair> canonicalCategories,
+        IReadOnlyCollection<SpecValue> canonicalSpecs)
     {
         if (!string.IsNullOrWhiteSpace(result.Category) &&
             !canonicalCategories.Any(p => p.Category == result.Category && p.SubCategory == result.SubCategory))
             return ResultDomain.Error(new MessageItem
             { Property = nameof(result.Category), Code = ProcurementResourceConstants.ENRICHMENT_CATEGORY_NOT_CANONICAL });
+
+        // 043 guard: yalnız registry'deki çiftler yaşar; aynı attribute'un tekrarı da düşer.
+        var validSpecs = result.Specs
+            .Where(s => canonicalSpecs.Contains(s))
+            .GroupBy(s => s.Attribute)
+            .Select(g => g.First())
+            .ToList();
+        result = EnrichmentResult.Create(result.SourceHash, result.Description,
+            result.Category, result.SubCategory, validSpecs);
 
         Enrichment = result;
 
@@ -161,8 +189,13 @@ public class PoolProduct : AggregateRoot
                 subCategory = result.SubCategory ?? string.Empty;
             }
 
+            // 043: merge'in vermediği attribute'lar AI seçiminden dolar.
+            var specs = Canonical.Specs
+                .Concat(validSpecs.Where(e => Canonical.Specs.All(s => s.Attribute != e.Attribute)))
+                .ToList();
+
             Canonical = CanonicalContent.Create(Canonical.Name, description, Canonical.Brand,
-                category, subCategory, Canonical.Sku, Canonical.Dimensions);
+                category, subCategory, Canonical.Sku, Canonical.Dimensions, specs);
         }
 
         Status = PoolProductStatus.Enriched;

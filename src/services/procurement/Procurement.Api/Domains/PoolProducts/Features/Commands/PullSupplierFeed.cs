@@ -61,7 +61,11 @@ public static class PullSupplierFeed
                     mapping.IsSuccess ? mapping.Data!.CanonicalCategory : null,
                     mapping.IsSuccess ? mapping.Data!.CanonicalSubCategory : null,
                     row.Price, row.Stock,
-                    RowDimensions.Create(row.Weight, row.Length, row.Width, row.Height));
+                    RowDimensions.Create(row.Weight, row.Length, row.Width, row.Height),
+                    // 043: ham attribute'lar saklanır; eşleme burada çözülür (kategori deseni) —
+                    // eşlenemeyen anahtar yok sayılır, satırı düşürmez.
+                    row.Attributes,
+                    CanonicalSpecs.MapRawAttributes(cmd.SupplierCode, row.Attributes));
 
                 if (!existing.TryGetValue(row.Barcode, out var product))
                 {
@@ -133,6 +137,13 @@ public static class PullSupplierFeed
                         enrichCount++;
                     }
                     continue; // eksik içerik yayınlanmaz (FR-011); yayını enrich zinciri tetikler
+                }
+
+                // 043: yalnız spec eksikse enrich PARALEL tetiklenir ama yayın BEKLEMEZ (FR-005).
+                if (product.NeedsSpecEnrichment && !product.HasFreshEnrichment)
+                {
+                    await bus.PublishAsync(new EnrichPoolProduct.EnrichPoolProductCommand(barcode));
+                    enrichCount++;
                 }
 
                 await bus.PublishAsync(new PublishPoolProduct.PublishPoolProductCommand(barcode));

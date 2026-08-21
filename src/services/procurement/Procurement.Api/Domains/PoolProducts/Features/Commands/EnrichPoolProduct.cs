@@ -27,8 +27,8 @@ public static class EnrichPoolProduct
             if (product is null)
                 return;
 
-            if (!product.NeedsEnrichment)
-                return; // arada feed tamamlamış — AI'ya gerek kalmadı
+            if (!product.NeedsEnrichment && !product.NeedsSpecEnrichment)
+                return; // arada feed tamamlamış — AI'ya gerek kalmadı (043: spec eksiği de tetikleyici)
 
             if (product.HasFreshEnrichment)
             {
@@ -49,7 +49,8 @@ public static class EnrichPoolProduct
                     .Distinct()
                     .ToList();
                 output = await agent.CompleteAsync(canonical.Name, canonical.Brand,
-                    canonical.Description, canonical.Category, hints, ct);
+                    canonical.Description, canonical.Category, hints,
+                    canonical.Specs.Select(s => s.Attribute).ToList(), ct);
             }
             catch (Exception ex)
             {
@@ -57,12 +58,14 @@ public static class EnrichPoolProduct
             }
 
             var result = EnrichmentResult.Create(product.MergedContentHash!,
-                output.Description, output.Category, output.SubCategory);
-            var apply = product.ApplyEnrichment(result, CanonicalTaxonomy.Pairs);
+                output.Description, output.Category, output.SubCategory,
+                (output.Specs ?? []).Select(s => SpecValue.Create(s.Attribute, s.Option)).ToList());
+            var apply = product.ApplyEnrichment(result, CanonicalTaxonomy.Pairs, CanonicalSpecs.ValidPairs);
             if (!apply.IsSuccess)
                 throw new EnrichmentException(cmd.Barcode,
                     string.Join(",", apply.Messages.Select(m => m.Code))); // liste dışı kategori → retry → DLQ (US3-4)
 
+            // 043: yalnız İÇERİK eksikliği hata sayılır; spec eksik kalabilir (FR-005 — yayın sürer).
             if (!product.Canonical!.IsComplete)
                 throw new EnrichmentException(cmd.Barcode, "AI çıktısı eksikleri kapatamadı"); // retry → DLQ
 

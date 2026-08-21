@@ -391,7 +391,7 @@ public class PoolProductTests
 
         var result = EnrichmentResult.Create(product.MergedContentHash!,
             "AI açıklaması", "Elektronik", "Telefon");
-        var apply = product.ApplyEnrichment(result, Canon);
+        var apply = product.ApplyEnrichment(result, Canon, []);
 
         apply.IsSuccess.ShouldBeTrue();
         product.Status.ShouldBe(PoolProductStatus.Enriched);
@@ -415,7 +415,7 @@ public class PoolProductTests
 
         var result = EnrichmentResult.Create(product.MergedContentHash!,
             "AI açıklaması", "Moda", "Çanta");
-        product.ApplyEnrichment(result, Canon);
+        product.ApplyEnrichment(result, Canon, []);
 
         product.Canonical!.Description.ShouldBe("Feed açıklaması"); // merge her zaman önceliklidir
         product.Canonical.Category.ShouldBe("Elektronik"); // feed'in eşlenen kategorisi kalır
@@ -430,7 +430,7 @@ public class PoolProductTests
 
         var result = EnrichmentResult.Create(product.MergedContentHash!,
             null, "Uydurma Kategori", "Uydurma Alt");
-        var apply = product.ApplyEnrichment(result, Canon);
+        var apply = product.ApplyEnrichment(result, Canon, []);
 
         apply.IsSuccess.ShouldBeFalse();
         apply.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.ENRICHMENT_CATEGORY_NOT_CANONICAL);
@@ -444,7 +444,7 @@ public class PoolProductTests
         product.UpsertListing(SupplierA, 1, Row(description: null));
         product.RebuildCanonical();
         product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
-            "AI açıklaması", null, null), Canon);
+            "AI açıklaması", null, null, []), Canon, []);
 
         product.HasFreshEnrichment.ShouldBeTrue(); // aynı girdi → AI tekrar çağrılmaz (komut bu getter'la atlar)
 
@@ -461,7 +461,7 @@ public class PoolProductTests
         product.UpsertListing(SupplierA, 1, Row(description: null, price: 100m));
         product.RebuildCanonical();
         product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
-            "AI açıklaması", null, null), Canon);
+            "AI açıklaması", null, null, []), Canon, []);
 
         // Fiyat değişimi rebuild tetikler; saklı enrich sonucu overlay'de yeniden uygulanır (FR-009).
         product.UpsertListing(SupplierA, 1, Row(description: null, price: 90m));
