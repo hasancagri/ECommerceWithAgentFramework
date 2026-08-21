@@ -10,6 +10,7 @@ using WebApp.Services.Refit;
 using WebApp.Authentication;
 using WebApp.Chat;
 using WebApp.Extensions;
+using WebApp.Services.Behavior;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,10 @@ builder.Services.AddHttpClient("file-images", client =>
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
+
+// 042: davranış JSONL yazıcısı — tek instance hem Enqueue yüzeyi hem arka plan tüketici.
+builder.Services.AddSingleton<BehaviorLogWriter>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<BehaviorLogWriter>());
 
 builder.Services.AddScoped<BasketService>();
 builder.Services.AddScoped<OrderService>();
@@ -196,6 +201,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 app.UseExceptionHandler("/Error");
 
 app.UseRouting();
+
+// 042: davranış kimlik çerezleri (pz_aid kalıcı, pz_sid oturumluk) — her istekte garanti edilir.
+app.UseMiddleware<AnonymousIdMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

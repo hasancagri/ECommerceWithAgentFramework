@@ -15,3 +15,11 @@ src/services/file/File.Api/Images/
 
 # ASP.NET Core Data Protection keys (dev-local, not for VCS)
 src/ui/WebApp/keys/
+
+# 042 Personalization: davranis loglari + Python venv + model dosyalari (runtime uretimi)
+artifacts/behavior-logs/
+src/services/personalization/.venv/
+src/services/personalization/models/
+src/services/personalization/__pycache__/
+src/services/personalization/**/__pycache__/
+src/services/personalization/*.egg-info/

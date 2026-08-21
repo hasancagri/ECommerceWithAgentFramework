@@ -25,6 +25,18 @@
     <Project Path="src/services/storefront/Storefront.Api/Storefront.Api.csproj" />
     <Project Path="src/services/supplier/Supplier.Api/Supplier.Api.csproj" />
   </Folder>
+  <Folder Name="/src/services/personalization/">
+    <File Path="src/services/personalization/pyproject.toml" />
+    <File Path="src/services/personalization/main.py" />
+    <File Path="src/services/personalization/config.py" />
+    <File Path="src/services/personalization/db.py" />
+    <File Path="src/services/personalization/ingest.py" />
+    <File Path="src/services/personalization/train.py" />
+    <File Path="src/services/personalization/recommend.py" />
+    <File Path="src/services/personalization/tests/test_ingest.py" />
+    <File Path="src/services/personalization/tests/test_train.py" />
+    <File Path="src/services/personalization/tests/test_recommend.py" />
+  </Folder>
   <Folder Name="/src/ui/">
     <Project Path="src/ui/WebApp/WebApp.csproj" />
   </Folder>
@@ -40,5 +52,6 @@
     <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />
     <Project Path="tests/Storefront.Api.Tests/Storefront.Api.Tests.csproj" />
     <Project Path="tests/Supplier.Api.Tests/Supplier.Api.Tests.csproj" />
+    <Project Path="tests/WebApp.Tests/WebApp.Tests.csproj" />
   </Folder>
 </Solution>

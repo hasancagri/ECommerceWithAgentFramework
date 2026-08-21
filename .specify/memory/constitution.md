@@ -1,19 +1,14 @@
-<!-- Sync Impact Report — v1.6.0 → v1.7.1 (2026-08-06; v1.7.0 MINOR + v1.7.1 PATCH)
-     v1.7.1 PATCH: İlke V'e açıklayıcı istisna — IdP'nin kendi server-rendered admin UI'ı cookie
-     ile auth olur (scope yok), admin rolüyle korunur; "back-office scope-gated" downstream API
-     içindir. 030-rbac analyze K1'i kapatır. Templates ✅ değişmez.
-     --- v1.7.0 MINOR ---
-     Modified: İlke V keskinleştirildi. Rol mekanizması netleşti — rol artık token'a "claim
-     olarak biner" değil, token verme anında rol→scope map'inden SCOPE DEMETİNE açılır;
-     downstream servisler rolü GÖRMEZ (rol claim ile yetki yok, [Authorize(Roles=...)] yok).
-     Scope kümesi KOD-sahipli kapalı registry (KnownScopes); rol→scope ve rol yönetimi DB'de,
-     admin ekrandan; admin serbest scope string giremez, listeden seçer. Back-office dahil her
-     yüzey scope ile korunur (rol-policy downstream'de kullanılmaz). Makine kimlikleri
-     (agent/saga) client_credentials + statik scope, RBAC dışı. Register aktivasyon-mail
-     ZORUNLU DEĞİL (customer direkt login). Seed: admin+customer rolleri, rol→scope map ve
-     login olabilen bootstrap admin kullanıcı. Templates: plan/spec/tasks ✅ değişiklik gerekmez
-     (İlke V referansı yok). Runtime docs: CLAUDE.md ⚠ pending — RBAC feature merge olunca
-     "rol→scope map" + KnownScopes + ekran akışı hizalanır. -->
+<!-- Sync Impact Report — v1.8.1 → v1.9.0 (2026-08-21, MINOR)
+     Modified: İlke I genişletildi — telemetri/davranış-verisi kanal istisnası eklendi (042 R7).
+     Kayıp-toleranslı, domain-gerçeği OLMAYAN davranış telemetrisi, UI/BFF katmanından (BC
+     değildir) TEK-tüketicili bir BC'ye versiyonlu, şema-kontratlı log dosyasıyla beslenebilir;
+     ikinci tüketici doğduğu an kanal integration event'e TERFİ ETMEK ZORUNDADIR. DB izolasyonu
+     aynen sürer (dosyayı yalnız sahibi BC okur, kendi DB'sine indirir).
+     Gerekçe: 042 Personalization — WebApp davranış JSONL'i → Python BC; event töreni telemetri
+     için ağır, kuralın sessiz esnemesi yerine kayıtlı istisna.
+     Added/Removed sections: yok.
+     Templates: plan/spec/tasks ✅ değişiklik gerekmez (Constitution Check anayasadan türetilir).
+     Runtime docs: CLAUDE.md ✅ 042 bölümü bu amendment'a hizalandı. -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -46,6 +41,13 @@ kendi Postgres veritabanı, kendi Marten şeması ve kendi domain modeli vardır
 - **MCP'yi yalnız agent'lar tüketir** (v1.8.1): MCP tool'ları LLM tool-seçim yüzeyidir;
   agent olmayan kod (WebApp, servisler) imperatif `CallToolAsync` ile MCP süremez.
   Yapısal (LLM'siz) servisler-arası ihtiyaç REST/gRPC sözleşmesiyle karşılanır.
+- **Telemetri kanalı istisnası** (v1.9.0, 042): kayıp-toleranslı, domain-gerçeği OLMAYAN
+  davranış telemetrisi, UI/BFF katmanından (bounded context DEĞİLDİR) TEK-tüketicili bir
+  BC'ye **versiyonlu, şema-kontratlı log dosyasıyla** beslenebilir (kontrat feature spec'inde
+  yaşar, örn. `specs/042/contracts/behavior-log-line.md`). Koşullar: üretici UI/BFF'dir
+  (BC-arası kullanılamaz), tüketici TEKtir, veri kaybı kabul edilebilirdir. İkinci tüketici
+  doğduğu an kanal integration event'e TERFİ ETMEK ZORUNDADIR. DB izolasyonu aynen geçerli:
+  dosyayı yalnız sahibi BC okur ve kendi veritabanına indirir.
 
 ### II. Zengin Aggregate, İçeride Korunan Invariant'lar
 
@@ -240,7 +242,12 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.8.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-11
+**Version**: 1.9.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-21
+
+<!-- v1.9.0 (2026-08-21, MINOR): İlke I'e telemetri kanalı istisnası — kayıp-toleranslı davranış
+     telemetrisi UI/BFF'den tek-tüketicili BC'ye versiyonlu log dosyasıyla beslenebilir; ikinci
+     tüketici doğarsa integration event'e terfi zorunlu; DB izolasyonu sürer. Gerekçe: 042
+     Personalization (WebApp davranış JSONL'i → Python BC); event töreni telemetri için ağır. -->
 
 <!-- v1.8.1 (2026-08-11, PATCH): İlke I'e netleştirme — MCP'yi yalnız agent'lar tüketir; agent
      olmayan koddan imperatif CallToolAsync yasak (WebApp GatewayRegistrationClient bu kuralla
