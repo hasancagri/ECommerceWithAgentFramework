@@ -50,7 +50,10 @@ public class PaymentAttemptTests
         var d = a.OnChargeResult(PaymentOutcome.Success, "pg-1", chargedPrice: 90m, Now, Cfg());
 
         d.Action.ShouldBe(PaymentAttemptAction.VerifyFailed);
-        a.Status.ShouldBe(PaymentAttemptStatus.Failed);
+        // Para ALINDI ama tutar uyusmaz: Failed degil NeedsReconciliation (terminal, ops gorunurluk)
+        // — Failed "farkli kartla dene" demektir, cift cekim riski dogurur.
+        a.Status.ShouldBe(PaymentAttemptStatus.NeedsReconciliation);
+        a.ProviderPaymentId.ShouldBe("pg-1"); // cekilen para izlenebilir kalir (iz/refund)
     }
 
     [Fact]
