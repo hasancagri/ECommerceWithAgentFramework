@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApp.PageModels;
 using WebApp.Services;
+using WebApp.Services.Behavior;
 using WebApp.ViewModel;
 
 namespace WebApp.Pages.Products;
 
 // 011: Tüm Ürünler ekranı — vitrinden sayfa başına 12 ürün, numaralı pager (US1).
 // 016: kategori filtresi — seçenekler facet ucundan (gerçek veri); filtre sayfalamada korunur.
-public class IndexModel(StorefrontService storefrontService) : BasePageModel
+public class IndexModel(StorefrontService storefrontService, BehaviorLogWriter behaviorLog) : BasePageModel
 {
     public List<StorefrontProductViewModel> Products { get; set; } = [];
     public FilterOptionsViewModel FilterOptions { get; set; } = FilterOptionsViewModel.Empty;
@@ -41,6 +42,21 @@ public class IndexModel(StorefrontService storefrontService) : BasePageModel
         Products = productsAsResult.Data!.Products;
         PageNumber = productsAsResult.Data.PageNumber;
         PageCount = productsAsResult.Data.PageCount;
+
+        // 042: ListShown impression — gösterilen sayfanın ürünleri tek satır (FR-002).
+        if (Products.Count > 0)
+        {
+            var (anonymousId, sessionId, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
+            behaviorLog.Enqueue(new BehaviorEvent
+            {
+                EventType = "ListShown",
+                UserId = userId,
+                AnonymousId = anonymousId,
+                ShownProductIds = Products.Select(p => p.ProductId).ToList(),
+                SessionId = sessionId,
+            });
+        }
+
         return Page();
     }
 }

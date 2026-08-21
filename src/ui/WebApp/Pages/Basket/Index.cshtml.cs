@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApp.PageModels;
 using WebApp.Pages.Basket.ViewModel;
 using WebApp.Services;
+using WebApp.Services.Behavior;
 using WebApp.Pages.Basket.Dto;
 
 #endregion
@@ -12,7 +13,8 @@ using WebApp.Pages.Basket.Dto;
 namespace WebApp.Pages.Basket;
 
 [Authorize]
-public class IndexModel(StorefrontService storefrontService, BasketService basketService) : BasePageModel
+public class IndexModel(StorefrontService storefrontService, BasketService basketService,
+    BehaviorLogWriter behaviorLog) : BasePageModel
 {
     public BasketPageViewModel Basket { get; set; } = new();
 
@@ -43,7 +45,23 @@ public class IndexModel(StorefrontService storefrontService, BasketService baske
 
         var result = await basketService.CreateOrUpdateBasketAsync(createOrUpdateBasket);
 
-        return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("Ürün sepete eklendi", "Index");
+        if (result.IsFail) return ErrorPage(result, "Index");
+
+        // 042: BasketItemAdded — yalnız başarılı eklemede; alanlar vitrin satırından denormalize (FR-004).
+        var (anonymousId, sessionId, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
+        behaviorLog.Enqueue(new BehaviorEvent
+        {
+            EventType = "BasketItemAdded",
+            UserId = userId,
+            AnonymousId = anonymousId,
+            ProductId = product.Data.ProductId,
+            Brand = product.Data.Brand,
+            Category = product.Data.Category,
+            Price = product.Data.Price,
+            SessionId = sessionId,
+        });
+
+        return SuccessPage("Ürün sepete eklendi", "Index");
     }
 
     public async Task<IActionResult> OnGetDeleteAsync(Guid productId)

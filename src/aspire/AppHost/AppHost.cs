@@ -161,4 +161,22 @@ builder.AddProject<Projects.Procurement_Api>("procurement-api")
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
 
+// 042: Personalization BC — sistemin ilk .NET-disi servisi (Python/FastAPI). WebApp'in yazdigi
+// davranis JSONL'ini kendi DB'sine indirir, ALS modeli egitir, /v1/recommendations sunar.
+// Kanal = paylasimli log dizini (tek uretici + tek tuketici; bkz. specs/042 R3/R7).
+var behaviorLogDir = Path.GetFullPath(
+    Path.Combine(builder.AppHostDirectory, "..", "..", "..", "artifacts", "behavior-logs"));
+Directory.CreateDirectory(behaviorLogDir);
+web.WithEnvironment("BehaviorLog__Directory", behaviorLogDir);
+
+var personalizationDb = postgres.AddDatabase("personalizationDb");
+
+#pragma warning disable ASPIREHOSTINGPYTHON001 // AddPythonApp deneysel — dev ortami icin kabul (042 R2)
+builder.AddPythonApp("personalization", "../../services/personalization", "main.py")
+#pragma warning restore ASPIREHOSTINGPYTHON001
+    .WithHttpEndpoint(env: "PORT")
+    .WithReference(personalizationDb)
+    .WithEnvironment("BEHAVIOR_LOG_DIR", behaviorLogDir)
+    .WaitFor(personalizationDb);
+
 await builder.Build().RunAsync();

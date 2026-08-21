@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.PageModels;
 using WebApp.Services;
+using WebApp.Services.Behavior;
 using WebApp.ViewModel;
 
 #endregion
@@ -11,7 +12,7 @@ using WebApp.ViewModel;
 namespace WebApp.Pages.Products;
 
 [AllowAnonymous]
-public class DetailModel(StorefrontService storefrontService) : BasePageModel
+public class DetailModel(StorefrontService storefrontService, BehaviorLogWriter behaviorLog) : BasePageModel
 {
     public StorefrontProductViewModel? Product { get; set; }
 
@@ -27,6 +28,21 @@ public class DetailModel(StorefrontService storefrontService) : BasePageModel
         // Vitrin stoğu event-beslemelidir (rezervasyonları anlık yansıtmaz); null = "raporlanmadı" → 0 say.
         // Gerçek koruma sepete eklemede gRPC fail-closed rezervasyondur.
         StockQuantity = Product.StockQuantity ?? 0;
+
+        // 042: ProductViewed — alanlar render verisinden denormalize (FR-001).
+        var (anonymousId, sessionId, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
+        behaviorLog.Enqueue(new BehaviorEvent
+        {
+            EventType = "ProductViewed",
+            UserId = userId,
+            AnonymousId = anonymousId,
+            ProductId = Product.ProductId,
+            Brand = Product.Brand,
+            Category = Product.Category,
+            Price = Product.Price,
+            SessionId = sessionId,
+        });
+
         return Page();
     }
 }
