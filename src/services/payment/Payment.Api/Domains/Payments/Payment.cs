@@ -12,23 +12,16 @@ public class Payment : AggregateRoot
     /// <remarks>Handler: CreatePaymentCommandHandler</remarks>
     public static ResultDomain<Payment> Create(Guid userId, decimal amount)
     {
+        var messages = new List<MessageItem>();
+
         if (userId == Guid.Empty)
-        {
-            return ResultDomain<Payment>.Error(new MessageItem
-            {
-                Property = nameof(UserId),
-                Code = PaymentResourceConstants.PAYMENT_USER_ID_REQUIRED
-            });
-        }
+            messages.Add(new MessageItem { Property = nameof(UserId), Code = PaymentResourceConstants.PAYMENT_USER_ID_REQUIRED });
 
         if (amount <= 0)
-        {
-            return ResultDomain<Payment>.Error(new MessageItem
-            {
-                Property = nameof(Amount),
-                Code = PaymentResourceConstants.PAYMENT_AMOUNT_INVALID
-            });
-        }
+            messages.Add(new MessageItem { Property = nameof(Amount), Code = PaymentResourceConstants.PAYMENT_AMOUNT_INVALID });
+
+        if (messages.Count > 0)
+            return ResultDomain<Payment>.Error(messages);
 
         return ResultDomain<Payment>.Ok(new Payment
         {

@@ -25,14 +25,16 @@ public class MerchantInformation : AggregateRoot
     /// <remarks>Handler: SetMerchantInformationCommandHandler</remarks>
     public static ResultDomain<MerchantInformation> Create(Guid merchantId, string merchantKey)
     {
-        if (merchantId == Guid.Empty || string.IsNullOrWhiteSpace(merchantKey))
-        {
-            return ResultDomain<MerchantInformation>.Error(new MessageItem
-            {
-                Property = nameof(MerchantId),
-                Code = CustomerResourceConstants.VALUE_IS_REQUIRED
-            });
-        }
+        var messages = new List<MessageItem>();
+
+        if (merchantId == Guid.Empty)
+            messages.Add(new MessageItem { Property = nameof(MerchantId), Code = CustomerResourceConstants.VALUE_IS_REQUIRED });
+
+        if (string.IsNullOrWhiteSpace(merchantKey))
+            messages.Add(new MessageItem { Property = nameof(MerchantKey), Code = CustomerResourceConstants.VALUE_IS_REQUIRED });
+
+        if (messages.Count > 0)
+            return ResultDomain<MerchantInformation>.Error(messages);
 
         return ResultDomain<MerchantInformation>.Ok(new MerchantInformation
         {
