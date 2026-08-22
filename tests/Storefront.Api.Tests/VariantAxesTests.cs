@@ -61,18 +61,34 @@ public class VariantAxesTests
     }
 
     [Fact]
-    public void DeriveAxes_MissingValueOnOneMember_IsStillAxis()
+    public void DeriveAxes_SinglePresentValue_NotAnAxis()
     {
+        // Bir üyede Renk=Siyah, diğerinde yok → tek mevcut değer → seçilecek varyant yok → eksen değil
+        // (enrich'in asimetrik doldurduğu tek-değerli attribute seçici gürültüsü yapmaz).
         var members = new[]
         {
             Member(("Renk", "Siyah")),
-            Member(),                    // Renk yok → "—" sayılır, ayrışma var
+            Member(),
+        };
+
+        GetProductFamily.DeriveAxes(members).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void DeriveAxes_TwoPresentValues_WithOneMissing_IsAxis()
+    {
+        // İki farklı mevcut değer (biri eksik olsa da) → anlamlı eksen.
+        var members = new[]
+        {
+            Member(("Renk", "Siyah")),
+            Member(("Renk", "Beyaz")),
+            Member(),
         };
 
         var axes = GetProductFamily.DeriveAxes(members);
 
         axes.Count.ShouldBe(1);
-        axes[0].Options.ShouldBe(new[] { "Siyah" }); // yalnız mevcut değerler listelenir
+        axes[0].Options.ShouldBe(new[] { "Beyaz", "Siyah" });
     }
 
     [Fact]

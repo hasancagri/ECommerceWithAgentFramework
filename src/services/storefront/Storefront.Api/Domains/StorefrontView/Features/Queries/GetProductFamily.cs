@@ -36,26 +36,25 @@ public static class GetProductFamily
         public List<FamilyMember> Members { get; set; } = [];
     }
 
-    // Saf çekirdek (test-first): üyeler arasında FARKLILAŞAN attribute'lar eksen olur.
-    // Bir üyede attribute eksikse (null) o da ayrışma sayılır (eksik değer "—"); options yalnız mevcut değerler.
+    // Saf çekirdek (test-first): eksen = üyeler arasında ≥2 FARKLI MEVCUT değeri olan attribute.
+    // Tek mevcut değer (kalanı eksik) anlamlı seçim vermez → eksen DEĞİL (enrich'in asimetrik
+    // doldurduğu tek-değerli attribute'lar seçici gürültüsü yapmasın). Options mevcut değerler.
     public static IReadOnlyList<VariantAxis> DeriveAxes(IReadOnlyList<StorefrontView> members)
     {
         var attributes = members.SelectMany(m => m.Specs.Select(s => s.Attribute)).Distinct();
         var axes = new List<VariantAxis>();
         foreach (var attribute in attributes.OrderBy(a => a, StringComparer.Ordinal))
         {
-            var perMember = members
+            var presentOptions = members
                 .Select(m => m.Specs.FirstOrDefault(s => s.Attribute == attribute)?.Option)
+                .Where(o => o is not null)
+                .Distinct()
+                .OrderBy(o => o, StringComparer.Ordinal)
                 .ToList();
-            if (perMember.Distinct().Count() <= 1)
-                continue; // hiç ayrışma yok → eksen değil
+            if (presentOptions.Count < 2)
+                continue; // tek/sıfır seçenek → seçilecek varyant yok, eksen değil
 
-            axes.Add(new VariantAxis
-            {
-                Attribute = attribute,
-                Options = perMember.Where(o => o is not null).Distinct()
-                    .OrderBy(o => o, StringComparer.Ordinal).ToList()!,
-            });
+            axes.Add(new VariantAxis { Attribute = attribute, Options = presentOptions! });
         }
 
         return axes;
