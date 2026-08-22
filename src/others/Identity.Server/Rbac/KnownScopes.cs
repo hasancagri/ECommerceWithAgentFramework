@@ -24,6 +24,7 @@ public static class KnownScopes
             ["storefront.read"] = "Vitrin okuma",
             ["customer.read"] = "Müşteri (cüzdan/adres) okuma",
             ["customer.write"] = "Müşteri (cüzdan/adres) yazma",
+            ["reviews.write"] = "Ürün yorumu yazma",
             ["apikeys.manage"] = "API anahtarı yönetimi",
             ["identity.roles.manage"] = "Rol/scope/kullanıcı yönetimi",
         };

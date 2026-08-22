@@ -35,6 +35,10 @@ public static class AuthorizationScopes
     // Audience customer.api (endpoint Customer.Api'de). Onboarding'de admin'e verilen kimligi girer.
     public const string MerchantCredentialsWrite = "merchant.credentials.write";
 
+    // reviews.api (044): yorum yazma + uygunluk sorgusu; Order satin-alma-kaniti gRPC ucu da
+    // bu scope'u ister (R4: ayri scope acilmaz, sub==user_id guard'i sunucuda).
+    public const string ReviewsWrite = "reviews.write";
+
     // identity (030 RBAC): IdP rol/scope/kullanici yonetim yuzeyi. Downstream servis zorlamaz;
     // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.
     public const string IdentityRolesManage = "identity.roles.manage";

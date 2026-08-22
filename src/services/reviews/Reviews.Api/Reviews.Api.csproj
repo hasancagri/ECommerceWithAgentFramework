@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>3f1a7c9e-2b6d-4e8f-a05c-9d4b1e6f7a23</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Marten" />
+        <PackageReference Include="Marten.Newtonsoft" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="WolverineFx" />
+        <PackageReference Include="WolverineFx.RuntimeCompilation" />
+        <PackageReference Include="WolverineFx.RabbitMQ" />
+        <PackageReference Include="WolverineFx.Http" />
+        <PackageReference Include="WolverineFx.Marten" />
+        <PackageReference Include="WolverineFx.Postgresql" />
+        <PackageReference Include="Asp.Versioning.Http" />
+        <PackageReference Include="Scrutor" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+        <PackageReference Include="Grpc.Net.ClientFactory" />
+        <PackageReference Include="Google.Protobuf" />
+        <PackageReference Include="Grpc.Tools">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Agents.AI" />
+        <PackageReference Include="Microsoft.Extensions.AI" />
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    </ItemGroup>
+
+    <!-- 044: satin-alma kaniti — Order.Api sunucu, biz istemciyiz (paylasilan proto). -->
+    <ItemGroup>
+        <Protobuf Include="..\..\..\others\Shared\Protos\order_purchase.proto" GrpcServices="Client" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\others\Common\Common.csproj" />
+        <ProjectReference Include="..\..\..\others\Shared\Shared.csproj" />
+        <ProjectReference Include="..\..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
+    </ItemGroup>
+
+</Project>

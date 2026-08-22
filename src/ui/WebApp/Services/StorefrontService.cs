@@ -31,7 +31,8 @@ public class StorefrontService(
         var products = content.Data
             .Select(p => new StorefrontProductViewModel(p.ProductId, p.Name, p.Description, p.Brand,
                 p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
-                p.CategoryId, p.BrandId))
+                p.CategoryId, p.BrandId,
+                RatingAverage: p.RatingAverage, RatingCount: p.RatingCount))
             .ToList();
 
         return ServiceResult<PagedProductListViewModel>.Success(new PagedProductListViewModel(
@@ -76,6 +77,7 @@ public class StorefrontService(
             p.ProductId, p.Name, p.Description ?? string.Empty, p.Brand ?? string.Empty,
             p.Price.Value, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
             p.CategoryId, p.BrandId,
-            (p.Specs ?? []).Select(s => new ProductSpecViewModel(s.Attribute, s.Option)).ToList()));
+            (p.Specs ?? []).Select(s => new ProductSpecViewModel(s.Attribute, s.Option)).ToList(),
+            RatingAverage: p.RatingAverage, RatingCount: p.RatingCount));
     }
 }

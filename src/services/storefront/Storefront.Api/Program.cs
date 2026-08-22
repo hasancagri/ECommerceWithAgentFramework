@@ -31,8 +31,16 @@ builder.Host.UseWolverine(opts =>
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
 
-    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
+    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
+
+    // 044: ReviewSummaryChanged binding'ini TUKETICI kurar (041 dersi); yayinci yalniz exchange
+    // deklare eder. Ayni storefront.events kuyruguna baglanir (Sequential — satir yarisi yok).
+    rabbit.DeclareExchange(RabbitMqConstants.ReviewSummaryChanged.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.ReviewSummaryChanged.Queues.Storefront);
+    });
 
     // TEK kuyruk (storefront.events): üç exchange de buraya bağlı; Sequential işleme sayesinde
     // aynı view satırına eşzamanlı yazım olmaz — ConcurrencyException kaynağında çözülür.

@@ -24,6 +24,10 @@ public static class GetProductStorefrontView
         public int? StockQuantity { get; set; }
         public bool? IsInStock { get; set; }
 
+        // 044: puan ozeti — null/0 = rozet cizilmez (FR-006).
+        public decimal? RatingAverage { get; set; }
+        public int RatingCount { get; set; }
+
         // 043 US2: detay spec tablosu — kanonik (attribute, option) ciftleri; bos liste mesru.
         public List<ProductSpecResponse> Specs { get; set; } = [];
 
@@ -47,6 +51,8 @@ public static class GetProductStorefrontView
             Category = view.Category,
             StockQuantity = view.StockQuantity,
             IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null,
+            RatingAverage = view.RatingAverage,
+            RatingCount = view.RatingCount,
             Specs = view.Specs
                 .Select(s => new ProductSpecResponse { Attribute = s.Attribute, Option = s.Option })
                 .ToList()

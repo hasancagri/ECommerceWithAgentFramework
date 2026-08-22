@@ -64,4 +64,8 @@ public static class IntegrationEvents
         string Barcode,
         Guid ProductId,
         int InitialStock);
+
+    // 044: Reviews → Storefront. Visible yorumlardan MUTLAK özet (delta değil) — geç/yeniden teslim
+    // son-yazan-kazanır ile güvenli. Count=0 ⇒ tüketici özeti temizler (rozet çizilmez).
+    public record ReviewSummaryChanged(Guid ProductId, decimal Average, int Count);
 }

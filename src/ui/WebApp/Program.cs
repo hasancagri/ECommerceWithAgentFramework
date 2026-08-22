@@ -66,6 +66,7 @@ builder.Services.AddScoped<StockService>();
 builder.Services.AddScoped<StorefrontService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<MerchantInformationService>();
+builder.Services.AddScoped<ReviewsService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
@@ -105,6 +106,13 @@ builder.Services.AddRefitClient<IStorefrontRefitService>().ConfigureHttpClient(c
 builder.Services.AddRefitClient<ICustomerRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://customer-api");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+
+
+// 044: Reviews API — liste anonim, form/submit kullanici token'iyla (reviews.write).
+builder.Services.AddRefitClient<IReviewsRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://reviews-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
@@ -155,6 +163,8 @@ builder.Services.AddAuthentication(configureOption =>
         // 033: merchant kimligi ekrani. Talep herkese, verilme role bagli (030): granted =
         // requested ∩ rol demeti — customer demetinde yok, yalniz admin token'ina biner.
         options.Scope.Add("merchant.credentials.write");
+        // 044: urun yorumu yazma + uygunluk sorgusu (Order purchase-check gRPC'si de ayni scope).
+        options.Scope.Add("reviews.write");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // 030 RBAC: MapInboundClaims (default true) gelen "role"u ClaimTypes.Role (uzun URI)'ye

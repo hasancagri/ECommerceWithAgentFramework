@@ -15,4 +15,7 @@ public record StorefrontProductDto(
     string? Category,
     // 016: kategori/marka Id'leri — kartta tıklanabilir filtre linki için gerekir.
     Guid? CategoryId,
-    Guid? BrandId);
+    Guid? BrandId,
+    // 044: kart yıldız rozeti — null/0 = çizilmez.
+    decimal? RatingAverage = null,
+    int RatingCount = 0);

@@ -11,6 +11,15 @@
 
         <div class="card-body">
             <h5 class="card-title">@Model.Name</h5>
+            @* 044: yildiz rozeti — yorumsuz urunde cizilmez (FR-006). *@
+            @if (Model.RatingCount > 0 && Model.RatingAverage is not null)
+            {
+                <p class="card-text mb-1">
+                    <span class="text-warning">★</span>
+                    <strong>@Model.RatingAverage.Value.ToString("0.0")</strong>
+                    <small class="text-muted">(@Model.RatingCount)</small>
+                </p>
+            }
             <p class="card-text">
                 @* FR-009: stok null = bilinmiyor, rozet yok; 0 = stokta yok; >0 = stokta. *@
                 @if (Model.IsInStock == true)

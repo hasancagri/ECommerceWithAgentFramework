@@ -14,7 +14,10 @@ public record StorefrontProductDetailDto(
     bool IsDeleted,
     int? StockQuantity,
     bool? IsInStock,
-    List<ProductSpecDto>? Specs);
+    List<ProductSpecDto>? Specs,
+    // 044: detay yıldız özeti — null/0 = çizilmez.
+    decimal? RatingAverage = null,
+    int RatingCount = 0);
 
 // 043: detay spec tablosu satiri (kanonik adlar).
 public record ProductSpecDto(string Attribute, string Option);

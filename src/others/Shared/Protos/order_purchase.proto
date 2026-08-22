@@ -1,0 +1,21 @@
+// Satin-alma kaniti — Reviews'in "bu kullanici bu urunu aldi mi" sorusu (spec 044).
+// Sunucu: Order.Api (GrpcServices=Server). Istemci: Reviews.Api (GrpcServices=Client).
+syntax = "proto3";
+
+option csharp_namespace = "Shared.Grpc.Order";
+
+package orderpurchase;
+
+service OrderPurchase {
+  // Kullanicinin urunu iceren en az bir Confirmed siparisi var mi? (044 R1)
+  rpc HasConfirmedPurchase (HasConfirmedPurchaseRequest) returns (HasConfirmedPurchaseReply);
+}
+
+message HasConfirmedPurchaseRequest {
+  string user_id = 1;     // Guid; token sub ile ESLESMEK ZORUNDA (sunucu guard'i)
+  string product_id = 2;  // Guid
+}
+
+message HasConfirmedPurchaseReply {
+  bool has_purchase = 1;
+}

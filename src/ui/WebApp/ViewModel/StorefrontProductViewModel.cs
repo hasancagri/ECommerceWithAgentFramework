@@ -16,7 +16,10 @@ public record StorefrontProductViewModel(
     string? Category,
     Guid? CategoryId,
     Guid? BrandId,
-    List<ProductSpecViewModel>? Specs = null)
+    List<ProductSpecViewModel>? Specs = null,
+    // 044: yıldız özeti (Storefront satırından) — null/0 = rozet çizilmez.
+    decimal? RatingAverage = null,
+    int RatingCount = 0)
 {
     public string TruncateDescription(int maxLength)
     {

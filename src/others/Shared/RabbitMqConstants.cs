@@ -104,4 +104,16 @@ public static class RabbitMqConstants
             public const string Stock = ProcurementEvents.StockQueue;
         }
     }
+
+    // 044: Reviews yayınlar, Storefront satırına RatingAverage/RatingCount yazar.
+    // Storefront TEK kuyruk deseni: mevcut storefront.events kuyruğuna bağlanır (Sequential).
+    public static class ReviewSummaryChanged
+    {
+        public const string Exchange = "reviews.summary-changed";
+
+        public static class Queues
+        {
+            public const string Storefront = StorefrontEvents.Queue;
+        }
+    }
 }
