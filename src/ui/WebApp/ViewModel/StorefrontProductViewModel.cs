@@ -19,7 +19,9 @@ public record StorefrontProductViewModel(
     List<ProductSpecViewModel>? Specs = null,
     // 044: yıldız özeti (Storefront satırından) — null/0 = rozet çizilmez.
     decimal? RatingAverage = null,
-    int RatingCount = 0)
+    int RatingCount = 0,
+    // 045: ailenin görünür üye adedi (ailesizde 1); >1 ise kart "N varyant" rozeti.
+    int VariantCount = 1)
 {
     public string TruncateDescription(int maxLength)
     {

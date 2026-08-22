@@ -18,4 +18,6 @@ public record StorefrontProductDto(
     Guid? BrandId,
     // 044: kart yıldız rozeti — null/0 = çizilmez.
     decimal? RatingAverage = null,
-    int RatingCount = 0);
+    int RatingCount = 0,
+    // 045: ailenin görünür üye adedi (ailesizde 1); >1 ise "N varyant" rozeti.
+    int VariantCount = 1);

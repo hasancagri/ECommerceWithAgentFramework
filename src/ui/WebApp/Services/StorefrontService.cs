@@ -32,7 +32,8 @@ public class StorefrontService(
             .Select(p => new StorefrontProductViewModel(p.ProductId, p.Name, p.Description, p.Brand,
                 p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
                 p.CategoryId, p.BrandId,
-                RatingAverage: p.RatingAverage, RatingCount: p.RatingCount))
+                RatingAverage: p.RatingAverage, RatingCount: p.RatingCount,
+                VariantCount: p.VariantCount))
             .ToList();
 
         return ServiceResult<PagedProductListViewModel>.Success(new PagedProductListViewModel(
@@ -79,5 +80,24 @@ public class StorefrontService(
             p.CategoryId, p.BrandId,
             (p.Specs ?? []).Select(s => new ProductSpecViewModel(s.Attribute, s.Option)).ToList(),
             RatingAverage: p.RatingAverage, RatingCount: p.RatingCount));
+    }
+
+    // 045: ürünün varyant ailesi; ailesiz/tek üye/404 → null (WebApp seçici çizmez).
+    public async Task<VariantFamilyViewModel?> GetFamilyAsync(Guid productId)
+    {
+        var response = await storefrontRefitService.GetFamily(productId);
+        if (!response.IsSuccessStatusCode || response.Content is null)
+            return null;
+
+        var f = response.Content;
+        if (f.Members.Count <= 1)
+            return null; // tek üye → seçici yok
+
+        var members = f.Members.Select(m => new VariantMemberViewModel(
+            m.ProductId, m.Name, m.Price, m.IsInStock, m.IsCurrent,
+            m.Specs.ToDictionary(s => s.Attribute, s => s.Option))).ToList();
+        var axes = f.Axes.Select(a => new VariantAxisViewModel(a.Attribute, a.Options)).ToList();
+
+        return new VariantFamilyViewModel(axes, members);
     }
 }

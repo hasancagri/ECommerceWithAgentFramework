@@ -60,6 +60,7 @@ public class ProcurementEventHandlers
         }
 
         product.SetIdentifiers(evt.Sku, gtin: evt.Barcode, manufacturerPartNumber: null);
+        product.SetFamilyCode(evt.FamilyCode); // 045: null gelirse aileden çıkar
         product.SetBrand(brand.Id);
 
         // 040 pasif alanları bu feature ile dolar: ölçü feed'den (0 = bilinmiyor), SEO kanonikten türetilir.
@@ -109,7 +110,8 @@ public class ProcurementEventHandlers
             product.Id, product.Name, product.FullDescription, product.Price.Amount,
             brand.Id, brand.Name, category.Id, category.Name,
             product.ImageUrl, IsDeleted: false,
-            Specs: ResolveSpecNames(product, registry)));
+            Specs: ResolveSpecNames(product, registry),
+            FamilyCode: product.FamilyCode));
 
         // Yalnız YENİ üründe: Stock barkod eşlemesini kurar + ilk OnHand'i yazar (yarış edge'i kapanır — R4).
         if (isNew)
@@ -159,7 +161,8 @@ public class ProcurementEventHandlers
             product.Id, product.Name, product.FullDescription, product.Price.Amount,
             brand.Id, brand.Name, category.Id, category.Name,
             product.ImageUrl, IsDeleted: false,
-            Specs: ResolveSpecNames(product, registry)));
+            Specs: ResolveSpecNames(product, registry),
+            FamilyCode: product.FamilyCode));
     }
 
     // 043: atama Id'lerini kanonik adlara çevirir (event sözleşmesi = AD). Registry'de artık

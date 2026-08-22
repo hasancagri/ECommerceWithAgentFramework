@@ -2,7 +2,7 @@
   {
     "barcode": "8690000000001",
     "supplierSku": "A-00001",
-    "name": "Peak Kulaklık 1",
+    "name": "Peak Kulaklik Pro",
     "description": "Peak Kulaklık 1: Elektronik kategorisinde güvenilir, garantili ürün.",
     "brand": "Peak",
     "category": "Elektronik/Kulaklık",
@@ -13,10 +13,9 @@
     "width": 16,
     "height": 8,
     "attributes": {
-      "Renk": "Kırmızı",
-      "Materyal": "Çelik",
-      "Garanti Süresi": "3 Yıl"
-    }
+      "Renk": "Kırmızı"
+    },
+    "familyCode": "FAM-KULAKLIK"
   },
   {
     "barcode": "8690000000002",
@@ -1410,7 +1409,7 @@
   {
     "barcode": "8690000000101",
     "supplierSku": "A-00101",
-    "name": "Peak Kahve Makinesi 101",
+    "name": "Peak Kulaklik Pro",
     "description": "Peak Kahve Makinesi 101: Ev Aletleri kategorisinde güvenilir, garantili ürün.",
     "brand": "Peak",
     "category": null,
@@ -1419,7 +1418,11 @@
     "weight": 2.4,
     "length": 30,
     "width": 20,
-    "height": 32
+    "height": 32,
+    "familyCode": "FAM-KULAKLIK",
+    "attributes": {
+      "Renk": "Siyah"
+    }
   },
   {
     "barcode": "8690000000102",
@@ -2810,7 +2813,7 @@
   {
     "barcode": "8690000000201",
     "supplierSku": "A-00201",
-    "name": "Kratos Blender 201",
+    "name": "Peak Kulaklik Pro",
     "description": "Kratos Blender 201: Ev Aletleri kategorisinde güvenilir, garantili ürün.",
     "brand": "Kratos",
     "category": "Ev Aletleri/Blender",
@@ -2819,7 +2822,11 @@
     "weight": 1.8,
     "length": 18,
     "width": 18,
-    "height": 40
+    "height": 40,
+    "familyCode": "FAM-KULAKLIK",
+    "attributes": {
+      "Renk": "Beyaz"
+    }
   },
   {
     "barcode": "8690000000202",
@@ -4210,7 +4217,7 @@
   {
     "barcode": "8690000000301",
     "supplierSku": "A-00301",
-    "name": "Selene Cüzdan 301",
+    "name": "Orbit Termos",
     "description": "Selene Cüzdan 301: Moda kategorisinde güvenilir, garantili ürün.",
     "brand": "Selene",
     "category": "Moda/Cüzdan",
@@ -4219,7 +4226,12 @@
     "weight": 0.2,
     "length": 12,
     "width": 2,
-    "height": 9
+    "height": 9,
+    "familyCode": "FAM-TERMOS",
+    "attributes": {
+      "Renk": "Siyah",
+      "Materyal": "Çelik"
+    }
   },
   {
     "barcode": "8690000000302",
@@ -5610,7 +5622,7 @@
   {
     "barcode": "8690000000401",
     "supplierSku": "A-00401",
-    "name": "Volta Saç Kurutma 401",
+    "name": "Orbit Termos",
     "description": "Volta Saç Kurutma 401: Kişisel Bakım kategorisinde güvenilir, garantili ürün.",
     "brand": "Volta",
     "category": "Kişisel Bakım/Saç Kurutma",
@@ -5619,7 +5631,12 @@
     "weight": 0.6,
     "length": 28,
     "width": 10,
-    "height": 24
+    "height": 24,
+    "familyCode": "FAM-TERMOS",
+    "attributes": {
+      "Renk": "Beyaz",
+      "Materyal": "Plastik"
+    }
   },
   {
     "barcode": "8690000000402",
@@ -7019,7 +7036,8 @@
     "weight": 5.0,
     "length": 30,
     "width": 14,
-    "height": 14
+    "height": 14,
+    "familyCode": "FAM-SOLO"
   },
   {
     "barcode": "8690000000502",
@@ -18223,7 +18241,8 @@
     "attributes": {
       "Renk": "Siyah",
       "Garanti Süresi": "2 Yıl"
-    }
+    },
+    "familyCode": "FAM-A-WINS"
   },
   {
     "barcode": "8690000002502",

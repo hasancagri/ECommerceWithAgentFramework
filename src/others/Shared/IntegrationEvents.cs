@@ -23,7 +23,9 @@ public static class IntegrationEvents
         string Category,
         string? ImageUrl,
         bool IsDeleted,
-        List<ProductSpec>? Specs = null);
+        List<ProductSpec>? Specs = null,
+        // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
+        string? FamilyCode = null);
     public record StockChangedEvent(Guid ProductId, int Quantity);
 
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
@@ -47,7 +49,9 @@ public static class IntegrationEvents
         decimal Price,
         int Stock,
         // 043: kanonik özellikler (attribute-başına merge + kapalı-liste enrich sonrası adlar).
-        List<ProductSpec>? Specs = null);
+        List<ProductSpec>? Specs = null,
+        // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
+        string? FamilyCode = null);
 
     // 041: Procurement → Catalog + Stock. Yalnız BuyBoxDecision değişince yayınlanır (value-eşitlik).
     // SupplierId null = kazanan yok (tüm offer'lar stoksuz/delisted): fiyat son bilinen, stok 0.

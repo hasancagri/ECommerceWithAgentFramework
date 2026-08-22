@@ -30,6 +30,10 @@ public class StorefrontView
     public List<SpecPair> Specs { get; private set; } = [];
     public string[] SpecKeys { get; private set; } = [];
 
+    // 045: varyant ailesi kodu (opsiyonel; null = ailesiz). Liste gruplama anahtarı
+    // coalesce(FamilyCode, ProductId) sorgu-zamanında kurulur (ayrı bayrak saklanmaz).
+    public string? FamilyCode { get; private set; }
+
     // Stock kaynagi — null = henuz raporlamadi ("bilinmiyor"). In-stock bu adetten turetilir.
     public int? StockQuantity { get; private set; }
 
@@ -45,7 +49,8 @@ public class StorefrontView
 
     public void ApplyCatalog(string name, string description, decimal price,
         Guid brandId, string brand, Guid categoryId, string category,
-        string? imageUrl, bool isDeleted, IReadOnlyList<SpecPair>? specs = null)
+        string? imageUrl, bool isDeleted, IReadOnlyList<SpecPair>? specs = null,
+        string? familyCode = null)
     {
         Name = name;
         Description = description;
@@ -58,6 +63,8 @@ public class StorefrontView
         IsDeleted = isDeleted;
         Specs = specs?.ToList() ?? [];
         SpecKeys = Specs.Select(s => s.Key).ToArray();
+        // 045: null gelirse aileden çıkar (aile üyeliği Catalog'dan akan güncel değerdir).
+        FamilyCode = string.IsNullOrWhiteSpace(familyCode) ? null : familyCode;
     }
 
     public void ApplyStock(int quantity) => StockQuantity = quantity;

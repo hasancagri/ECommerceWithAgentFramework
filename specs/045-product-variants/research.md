@@ -33,19 +33,20 @@
 - **Alternatives**: Catalog'da tutmayıp Procurement→Storefront direkt taşımak — zincir kırılır
   (Storefront'un kaynağı ProductChangedEvent); ELENDİ.
 
-## R5 — Liste gruplaması: sorgu-zamanı Postgres `DISTINCT ON` (projeksiyon bayrağı DEĞİL)
+## R5 — Liste gruplaması: filtreleme LINQ'te + gruplama BELLEK-içi (implement'te DISTINCT ON'dan dönüldü)
 
-- **Decision**: `GetStorefrontProductList` filtre uygulanmış küme üzerinde
-  `DISTINCT ON (coalesce(FamilyCode, ProductId))` + temsilci sırası
-  `(stok>0) DESC, Price ASC, ProductId` ile aile başına TEK satır seçer; dış sorgu Name sırası +
-  sayfalama. Count = `count(DISTINCT coalesce(...))`. Marten raw/AdvancedSql ile (040/043
-  MatchesSql dersi: karmaşık LINQ kompoze etme, SQL'e in). Bellek-içi eş semantik çekirdek
-  (temsilci kuralı) birim testli; SQL canlı doğrulanır.
-- **Rationale**: FR-009 temsilciyi FİLTRE-bağlamlı yapar ("Renk: Siyah" → siyah üye temsil eder);
-  satıra yazılmış sabit temsilci bayrağı bunu karşılayamaz. Sayfalama DISTINCT'ten sonra
-  uygulanmalı → tek SQL.
-- **Alternatives**: (a) Projeksiyon-anı IsRepresentative bayrağı — filtre bağlamında yanlış,
-  ELENDİ; (b) tüm kümeyi belleğe çekip gruplama — sayfalama/ölçek ilkesizliği, ELENDİ.
+- **Decision (revize)**: Filtreleme mevcut LINQ/jsonb SQL'de kalır (test edilmiş `ApplyFilters`
+  + `ApplySpecFilters`). Filtreli küme materyalize edilip `GroupToRepresentatives` (saf çekirdek)
+  aile başına temsilci `(stok>0) DESC, Price ASC, ProductId` seçer, sayfalama bellek-içi. Count =
+  aile-anahtarı distinct. FamilyKey = `coalesce(FamilyCode, ProductId)`.
+- **Rationale**: DISTINCT ON'lu raw SQL, jsonb spec filtrelerini + sayfalamayı da SQL'e taşımayı
+  gerektirir → test edilmiş LINQ çekirdeği kaybolur, tam da 040/043'ün uyardığı kırılganlık geri
+  gelir. Ölçek yüzlerce ürün (dev/demo); materyalize + bellek-içi gruplama "mevcut gecikme sınıfı"
+  hedefini karşılar ve FR-009 filtre-bağlamlı temsilciyi doğal verir (yalnız filtreyi geçen üyeler
+  gruba girer). Temsilci kuralı saf çekirdek + birim testli (SC-003 birebirlik testli).
+- **Alternatives**: (a) DISTINCT ON raw SQL — filtre/sayfalama SQL'e taşınır, kırılgan, ELENDİ
+  (implement'te denenmeden bu risk görüldü); (b) Projeksiyon-anı IsRepresentative bayrağı — filtre
+  bağlamında yanlış, ELENDİ. Ölçek milyonlara çıkarsa DISTINCT ON'a geçiş aday not.
 
 ## R6 — Facet sayıları: aile-bazlı distinct (mevcut in-memory yol içinde)
 

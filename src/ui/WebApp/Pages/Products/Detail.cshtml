@@ -48,6 +48,36 @@
                     </p>
                     <hr>
 
+                    @* 045: varyant seçici — yalnız aileli üründe (ayrışan eksen varsa); ailesizde hiç yok. *@
+                    @if (Model.Family is { HasSelector: true })
+                    {
+                        foreach (var selector in Model.Family.BuildSelectors())
+                        {
+                            <h5 class="card-title">@selector.Attribute</h5>
+                            <div class="mb-3 d-flex flex-wrap gap-2">
+                                @foreach (var opt in selector.Options)
+                                {
+                                    @if (opt.IsCurrent)
+                                    {
+                                        <span class="btn btn-primary btn-sm disabled">@opt.Value</span>
+                                    }
+                                    else if (opt.TargetProductId is not null)
+                                    {
+                                        <a class="btn btn-outline-primary btn-sm @(opt.IsInStock ? "" : "opacity-50")"
+                                           asp-page="/Products/Detail" asp-route-id="@opt.TargetProductId">
+                                            @opt.Value@(opt.IsInStock ? "" : " (stok yok)")
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="btn btn-outline-secondary btn-sm disabled">@opt.Value</span>
+                                    }
+                                }
+                            </div>
+                        }
+                        <hr>
+                    }
+
                     @* 043 US2: kanonik ozellik tablosu — ozelliksiz urunde bolum hic gorunmez. *@
                     @if (Model.Product.Specs is { Count: > 0 })
                     {

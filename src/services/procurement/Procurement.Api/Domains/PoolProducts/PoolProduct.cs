@@ -124,7 +124,10 @@ public class PoolProduct : AggregateRoot
             .Select(g => g.First())
             .ToList();
 
-        var merged = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs);
+        // 045: familyCode alan-bazlı merge — Priority sırasında ilk DOLU değer kazanır (sıra-bağımsız).
+        var familyCode = active.Select(l => l.FamilyCode).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+        var merged = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs, familyCode);
         MergedContentHash = merged.ComputeHash();
 
         // Enrich overlay: yalnız hâlâ eksik içerik alanları saklı AI sonucundan dolar (FR-009).
@@ -142,7 +145,7 @@ public class PoolProduct : AggregateRoot
                     .Where(e => specs.All(s => s.Attribute != e.Attribute)))
                 .ToList();
 
-        Canonical = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs);
+        Canonical = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs, familyCode);
         if (!Canonical.IsComplete)
             Status = PoolProductStatus.Pending;
 
@@ -195,7 +198,7 @@ public class PoolProduct : AggregateRoot
                 .ToList();
 
             Canonical = CanonicalContent.Create(Canonical.Name, description, Canonical.Brand,
-                category, subCategory, Canonical.Sku, Canonical.Dimensions, specs);
+                category, subCategory, Canonical.Sku, Canonical.Dimensions, specs, Canonical.FamilyCode);
         }
 
         Status = PoolProductStatus.Enriched;

@@ -24,6 +24,9 @@ public class SupplierListing
     public Dictionary<string, string> RawAttributes { get; private set; } = new();
     public List<SpecValue> CanonicalSpecs { get; private set; } = [];
 
+    // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
+    public string? FamilyCode { get; private set; }
+
     public string ContentHash { get; private set; } = default!;
     public bool IsDelisted { get; private set; }
     public DateTime LastSeenUtc { get; private set; }
@@ -55,6 +58,7 @@ public class SupplierListing
         Dimensions = row.Dimensions;
         RawAttributes = new Dictionary<string, string>(row.RawAttributes);
         CanonicalSpecs = row.CanonicalSpecs.ToList();
+        FamilyCode = row.FamilyCode;
         ContentHash = row.ComputeContentHash();
         IsDelisted = false;
         LastSeenUtc = DateTime.UtcNow;
