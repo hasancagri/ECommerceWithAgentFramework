@@ -1,5 +1,3 @@
-using Refit;
-using WebApp.Pages.Order.Dto;
 
 namespace WebApp.Services.Refit;
 

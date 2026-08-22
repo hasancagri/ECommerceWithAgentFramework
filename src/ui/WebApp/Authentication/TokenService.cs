@@ -1,5 +1,4 @@
 using Duende.IdentityModel.Client;
-using Microsoft.AspNetCore.Authentication;
 
 namespace WebApp.Authentication;
 

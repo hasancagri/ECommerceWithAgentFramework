@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-
 namespace Identity.Server.Rbac;
 
 // 030 RBAC: admin yönetim yüzeyinin + register + seed'in kullandığı rol/scope/atama servisi.

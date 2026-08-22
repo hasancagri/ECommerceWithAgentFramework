@@ -1,8 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using WebApp.Pages.Admin.Dto;
-using WebApp.Services;
 
 namespace WebApp.Pages.Admin;
 

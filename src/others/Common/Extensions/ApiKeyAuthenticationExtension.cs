@@ -1,9 +1,7 @@
 using Common.Auths;
 using Common.Options;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Common.Extensions;
 

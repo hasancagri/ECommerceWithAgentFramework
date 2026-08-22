@@ -1,6 +1,3 @@
-using System.Net;
-using WebApp.Extensions;
-using WebApp.Services.Refit;
 
 namespace WebApp.Services;
 

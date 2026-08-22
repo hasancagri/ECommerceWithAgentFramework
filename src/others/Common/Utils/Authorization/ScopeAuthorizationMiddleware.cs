@@ -1,6 +1,3 @@
-using System.Reflection;
-using Microsoft.AspNetCore.Http;
-using Wolverine;
 
 namespace Common.Utils.Authorization;
 

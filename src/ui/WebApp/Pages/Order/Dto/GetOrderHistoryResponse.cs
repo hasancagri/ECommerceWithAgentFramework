@@ -1,6 +1,5 @@
 ﻿#region
 
-using WebApp.Pages.Order.ViewModel;
 
 #endregion
 

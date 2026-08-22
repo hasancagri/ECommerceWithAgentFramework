@@ -31,7 +31,7 @@ public static class UpdateAddress
 
             var result = book.UpdateAddress(cmd.AddressId, address.Data!);
             if (!result.IsSuccess)
-                return result;
+                return FeatureResultModel.Error(result.Messages);
 
             session.Store(book);
             return FeatureResultModel.Ok();

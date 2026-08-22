@@ -1,7 +1,3 @@
-using System.Net;
-using WebApp.Extensions;
-using WebApp.Pages.Account.Dto;
-using WebApp.Services.Refit;
 
 namespace WebApp.Services;
 

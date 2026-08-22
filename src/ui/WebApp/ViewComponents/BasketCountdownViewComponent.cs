@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using WebApp.Pages.Basket.ViewModel;
-using WebApp.Services;
 
 namespace WebApp.ViewComponents;
 

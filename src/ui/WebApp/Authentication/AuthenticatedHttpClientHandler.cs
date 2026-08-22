@@ -1,7 +1,5 @@
-using System.Net;
 using System.Security.Claims;
 using Duende.IdentityModel.Client;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 

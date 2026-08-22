@@ -20,7 +20,7 @@ public static class DeleteAddress
 
             var result = book.RemoveAddress(cmd.AddressId);
             if (!result.IsSuccess)
-                return result;
+                return FeatureResultModel.Error(result.Messages);
 
             session.Store(book);
             return FeatureResultModel.Ok();

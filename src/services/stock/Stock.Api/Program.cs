@@ -80,8 +80,11 @@ builder.Services.AddApiVersioning(options =>
 });
 
 // 012: rezervasyon TTL/sweep config binding.
-builder.Services.Configure<ReservationOptions>(
-    builder.Configuration.GetSection(ReservationOptions.SectionName));
+builder.Services.AddOptions<ReservationOptions>()
+    .BindConfiguration(ReservationOptions.SectionName)
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<ReservationOptions>(
+    sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ReservationOptions>>().Value);
 
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,

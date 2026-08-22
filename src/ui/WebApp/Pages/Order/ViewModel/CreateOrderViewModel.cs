@@ -1,8 +1,6 @@
 #region
 
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using WebApp.Pages.Account.Dto;
-using WebApp.Pages.Basket.ViewModel;
 
 #endregion
 

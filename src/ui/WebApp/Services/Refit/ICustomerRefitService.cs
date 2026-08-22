@@ -1,5 +1,3 @@
-using Refit;
-using WebApp.Pages.Account.Dto;
 using WebApp.Pages.Admin.Dto;
 
 namespace WebApp.Services.Refit;

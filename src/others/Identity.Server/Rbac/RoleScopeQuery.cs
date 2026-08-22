@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-
 namespace Identity.Server.Rbac;
 
 // 030 RBAC: bir kullanıcının rol demetini (rol→scope) çözer. Token verme yolunda

@@ -76,8 +76,11 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("basket");
 
 // 017: sepet capasi suresi (Basket:ReservationDuration, varsayilan 5 dk).
-builder.Services.Configure<Basket.Api.Domains.Baskets.BasketReservationOptions>(
-    builder.Configuration.GetSection(Basket.Api.Domains.Baskets.BasketReservationOptions.SectionName));
+builder.Services.AddOptions<Basket.Api.Domains.Baskets.BasketReservationOptions>()
+    .BindConfiguration(Basket.Api.Domains.Baskets.BasketReservationOptions.SectionName)
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<Basket.Api.Domains.Baskets.BasketReservationOptions>(
+    sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Basket.Api.Domains.Baskets.BasketReservationOptions>>().Value);
 
 builder.Services.AddHttpContextAccessor();
 

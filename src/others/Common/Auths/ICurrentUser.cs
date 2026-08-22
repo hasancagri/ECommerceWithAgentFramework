@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Common.Dependencies;
 
 namespace Common.Auths;

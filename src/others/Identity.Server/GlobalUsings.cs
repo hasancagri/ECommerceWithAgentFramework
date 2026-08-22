@@ -1,0 +1,11 @@
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.AspNetCore.Mvc.RazorPages;
+global using Identity.Server.Rbac;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Authorization;
+global using System.Security.Claims;
+global using OpenIddict.Server.AspNetCore;
+global using OpenIddict.Abstractions;
+global using Microsoft.AspNetCore.Authentication;
+global using static OpenIddict.Abstractions.OpenIddictConstants;

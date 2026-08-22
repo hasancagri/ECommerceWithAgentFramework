@@ -1,10 +1,7 @@
 using Identity.Server;
 using Identity.Server.ApiKeys;
 using Identity.Server.Connect;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using static OpenIddict.Abstractions.OpenIddictConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 

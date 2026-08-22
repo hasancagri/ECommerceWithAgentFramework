@@ -20,7 +20,7 @@ public static class SetDefaultCard
 
             var result = wallet.SetDefaultCard(cmd.CardId);
             if (!result.IsSuccess)
-                return result;
+                return FeatureResultModel.Error(result.Messages);
 
             session.Store(wallet);
             return FeatureResultModel.Ok();

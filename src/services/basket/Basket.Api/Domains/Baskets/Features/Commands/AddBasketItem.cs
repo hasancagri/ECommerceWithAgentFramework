@@ -21,7 +21,7 @@ public static class AddBasketItem
             AddBasketItemCommand cmd,
             IDocumentSession session,
             StockReservationClientProxy reservation,
-            IOptions<BasketReservationOptions> options,
+            BasketReservationOptions options,
             CancellationToken ct)
         {
             var basket = await session.Query<Basket>()
@@ -38,7 +38,7 @@ public static class AddBasketItem
 
             // 017 (FR-002/003): capa adayi = mevcut capa ?? now + Duration. Rezervasyon capayla yaratilir;
             // basarida (yalniz capa yokken) kurulur — sonraki eklemeler capaya dokunmaz.
-            var anchor = basket.ReservationExpiresAt ?? now.Add(options.Value.ReservationDuration);
+            var anchor = basket.ReservationExpiresAt ?? now.Add(options.ReservationDuration);
 
             // 012: adet 1 artar; yeni toplam adet Stock'ta rezerve edilir (ayna). Yetersiz/erisilemez
             // ise sepete YAZILMAZ (fail-closed, FR-018/US1).

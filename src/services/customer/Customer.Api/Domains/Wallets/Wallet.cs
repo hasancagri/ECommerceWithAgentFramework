@@ -21,39 +21,41 @@ public class Wallet : AggregateRoot
     /// <summary>Kart ekler; gecmis son-kullanma reddedilir (FR-009), dogrulama domain'de.</summary>
     /// <remarks>Handler: AddCardCommandHandler</remarks>
     // Kart ekler. Gecmis son-kullanma reddedilir (FR-009) — dogrulama domain'de, tokenizer stub'ta degil.
-    public FeatureResultModel AddCard(SavedCard card, DateTimeOffset now)
+    public ResultDomain AddCard(SavedCard card, DateTimeOffset now)
     {
         if (!IsExpiryInFuture(card.ExpiryMonth, card.ExpiryYear, now))
-            return FeatureResultModel.Error(
+            return ResultDomain.Error(
                 new MessageItem { Property = nameof(card.ExpiryYear), Code = CustomerResourceConstants.INVALID_VALUE });
 
         _cards.Add(card);
-        return FeatureResultModel.Ok();
+        return ResultDomain.Ok();
     }
 
     /// <summary>Karti cikarir + token'ini doner (handler gateway'de best-effort revoke eder).</summary>
     /// <remarks>Handler: DeleteCardCommandHandler</remarks>
     // Karti cikarir + token'ini doner (handler gateway'de best-effort revoke eder — fail-open).
-    public FeatureObjectResultModel<RemovedCard> RemoveCard(Guid cardId)
+    public ResultDomain<RemovedCard> RemoveCard(Guid cardId)
     {
         var card = _cards.FirstOrDefault(x => x.Id == cardId);
-        if (card is null) return FeatureObjectResultModel<RemovedCard>.NotFound();
+        if (card is null)
+            return ResultDomain<RemovedCard>.Error(new MessageItem { Code = CustomerResourceConstants.RECORD_NOT_FOUND });
         _cards.Remove(card);
-        return FeatureObjectResultModel<RemovedCard>.Ok(new RemovedCard { Token = card.Token });
+        return ResultDomain<RemovedCard>.Ok(new RemovedCard { Token = card.Token });
     }
 
     /// <summary>Hedef karti varsayilan yapar; digerlerini temizler (≤1 varsayilan invariant).</summary>
     /// <remarks>Handler: SetDefaultCardCommandHandler</remarks>
     // ≤1 varsayilan invariant: hedef bulunur, digerleri false, hedef true (tek yazma — atomik).
-    public FeatureResultModel SetDefaultCard(Guid cardId)
+    public ResultDomain SetDefaultCard(Guid cardId)
     {
         var target = _cards.FirstOrDefault(x => x.Id == cardId);
-        if (target is null) return FeatureResultModel.NotFound();
+        if (target is null)
+            return ResultDomain.Error(new MessageItem { Code = CustomerResourceConstants.RECORD_NOT_FOUND });
 
         foreach (var card in _cards)
             card.SetDefault(card.Id == cardId);
 
-        return FeatureResultModel.Ok();
+        return ResultDomain.Ok();
     }
 
     /// <summary>Verilen ay/yil son-kullanmanin gelecekte olup olmadigini dogrular.</summary>
