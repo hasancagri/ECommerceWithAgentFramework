@@ -117,7 +117,7 @@ test-first; handler/endpoint/UI/agent testsiz (canlı doğrulama quickstart.md).
 ## Phase 7: Polish & Doğrulama
 
 - [x] T036 `dotnet build` + `dotnet test` tüm çözüm yeşil (mevcut testlerde regresyon 0)
-- [ ] T037 quickstart.md canlı doğrulama — Aspire ayakta, 9 adım + beklenen sonuç tablosu
+- [x] T037 quickstart.md canlı doğrulama — Aspire ayakta, 9 adım + beklenen sonuç tablosu (2026-08-22 PASS)
 - [x] T038 [P] CLAUDE.md + README: Reviews BC bölümü (özlü; 150 karakter kuralı)
 
 ---
