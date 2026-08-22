@@ -174,7 +174,7 @@ public class Product : AggregateRoot
 
     /// <summary>Özellik atamalarını TAM-DEĞİŞTİRME ile yazar (043; boş liste = temizleme). Aynı
     /// attribute'un birden çok değeri reddedilir; hatada mevcut atamalar değişmez.</summary>
-    /// <remarks>Handler: ProcurementEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
+    /// <remarks>Handler: CatalogEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
     public ResultDomain SetSpecifications(IReadOnlyList<ProductSpecificationAssignment> assignments)
     {
         if (assignments.GroupBy(a => a.AttributeId).Any(g => g.Count() > 1))
@@ -187,7 +187,7 @@ public class Product : AggregateRoot
     }
 
     /// <summary>045: varyant ailesi kodunu yazar (null/boş = aileden çıkar). Feed'den akan opak kimlik.</summary>
-    /// <remarks>Handler: ProcurementEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
+    /// <remarks>Handler: CatalogEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
     public ResultDomain SetFamilyCode(string? familyCode)
     {
         FamilyCode = string.IsNullOrWhiteSpace(familyCode) ? null : familyCode.Trim();

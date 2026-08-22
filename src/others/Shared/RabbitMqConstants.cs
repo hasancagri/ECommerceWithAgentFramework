@@ -96,4 +96,26 @@ public static class RabbitMqConstants
             public const string Storefront = StorefrontEvents.Queue;
         }
     }
+
+    // 046: Reviews yayınlar, Reviews.Moderation worker tüketir (worker kendi kuyruğunu bağlar).
+    public static class ReviewModerationRequested
+    {
+        public const string Exchange = "reviews.moderation-requested";
+
+        public static class Queues
+        {
+            public const string Worker = "reviews-moderation.requested";
+        }
+    }
+
+    // 046: Reviews.Moderation worker yayınlar, Reviews tüketir (Reviews kendi kuyruğunu bağlar).
+    public static class ReviewModerated
+    {
+        public const string Exchange = "reviews.moderated";
+
+        public static class Queues
+        {
+            public const string Reviews = "reviews.moderated";
+        }
+    }
 }

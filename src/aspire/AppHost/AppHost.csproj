@@ -21,6 +21,7 @@
       <ProjectReference Include="..\..\ui\WebApp\WebApp.csproj" />
       <ProjectReference Include="..\..\others\Identity.Server\Identity.Server.csproj" />
       <ProjectReference Include="..\..\agents\ChatAgent\ChatAgent.csproj" />
+      <ProjectReference Include="..\..\agents\Reviews.Moderation\Reviews.Moderation.csproj" />
       <ProjectReference Include="..\..\services\supplier\Supplier.Api\Supplier.Api.csproj" />
       <ProjectReference Include="..\..\services\procurement\Procurement.Api\Procurement.Api.csproj" />
       <ProjectReference Include="..\..\services\reviews\Reviews.Api\Reviews.Api.csproj" />

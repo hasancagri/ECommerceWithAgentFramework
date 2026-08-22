@@ -72,4 +72,11 @@ public static class IntegrationEvents
     // 044: Reviews → Storefront. Visible yorumlardan MUTLAK özet (delta değil) — geç/yeniden teslim
     // son-yazan-kazanır ile güvenli. Count=0 ⇒ tüketici özeti temizler (rozet çizilmez).
     public record ReviewSummaryChanged(Guid ProductId, decimal Average, int Count);
+
+    // 046: Reviews → Reviews.Moderation worker. Moderasyon istegi; PII YOK (yalniz metin+yildiz+id).
+    public record ReviewModerationRequested(Guid ReviewId, string Text, int Rating);
+
+    // 046: Reviews.Moderation worker → Reviews. Moderasyon karari; kategori kapali kume
+    // (profanity/insult/personal_attack/none). Reviews ApplyModeration ile uygular.
+    public record ReviewModerated(Guid ReviewId, bool Violation, string Category, string Reason);
 }

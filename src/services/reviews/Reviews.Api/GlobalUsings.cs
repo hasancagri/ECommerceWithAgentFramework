@@ -21,7 +21,6 @@ global using Reviews.Api.Domains.Reviews.Features.Commands;
 global using Reviews.Api.Domains.Reviews.Features.Queries;
 global using Reviews.Api.Domains.Reviews.ValueObjects;
 global using Reviews.Api.Grpc;
-global using Reviews.Api.Options;
 global using Shared;
 global using Shared.Grpc.Order;
 global using Shared.Utils.Constants;

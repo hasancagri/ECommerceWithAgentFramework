@@ -113,6 +113,13 @@ var reviewsApi = builder.AddProject<Projects.Reviews_Api>("reviews-api")
     // Tuketici kuyrugu yayincidan once baglansin (007 dersi): Storefront reviews'tan once ayakta.
     .WaitFor(storefrontApi);
 
+// 046: Reviews moderasyon worker'i — DB'siz agent process (ChatAgent emsali). Reviews ile yalniz
+// RabbitMQ event'leriyle konusur (ReviewModerationRequested tuket → ReviewModerated yayinla).
+// OpenAI user-secret bu projede; Reviews'in OpenAI bagimliligi kalkti.
+builder.AddProject<Projects.Reviews_Moderation>("reviews-moderation-agent")
+    .WithReference(rabbit)
+    .WaitFor(rabbit);
+
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)
