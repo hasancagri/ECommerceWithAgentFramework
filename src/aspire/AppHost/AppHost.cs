@@ -20,7 +20,6 @@ var redis = builder.AddRedis("redis")
 var catalogDb = postgres.AddDatabase("catalogDb");
 var basketDb = postgres.AddDatabase("basketDb");
 var orderDb = postgres.AddDatabase("orderDb");
-var fileDb = postgres.AddDatabase("fileDb");
 var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
@@ -69,14 +68,6 @@ var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
     .WaitFor(rabbit)
     .WaitFor(stockApi)
     .WaitFor(basketApi)
-    .WaitFor(redis);
-
-var fileApi = builder.AddProject<Projects.File_Api>("file-api")
-    .WithReference(fileDb)
-    .WithReference(rabbit)
-    .WithReference(redis)
-    .WaitFor(fileDb)
-    .WaitFor(rabbit)
     .WaitFor(redis);
 
 var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api")
@@ -128,7 +119,6 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(orderApi)
     .WithReference(paymentApi)
     .WithReference(stockApi)
-    .WithReference(fileApi)
     .WithReference(storefrontApi)
     .WithReference(customerApi)
     .WithReference(reviewsApi)
@@ -139,7 +129,6 @@ var web = builder.AddProject<Projects.WebApp>("ecommerce-web");
 web.WithReference(basketApi)
     .WithReference(stockApi)
     .WithReference(orderApi)
-    .WithReference(fileApi)
     .WithReference(paymentApi)
     .WithReference(storefrontApi)
     .WithReference(customerApi)

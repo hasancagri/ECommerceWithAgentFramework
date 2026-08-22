@@ -34,7 +34,6 @@ public static class Config
             ["payment.write"] = "payment.api",
             ["stock.write"] = "stock.api",
             ["stock.reserve"] = "stock.api",
-            ["file.write"] = "file.api",
             ["storefront.read"] = "storefront.api",
             ["customer.read"] = "customer.api",
             ["customer.write"] = "customer.api",
@@ -45,7 +44,7 @@ public static class Config
             ["reviews.write"] = "reviews.api",
         };
 
-    // WebApp BFF'nin talep ettiği 12 servis scope'u (file.write + apikeys.manage HARİÇ; bugünkü Duende paritesi).
+    // WebApp BFF'nin talep ettiği 12 servis scope'u (apikeys.manage HARİÇ; bugünkü Duende paritesi).
     public static readonly string[] BffServiceScopes =
     [
         "catalog.write",
@@ -61,7 +60,7 @@ public static class Config
         "reviews.write",
     ];
 
-    // Tüm API scope'ları (13 servis scope'u + apikeys.manage + identity.roles.manage) — seed edilir.
+    // Tüm API scope'ları (12 servis scope'u + apikeys.manage + identity.roles.manage) — seed edilir.
     // 030: KnownScopes registry bu listeyi tek kaynak olarak kullanır (atanabilir scope kümesi).
     public static IEnumerable<string> AllApiScopes =>
         ScopeResources.Keys.Append(ApiKeysManageScope).Append(IdentityRolesManageScope);
