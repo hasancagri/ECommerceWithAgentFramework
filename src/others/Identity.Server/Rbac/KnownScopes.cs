@@ -20,7 +20,6 @@ public static class KnownScopes
             ["payment.write"] = "Ödeme yazma",
             ["stock.write"] = "Stok yazma (mutlak)",
             ["stock.reserve"] = "Stok rezervasyonu",
-            ["file.write"] = "Dosya/görsel yazma",
             ["storefront.read"] = "Vitrin okuma",
             ["customer.read"] = "Müşteri (cüzdan/adres) okuma",
             ["customer.write"] = "Müşteri (cüzdan/adres) yazma",

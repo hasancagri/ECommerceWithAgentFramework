@@ -43,15 +43,6 @@ builder.Host.UseWolverine(opts =>
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
 
-    rabbit.DeclareExchange(RabbitMqConstants.UploadCoursePicture.Exchange,
-        e => { e.ExchangeType = ExchangeType.Fanout; });
-
-    rabbit.DeclareExchange(RabbitMqConstants.CoursePictureUploaded.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
-    });
-    
     rabbit.DeclareExchange(RabbitMqConstants.ProductChanged.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
@@ -82,8 +73,6 @@ builder.Host.UseWolverine(opts =>
     });
     opts.PublishMessage<Shared.IntegrationEvents.ProductLinked>()
         .ToRabbitExchange(RabbitMqConstants.ProductLinked.Exchange);
-
-    opts.ListenToRabbitQueue(RabbitMqConstants.CoursePictureUploaded.Queues.Catalog);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(

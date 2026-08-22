@@ -47,7 +47,7 @@ public class Product : AggregateRoot
     private readonly List<ProductSpecificationAssignment> _specifications = new();
     public IReadOnlyList<ProductSpecificationAssignment> Specifications => _specifications;
 
-    // ⊕ Ana repo işlevleri: marka ilişkisi (016 düzeni) + görsel (File.Api topolojisi).
+    // ⊕ Ana repo işlevleri: marka ilişkisi (016 düzeni) + görsel URL (feed'den gelir; serving servisi yok).
     public Guid BrandId { get; private set; }
     public string? ImageUrl { get; private set; }
 
@@ -202,7 +202,7 @@ public class Product : AggregateRoot
         return ResultDomain.Ok();
     }
 
-    /// <summary>⊕ Görsel URL'ini atar/temizler (K7: File.Api + gateway-relative yol topolojisi).</summary>
+    /// <summary>⊕ Görsel URL'ini atar/temizler (feed kaynaklı URL; iç serving servisi yok).</summary>
     /// <remarks>Handler: CreateProductCommandHandler, UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain SetImage(string? imageUrl)
     {
