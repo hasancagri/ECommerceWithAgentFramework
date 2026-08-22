@@ -17,7 +17,9 @@ public record SupplierFeedRow(
     decimal Length,
     decimal Width,
     decimal Height,
-    Dictionary<string, string>? Attributes = null);
+    Dictionary<string, string>? Attributes = null,
+    // 045: opsiyonel varyant ailesi kodu — feed round-trip'te korunmalı (yok = ailesiz).
+    string? FamilyCode = null);
 
 // 041: tedarikçi-kodlu mock uçlar. Veri Datasets/supplier-{kod}.rev{N}.json dosyalarından istek
 // anında okunur (dosya değişikliği restart'sız yansır — 005/R12 mirası). Rev başına AYRI dosya:
