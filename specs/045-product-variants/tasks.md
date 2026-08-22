@@ -103,7 +103,7 @@ facet aile-sayımı) test-first; handler/endpoint/UI testsiz (canlı doğrulama 
 ## Phase 6: Polish & Doğrulama
 
 - [x] T024 `dotnet build` + `dotnet test` tüm çözüm yeşil (mevcut testlerde regresyon 0)
-- [ ] T025 quickstart.md canlı doğrulama — Aspire ayakta, 8 adım + beklenen sonuç tablosu
+- [x] T025 quickstart.md canlı doğrulama — Aspire ayakta, 8 adım + beklenen sonuç tablosu
 - [x] T026 [P] CLAUDE.md + README: Variants (barkod ailesi) notu (özlü; 150 karakter kuralı)
 
 ---
