@@ -4,7 +4,7 @@ namespace Reviews.Api;
 // uygulanir; Visible→Hidden olduysa MUTLAK ozet yeniden hesaplanip ReviewSummaryChanged yayinlanir.
 // Eski ModerateReview handler mantigi (LLM cagrisi haric) buraya tasindi.
 [Transactional]
-public class ReviewEventHandler
+public class ReviewsEventHandlers
 {
     public async Task Handle(
         IntegrationEvents.ReviewModerated evt,

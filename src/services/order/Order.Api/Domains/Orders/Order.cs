@@ -38,20 +38,19 @@ public class Order : AggregateRoot
     /// <remarks>Handler: CreateOrderCommandHandler</remarks>
     public FeatureResultModel AddOrderItem(Guid productId, string productName, decimal unitPrice, int quantity = 1)
     {
+        var messages = new List<MessageItem>();
+
         if (string.IsNullOrEmpty(productName))
-        {
-            return FeatureResultModel.Error(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_PRODUCT_NAME_REQUIRED });
-        }
+            messages.Add(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_PRODUCT_NAME_REQUIRED });
 
         if (unitPrice <= 0)
-        {
-            return FeatureResultModel.Error(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_UNIT_PRICE_INVALID });
-        }
+            messages.Add(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_UNIT_PRICE_INVALID });
 
         if (quantity <= 0)
-        {
-            return FeatureResultModel.Error(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_QUANTITY_INVALID });
-        }
+            messages.Add(new MessageItem { Code = OrderResourceConstants.ORDER_ITEM_QUANTITY_INVALID });
+
+        if (messages.Count > 0)
+            return FeatureResultModel.Error(messages);
 
         OrderItems.Add(OrderItem.Create(productId, productName, unitPrice, quantity));
         RecalculateTotalPrice();

@@ -26,15 +26,15 @@ public class Supplier : AggregateRoot
     [JasperFx.Core.JasperFxIgnore]
     public static ResultDomain<Supplier> Create(string code, string name, int priority)
     {
+        var messages = new List<MessageItem>();
         if (string.IsNullOrWhiteSpace(code))
-            return ResultDomain<Supplier>.Error(new MessageItem
-            { Property = nameof(code), Code = ProcurementResourceConstants.SUPPLIER_CODE_REQUIRED });
+            messages.Add(new MessageItem { Property = nameof(code), Code = ProcurementResourceConstants.SUPPLIER_CODE_REQUIRED });
         if (string.IsNullOrWhiteSpace(name))
-            return ResultDomain<Supplier>.Error(new MessageItem
-            { Property = nameof(name), Code = ProcurementResourceConstants.SUPPLIER_NAME_REQUIRED });
+            messages.Add(new MessageItem { Property = nameof(name), Code = ProcurementResourceConstants.SUPPLIER_NAME_REQUIRED });
         if (priority <= 0)
-            return ResultDomain<Supplier>.Error(new MessageItem
-            { Property = nameof(priority), Code = ProcurementResourceConstants.SUPPLIER_PRIORITY_INVALID });
+            messages.Add(new MessageItem { Property = nameof(priority), Code = ProcurementResourceConstants.SUPPLIER_PRIORITY_INVALID });
+        if (messages.Count > 0)
+            return ResultDomain<Supplier>.Error(messages);
 
         return ResultDomain<Supplier>.Ok(new Supplier { Code = code, Name = name, Priority = priority });
     }

@@ -63,6 +63,9 @@ builder.Host.UseWolverine(opts =>
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // *EventHandlers (çoğul) Wolverine isim-konvansiyonunca keşfedilMEZ — elle dahil et
+    // (Catalog/Storefront/Stock emsali).
+    opts.Discovery.IncludeType(typeof(Reviews.Api.ReviewsEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>

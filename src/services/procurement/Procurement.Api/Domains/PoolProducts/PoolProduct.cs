@@ -56,15 +56,15 @@ public class PoolProduct : AggregateRoot
     /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     public ResultDomain<ListingChange> UpsertListing(Guid supplierId, int supplierPriority, ListingRow row)
     {
+        var messages = new List<MessageItem>();
         if (string.IsNullOrWhiteSpace(row.Name))
-            return ResultDomain<ListingChange>.Error(new MessageItem
-            { Property = nameof(row.Name), Code = ProcurementResourceConstants.LISTING_NAME_REQUIRED });
+            messages.Add(new MessageItem { Property = nameof(row.Name), Code = ProcurementResourceConstants.LISTING_NAME_REQUIRED });
         if (row.Price < 0)
-            return ResultDomain<ListingChange>.Error(new MessageItem
-            { Property = nameof(row.Price), Code = ProcurementResourceConstants.LISTING_PRICE_NEGATIVE });
+            messages.Add(new MessageItem { Property = nameof(row.Price), Code = ProcurementResourceConstants.LISTING_PRICE_NEGATIVE });
         if (row.Stock < 0)
-            return ResultDomain<ListingChange>.Error(new MessageItem
-            { Property = nameof(row.Stock), Code = ProcurementResourceConstants.LISTING_STOCK_NEGATIVE });
+            messages.Add(new MessageItem { Property = nameof(row.Stock), Code = ProcurementResourceConstants.LISTING_STOCK_NEGATIVE });
+        if (messages.Count > 0)
+            return ResultDomain<ListingChange>.Error(messages);
 
         var listing = _listings.FirstOrDefault(l => l.SupplierId == supplierId);
         if (listing is null)
