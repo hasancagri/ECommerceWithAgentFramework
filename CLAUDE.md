@@ -53,17 +53,20 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
 | `procurement` | procurementDb | Feed çek (Hangfire) → `PoolProduct` merge/buy-box/enrich → Catalog/Stock event | `specs/041-multi-supplier-buybox` |
 | `supplier` | — | Dış dünya maketi: rev'li statik JSON dataset döner (DB yok) | `specs/041-multi-supplier-buybox` |
-| `reviews` | reviewsDb | Satın-alma şartlı yorum + AI moderasyon; özet event → Storefront | `specs/044-product-reviews` |
+| `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `personalization` | personalizationDb | **Python/FastAPI**; davranış-log ALS öneri; .NET bağlanmaz | `specs/042-behavior-personalization` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
 | `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC | `specs/029-openiddict-migration` |
 | `chat-agent` | — | AI asistan (MAF); MCP istemci + A2A ödeme (uzak PaymentGateway) | `specs/024-a2a-payment-agent` |
+| `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 
 - **Procurement yazım yolu:** feed → `PoolProduct` (barkod-anahtarlı, Priority-merge, hash-diff, Delisted)
   → EKSİKSİZ + değişimde `CanonicalProductUpserted`/`BuyBoxChanged`/`ProductLinked` → Catalog/Stock.
   Saga YOK; dayanıklılık = idempotent upsert + hash-diff + retry + error queue.
-- **EnrichmentAgent/ModerationAgent:** in-proc Singleton ChatClientAgent (Temp=0, structured JSON, MCP'siz),
-  durable kuyruk + retry→error queue. AI kimlik/ölçü/fiyat/stok/barkod ÜRETMEZ; yalnız eksik içerik/karar.
+- **EnrichmentAgent (Procurement, in-proc) / ModerationAgent (ayrı `reviews-moderation-agent` worker'ı):**
+  Singleton ChatClientAgent (Temp=0, structured JSON, MCP'siz), retry→error queue. AI kimlik/ölçü/fiyat/
+  stok/barkod ÜRETMEZ; yalnız eksik içerik/karar. Moderasyon 046'da BC'den broker'lı worker'a taşındı
+  (Reviews'te agent-framework yok; iletişim `ReviewModerationRequested`/`ReviewModerated` event'leriyle).
 
 ## Projeye özel yetki + tuzaklar
 

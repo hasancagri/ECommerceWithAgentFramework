@@ -1,15 +1,16 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using OpenAI;
+using Reviews.Moderation.Options;
 
-namespace Reviews.Api.Infrastructure.Moderation;
+namespace Reviews.Moderation;
 
-// 044 R5: in-process Singleton ChatClientAgent (041 EnrichmentAgent emsali) — MCP'siz,
-// Temperature=0, structured JSON. Yalniz KARAR verir; gizlemeyi Review.ApplyModeration uygular.
+// 044 R5 / 046: in-process Singleton ChatClientAgent (041 EnrichmentAgent emsali) — MCP'siz,
+// Temperature=0, structured JSON. Yalniz KARAR verir; gizlemeyi Reviews'te Review.ApplyModeration uygular.
 // PII gonderilmez: prompt'a yalniz yorum metni + yildiz gider (kullanici adi/Id ASLA).
 public sealed class ModerationAgent
 {
-    // Structured cikti sozlesmesi (contracts/moderation-agent-output.md): kapali enum.
+    // Structured cikti sozlesmesi: kapali kategori enum'u (profanity/insult/personal_attack/none).
     public record ModerationOutput(bool Violation, string Category, string Reason);
 
     private const string Instructions =

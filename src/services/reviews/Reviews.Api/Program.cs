@@ -1,5 +1,3 @@
-using Reviews.Api.Infrastructure.Moderation;
-
 var builder = WebApplication.CreateBuilder(args);
 builder.AddOpenApiDocumentation();
 builder.AddServiceDefaults();
@@ -42,12 +40,23 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ReviewSummaryChanged>()
         .ToRabbitExchange(RabbitMqConstants.ReviewSummaryChanged.Exchange);
 
-    // FR-012: moderasyon lokal durable kuyrugu — yayin AI gecikmesine baglanmaz (fail-open).
-    opts.PublishMessage<ModerateReview.ModerateReviewCommand>()
-        .ToLocalQueue(ModerateReview.QueueName);
-    opts.OnException<ModerationException>()
-        .RetryWithCooldown(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60))
-        .Then.MoveToErrorQueue();
+    // 046: moderasyon istegi ayri worker'a (RabbitMQ). Yayinci yalniz exchange deklare eder;
+    // [Transactional] SubmitReview + transactional outbox → broker down olsa submit reviewsDb'ye
+    // commit olur, mesaj outbox'ta bekler (fail-open, submit broker'a senkron baglanmaz).
+    rabbit.DeclareExchange(RabbitMqConstants.ReviewModerationRequested.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+    });
+    opts.PublishMessage<Shared.IntegrationEvents.ReviewModerationRequested>()
+        .ToRabbitExchange(RabbitMqConstants.ReviewModerationRequested.Exchange);
+
+    // 046: worker'in karari — tuketici kendi kuyrugunu deklare edilen exchange'e baglar (007) + dinler.
+    rabbit.DeclareExchange(RabbitMqConstants.ReviewModerated.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.ReviewModerated.Queues.Reviews);
+    });
+    opts.ListenToRabbitQueue(RabbitMqConstants.ReviewModerated.Queues.Reviews);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
@@ -70,16 +79,6 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
-
-// Moderasyon config'i ZORUNLU — acilista fail-fast (EnrichmentOptions emsali; section "OpenAI").
-builder.Services.AddOptions<Reviews.Api.Options.ModerationOptions>()
-    .BindConfiguration(Reviews.Api.Options.ModerationOptions.SectionName)
-    .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton<Reviews.Api.Options.ModerationOptions>(sp =>
-    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Reviews.Api.Options.ModerationOptions>>().Value);
-
-// Agent Singleton'dir (konvansiyon: framework baslangicta yakalar).
-builder.Services.AddSingleton<ModerationAgent>();
 
 // 044: Order satin-alma kaniti gRPC istemcisi; kullanici bearer'i BearerForwardingHandler ile tasinir.
 builder.Services.AddTransient<Reviews.Api.Grpc.BearerForwardingHandler>();

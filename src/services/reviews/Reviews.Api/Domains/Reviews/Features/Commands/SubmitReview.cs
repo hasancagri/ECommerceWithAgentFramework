@@ -70,8 +70,11 @@ public static class SubmitReview
             var average = Math.Round((visibleSum + review.Rating) / (decimal)count, 2);
             await bus.PublishAsync(new IntegrationEvents.ReviewSummaryChanged(cmd.ProductId, average, count));
 
-            // FR-011: async moderasyon kuyruga (fail-open — yayin beklemez).
-            await bus.PublishAsync(new ModerateReview.ModerateReviewCommand(review.Id));
+            // 046 FR-010: async moderasyon ayri worker'a — YALNIZ metin varsa (metinsiz yorumda
+            // denetlenecek icerik yok). PII yok: id + metin + yildiz. Fail-open (outbox; AI'ya baglanmaz).
+            if (!string.IsNullOrWhiteSpace(review.Text))
+                await bus.PublishAsync(new IntegrationEvents.ReviewModerationRequested(
+                    review.Id, review.Text, review.Rating));
 
             // R9 cift savunma (2): unique index son sozu soyler — yaris kaybedeni nazik hataya cevrilir.
             try

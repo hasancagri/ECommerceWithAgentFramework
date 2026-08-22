@@ -25,9 +25,6 @@
         <PackageReference Include="Grpc.Tools">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Agents.AI" />
-        <PackageReference Include="Microsoft.Extensions.AI" />
-        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
     </ItemGroup>
 
     <!-- 044: satin-alma kaniti — Order.Api sunucu, biz istemciyiz (paylasilan proto). -->
