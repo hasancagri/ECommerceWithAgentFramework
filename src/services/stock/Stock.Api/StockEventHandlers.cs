@@ -4,7 +4,7 @@ namespace Stock.Api;
 // işlenir. OnHand kazanan offer'ın stoğuyla MUTLAK yazılır (toplam değil — FR-016); feed stoğun
 // tek otoritesi olmayı sürdürür (014), yazım kanalı artık buy-box event'leridir.
 [Transactional]
-public class ProcurementEventHandlers
+public class StockEventHandlers
 {
     public async Task Handle(
         IntegrationEvents.ProductLinked evt,

@@ -64,7 +64,7 @@ public class Review : AggregateRoot
     }
 
     /// <summary>Moderasyon kararini uygular: ihlalde gizler (Hidden), temizde yalniz damgalar; tekrar no-op.</summary>
-    /// <remarks>Handler: ModerateReviewCommandHandler</remarks>
+    /// <remarks>Handler: ReviewsEventHandlers</remarks>
     public ResultDomain ApplyModeration(ValueObjects.ModerationVerdict verdict, DateTimeOffset now)
     {
         // At-least-once teslimat: denetim tamamlanmissa ikinci karar durumu degistirmez (idempotent).
