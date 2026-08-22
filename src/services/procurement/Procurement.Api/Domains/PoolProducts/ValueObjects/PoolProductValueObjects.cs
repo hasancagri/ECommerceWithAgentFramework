@@ -29,6 +29,9 @@ public record ListingRow
         new Dictionary<string, string>();
     public IReadOnlyList<SpecValue> CanonicalSpecs { get; private init; } = [];
 
+    // 045: opsiyonel varyant ailesi kodu (aynı model üyeleri paylaşır); yok/boş = ailesiz.
+    public string? FamilyCode { get; private init; }
+
     private ListingRow() { }
 
     public static ListingRow Create(
@@ -36,7 +39,8 @@ public record ListingRow
         string? rawCategoryName, string? canonicalCategory, string? canonicalSubCategory,
         decimal price, int stock, RowDimensions? dimensions,
         IReadOnlyDictionary<string, string>? rawAttributes = null,
-        IReadOnlyList<SpecValue>? canonicalSpecs = null)
+        IReadOnlyList<SpecValue>? canonicalSpecs = null,
+        string? familyCode = null)
         => new()
         {
             SupplierSku = supplierSku,
@@ -51,6 +55,7 @@ public record ListingRow
             Dimensions = dimensions,
             RawAttributes = rawAttributes ?? new Dictionary<string, string>(),
             CanonicalSpecs = canonicalSpecs ?? [],
+            FamilyCode = string.IsNullOrWhiteSpace(familyCode) ? null : familyCode.Trim(),
         };
 
     /// <summary>Satırın deterministik içerik hash'i (SHA256, invariant-culture). Fiyat + stok dahil:
@@ -68,7 +73,8 @@ public record ListingRow
             string.Join('\u001e', RawAttributes.OrderBy(kv => kv.Key, StringComparer.Ordinal)
                 .Select(kv => $"{kv.Key}={kv.Value}")),
             string.Join('\u001e', CanonicalSpecs.OrderBy(x => x.Attribute, StringComparer.Ordinal)
-                .Select(x => $"{x.Attribute}={x.Option}")));
+                .Select(x => $"{x.Attribute}={x.Option}")),
+            FamilyCode ?? "");
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
     }
 }
@@ -127,11 +133,15 @@ public record CanonicalContent
     // 043: kanonik özellikler — IsComplete HESABINA GİRMEZ (FR-005: spec eksikliği yayını bloklamaz).
     public IReadOnlyList<SpecValue> Specs { get; private init; } = [];
 
+    // 045: varyant ailesi kodu (opsiyonel); IsComplete'e GİRMEZ (ailesiz ürün yayınlanır).
+    public string? FamilyCode { get; private init; }
+
     private CanonicalContent() { }
 
     public static CanonicalContent Create(
         string name, string description, string brand, string category, string subCategory,
-        string sku, RowDimensions? dimensions, IReadOnlyList<SpecValue>? specs = null)
+        string sku, RowDimensions? dimensions, IReadOnlyList<SpecValue>? specs = null,
+        string? familyCode = null)
         => new()
         {
             Name = name,
@@ -142,6 +152,7 @@ public record CanonicalContent
             Sku = sku,
             Dimensions = dimensions,
             Specs = specs ?? [],
+            FamilyCode = familyCode,
         };
 
     public bool IsComplete =>
@@ -155,11 +166,11 @@ public record CanonicalContent
         other is not null &&
         Name == other.Name && Description == other.Description && Brand == other.Brand &&
         Category == other.Category && SubCategory == other.SubCategory && Sku == other.Sku &&
-        Equals(Dimensions, other.Dimensions) &&
+        Equals(Dimensions, other.Dimensions) && FamilyCode == other.FamilyCode &&
         Specs.OrderBy(x => x.Attribute).SequenceEqual(other.Specs.OrderBy(x => x.Attribute));
 
     public override int GetHashCode() =>
-        HashCode.Combine(Name, Description, Brand, Category, SubCategory, Sku, Dimensions);
+        HashCode.Combine(Name, Description, Brand, Category, SubCategory, Sku, Dimensions, FamilyCode);
 
     /// <summary>Kanonik içeriğin deterministik hash'i — tekrar-yayın kesici (PublishedContentHash).</summary>
     public string ComputeHash()
@@ -171,7 +182,8 @@ public record CanonicalContent
             Dimensions?.Width.ToString(CultureInfo.InvariantCulture) ?? "",
             Dimensions?.Height.ToString(CultureInfo.InvariantCulture) ?? "",
             string.Join('\u001e', Specs.OrderBy(x => x.Attribute, StringComparer.Ordinal)
-                .Select(x => $"{x.Attribute}={x.Option}")));
+                .Select(x => $"{x.Attribute}={x.Option}")),
+            FamilyCode ?? "");
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
     }
 }

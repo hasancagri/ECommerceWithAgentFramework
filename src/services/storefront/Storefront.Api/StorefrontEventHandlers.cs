@@ -16,7 +16,9 @@ public static class StorefrontEventHandlers
         view.ApplyCatalog(evt.Name, evt.Description, evt.Price,
             evt.BrandId, evt.Brand, evt.CategoryId, evt.Category, evt.ImageUrl, evt.IsDeleted,
             // 043: kanonik spec adlari satira denormalize edilir (facet + filtre + detay).
-            (evt.Specs ?? []).Select(s => SpecPair.Create(s.Attribute, s.Option)).ToList());
+            (evt.Specs ?? []).Select(s => SpecPair.Create(s.Attribute, s.Option)).ToList(),
+            // 045: varyant ailesi kodu (null = ailesiz).
+            evt.FamilyCode);
 
         session.Store(view);
         await session.SaveChangesAsync(ct);

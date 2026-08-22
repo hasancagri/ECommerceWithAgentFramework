@@ -65,7 +65,8 @@ public static class PullSupplierFeed
                     // 043: ham attribute'lar saklanır; eşleme burada çözülür (kategori deseni) —
                     // eşlenemeyen anahtar yok sayılır, satırı düşürmez.
                     row.Attributes,
-                    CanonicalSpecs.MapRawAttributes(cmd.SupplierCode, row.Attributes));
+                    CanonicalSpecs.MapRawAttributes(cmd.SupplierCode, row.Attributes),
+                    row.FamilyCode);
 
                 if (!existing.TryGetValue(row.Barcode, out var product))
                 {

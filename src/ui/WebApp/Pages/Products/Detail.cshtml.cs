@@ -25,6 +25,9 @@ public class DetailModel(
     public ReviewListViewModel Reviews { get; set; } = ReviewListViewModel.Empty;
     public bool CanReview { get; set; }
 
+    // 045: varyant ailesi (null = ailesiz/tek uye → secici cizilmez).
+    public VariantFamilyViewModel? Family { get; set; }
+
     [TempData] public string? ReviewError { get; set; }
     [TempData] public string? ReviewSuccess { get; set; }
 
@@ -43,6 +46,9 @@ public class DetailModel(
         Reviews = await reviewsService.GetProductReviewsAsync(id, reviewsPage);
         if (User.Identity?.IsAuthenticated == true)
             CanReview = await reviewsService.CanReviewAsync(id);
+
+        // 045: varyant ailesi (ailesizde null).
+        Family = await storefrontService.GetFamilyAsync(id);
 
         // 042: ProductViewed — alanlar render verisinden denormalize (FR-001).
         var (anonymousId, sessionId, userId) = AnonymousIdMiddleware.GetIds(HttpContext);

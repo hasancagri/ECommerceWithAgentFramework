@@ -56,16 +56,19 @@ public static class GetStorefrontFilterOptions
             .OrderBy(x => x.Name)
             .ToList();
 
-        // 043: spec facet'leri satırlardaki ad çiftlerinden türetilir; count = çifti taşıyan satır
-        // sayısı (SC-006 — filtre sonucuyla birebir, aynı satılabilir küme).
+        // 043: spec facet'leri satırlardaki ad çiftlerinden türetilir; 045: count = çifti taşıyan
+        // DISTINCT AİLE sayısı (kart-bazlı — 3 üyeli aile 1 sayılır; SC-003 liste kartıyla birebir).
+        // Ailesiz satır FamilyKey=ProductId (tekil) → 043 davranışıyla aynı kalır (regresyon 0).
         var specifications = rows
-            .SelectMany(x => x.Specs)
-            .GroupBy(s => s.Attribute)
+            .SelectMany(x => x.Specs.Select(s =>
+                (Family: GetStorefrontProductList.FamilyKey(x), s.Attribute, s.Option)))
+            .GroupBy(p => p.Attribute)
             .Select(g => new SpecFacetResponse
             {
                 Name = g.Key,
-                Options = g.GroupBy(s => s.Option)
-                    .Select(o => new SpecFacetOptionResponse { Name = o.Key, Count = o.Count() })
+                Options = g.GroupBy(p => p.Option)
+                    .Select(o => new SpecFacetOptionResponse
+                    { Name = o.Key, Count = o.Select(p => p.Family).Distinct().Count() })
                     .OrderBy(o => o.Name)
                     .ToList(),
             })

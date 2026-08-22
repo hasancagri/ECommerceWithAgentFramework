@@ -20,6 +20,13 @@
                     <small class="text-muted">(@Model.RatingCount)</small>
                 </p>
             }
+            @* 045: varyant ailesi rozeti — >1 uye varsa cizilir (FR-008). *@
+            @if (Model.VariantCount > 1)
+            {
+                <p class="card-text mb-1">
+                    <span class="badge bg-primary-subtle text-primary border">@Model.VariantCount varyant</span>
+                </p>
+            }
             <p class="card-text">
                 @* FR-009: stok null = bilinmiyor, rozet yok; 0 = stokta yok; >0 = stokta. *@
                 @if (Model.IsInStock == true)

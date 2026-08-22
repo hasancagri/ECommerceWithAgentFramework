@@ -8,6 +8,7 @@ public static class StorefrontViewEndpointExtension
             .WithTags("storefront")
             .WithApiVersionSet(apiVersionSet)
             .GetProductStorefrontViewGroupItemEndpoint()
+            .GetProductFamilyGroupItemEndpoint()
             .GetStorefrontProductListGroupItemEndpoint()
             .GetStorefrontFilterOptionsGroupItemEndpoint()
             .SearchStorefrontProductsGroupItemEndpoint();

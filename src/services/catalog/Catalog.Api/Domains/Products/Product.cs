@@ -18,6 +18,8 @@ public class Product : AggregateRoot
     // 040 K3: Gtin modelde hazır, feed kontratı değişmediği için boş yaşar — 041 (buy-box) dolduracak.
     public string? Gtin { get; private set; }
     public string? ManufacturerPartNumber { get; private set; }
+    // 045: varyant ailesi kodu (feed'den akan opak gruplama kimliği; null = ailesiz).
+    public string? FamilyCode { get; private set; }
 
     public ProductType Type { get; private set; }
     // Grouped ürünün çocukları üst ürüne bu Id ile bağlanır (Simple üründe null, K11: akış yok).
@@ -181,6 +183,14 @@ public class Product : AggregateRoot
 
         _specifications.Clear();
         _specifications.AddRange(assignments);
+        return ResultDomain.Ok();
+    }
+
+    /// <summary>045: varyant ailesi kodunu yazar (null/boş = aileden çıkar). Feed'den akan opak kimlik.</summary>
+    /// <remarks>Handler: ProcurementEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
+    public ResultDomain SetFamilyCode(string? familyCode)
+    {
+        FamilyCode = string.IsNullOrWhiteSpace(familyCode) ? null : familyCode.Trim();
         return ResultDomain.Ok();
     }
 

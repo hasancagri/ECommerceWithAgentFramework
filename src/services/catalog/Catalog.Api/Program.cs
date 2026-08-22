@@ -14,7 +14,8 @@ builder.Services.AddMarten(opts =>
             });
         
         // 041: Gtin (barkod) Procurement upsert anahtarıdır — lookup index'i.
-        opts.Schema.For<Product>().Index(x => x.Gtin);
+        // 045: FamilyCode agent okumaları için ucuz lookup index'i (gruplama Storefront'ta).
+        opts.Schema.For<Product>().Index(x => x.Gtin).Index(x => x.FamilyCode);
 
         // 040 K9: ProductTag yeni aggregate — dış yüzeyi yok, şemada yaşar (besleyen akış 041+).
         opts.Schema.For<ProductTag>();

@@ -18,7 +18,9 @@ public record SupplierFeedRowDto(
     decimal Width,
     decimal Height,
     // 043: ham tedarikçi attribute'ları (opsiyonel; eski rev dosyaları alansız geçerli).
-    Dictionary<string, string>? Attributes = null);
+    Dictionary<string, string>? Attributes = null,
+    // 045: opsiyonel varyant ailesi kodu (yok = ailesiz).
+    string? FamilyCode = null);
 
 // Feed çekici: adres Aspire service discovery'den (Options istisnası — dinamik enjekte anahtar).
 // Feed çekimi kısa ömürlü GET; standart resilience yeterli (Gateway 007 emsali).

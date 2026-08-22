@@ -92,6 +92,9 @@ public static class GetStorefrontProductList
         public decimal? RatingAverage { get; set; }
         public int RatingCount { get; set; }
 
+        // 045: ailenin görünür üye adedi (ailesizde 1); >1 ise kart "N varyant" rozeti çizer.
+        public int VariantCount { get; set; }
+
         public static StorefrontProductResponse From(StorefrontView view) => new()
         {
             ProductId = view.ProductId,
@@ -109,6 +112,28 @@ public static class GetStorefrontProductList
             RatingCount = view.RatingCount
         };
     }
+
+    // 045: liste gruplama anahtarı — ailesizde ProductId (aile kadar tekil), ailede FamilyCode.
+    public static string FamilyKey(StorefrontView v) =>
+        string.IsNullOrWhiteSpace(v.FamilyCode) ? v.ProductId.ToString() : v.FamilyCode!;
+
+    // 045: temsilci — stok>0 önce, sonra en ucuz, sonra ProductId (deterministik; FR-007 + Assumption).
+    public static StorefrontView PickRepresentative(IReadOnlyCollection<StorefrontView> members) =>
+        members
+            .OrderByDescending(m => m.StockQuantity is > 0)
+            .ThenBy(m => m.Price ?? decimal.MaxValue)
+            .ThenBy(m => m.ProductId)
+            .First();
+
+    public record RepresentativeGroup(StorefrontView Representative, int VariantCount);
+
+    // 045: filtreli küme → aile başına TEK temsilci + görünür üye adedi (SC-003 kart-bazlı).
+    // Filtre-bağlamlı: yalnız filtreyi geçen üyeler girer → temsilci eşleşen üyeye kayar (FR-009).
+    public static IReadOnlyList<RepresentativeGroup> GroupToRepresentatives(IEnumerable<StorefrontView> views) =>
+        views
+            .GroupBy(FamilyKey)
+            .Select(g => new RepresentativeGroup(PickRepresentative(g.ToList()), g.Count()))
+            .ToList();
 
     public class GetStorefrontProductListQueryHandler
     {
@@ -129,16 +154,25 @@ public static class GetStorefrontProductList
             // 043: spec kesişimi — grup içi OR, gruplar arası AND (FR-008).
             filtered = ApplySpecFilters(filtered, ParseSpecGroups(query.Specs ?? []));
 
-            // Sayfa sayısı filtreli sonuca göre hesaplanır (US1-2/SC-005).
-            var totalCount = await filtered.CountAsync(ct);
+            // 045: filtreleme DB'de (test edilmiş LINQ/jsonb SQL); aile gruplama + temsilci bellekte
+            // (yüzlerce ürün ölçeği — DISTINCT ON raw SQL 043 kırılganlığını geri getirirdi, ELENDİ).
+            var members = await filtered.ToListAsync(ct);
+            var groups = GroupToRepresentatives(members)
+                .OrderBy(g => g.Representative.Name)
+                .ToList();
 
-            var views = await filtered
-                .OrderBy(x => x.Name)
+            // Sayfalama KART bazlı (aile=1 kart); toplam = aile sayısı (SC-003).
+            var totalCount = groups.Count;
+            var response = groups
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync(ct);
-
-            var response = views.Select(StorefrontProductResponse.From).ToList();
+                .Select(g =>
+                {
+                    var r = StorefrontProductResponse.From(g.Representative);
+                    r.VariantCount = g.VariantCount;
+                    return r;
+                })
+                .ToList();
 
             // Boş vitrin ve aralık dışı sayfa NotFound döner; WebApp bunu boş duruma çevirir (011 FR-006).
             var metaData = new StaticPagedList<StorefrontProductResponse>(response, pageNumber, pageSize, totalCount);

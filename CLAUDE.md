@@ -190,6 +190,14 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
   (Catalog `CatalogSpecSeedHostedService`, Procurement `CanonicalSpecs`) — sözleşme AD'dır, bilinçli tekrar.
 - Storefront facet: `StorefrontView.SpecKeys[]` ("Attribute|Option") + liste sorgusunda attribute-grubu
   `MatchesSql` jsonb `?|` (grup içi OR, gruplar arası AND); filtre yanıtında count birebirdir.
+- **Varyantlar (045):** feed satırı opsiyonel `familyCode` taşır → kanonik İÇERİK alanı (Priority-merge +
+  hash'e dahil; IsComplete'e DEĞİL; Enrich üretmez). İki event'e additive `string? FamilyCode`;
+  `Product.FamilyCode` (Marten index) → `StorefrontView.FamilyCode`. Kombinasyon üretimi YOK — gruplama.
+- Liste gruplama SORGU-zamanı BELLEK-içi: filtreleme LINQ/jsonb'de kalır, `GroupToRepresentatives`
+  (saf çekirdek) aile başına temsilci (stok>0, en ucuz, ProductId) seçer — DISTINCT ON raw SQL
+  ELENDİ (043 kırılganlığı; ölçek yüzlerce). Facet count = distinct aile; `variantCount` kart rozeti.
+- Detay seçici: `GET /storefront/products/{id}/family` üyeler + `DeriveAxes` (üyeler-arası farklılaşan
+  spec eksenleri). Ailesiz/tek üye → boş aile, seçici yok. Arama/agent yüzeyi ÜYE-bazlı kalır (kapsam dışı).
 
 ### Vertical Slice + DDD
 

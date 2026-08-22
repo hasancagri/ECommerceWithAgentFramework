@@ -124,7 +124,7 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | `stock-api` | Product stock levels |
 | `payment-api` | Payment processing |
 | `file-api` | Product image storage/serving (internal) |
-| `storefront-api` | Push-only composite read model (catalog + stock) |
+| `storefront-api` | Push-only composite read model (catalog + stock); variant families (045): feed `familyCode` groups existing products into one list card + a derived-axis selector on the detail page (no combinatorial generation) |
 | `customer-api` | Wallet (saved cards, tokenized — no PAN/CVV; stores the non-sensitive BIN for installment quotes) + AddressBook (Customer bounded context) |
 | `reviews-api` | Verified-purchase product reviews (1-5 stars) — purchase proof via sync gRPC to Order, async AI moderation (auto-hide), rating summary event to Storefront |
 | `supplier-api` | Supplier feed simulator — one typed JSON endpoint, no DB, no bus |

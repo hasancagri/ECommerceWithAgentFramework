@@ -17,4 +17,8 @@ public interface IStorefrontRefitService
 
     [Get("/api/v1/storefront/products/{productId}")]
     Task<ApiResponse<StorefrontProductDetailDto>> GetProduct(Guid productId);
+
+    // 045: varyant ailesi (üyeler + eksenler); ailesiz üründe 404 → seçici çizilmez.
+    [Get("/api/v1/storefront/products/{productId}/family")]
+    Task<ApiResponse<FamilyDto>> GetFamily(Guid productId);
 }
