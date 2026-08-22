@@ -22,6 +22,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="ModelContextProtocol.AspNetCore" />
         <PackageReference Include="Grpc.Net.ClientFactory" />
+        <PackageReference Include="Grpc.AspNetCore" />
         <PackageReference Include="Google.Protobuf" />
         <PackageReference Include="Grpc.Tools">
             <PrivateAssets>all</PrivateAssets>
@@ -34,6 +35,8 @@
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_clear.proto" GrpcServices="Client" />
         <!-- 039: sepet kalemleri okuma istemcisi (chat siparis tamamlama). -->
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_items.proto" GrpcServices="Client" />
+        <!-- 044: satin-alma kaniti sunucusu (Reviews istemci). -->
+        <Protobuf Include="..\..\..\others\Shared\Protos\order_purchase.proto" GrpcServices="Server" />
     </ItemGroup>
 
     <ItemGroup>

@@ -41,6 +41,8 @@ public static class Config
             // DropShop vault merchant kimliği yönetimi — audience customer.api; admin demetinde (AllApiScopes),
             // customer'da YOK. AllApiScopes bu key'i otomatik alır → admin role'a düşer.
             ["merchant.credentials.write"] = "customer.api",
+            // 044: yorum yazma (Order purchase-check gRPC ucu da aynı scope'u ister — R4).
+            ["reviews.write"] = "reviews.api",
         };
 
     // WebApp BFF'nin talep ettiği 12 servis scope'u (file.write + apikeys.manage HARİÇ; bugünkü Duende paritesi).
@@ -55,6 +57,8 @@ public static class Config
         "customer.read", "customer.write",
         // Admin kullanıcı token'ı bunu taşısın diye BFF ister; yalnız admin role demeti verir (customer'da yok).
         "merchant.credentials.write",
+        // 044: yorum yazma (form + submit; Order purchase-check gRPC'si de bunu ister).
+        "reviews.write",
     ];
 
     // Tüm API scope'ları (13 servis scope'u + apikeys.manage + identity.roles.manage) — seed edilir.
@@ -72,6 +76,7 @@ public static class Config
         "stock.reserve",
         "storefront.read",
         "customer.read", "customer.write",
+        "reviews.write",
     ];
 
     // admin: tüm atanabilir scope'lar (customer + catalog.write + stock.write + apikeys.manage + identity.roles.manage).

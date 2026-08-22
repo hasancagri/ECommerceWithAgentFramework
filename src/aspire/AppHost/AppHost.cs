@@ -109,6 +109,19 @@ var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
 // yapisal REST ile ceker (customerApi orderApi'den SONRA tanimli oldugu icin referans burada eklenir).
 orderApi.WithReference(customerApi).WaitFor(customerApi);
 
+// 044: Reviews BC — satin-alma sartli yorum + puan ozeti. Satin-alma kaniti icin Order gRPC'sine
+// senkron sorar (fail-closed); ozet ReviewSummaryChanged fanout'uyla Storefront'a akar.
+var reviewsDb = postgres.AddDatabase("reviewsDb");
+var reviewsApi = builder.AddProject<Projects.Reviews_Api>("reviews-api")
+    .WithReference(reviewsDb)
+    .WithReference(rabbit)
+    .WithReference(orderApi)
+    .WaitFor(reviewsDb)
+    .WaitFor(rabbit)
+    .WaitFor(orderApi)
+    // Tuketici kuyrugu yayincidan once baglansin (007 dersi): Storefront reviews'tan once ayakta.
+    .WaitFor(storefrontApi);
+
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)
@@ -118,6 +131,7 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(fileApi)
     .WithReference(storefrontApi)
     .WithReference(customerApi)
+    .WithReference(reviewsApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
@@ -129,6 +143,7 @@ web.WithReference(basketApi)
     .WithReference(paymentApi)
     .WithReference(storefrontApi)
     .WithReference(customerApi)
+    .WithReference(reviewsApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 

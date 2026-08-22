@@ -13,7 +13,16 @@
                 <img class="card-img-top product-detail-img" alt="@Model.Product!.Name"
                      src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/NoImage.jpeg" : Model.Product.ImageUrl)">
                 <div class="card-body">
-                    <h2 class="mb-4">@Model.Product.Name</h2>
+                    <h2 class="mb-2">@Model.Product.Name</h2>
+                    @* 044: yildiz ozeti — yorumsuz urunde hic cizilmez (FR-006). *@
+                    @if (Model.Product.RatingCount > 0 && Model.Product.RatingAverage is not null)
+                    {
+                        <p class="mb-3">
+                            <span class="text-warning">★</span>
+                            <strong>@Model.Product.RatingAverage.Value.ToString("0.0")</strong>
+                            <span class="text-muted">(@Model.Product.RatingCount yorum)</span>
+                        </p>
+                    }
                     <h5 class="card-title">Açıklama</h5>
                     <p>@Model.Product.Description</p>
                 </div>
@@ -83,6 +92,91 @@
                     else
                     {
                         <button class="btn btn-primary" disabled>Sepete Ekle</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* 044: yorumlar — liste herkese acik; form yalniz uygun (satin almis) login'li kullaniciya. *@
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-body">
+                    <h4 class="card-title mb-3">Yorumlar</h4>
+
+                    @if (!string.IsNullOrEmpty(Model.ReviewSuccess))
+                    {
+                        <div class="alert alert-success">@Model.ReviewSuccess</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ReviewError))
+                    {
+                        <div class="alert alert-danger">@Model.ReviewError</div>
+                    }
+
+                    @if (Model.CanReview)
+                    {
+                        <form method="post" asp-page-handler="Review" asp-route-id="@Model.Product.ProductId"
+                              class="mb-4">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Puanınız</label>
+                                <select name="rating" class="form-select w-auto">
+                                    <option value="5">★★★★★ (5)</option>
+                                    <option value="4">★★★★ (4)</option>
+                                    <option value="3">★★★ (3)</option>
+                                    <option value="2">★★ (2)</option>
+                                    <option value="1">★ (1)</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Yorumunuz (isteğe bağlı)</label>
+                                <textarea name="text" class="form-control" rows="3" maxlength="2000"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Yorumu Gönder</button>
+                        </form>
+                        <hr>
+                    }
+
+                    @if (Model.Reviews.Reviews.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Henüz yorum yok.</p>
+                    }
+                    else
+                    {
+                        @foreach (var review in Model.Reviews.Reviews)
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <strong>@review.MaskedName</strong>
+                                    <span class="badge bg-success-subtle text-success border">Doğrulanmış alışveriş</span>
+                                    <small class="text-muted">@review.CreatedTime.ToString("dd.MM.yyyy")</small>
+                                </div>
+                                <div class="text-warning">
+                                    @string.Concat(Enumerable.Repeat("★", review.Rating))<span
+                                        class="text-muted">@string.Concat(Enumerable.Repeat("☆", 5 - review.Rating))</span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(review.Text))
+                                {
+                                    <p class="mb-0 mt-1">@review.Text</p>
+                                }
+                            </div>
+                        }
+
+                        @if (Model.Reviews.PageCount > 1)
+                        {
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    @for (var p = 1; p <= Model.Reviews.PageCount; p++)
+                                    {
+                                        <li class="page-item @(p == Model.Reviews.PageNumber ? "active" : "")">
+                                            <a class="page-link" asp-page="/Products/Detail"
+                                               asp-route-id="@Model.Product.ProductId"
+                                               asp-route-reviewsPage="@p">@p</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </nav>
+                        }
                     }
                 </div>
             </div>

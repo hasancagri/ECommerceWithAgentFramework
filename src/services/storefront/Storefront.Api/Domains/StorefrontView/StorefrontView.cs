@@ -33,6 +33,10 @@ public class StorefrontView
     // Stock kaynagi — null = henuz raporlamadi ("bilinmiyor"). In-stock bu adetten turetilir.
     public int? StockQuantity { get; private set; }
 
+    // 044: Reviews kaynagi — ReviewSummaryChanged MUTLAK ozeti yazar. null/0 = rozet cizilmez (FR-006).
+    public decimal? RatingAverage { get; private set; }
+    public int RatingCount { get; private set; }
+
     // Ayri surec (BackgroundService vb.) sahiplenir; ingestion ASLA yazmaz. Default false.
     public bool IsAvailableForSale { get; private set; }
 
@@ -57,6 +61,13 @@ public class StorefrontView
     }
 
     public void ApplyStock(int quantity) => StockQuantity = quantity;
+
+    // 044: Count=0 ⇒ ikisi de temizlenir (kontrat: Average yok sayilir; tek yorum gizlenince rozet kalkar).
+    public void ApplyReviewSummary(decimal average, int count)
+    {
+        RatingAverage = count == 0 ? null : average;
+        RatingCount = count;
+    }
 }
 
 // 043: satirdaki tek ozellik cifti (kanonik ADlar — event sozlesmesi). Key = "Attribute|Option".

@@ -52,7 +52,9 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
     AuthorizationScopes.OrderRead,
-    AuthorizationScopes.OrderWrite);
+    AuthorizationScopes.OrderWrite,
+    // 044: satin-alma kaniti gRPC ucu reviews.write ister (R4 — ayri scope acilmaz).
+    AuthorizationScopes.ReviewsWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
@@ -141,6 +143,9 @@ builder.Services
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
 builder.Services.AddApiKeyAuthentication(builder.Configuration);
 
+// 044: satin-alma kaniti gRPC sunucusu (Reviews istemci; kullanici bearer'i forward edilir).
+builder.Services.AddGrpc();
+
 var app = builder.Build();
 app.MapScalarDocumentation();
 
@@ -154,6 +159,10 @@ app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 app.AddOrderGroupEndpointExtension(apiVersionSet);
+
+// 044: sub==user_id guard'i serviste; yetki endpoint seviyesinde (reviews.write).
+app.MapGrpcService<Order.Api.Grpc.OrderPurchaseGrpcService>()
+    .RequireAuthorization(AuthorizationScopes.ReviewsWrite);
 
 app.MapMcp("/mcp");
 

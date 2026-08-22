@@ -99,6 +99,23 @@ altında, ayrıca `gateway`. Destekleyici projeler: `src/others` (`Common`, `Sha
 - Kimlik: `pz_aid` (kalıcı anonim) + `pz_sid` (oturum) çerezleri; login'liye ek UserId. Stitching
   yok; davranış satırında kişisel veri YASAK. UI gösterimi ("Sana önerilenler") AYRI feature.
 
+### Reviews BC (044) — satın-alma şartlı yorum + puan
+
+- `src/services/reviews` (`reviewsDb`/`reviewsManagement`): tek aggregate `Review` (1-5 tam yıldız,
+  metin ≤2000 ops., ürün başına TEK yorum — UniqueIndex(UserId, ProductId) + ön-kontrol).
+- Satın-alma kanıtı: senkron gRPC `order_purchase.proto` (Order sunucu, Reviews istemci; fail-closed).
+  Uç `reviews.write` ister + sub==user_id guard; kullanıcı bearer'ı forward edilir (012 deseni).
+- Yayın HEMEN (admin onayı YOK); **ModerationAgent** (MAF ChatClientAgent, EnrichmentAgent emsali)
+  async denetler: lokal kuyruk `reviews.moderate`, retry 10/30/60 → error queue (fail-open).
+  Agent yalnız KARAR verir; gizlemeyi `Review.ApplyModeration` uygular (ihlal=Hidden, idempotent).
+- Özet: `ReviewSummaryChanged(ProductId, Average, Count)` MUTLAK fat event →
+  `reviews.summary-changed` fanout → Storefront `storefront.events` kuyruğu →
+  `StorefrontView.ApplyReviewSummary` (Count=0 özeti temizler; rozet çizilmez).
+- Ad maskeli görüntülenir (`ReviewerName.Masked()`: "H** D**"), ham ad saklanır; liste anonim
+  + sayfalı (`GET /api/v1/reviews/products/{id}`), eligibility ucu form göster/gizle öngörüsüdür.
+- Scope `reviews.write` customer rol demetinde; mevcut DB'de rol map seed'i BOŞ rolü doldurur —
+  var olan role Admin ekranından eklenir. OpenAI ApiKey+Model zorunlu (fail-fast).
+
 ### Çok-tedarikçi Procurement akışı (041; 007/015 söküldü)
 
 - **041 (2026-08-19): Supplier.Gateway + IngestionAgent (015 LLM yazıcı zinciri) TAMAMEN söküldü.**

@@ -126,6 +126,7 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | `file-api` | Product image storage/serving (internal) |
 | `storefront-api` | Push-only composite read model (catalog + stock) |
 | `customer-api` | Wallet (saved cards, tokenized — no PAN/CVV; stores the non-sensitive BIN for installment quotes) + AddressBook (Customer bounded context) |
+| `reviews-api` | Verified-purchase product reviews (1-5 stars) — purchase proof via sync gRPC to Order, async AI moderation (auto-hide), rating summary event to Storefront |
 | `supplier-api` | Supplier feed simulator — one typed JSON endpoint, no DB, no bus |
 | `supplier-gateway` | Supplier boundary — Hangfire-scheduled feed pull, normalizes to the canonical event, publishes only new/changed records (snapshots in `supplierGatewayDb`) |
 | `gateway` | YARP reverse proxy / single entry point |
@@ -195,8 +196,8 @@ dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj
 ```
 src/
   aspire/        AppHost (orchestration) + ServiceDefaults
-  services/      basket, catalog, customer, file, gateway,
-                 order, payment, stock, storefront, supplier
+  services/      basket, catalog, customer, file, gateway, order,
+                 payment, procurement, reviews, stock, storefront, supplier
   others/        Common, Shared, Identity.Server
   agents/        ChatAgent (MCP client, LLM) + IngestionAgent (Workflows, LLM writers)
   ui/            WebApp (Blazor)

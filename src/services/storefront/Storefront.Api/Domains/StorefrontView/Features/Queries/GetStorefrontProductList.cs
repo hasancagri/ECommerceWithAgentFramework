@@ -88,6 +88,10 @@ public static class GetStorefrontProductList
         public int? StockQuantity { get; set; }
         public bool? IsInStock { get; set; }
 
+        // 044: kart yıldız rozeti — null/0 = çizilmez (FR-006).
+        public decimal? RatingAverage { get; set; }
+        public int RatingCount { get; set; }
+
         public static StorefrontProductResponse From(StorefrontView view) => new()
         {
             ProductId = view.ProductId,
@@ -100,7 +104,9 @@ public static class GetStorefrontProductList
             Price = view.Price!.Value,
             ImageUrl = view.ImageUrl,
             StockQuantity = view.StockQuantity,
-            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null
+            IsInStock = view.StockQuantity.HasValue ? view.StockQuantity > 0 : null,
+            RatingAverage = view.RatingAverage,
+            RatingCount = view.RatingCount
         };
     }
 
