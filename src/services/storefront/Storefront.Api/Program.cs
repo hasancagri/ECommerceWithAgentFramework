@@ -60,14 +60,16 @@ builder.Host.UseWolverine(opts =>
 });
 
 // 019 FR-019 fail-fast: embedding config'i ZORUNLU; eksikse servis ACILMAZ (IngestionAgent deseni).
-string openAiKey = builder.Configuration["OpenAI:ApiKey"]
-    ?? throw new InvalidOperationException("OpenAI:ApiKey yapılandırılmamış (user-secrets/appsettings)");
-string embeddingModel = builder.Configuration["OpenAI:EmbeddingModel"]
-    ?? throw new InvalidOperationException("OpenAI:EmbeddingModel yapılandırılmamış (appsettings)");
+// 019 FR-019 fail-fast: embedding config'i ZORUNLU; eksikse ValidateOnStart ile servis ACILMAZ.
+builder.Services.AddOptions<Storefront.Api.Options.OpenAiOption>().BindConfiguration("OpenAI")
+    .ValidateDataAnnotations().ValidateOnStart();
 
 // Singleton: agent/AI istemci tipleri baslangicta yakalanir (repo konvansiyonu).
-builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(
-    new OpenAI.OpenAIClient(openAiKey).GetEmbeddingClient(embeddingModel).AsIEmbeddingGenerator());
+builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+{
+    var openAi = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Storefront.Api.Options.OpenAiOption>>().Value;
+    return new OpenAI.OpenAIClient(openAi.ApiKey).GetEmbeddingClient(openAi.EmbeddingModel).AsIEmbeddingGenerator();
+});
 
 builder.Services.AddApiVersioning(options =>
 {

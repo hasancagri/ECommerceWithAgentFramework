@@ -1,5 +1,3 @@
-using Refit;
-using WebApp.Dto;
 
 namespace WebApp.Services.Refit;
 

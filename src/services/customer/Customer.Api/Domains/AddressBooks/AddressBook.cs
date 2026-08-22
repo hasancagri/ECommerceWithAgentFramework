@@ -29,35 +29,38 @@ public class AddressBook : AggregateRoot
 
     /// <summary>Id ile bulunan adresi gunceller; yoksa NotFound doner.</summary>
     /// <remarks>Handler: UpdateAddressCommandHandler</remarks>
-    public FeatureResultModel UpdateAddress(Guid addressId, Address value)
+    public ResultDomain UpdateAddress(Guid addressId, Address value)
     {
         var address = _addresses.FirstOrDefault(x => x.Id == addressId);
-        if (address is null) return FeatureResultModel.NotFound();
+        if (address is null)
+            return ResultDomain.Error(new MessageItem { Code = CustomerResourceConstants.RECORD_NOT_FOUND });
         address.Update(value);
-        return FeatureResultModel.Ok();
+        return ResultDomain.Ok();
     }
 
     /// <summary>Id ile bulunan adresi defterden siler; yoksa NotFound doner.</summary>
     /// <remarks>Handler: DeleteAddressCommandHandler</remarks>
-    public FeatureResultModel RemoveAddress(Guid addressId)
+    public ResultDomain RemoveAddress(Guid addressId)
     {
         var address = _addresses.FirstOrDefault(x => x.Id == addressId);
-        if (address is null) return FeatureResultModel.NotFound();
+        if (address is null)
+            return ResultDomain.Error(new MessageItem { Code = CustomerResourceConstants.RECORD_NOT_FOUND });
         _addresses.Remove(address);
-        return FeatureResultModel.Ok();
+        return ResultDomain.Ok();
     }
 
     /// <summary>Hedef adresi varsayilan yapar, digerlerini false ceker (≤1 varsayilan invariant).</summary>
     /// <remarks>Handler: SetDefaultAddressCommandHandler</remarks>
     // ≤1 varsayilan invariant: hedef bulunur, digerleri false, hedef true (tek yazma — atomik).
-    public FeatureResultModel SetDefaultAddress(Guid addressId)
+    public ResultDomain SetDefaultAddress(Guid addressId)
     {
         var target = _addresses.FirstOrDefault(x => x.Id == addressId);
-        if (target is null) return FeatureResultModel.NotFound();
+        if (target is null)
+            return ResultDomain.Error(new MessageItem { Code = CustomerResourceConstants.RECORD_NOT_FOUND });
 
         foreach (var address in _addresses)
             address.SetDefault(address.Id == addressId);
 
-        return FeatureResultModel.Ok();
+        return ResultDomain.Ok();
     }
 }

@@ -1,9 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
-using OpenIddict.Abstractions;
-using OpenIddict.Server.AspNetCore;
-using static OpenIddict.Abstractions.OpenIddictConstants;
-
 namespace Identity.Server.Connect;
 
 // /connect/userinfo — WebApp GetClaimsFromUserInfoEndpoint=true olduğundan name/email(/role) döner.

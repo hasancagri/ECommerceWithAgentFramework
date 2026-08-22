@@ -1,8 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using WebApp.PageModels;
-using WebApp.Services;
-using WebApp.Services.Behavior;
-using WebApp.ViewModel;
 
 
 namespace WebApp.Pages;

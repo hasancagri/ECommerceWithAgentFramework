@@ -1,6 +1,4 @@
-using System.Security.Claims;
 using OpenIddict.Server;
-using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Identity.Server.Connect;
 

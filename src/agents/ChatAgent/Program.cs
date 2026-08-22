@@ -5,19 +5,20 @@ builder.AddServiceDefaults();
 
 builder.Services.AddHttpContextAccessor();
 
-string apiKey = builder.Configuration["OpenAI:ApiKey"]
-                ?? throw new InvalidOperationException(
-                    "OpenAI:ApiKey is not set");
-string model = builder.Configuration["OpenAI:Model"] ?? "gpt-4o-mini";
+// OpenAI sohbet config'i — fail-fast: ApiKey eksikse ValidateOnStart servis acilisini durdurur.
+builder.Services.AddOptions<ChatAgent.Options.OpenAiOption>().BindConfiguration("OpenAI")
+    .ValidateDataAnnotations().ValidateOnStart();
 
-IChatClient chatClient = new OpenAIClient(apiKey)
-    .GetChatClient(model)
-    .AsIChatClient()
-    .AsBuilder()
-    .ConfigureOptions(o => o.ModelId = model)
-    .Build();
-
-builder.Services.AddSingleton(chatClient);
+builder.Services.AddSingleton<IChatClient>(sp =>
+{
+    var openAi = sp.GetRequiredService<IOptions<ChatAgent.Options.OpenAiOption>>().Value;
+    return new OpenAIClient(openAi.ApiKey)
+        .GetChatClient(openAi.Model)
+        .AsIChatClient()
+        .AsBuilder()
+        .ConfigureOptions(o => o.ModelId = openAi.Model)
+        .Build();
+});
 
 // OpenAI-uyumlu protokolleri etkinleştir.
 builder.AddOpenAIChatCompletions();

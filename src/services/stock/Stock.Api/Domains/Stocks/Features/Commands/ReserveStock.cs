@@ -20,7 +20,7 @@ public static class ReserveStock
         public async Task<FeatureObjectResultModel<ReserveStockResponse>> Handle(
             ReserveStockCommand cmd,
             IDocumentSession session,
-            IOptions<ReservationOptions> options,
+            ReservationOptions options,
             IMessageBus bus,
             CancellationToken ct)
         {
@@ -32,7 +32,7 @@ public static class ReserveStock
                     new MessageItem { Code = StockResourceConstants.RECORD_NOT_FOUND });
 
             var now = DateTimeOffset.UtcNow;
-            var result = stock.SetReservedQuantity(cmd.UserId, cmd.Quantity, options.Value.Ttl, now, cmd.ExpiresAt);
+            var result = stock.SetReservedQuantity(cmd.UserId, cmd.Quantity, options.Ttl, now, cmd.ExpiresAt);
             if (!result.IsSuccess)
                 return FeatureObjectResultModel<ReserveStockResponse>.Error(result.Messages);
 

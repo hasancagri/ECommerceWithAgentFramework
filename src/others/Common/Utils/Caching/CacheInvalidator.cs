@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Hybrid;
 using StackExchange.Redis;
 
 namespace Common.Utils.Caching;

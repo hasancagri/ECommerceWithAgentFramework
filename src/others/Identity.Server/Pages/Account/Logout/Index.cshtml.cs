@@ -1,8 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-
 namespace Identity.Server.Pages.Logout;
 
 // IdP'de doğrudan çıkış (nav linki). OIDC signout akışı ise /connect/logout end-session ucundan geçer.

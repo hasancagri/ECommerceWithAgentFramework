@@ -1,9 +1,3 @@
-using System.Net;
-using System.Text.Json;
-using WebApp.Dto;
-using WebApp.Extensions;
-using WebApp.Services.Refit;
-using WebApp.ViewModel;
 
 namespace WebApp.Services;
 

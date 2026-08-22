@@ -1,7 +1,4 @@
 ﻿using System.Net;
-using WebApp.Pages.Basket.ViewModel;
-using WebApp.Services.Refit;
-using WebApp.Extensions;
 using WebApp.Pages.Basket.Dto;
 
 

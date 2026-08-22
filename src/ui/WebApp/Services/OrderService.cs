@@ -1,8 +1,4 @@
 ﻿using System.Net;
-using WebApp.Pages.Order.Dto;
-using WebApp.Pages.Order.ViewModel;
-using WebApp.Services.Refit;
-using WebApp.Extensions;
 
 
 namespace WebApp.Services;

@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
-using OpenIddict.Server.AspNetCore;
-
 namespace Identity.Server.Connect;
 
 // /connect/logout — end-session ucu. WebApp OIDC signout'u buraya gelir; IdP cookie'si düşer,

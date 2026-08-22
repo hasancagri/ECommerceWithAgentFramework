@@ -1,9 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using WebApp.PageModels;
-using WebApp.Pages.Account.Dto;
-using WebApp.Pages.Order.ViewModel;
-using WebApp.Services;
 
 namespace WebApp.Pages.Account;
 

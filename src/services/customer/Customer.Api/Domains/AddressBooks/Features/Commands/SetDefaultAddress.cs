@@ -20,7 +20,7 @@ public static class SetDefaultAddress
 
             var result = book.SetDefaultAddress(cmd.AddressId);
             if (!result.IsSuccess)
-                return result;
+                return FeatureResultModel.Error(result.Messages);
 
             session.Store(book);
             return FeatureResultModel.Ok();

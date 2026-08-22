@@ -2,15 +2,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
-using Refit;
 using System.Globalization;
 using WebApp.ExceptionHandlers;
-using WebApp.Services;
-using WebApp.Services.Refit;
 using WebApp.Authentication;
 using WebApp.Chat;
-using WebApp.Extensions;
-using WebApp.Services.Behavior;
 
 
 var builder = WebApplication.CreateBuilder(args);

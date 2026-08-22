@@ -1,10 +1,3 @@
-using System.Security.Claims;
-using Identity.Server.Rbac;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using OpenIddict.Abstractions;
-using static OpenIddict.Abstractions.OpenIddictConstants;
-
 namespace Identity.Server.Connect;
 
 // Açılışta idempotent client + scope seed (Duende in-memory store'un karşılığı).

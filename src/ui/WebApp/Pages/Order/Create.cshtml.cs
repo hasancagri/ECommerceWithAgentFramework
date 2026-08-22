@@ -1,9 +1,5 @@
 #region
 
-using Microsoft.AspNetCore.Mvc;
-using WebApp.PageModels;
-using WebApp.Pages.Order.ViewModel;
-using WebApp.Services;
 
 #endregion
 
