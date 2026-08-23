@@ -42,15 +42,9 @@ builder.Host.UseWolverine(opts =>
     {
         e.ExchangeType = ExchangeType.Fanout;
     });
-    rabbit.DeclareExchange(RabbitMqConstants.BuyBoxChanged.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-    });
 
     opts.PublishMessage<Shared.IntegrationEvents.CanonicalProductUpserted>()
         .ToRabbitExchange(RabbitMqConstants.CanonicalProduct.Exchange);
-    opts.PublishMessage<Shared.IntegrationEvents.BuyBoxChanged>()
-        .ToRabbitExchange(RabbitMqConstants.BuyBoxChanged.Exchange);
 
     // Enrich lokal durable kuyruğu (R5): feed işleme hızı AI gecikmesine bağlanmaz; mesajlar
     // havuz yazımıyla aynı tx'te outbox'lanır. Hata: kademeli retry → error queue (DLQ deseni).

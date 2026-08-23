@@ -54,15 +54,11 @@ builder.Host.UseWolverine(opts =>
 
     // 041: Procurement yayınlarının tüketicisi — TEK sıralı kuyruk (aynı barkod sıralı işlenir).
     // Binding'i TÜKETİCİ kurar (007 dersi); iki exchange de aynı kuyruğa bağlanır.
+    // 047: buy-box söküldü → Catalog tek exchange (CanonicalProduct) dinler; fiyat da buradan gelir.
     rabbit.DeclareExchange(RabbitMqConstants.CanonicalProduct.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
         e.BindQueue(RabbitMqConstants.CanonicalProduct.Queues.Catalog);
-    });
-    rabbit.DeclareExchange(RabbitMqConstants.BuyBoxChanged.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.BuyBoxChanged.Queues.Catalog);
     });
     opts.ListenToRabbitQueue(RabbitMqConstants.ProcurementEvents.CatalogQueue).Sequential();
 

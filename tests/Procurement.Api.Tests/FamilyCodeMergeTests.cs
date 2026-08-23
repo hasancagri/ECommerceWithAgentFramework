@@ -5,12 +5,11 @@ using Xunit;
 
 namespace Procurement.Api.Tests;
 
-// 045: familyCode kanonik İÇERİK alanı — alan-bazlı Priority-merge (dolu kazanır, sıra-bağımsız),
-// hash'e dahil (değişim yeniden yayın), IsComplete'e DEĞİL (ailesiz ürün yayınlanır).
+// 045/047: familyCode kanonik İÇERİK alanı — tek listing'ten taşınır (barkod-başı tek tedarikçi;
+// çoklu-tedarikçi merge söküldü). Hash'e dahil (değişim yeniden yayın), IsComplete'e DEĞİL.
 public class FamilyCodeMergeTests
 {
     private static readonly Guid SupplierA = Guid.NewGuid();
-    private static readonly Guid SupplierB = Guid.NewGuid();
 
     private static ListingRow Row(string sku, string? familyCode, decimal price = 100m)
         => ListingRow.Create(sku, "Kulaklik Pro", "Açıklama", "Peak", "Elektronik/Kulaklık",
@@ -20,49 +19,20 @@ public class FamilyCodeMergeTests
     private static PoolProduct Product() => PoolProduct.Create("8690000000001").Data!;
 
     [Fact]
-    public void Merge_PriorityWins_FilledValue()
+    public void FamilyCode_FromListing_Survives()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row("A-1", "FAM-A"));
-        product.UpsertListing(SupplierB, 2, Row("B-1", "FAM-B"));
+        product.UpsertListing(SupplierA, Row("A-1", "FAM-A"));
         product.RebuildCanonical();
 
-        product.Canonical!.FamilyCode.ShouldBe("FAM-A"); // düşük Priority kazanır
+        product.Canonical!.FamilyCode.ShouldBe("FAM-A");
     }
 
     [Fact]
-    public void Merge_IsOrderIndependent()
-    {
-        var forward = Product();
-        forward.UpsertListing(SupplierA, 1, Row("A-1", "FAM-A"));
-        forward.UpsertListing(SupplierB, 2, Row("B-1", "FAM-B"));
-        forward.RebuildCanonical();
-
-        var reversed = Product();
-        reversed.UpsertListing(SupplierB, 2, Row("B-1", "FAM-B"));
-        reversed.UpsertListing(SupplierA, 1, Row("A-1", "FAM-A"));
-        reversed.RebuildCanonical();
-
-        forward.Canonical!.FamilyCode.ShouldBe("FAM-A");
-        reversed.Canonical!.FamilyCode.ShouldBe("FAM-A");
-    }
-
-    [Fact]
-    public void Merge_OnlyOneSupplierGivesCode_ThatValueSurvives()
+    public void NoFamilyCode_CanonicalFamilyNull()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row("A-1", null));
-        product.UpsertListing(SupplierB, 2, Row("B-1", "FAM-B"));
-        product.RebuildCanonical();
-
-        product.Canonical!.FamilyCode.ShouldBe("FAM-B"); // tek verenin değeri kaybolmaz
-    }
-
-    [Fact]
-    public void Merge_NoSupplierGivesCode_FamilyCodeNull()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row("A-1", null));
+        product.UpsertListing(SupplierA, Row("A-1", null));
         product.RebuildCanonical();
 
         product.Canonical!.FamilyCode.ShouldBeNull(); // ailesiz
@@ -72,11 +42,11 @@ public class FamilyCodeMergeTests
     public void Hash_ChangesWhenFamilyCodeChanges()
     {
         var a = Product();
-        a.UpsertListing(SupplierA, 1, Row("A-1", "FAM-A"));
+        a.UpsertListing(SupplierA, Row("A-1", "FAM-A"));
         a.RebuildCanonical();
 
         var b = Product();
-        b.UpsertListing(SupplierA, 1, Row("A-1", "FAM-B"));
+        b.UpsertListing(SupplierA, Row("A-1", "FAM-B"));
         b.RebuildCanonical();
 
         a.Canonical!.ComputeHash().ShouldNotBe(b.Canonical!.ComputeHash());
@@ -85,11 +55,10 @@ public class FamilyCodeMergeTests
     [Fact]
     public void FamilyCode_DoesNotAffectIsComplete()
     {
-        // Ailesiz ürün (familyCode null) yine complete olabilir → yayınlanır.
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row("A-1", null));
+        product.UpsertListing(SupplierA, Row("A-1", null));
         product.RebuildCanonical();
 
-        product.Canonical!.IsComplete.ShouldBeTrue();
+        product.Canonical!.IsComplete.ShouldBeTrue(); // ailesiz ürün yine yayınlanır
     }
 }

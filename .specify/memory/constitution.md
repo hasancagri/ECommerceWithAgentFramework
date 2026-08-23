@@ -1,14 +1,16 @@
-<!-- Sync Impact Report — v1.8.1 → v1.9.0 (2026-08-21, MINOR)
-     Modified: İlke I genişletildi — telemetri/davranış-verisi kanal istisnası eklendi (042 R7).
-     Kayıp-toleranslı, domain-gerçeği OLMAYAN davranış telemetrisi, UI/BFF katmanından (BC
-     değildir) TEK-tüketicili bir BC'ye versiyonlu, şema-kontratlı log dosyasıyla beslenebilir;
-     ikinci tüketici doğduğu an kanal integration event'e TERFİ ETMEK ZORUNDADIR. DB izolasyonu
-     aynen sürer (dosyayı yalnız sahibi BC okur, kendi DB'sine indirir).
-     Gerekçe: 042 Personalization — WebApp davranış JSONL'i → Python BC; event töreni telemetri
-     için ağır, kuralın sessiz esnemesi yerine kayıtlı istisna.
-     Added/Removed sections: yok.
+<!-- Sync Impact Report — v1.9.0 → v1.10.0 (2026-08-23, MINOR)
+     Added: İlke VII — Domain Süreci Legibility (EventStorming-belgelenmiş süreç). Her BC'nin
+     domain süreci ubiquitous dille, EventStorming altitude'unda belgelenir ve süreç değiştikçe
+     güncel tutulur; süreç belgesi olmayan/bayat BC kabul edilemez. Süreç disiplinidir (İlke VI
+     emsali); anayasa yalnız ne+neden der, dosya adı/format/guard "nasıl" olarak conventions.md/
+     CLAUDE.md'ye bırakılır.
+     Gerekçe: koda uzun süre uzak kalan sahibin bile süreci geri yükleyebilmesi; domain'in
+     teknolojinin ardında kaybolmaması (DDD çekirdeği = domain legibility).
+     Modified/Removed principles: yok (mevcut ilkeler bozulmadı).
      Templates: plan/spec/tasks ✅ değişiklik gerekmez (Constitution Check anayasadan türetilir).
-     Runtime docs: CLAUDE.md ✅ 042 bölümü bu amendment'a hizalandı. -->
+     Runtime docs: CLAUDE.md ⚠ pending (FLOW.md guard komutu + kural pointer eklenecek);
+     conventions.md ⚠ pending (FLOW.md "nasıl" — format + tetik + guard); src/services/*/FLOW.md
+     ⚠ pending (Procurement pilot yazıldı, kalan BC'ler + scripts/check-flow-links.sh sırada). -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -156,6 +158,27 @@ edilebilir diğer domain birimleri.
   harness gerektiren katmanlarda pahalıdır. İlke II'nin "iş kuralı aggregate'te"
   kuralı bu ilkeyle test edilebilirliğini kanıtlar.
 
+### VII. Domain Süreci Legibility (EventStorming-belgelenmiş süreç)
+
+Her Bounded Context'in domain süreci **okunabilir olmak zorundadır**: BC'nin iş akışı
+(hangi adım, hangi sırayla, hangi komut/olay/policy) **EventStorming altitude'unda**,
+ubiquitous dille (teknoloji değil, iş/ürün anlatısı olarak) belgelenir ve **domain süreci
+değiştikçe** güncel tutulur.
+
+- Kapsam **domain sürecidir** — iş adımlarının sırası ve doğurdukları olaylar; class-by-class
+  çağrı dökümü DEĞİL. Teknoloji yalnız koda-atlama köprüsü olarak kenarda kalır.
+- Güncelleme tetiği **dardır**: yeni/silinen command-event-policy ya da adım sırası değişimi.
+  Mekanik refactor/rename süreci değiştirmez → belgeyi tetiklemez (o drifti guard yakalar).
+- Domain süreci belgesi **olmayan ya da bayat** (koddaki güncel süreçle çelişen) bir BC kabul
+  edilemez. Bir feature domain sürecini değiştiriyorsa belge **aynı PR'da** güncellenir.
+- Bu bir **süreç disiplinidir** (İlke VI Domain-TDD gibi), yapı invariant'ı değil. Anayasa yalnız
+  *ne + neden* der; belgenin **dosya adı, formatı ve senkron-guard'ı** "nasıl" olarak
+  `conventions.md`/`CLAUDE.md`'de tanımlanır (İlke VI'nın "test-first" deyip "xUnit"i CLAUDE.md'ye
+  bırakması gibi).
+- Gerekçe: DDD'nin çekirdeği domain legibility'dir. Koda uzun süre uzak kalan sahibin bile süreci
+  geri yükleyebilmesi, domain'in teknolojinin ardında kaybolmaması gerekir. Domain-altitude olduğu
+  için bu belge class-yapısından çok daha az bayatlar — yalnız iş süreci değişince değişir.
+
 ## Teknoloji ve Mimari Kısıtları
 
 - **.NET 10**, C#, her yerde `Nullable` + `ImplicitUsings` açık.
@@ -242,7 +265,14 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.9.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-21
+**Version**: 1.10.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-23
+
+<!-- v1.10.0 (2026-08-23, MINOR): İlke VII eklendi — Domain Süreci Legibility. Her BC'nin domain
+     süreci EventStorming altitude'unda, ubiquitous dille belgelenir ve süreç değiştikçe (yeni/silinen
+     command-event-policy, sıra değişimi) güncel tutulur; belgesi olmayan/bayat BC kabul edilemez.
+     Süreç disiplinidir (İlke VI emsali); anayasa ne+neden der, dosya adı/format/guard "nasıl" olarak
+     conventions.md/CLAUDE.md'ye bırakılır. Gerekçe: koddan uzak kalan sahibin süreci geri yükleyebilmesi,
+     domain'in teknoloji ardında kaybolmaması (DDD çekirdeği). Procurement FLOW.md pilotu yazıldı. -->
 
 <!-- v1.9.0 (2026-08-21, MINOR): İlke I'e telemetri kanalı istisnası — kayıp-toleranslı davranış
      telemetrisi UI/BFF'den tek-tüketicili BC'ye versiyonlu log dosyasıyla beslenebilir; ikinci

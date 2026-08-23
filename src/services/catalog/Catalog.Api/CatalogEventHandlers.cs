@@ -118,53 +118,6 @@ public class CatalogEventHandlers
             await bus.PublishAsync(new IntegrationEvents.ProductLinked(evt.Barcode, product.Id, evt.Stock));
     }
 
-    // US2: buy-box kararı fiyatı günceller. Bilinmeyen Gtin YOK SAYILIR — ilk değerler
-    // CanonicalProductUpserted'da taşındığından kayıp olmaz (yarış edge'i, R4). Kazanansız durumda
-    // ürün vitrinde KALIR (unpublish yok — FR-015); satın alınamazlık stok 0 ile sağlanır (Stock tarafı).
-    public async Task Handle(
-        IntegrationEvents.BuyBoxChanged evt,
-        IDocumentSession session,
-        IMessageBus bus,
-        ILogger<CatalogEventHandlers> logger,
-        CancellationToken ct)
-    {
-        var product = await session.Query<Product>()
-            .FirstOrDefaultAsync(p => p.Gtin == evt.Barcode, ct);
-        if (product is null)
-            return;
-
-        var price = Money.Create(evt.Price);
-        if (price is null)
-        {
-            logger.LogWarning("Negatif buy-box fiyatı yok sayıldı: {Barcode}", evt.Barcode);
-            return;
-        }
-
-        product.SetPrice(price);
-        session.Store(product);
-
-        // Fat kontrat: ProductChangedEvent marka/kategori adlarını da taşır (016 R7) — lookup burada.
-        var brand = await session.LoadAsync<Brand>(product.BrandId, ct);
-        var primary = product.Categories.FirstOrDefault();
-        var category = primary is null ? null : await session.LoadAsync<Category>(primary.CategoryId, ct);
-        if (brand is null || category is null)
-        {
-            logger.LogWarning("Buy-box fiyat yazıldı ama marka/kategori çözülemedi, event atlandı: {Barcode}", evt.Barcode);
-            return;
-        }
-
-        // 043: fat kontrat spec adlarını da taşır — Storefront satırı eksik yazılmasın.
-        var registry = await session.Query<Domains.SpecificationAttributes.SpecificationAttribute>()
-            .Where(a => !a.IsDeleted).ToListAsync(ct);
-
-        await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
-            product.Id, product.Name, product.FullDescription, product.Price.Amount,
-            brand.Id, brand.Name, category.Id, category.Name,
-            product.ImageUrl, IsDeleted: false,
-            Specs: ResolveSpecNames(product, registry),
-            FamilyCode: product.FamilyCode));
-    }
-
     // 043: atama Id'lerini kanonik adlara çevirir (event sözleşmesi = AD). Registry'de artık
     // bulunmayan atama sessizce düşer (seed değişimi — telemetri değil, kayıp kabul).
     private static List<IntegrationEvents.ProductSpec> ResolveSpecNames(

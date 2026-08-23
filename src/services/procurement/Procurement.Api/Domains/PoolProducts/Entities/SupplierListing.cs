@@ -2,13 +2,13 @@ namespace Procurement.Api.Domains.PoolProducts.Entities;
 
 /// <summary>
 /// (Tedarikçi × barkod) ham feed satırı — PoolProduct aggregate'ine ait entity (base sınıf almaz).
-/// SupplierPriority denormalize taşınır: merge + buy-box saf kalır (Supplier lookup'sız, R1).
-/// Feed'den düşen satır silinmez, IsDelisted işaretlenir (FR-006) — yarıştan ve merge'den çıkar.
+/// 047: barkod global tekil → barkod-başı TEK tedarikçi. Buy-box/priority-merge söküldü; SupplierPriority
+/// ve satır-düzeyi ContentHash kaldırıldı (idempotency tek noktada = TryTakePublish publish-gate).
+/// Feed'den düşen satır silinmez, IsDelisted işaretlenir (FR-006) — kanonikten çıkar (stok 0).
 /// </summary>
 public class SupplierListing
 {
     public Guid SupplierId { get; private set; }
-    public int SupplierPriority { get; private set; }
     public string SupplierSku { get; private set; } = default!;
     public string Name { get; private set; } = default!;
     public string? Description { get; private set; }
@@ -27,7 +27,6 @@ public class SupplierListing
     // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
     public string? FamilyCode { get; private set; }
 
-    public string ContentHash { get; private set; } = default!;
     public bool IsDelisted { get; private set; }
     public DateTime LastSeenUtc { get; private set; }
 
@@ -35,17 +34,16 @@ public class SupplierListing
     {
     }
 
-    public static SupplierListing Create(Guid supplierId, int supplierPriority, ListingRow row)
+    public static SupplierListing Create(Guid supplierId, ListingRow row)
     {
         var listing = new SupplierListing { SupplierId = supplierId };
-        listing.Refresh(supplierPriority, row);
+        listing.Refresh(row);
         return listing;
     }
 
-    /// <summary>Satırı feed'deki güncel haliyle ezer; delist işaretini kaldırır (yeniden listelendi).</summary>
-    public void Refresh(int supplierPriority, ListingRow row)
+    /// <summary>Satırı feed'deki güncel haliyle koşulsuz ezer; delist işaretini kaldırır (yeniden listelendi).</summary>
+    public void Refresh(ListingRow row)
     {
-        SupplierPriority = supplierPriority;
         SupplierSku = row.SupplierSku;
         Name = row.Name;
         Description = row.Description;
@@ -59,14 +57,10 @@ public class SupplierListing
         RawAttributes = new Dictionary<string, string>(row.RawAttributes);
         CanonicalSpecs = row.CanonicalSpecs.ToList();
         FamilyCode = row.FamilyCode;
-        ContentHash = row.ComputeContentHash();
         IsDelisted = false;
         LastSeenUtc = DateTime.UtcNow;
     }
 
-    /// <summary>Değişmeyen satırın görülme zamanını tazeler.</summary>
-    public void Touch() => LastSeenUtc = DateTime.UtcNow;
-
-    /// <summary>Feed'de görünmeyen satırı yarıştan çıkarır (silme yok — FR-006).</summary>
+    /// <summary>Feed'de görünmeyen satırı işaretler (silme yok — FR-006).</summary>
     public void Delist() => IsDelisted = true;
 }

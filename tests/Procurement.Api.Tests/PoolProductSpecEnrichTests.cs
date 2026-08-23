@@ -14,7 +14,7 @@ public class PoolProductSpecEnrichTests
     private static PoolProduct CompleteProduct(IReadOnlyList<SpecValue>? specs = null)
     {
         var product = PoolProduct.Create("8690000000001").Data!;
-        product.UpsertListing(SupplierA, 1, ListingRow.Create(
+        product.UpsertListing(SupplierA, ListingRow.Create(
             "A-1", "Telefon X", "Açıklama", "MarkaX", "Elektronik/Telefon",
             "Elektronik", "Telefon", 100m, 10, null, null, specs));
         product.RebuildCanonical();
@@ -54,7 +54,7 @@ public class PoolProductSpecEnrichTests
         product.NeedsEnrichment.ShouldBeFalse();               // içerik eksik değil
         product.NeedsSpecEnrichment.ShouldBeTrue();            // ama spec enrich adayı
 
-        var publish = product.TryTakePublish(product.EvaluateBuyBox().Data!);
+        var publish = product.TryTakePublish();
         publish.Data!.PublishCanonical.ShouldBeTrue();         // yayın spec beklemez
     }
 
@@ -70,16 +70,16 @@ public class PoolProductSpecEnrichTests
     public void SpecChange_ChangesCanonicalHash_TriggersRepublish()
     {
         var product = CompleteProduct([SpecValue.Create("Renk", "Siyah")]);
-        product.TryTakePublish(product.EvaluateBuyBox().Data!); // ilk yayın
+        product.TryTakePublish(); // ilk yayın
 
         // Yalnız spec değişti → içerik hash'i değişmeli → yeniden kanonik yayın.
-        product.UpsertListing(SupplierA, 1, ListingRow.Create(
+        product.UpsertListing(SupplierA, ListingRow.Create(
             "A-1", "Telefon X", "Açıklama", "MarkaX", "Elektronik/Telefon",
             "Elektronik", "Telefon", 100m, 10, null, null,
             [SpecValue.Create("Renk", "Beyaz")]));
         product.RebuildCanonical();
 
-        var publish = product.TryTakePublish(product.EvaluateBuyBox().Data!);
+        var publish = product.TryTakePublish();
         publish.Data!.PublishCanonical.ShouldBeTrue();
     }
 }

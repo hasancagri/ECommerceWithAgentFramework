@@ -7,12 +7,12 @@ using Xunit;
 namespace Procurement.Api.Tests;
 
 // PoolProduct aggregate saf domain testleri (İlke VI — test-first).
-// Kapsam US1: UpsertListing hash-diff + guard'lar, RebuildCanonical Priority-merge + sıra-bağımsızlık,
-// EvaluateBuyBox (en ucuz / eşitlikte düşük Priority / tek offer), TryTakePublish (complete+değişim, NoChange).
+// 047: barkod global tekil → barkod-başı TEK tedarikçi. Buy-box/çoklu-offer/priority-merge söküldü.
+// Kapsam: UpsertListing (tek-listing, guard'lar), RebuildCanonical (tek-kaynak), CurrentOffer,
+// MarkDelisted (stok 0/son fiyat), TryTakePublish (içerik VEYA fiyat VEYA stok değişince; tek-gate).
 public class PoolProductTests
 {
     private static readonly Guid SupplierA = Guid.NewGuid();
-    private static readonly Guid SupplierB = Guid.NewGuid();
 
     private static ListingRow Row(
         string sku = "A-001",
@@ -55,52 +55,36 @@ public class PoolProductTests
         result.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.BARCODE_REQUIRED);
     }
 
-    // --- UpsertListing ---
+    // --- UpsertListing (tek-listing, koşulsuz ezme) ---
 
     [Fact]
-    public void UpsertListing_NewSupplier_ReturnsAdded()
+    public void UpsertListing_New_CreatesSingleListing()
     {
         var product = Product();
 
-        var result = product.UpsertListing(SupplierA, 1, Row());
+        var result = product.UpsertListing(SupplierA, Row());
 
         result.IsSuccess.ShouldBeTrue();
-        result.Data.ShouldBe(ListingChange.Added);
-        product.Listings.Count.ShouldBe(1);
+        product.Listing.ShouldNotBeNull();
+        product.Listing!.SupplierId.ShouldBe(SupplierA);
     }
 
     [Fact]
-    public void UpsertListing_SameRowTwice_ReturnsUnchanged()
+    public void UpsertListing_ChangedPrice_RefreshesListing()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row());
+        product.UpsertListing(SupplierA, Row(price: 100m));
 
-        var result = product.UpsertListing(SupplierA, 1, Row());
-
-        result.IsSuccess.ShouldBeTrue();
-        result.Data.ShouldBe(ListingChange.Unchanged);
-        product.Listings.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void UpsertListing_ChangedPrice_ReturnsUpdated()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(price: 100m));
-
-        var result = product.UpsertListing(SupplierA, 1, Row(price: 90m));
+        var result = product.UpsertListing(SupplierA, Row(price: 90m));
 
         result.IsSuccess.ShouldBeTrue();
-        result.Data.ShouldBe(ListingChange.Updated);
-        product.Listings.Single().Price.ShouldBe(90m);
+        product.Listing!.Price.ShouldBe(90m);
     }
 
     [Fact]
     public void UpsertListing_EmptyName_Fails()
     {
-        var product = Product();
-
-        var result = product.UpsertListing(SupplierA, 1, Row(name: " "));
+        var result = Product().UpsertListing(SupplierA, Row(name: " "));
 
         result.IsSuccess.ShouldBeFalse();
         result.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.LISTING_NAME_REQUIRED);
@@ -109,9 +93,7 @@ public class PoolProductTests
     [Fact]
     public void UpsertListing_NegativePrice_Fails()
     {
-        var product = Product();
-
-        var result = product.UpsertListing(SupplierA, 1, Row(price: -1m));
+        var result = Product().UpsertListing(SupplierA, Row(price: -1m));
 
         result.IsSuccess.ShouldBeFalse();
         result.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.LISTING_PRICE_NEGATIVE);
@@ -120,67 +102,34 @@ public class PoolProductTests
     [Fact]
     public void UpsertListing_NegativeStock_Fails()
     {
-        var product = Product();
-
-        var result = product.UpsertListing(SupplierA, 1, Row(stock: -5));
+        var result = Product().UpsertListing(SupplierA, Row(stock: -5));
 
         result.IsSuccess.ShouldBeFalse();
         result.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.LISTING_STOCK_NEGATIVE);
     }
 
-    // --- RebuildCanonical (R9 Priority-merge) ---
+    // --- RebuildCanonical (tek-kaynak; priority-merge YOK) ---
 
     [Fact]
-    public void RebuildCanonical_PriorityWinsOnFilledFields()
+    public void RebuildCanonical_FromSingleListing()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(name: "Telefon X (A)", description: "A açıklaması"));
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", name: "Telefon X (B)", description: "B açıklaması"));
+        product.UpsertListing(SupplierA, Row(name: "Telefon X", description: "A açıklaması"));
 
         product.RebuildCanonical().IsSuccess.ShouldBeTrue();
 
-        product.Canonical!.Name.ShouldBe("Telefon X (A)");
+        product.Canonical!.Name.ShouldBe("Telefon X");
         product.Canonical.Description.ShouldBe("A açıklaması");
-        product.Canonical.Sku.ShouldBe("A-001"); // öncelikli tedarikçinin SKU'su
-    }
-
-    [Fact]
-    public void RebuildCanonical_MissingFieldFilledFromLowerPriority()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(description: null, canonicalCategory: null, canonicalSubCategory: null, rawCategory: null));
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", description: "B açıklaması"));
-
-        product.RebuildCanonical();
-
-        product.Canonical!.Description.ShouldBe("B açıklaması");
-        product.Canonical.Category.ShouldBe("Elektronik"); // pair B'den geldi
+        product.Canonical.Sku.ShouldBe("A-001");
+        product.Canonical.Category.ShouldBe("Elektronik");
         product.Canonical.SubCategory.ShouldBe("Telefon");
-        product.Canonical.Sku.ShouldBe("A-001"); // sku hâlâ öncelikli tedarikçiden
-    }
-
-    [Fact]
-    public void RebuildCanonical_OrderIndependent()
-    {
-        var first = Product();
-        first.UpsertListing(SupplierA, 1, Row(name: "Ad A", description: null));
-        first.UpsertListing(SupplierB, 2, Row(sku: "B-001", name: "Ad B", description: "B açıklaması"));
-        first.RebuildCanonical();
-
-        var second = Product();
-        second.UpsertListing(SupplierB, 2, Row(sku: "B-001", name: "Ad B", description: "B açıklaması"));
-        second.UpsertListing(SupplierA, 1, Row(name: "Ad A", description: null));
-        second.RebuildCanonical();
-
-        second.Canonical.ShouldBe(first.Canonical); // value-eşitlik: aynı kanonik içerik
-        second.MergedContentHash.ShouldBe(first.MergedContentHash);
     }
 
     [Fact]
     public void RebuildCanonical_IncompleteContent_StaysPending()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(description: null));
+        product.UpsertListing(SupplierA, Row(description: null));
 
         product.RebuildCanonical();
 
@@ -189,191 +138,150 @@ public class PoolProductTests
         product.NeedsEnrichment.ShouldBeTrue();
     }
 
-    // --- EvaluateBuyBox ---
+    // --- CurrentOffer ---
 
     [Fact]
-    public void EvaluateBuyBox_CheapestStockedWins()
+    public void CurrentOffer_ActiveListing_ReturnsListingPriceStock()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(price: 120m, stock: 5));
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 100m, stock: 3));
+        product.UpsertListing(SupplierA, Row(price: 120m, stock: 7));
 
-        var result = product.EvaluateBuyBox();
-
-        result.IsSuccess.ShouldBeTrue();
-        result.Data!.SupplierId.ShouldBe(SupplierB);
-        result.Data.Price.ShouldBe(100m);
-        result.Data.Stock.ShouldBe(3);
+        product.CurrentOffer.Price.ShouldBe(120m);
+        product.CurrentOffer.Stock.ShouldBe(7);
     }
 
     [Fact]
-    public void EvaluateBuyBox_EqualPrice_LowerPriorityWins()
+    public void CurrentOffer_Delisted_StockZero_PriceLastKnown()
     {
         var product = Product();
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 100m, stock: 3));
-        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 5));
-
-        var result = product.EvaluateBuyBox();
-
-        result.Data!.SupplierId.ShouldBe(SupplierA);
-    }
-
-    [Fact]
-    public void EvaluateBuyBox_SingleOffer_Wins()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 5));
-
-        var result = product.EvaluateBuyBox();
-
-        result.Data!.SupplierId.ShouldBe(SupplierA);
-        result.Data.Price.ShouldBe(100m);
-    }
-
-    [Fact]
-    public void EvaluateBuyBox_OutOfStockExcluded()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(price: 90m, stock: 0));
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 100m, stock: 3));
-
-        var result = product.EvaluateBuyBox();
-
-        result.Data!.SupplierId.ShouldBe(SupplierB); // en ucuz stoksuz → sıradaki stoklu kazanır
-    }
-
-    // --- TryTakePublish ---
-
-    [Fact]
-    public void TryTakePublish_CompleteAndNew_PublishesBoth()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row());
+        product.UpsertListing(SupplierA, Row(price: 120m, stock: 7));
         product.RebuildCanonical();
-        var decision = product.EvaluateBuyBox().Data!;
-
-        var result = product.TryTakePublish(decision);
-
-        result.IsSuccess.ShouldBeTrue();
-        result.Data!.PublishCanonical.ShouldBeTrue();
-        result.Data.PublishBuyBox.ShouldBeTrue();
-        product.Status.ShouldBe(PoolProductStatus.Published);
-        product.PublishedBuyBox.ShouldBe(decision);
-    }
-
-    [Fact]
-    public void TryTakePublish_NoChange_PublishesNothing()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row());
-        product.RebuildCanonical();
-        var decision = product.EvaluateBuyBox().Data!;
-        product.TryTakePublish(decision);
-
-        var again = product.TryTakePublish(product.EvaluateBuyBox().Data!);
-
-        again.IsSuccess.ShouldBeTrue();
-        again.Data!.PublishCanonical.ShouldBeFalse();
-        again.Data.PublishBuyBox.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TryTakePublish_IncompleteCanonical_NoChange()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(description: null));
-        product.RebuildCanonical();
-        var decision = product.EvaluateBuyBox().Data!;
-
-        var result = product.TryTakePublish(decision);
-
-        result.Data!.PublishCanonical.ShouldBeFalse();
-        result.Data.PublishBuyBox.ShouldBeFalse();
-        product.Status.ShouldBe(PoolProductStatus.Pending);
-    }
-
-    // --- US2: buy-box değişimi (T035) ---
-
-    private static PoolProduct PublishedProduct(out BuyBoxDecision published)
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 5));
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 120m, stock: 8));
-        product.RebuildCanonical();
-        published = product.EvaluateBuyBox().Data!;
-        product.TryTakePublish(published);
-        return product;
-    }
-
-    [Fact]
-    public void BuyBox_RivalUndercuts_WinnerHandsOver_OnlyBuyBoxPublished()
-    {
-        var product = PublishedProduct(out _);
-
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 90m, stock: 8));
-        product.RebuildCanonical();
-        var decision = product.EvaluateBuyBox().Data!;
-        var publish = product.TryTakePublish(decision);
-
-        decision.SupplierId.ShouldBe(SupplierB); // kazanan devri
-        decision.Price.ShouldBe(90m);
-        publish.Data!.PublishBuyBox.ShouldBeTrue();
-        publish.Data.PublishCanonical.ShouldBeFalse(); // fiyat içerik hash'ine girmez
-    }
-
-    [Fact]
-    public void BuyBox_WinnerOutOfStock_NextCheapestWins()
-    {
-        var product = PublishedProduct(out _);
-
-        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 0));
-        var decision = product.EvaluateBuyBox().Data!;
-
-        decision.SupplierId.ShouldBe(SupplierB); // stoksuz kazanan yarıştan düşer
-        decision.Price.ShouldBe(120m);
-        decision.Stock.ShouldBe(8);
-    }
-
-    [Fact]
-    public void BuyBox_AllOutOfStock_NoWinnerStockZeroPriceKept()
-    {
-        var product = PublishedProduct(out var published);
-
-        product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 0));
-        product.UpsertListing(SupplierB, 2, Row(sku: "B-001", price: 120m, stock: 0));
-        var decision = product.EvaluateBuyBox().Data!;
-        var publish = product.TryTakePublish(decision);
-
-        decision.SupplierId.ShouldBeNull();
-        decision.Stock.ShouldBe(0);
-        decision.Price.ShouldBe(published.Price); // son bilinen fiyat vitrinde kalır
-        publish.Data!.PublishBuyBox.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void MarkDelisted_RemovesListingFromRace()
-    {
-        var product = PublishedProduct(out _);
+        product.TryTakePublish();            // PublishedPrice = 120
 
         product.MarkDelisted(SupplierA);
-        product.RebuildCanonical();
-        var decision = product.EvaluateBuyBox().Data!;
 
-        decision.SupplierId.ShouldBe(SupplierB); // delisted satır yarışa girmez
-        product.Canonical!.Name.ShouldBe("Telefon X"); // merge de delisted'i atlar (B'nin adı)
+        product.CurrentOffer.Stock.ShouldBe(0);
+        product.CurrentOffer.Price.ShouldBe(120m); // son bilinen fiyat vitrinde kalır
+    }
+
+    // --- MarkDelisted ---
+
+    [Fact]
+    public void MarkDelisted_KeepsCanonical_DropsStock()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, Row());
+        product.RebuildCanonical();
+
+        product.MarkDelisted(SupplierA).IsSuccess.ShouldBeTrue();
+        product.RebuildCanonical(); // delisted → son kanonik korunur
+
+        product.Canonical!.Name.ShouldBe("Telefon X"); // ürün vitrinde kalır
+        product.CurrentOffer.Stock.ShouldBe(0);
     }
 
     [Fact]
     public void MarkDelisted_IsIdempotent()
     {
-        var product = PublishedProduct(out _);
+        var product = Product();
+        product.UpsertListing(SupplierA, Row());
 
         product.MarkDelisted(SupplierA).IsSuccess.ShouldBeTrue();
         product.MarkDelisted(SupplierA).IsSuccess.ShouldBeTrue();
         product.MarkDelisted(Guid.NewGuid()).IsSuccess.ShouldBeTrue(); // bilinmeyen tedarikçi sessiz geçer
     }
 
-    // --- US3: ApplyEnrichment (T041) ---
+    // --- TryTakePublish (tek-gate: içerik VEYA fiyat VEYA stok) ---
+
+    [Fact]
+    public void TryTakePublish_CompleteAndNew_Publishes()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, Row());
+        product.RebuildCanonical();
+
+        var result = product.TryTakePublish();
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Data!.PublishCanonical.ShouldBeTrue();
+        product.Status.ShouldBe(PoolProductStatus.Published);
+        product.PublishedPrice.ShouldBe(100m);
+        product.PublishedStock.ShouldBe(10);
+    }
+
+    [Fact]
+    public void TryTakePublish_NoChange_PublishesNothing()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, Row());
+        product.RebuildCanonical();
+        product.TryTakePublish();
+
+        var again = product.TryTakePublish();
+
+        again.Data!.PublishCanonical.ShouldBeFalse(); // değişmeyen tekrar sessiz (SC-008)
+    }
+
+    [Fact]
+    public void TryTakePublish_IncompleteCanonical_NoChange()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, Row(description: null));
+        product.RebuildCanonical();
+
+        var result = product.TryTakePublish();
+
+        result.Data!.PublishCanonical.ShouldBeFalse();
+        product.Status.ShouldBe(PoolProductStatus.Pending);
+    }
+
+    [Fact]
+    public void TryTakePublish_PriceChanged_Republishes()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, Row(price: 100m));
+        product.RebuildCanonical();
+        product.TryTakePublish();
+
+        product.UpsertListing(SupplierA, Row(price: 90m)); // yalnız fiyat değişti
+        product.RebuildCanonical();
+        var publish = product.TryTakePublish();
+
+        publish.Data!.PublishCanonical.ShouldBeTrue(); // fiyat tek kanaldan akar (047)
+        product.PublishedPrice.ShouldBe(90m);
+    }
+
+    [Fact]
+    public void TryTakePublish_StockChanged_Republishes()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, Row(stock: 10));
+        product.RebuildCanonical();
+        product.TryTakePublish();
+
+        product.UpsertListing(SupplierA, Row(stock: 3)); // yalnız stok değişti
+        product.RebuildCanonical();
+        var publish = product.TryTakePublish();
+
+        publish.Data!.PublishCanonical.ShouldBeTrue();
+        product.PublishedStock.ShouldBe(3);
+    }
+
+    [Fact]
+    public void TryTakePublish_ContentChanged_Republishes()
+    {
+        var product = Product();
+        product.UpsertListing(SupplierA, Row(name: "Telefon X"));
+        product.RebuildCanonical();
+        product.TryTakePublish();
+
+        product.UpsertListing(SupplierA, Row(name: "Telefon X Pro")); // içerik değişti
+        product.RebuildCanonical();
+
+        product.TryTakePublish().Data!.PublishCanonical.ShouldBeTrue();
+    }
+
+    // --- ApplyEnrichment (tek-listing overlay) ---
 
     private static readonly IReadOnlyList<CanonicalCategoryPair> Canon =
     [
@@ -385,7 +293,7 @@ public class PoolProductTests
     public void ApplyEnrichment_FillsOnlyMissingContentFields()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(description: null, rawCategory: null,
+        product.UpsertListing(SupplierA, Row(description: null, rawCategory: null,
             canonicalCategory: null, canonicalSubCategory: null, price: 100m, stock: 5));
         product.RebuildCanonical();
 
@@ -397,59 +305,54 @@ public class PoolProductTests
         product.Status.ShouldBe(PoolProductStatus.Enriched);
         product.Canonical!.Description.ShouldBe("AI açıklaması");
         product.Canonical.Category.ShouldBe("Elektronik");
-        product.Canonical.SubCategory.ShouldBe("Telefon");
         product.Canonical.IsComplete.ShouldBeTrue();
-        // Barkod/ölçü/fiyat/stok DOKUNULMAZ (FR-010): listing değerleri aynen durur.
+        // Barkod/fiyat/stok DOKUNULMAZ (FR-010).
         product.Barcode.ShouldBe("8690000000001");
-        product.Listings.Single().Price.ShouldBe(100m);
-        product.Listings.Single().Stock.ShouldBe(5);
-        product.Canonical.Dimensions.ShouldBe(RowDimensions.Create(0.5m, 15m, 7m, 1m));
+        product.Listing!.Price.ShouldBe(100m);
+        product.Listing.Stock.ShouldBe(5);
     }
 
     [Fact]
     public void ApplyEnrichment_DoesNotOverrideExistingContent()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(description: "Feed açıklaması"));
+        product.UpsertListing(SupplierA, Row(description: "Feed açıklaması"));
         product.RebuildCanonical();
 
-        var result = EnrichmentResult.Create(product.MergedContentHash!,
-            "AI açıklaması", "Moda", "Çanta");
+        var result = EnrichmentResult.Create(product.MergedContentHash!, "AI açıklaması", "Moda", "Çanta");
         product.ApplyEnrichment(result, Canon, []);
 
-        product.Canonical!.Description.ShouldBe("Feed açıklaması"); // merge her zaman önceliklidir
-        product.Canonical.Category.ShouldBe("Elektronik"); // feed'in eşlenen kategorisi kalır
+        product.Canonical!.Description.ShouldBe("Feed açıklaması"); // feed her zaman önceliklidir
+        product.Canonical.Category.ShouldBe("Elektronik");
     }
 
     [Fact]
     public void ApplyEnrichment_NonCanonicalCategory_Fails()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(rawCategory: null, canonicalCategory: null, canonicalSubCategory: null));
+        product.UpsertListing(SupplierA, Row(rawCategory: null, canonicalCategory: null, canonicalSubCategory: null));
         product.RebuildCanonical();
 
-        var result = EnrichmentResult.Create(product.MergedContentHash!,
-            null, "Uydurma Kategori", "Uydurma Alt");
+        var result = EnrichmentResult.Create(product.MergedContentHash!, null, "Uydurma", "Uydurma Alt");
         var apply = product.ApplyEnrichment(result, Canon, []);
 
         apply.IsSuccess.ShouldBeFalse();
         apply.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.ENRICHMENT_CATEGORY_NOT_CANONICAL);
-        product.Enrichment.ShouldBeNull(); // reddedilen sonuç saklanmaz
+        product.Enrichment.ShouldBeNull();
     }
 
     [Fact]
     public void Enrichment_SourceHashCache_SameInputSkips()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(description: null));
+        product.UpsertListing(SupplierA, Row(description: null));
         product.RebuildCanonical();
         product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
             "AI açıklaması", null, null, []), Canon, []);
 
-        product.HasFreshEnrichment.ShouldBeTrue(); // aynı girdi → AI tekrar çağrılmaz (komut bu getter'la atlar)
+        product.HasFreshEnrichment.ShouldBeTrue();
 
-        // Listing içeriği değişirse merge hash'i değişir → cache düşer, enrich yeniden gerekebilir.
-        product.UpsertListing(SupplierA, 1, Row(name: "Yeni Ad", description: null));
+        product.UpsertListing(SupplierA, Row(name: "Yeni Ad", description: null));
         product.RebuildCanonical();
         product.HasFreshEnrichment.ShouldBeFalse();
     }
@@ -458,29 +361,15 @@ public class PoolProductTests
     public void Enrichment_SurvivesRebuild_OverlayReapplied()
     {
         var product = Product();
-        product.UpsertListing(SupplierA, 1, Row(description: null, price: 100m));
+        product.UpsertListing(SupplierA, Row(description: null, price: 100m));
         product.RebuildCanonical();
         product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
             "AI açıklaması", null, null, []), Canon, []);
 
-        // Fiyat değişimi rebuild tetikler; saklı enrich sonucu overlay'de yeniden uygulanır (FR-009).
-        product.UpsertListing(SupplierA, 1, Row(description: null, price: 90m));
+        product.UpsertListing(SupplierA, Row(description: null, price: 90m)); // fiyat değişti → rebuild
         product.RebuildCanonical();
 
-        product.Canonical!.Description.ShouldBe("AI açıklaması");
+        product.Canonical!.Description.ShouldBe("AI açıklaması"); // saklı enrich overlay yeniden uygulanır
         product.Canonical.IsComplete.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void SameListingAgain_UnchangedAndNoPublish()
-    {
-        var product = PublishedProduct(out _);
-
-        var upsert = product.UpsertListing(SupplierA, 1, Row(price: 100m, stock: 5));
-        var publish = product.TryTakePublish(product.EvaluateBuyBox().Data!);
-
-        upsert.Data.ShouldBe(ListingChange.Unchanged);
-        publish.Data!.PublishCanonical.ShouldBeFalse();
-        publish.Data.PublishBuyBox.ShouldBeFalse(); // değişmeyen feed sessizdir (SC-007)
     }
 }

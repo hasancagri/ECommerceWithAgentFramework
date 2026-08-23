@@ -189,22 +189,18 @@ public record CanonicalContent
 }
 
 /// <summary>
-/// Buy-box kararı: stok>0 en ucuz offer'ın kimlik + fiyat + stoğu. Kazanan yoksa SupplierId null,
-/// Stock 0, Price son bilinen (vitrinde fiyat kalır). Record value-eşitliği değişim tespitini verir.
+/// Barkodun güncel satış teklifi (fiyat + stok) — tek tedarikçi (buy-box söküldü, 047). Listing
+/// delisted/yok ise stok 0, fiyat son bilinen. Record value-eşitliği yayın değişim tespitini verir.
 /// </summary>
-public record BuyBoxDecision
+public record CurrentOffer
 {
-    public Guid? SupplierId { get; private init; }
-    public decimal? Price { get; private init; }
+    public decimal Price { get; private init; }
     public int Stock { get; private init; }
 
-    private BuyBoxDecision() { }
+    private CurrentOffer() { }
 
-    public static BuyBoxDecision Winner(Guid supplierId, decimal price, int stock)
-        => new() { SupplierId = supplierId, Price = price, Stock = stock };
-
-    public static BuyBoxDecision NoWinner(decimal? lastKnownPrice)
-        => new() { SupplierId = null, Price = lastKnownPrice, Stock = 0 };
+    public static CurrentOffer Create(decimal price, int stock)
+        => new() { Price = price, Stock = stock };
 }
 
 /// <summary>
@@ -251,19 +247,16 @@ public record CanonicalCategoryPair
 }
 
 /// <summary>
-/// TryTakePublish sonucu: hangi event'lerin yayınlanacağı. İkisi de false = NoChange.
-/// Kalıcı değildir (dönüş değeri); Canonical değişimi CanonicalProductUpserted'ı, buy-box değişimi
-/// BuyBoxChanged'i tetikler — ikisi aynı pull'da birlikte doğabilir.
+/// TryTakePublish sonucu (047): tek kanal. PublishCanonical=true ise CanonicalProductUpserted yayınlanır
+/// (içerik + fiyat + stok birlikte). false = NoChange (değişimsiz/eksik). Buy-box olayı yok.
 /// </summary>
 public record PublishDecision
 {
     public bool PublishCanonical { get; private init; }
-    public bool PublishBuyBox { get; private init; }
 
     private PublishDecision() { }
 
-    public static PublishDecision Create(bool publishCanonical, bool publishBuyBox)
-        => new() { PublishCanonical = publishCanonical, PublishBuyBox = publishBuyBox };
+    public static PublishDecision Publish() => new() { PublishCanonical = true };
 
     public static PublishDecision NoChange() => new();
 }

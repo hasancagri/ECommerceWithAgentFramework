@@ -51,21 +51,11 @@ public static class RabbitMqConstants
         public const string StockQueue = "stock.procurement-events";
     }
 
-    // 041: Procurement yayınlar, Catalog tüketir (eksiksiz kanonik ürün, fat).
+    // 041/047: Procurement yayınlar; Catalog (içerik+fiyat) + Stock (OnHand) tüketir. 047'de buy-box
+    // söküldü → fiyat/stok bu TEK kanaldan akar (ayrı BuyBoxChanged yok).
     public static class CanonicalProduct
     {
         public const string Exchange = "procurement.canonical-product";
-
-        public static class Queues
-        {
-            public const string Catalog = ProcurementEvents.CatalogQueue;
-        }
-    }
-
-    // 041: Procurement yayınlar, Catalog (fiyat) + Stock (OnHand) tüketir.
-    public static class BuyBoxChanged
-    {
-        public const string Exchange = "procurement.buybox-changed";
 
         public static class Queues
         {
