@@ -7,7 +7,6 @@ public class Wallet : AggregateRoot
     private Wallet() { }
 
     /// <summary>Yeni bir cuzdan olusturur (verilen UserId ile).</summary>
-    /// <remarks>Handler: AddCardCommandHandler</remarks>
     public static Wallet Create(Guid userId) => new() { UserId = userId };
 
     public Guid UserId { get; private set; }
@@ -15,11 +14,9 @@ public class Wallet : AggregateRoot
     [JsonProperty("Cards")] private List<SavedCard> _cards = new();
 
     /// <summary>Kayitli kartlari salt-okunur olarak doner.</summary>
-    /// <remarks>Handler: GetDefaultCardBinQueryHandler, GetCardsQueryHandler</remarks>
     [JsonIgnore] public IReadOnlyList<SavedCard> Cards => _cards.AsReadOnly();
 
     /// <summary>Kart ekler; gecmis son-kullanma reddedilir (FR-009), dogrulama domain'de.</summary>
-    /// <remarks>Handler: AddCardCommandHandler</remarks>
     // Kart ekler. Gecmis son-kullanma reddedilir (FR-009) — dogrulama domain'de, tokenizer stub'ta degil.
     public ResultDomain AddCard(SavedCard card, DateTimeOffset now)
     {
@@ -32,7 +29,6 @@ public class Wallet : AggregateRoot
     }
 
     /// <summary>Karti cikarir + token'ini doner (handler gateway'de best-effort revoke eder).</summary>
-    /// <remarks>Handler: DeleteCardCommandHandler</remarks>
     // Karti cikarir + token'ini doner (handler gateway'de best-effort revoke eder — fail-open).
     public ResultDomain<RemovedCard> RemoveCard(Guid cardId)
     {
@@ -44,7 +40,6 @@ public class Wallet : AggregateRoot
     }
 
     /// <summary>Hedef karti varsayilan yapar; digerlerini temizler (≤1 varsayilan invariant).</summary>
-    /// <remarks>Handler: SetDefaultCardCommandHandler</remarks>
     // ≤1 varsayilan invariant: hedef bulunur, digerleri false, hedef true (tek yazma — atomik).
     public ResultDomain SetDefaultCard(Guid cardId)
     {
@@ -59,7 +54,6 @@ public class Wallet : AggregateRoot
     }
 
     /// <summary>Verilen ay/yil son-kullanmanin gelecekte olup olmadigini dogrular.</summary>
-    /// <remarks>Handler: AddCardCommandHandler</remarks>
     // Handler tokenize'dan ONCE cagirir (gecmis expiry'de token uretmeyip orphan token'i onler);
     // aggregate AddCard da invariant olarak yeniden dogrular (defense-in-depth).
     public static bool IsExpiryInFuture(int month, int year, DateTimeOffset now)

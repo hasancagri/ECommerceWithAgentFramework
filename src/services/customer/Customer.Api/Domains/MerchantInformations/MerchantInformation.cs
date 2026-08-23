@@ -22,7 +22,6 @@ public class MerchantInformation : AggregateRoot
     public string Status { get; private set; } = "Active";
 
     /// <summary>Yeni merchant kimliği oluşturur; merchantId + key zorunlu.</summary>
-    /// <remarks>Handler: SetMerchantInformationCommandHandler</remarks>
     public static ResultDomain<MerchantInformation> Create(Guid merchantId, string merchantKey)
     {
         var messages = new List<MessageItem>();
@@ -45,7 +44,6 @@ public class MerchantInformation : AggregateRoot
     }
 
     /// <summary>MerchantKey'i günceller (rotate / yeniden set); boş RET.</summary>
-    /// <remarks>Handler: SetMerchantInformationCommandHandler</remarks>
     public ResultDomain UpdateKey(string merchantKey)
     {
         if (string.IsNullOrWhiteSpace(merchantKey))

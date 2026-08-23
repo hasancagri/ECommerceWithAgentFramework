@@ -1,4 +1,3 @@
-using StockReservation = Stock.Api.Domains.Stocks.Entities.StockReservation;
 
 namespace Stock.Api.Domains.Stocks;
 
@@ -13,8 +12,8 @@ public class ProductStock : AggregateRoot
     [JsonIgnore] public int OnHand => Quantity;
 
     // 012: aktif rezervasyonlar (gomulu entity). Available bunlardan turetilir.
-    [JsonProperty("Reservations")] private List<StockReservation> _reservations = new();
-    [JsonIgnore] public IReadOnlyList<StockReservation> Reservations => _reservations.AsReadOnly();
+    [JsonProperty("Reservations")] private List<ReservationEntry> _reservations = new();
+    [JsonIgnore] public IReadOnlyList<ReservationEntry> Reservations => _reservations.AsReadOnly();
 
     // 028: islenmis saga operasyon anahtarlari ("orderId:commit" / "orderId:revert").
     // At-least-once teslimatta mukerrer Commit/RevertCommit'i no-op yapar. Bounded (son 100).
@@ -36,7 +35,6 @@ public class ProductStock : AggregateRoot
     }
 
     /// <summary>Yeni bir ProductStock aggregate'i verilen urun ve baslangic adediyle olusturur.</summary>
-    /// <remarks>Handler: SetStockCommandHandler</remarks>
     public static ProductStock Create(Guid productId, int quantity)
     {
         return new ProductStock
@@ -47,7 +45,6 @@ public class ProductStock : AggregateRoot
     }
 
     /// <summary>Stok adedini verilen miktar kadar artirir (restock).</summary>
-    /// <remarks>Handler: IncreaseStockCommandHandler</remarks>
     public ResultDomain Increase(int amount)
     {
         Quantity += amount;
@@ -55,7 +52,6 @@ public class ProductStock : AggregateRoot
     }
 
     /// <summary>Stok adedini verilen miktar kadar azaltir.</summary>
-    /// <remarks>Handler: DecreaseStockCommandHandler</remarks>
     public ResultDomain Decrease(int amount)
     {
         Quantity -= amount;
@@ -65,7 +61,6 @@ public class ProductStock : AggregateRoot
     // 005-supplier-ingestion: feed mutlak adet verir; set semantigi Increase/Decrease'ten ayridir.
     // Invariant: stok adedi negatif olamaz — kural handler'da degil aggregate'te korunur.
     /// <summary>Feed mutlak adedini set eder; negatif adedi reddeder (invariant).</summary>
-    /// <remarks>Handler: SetStockCommandHandler</remarks>
     public ResultDomain SetQuantity(int quantity)
     {
         if (quantity < 0)
@@ -89,18 +84,15 @@ public class ProductStock : AggregateRoot
 
     // Aktif (suresi gecmemis) rezerve edilmis toplam adet (UI "reserved" gosterimi icin).
     /// <summary>Aktif (suresi gecmemis) rezerve edilmis toplam adedi dondurur.</summary>
-    /// <remarks>Handler: GetStockByProductIdQueryHandler</remarks>
     public int ReservedAt(DateTimeOffset now) => ActiveReservedQuantity(now);
 
     // Available = OnHand - aktif rezervasyonlar; oversell'de 0'a kirpilir (G1/FR-017).
     /// <summary>Musait adet = OnHand - aktif rezervasyonlar; 0'a kirpilir.</summary>
-    /// <remarks>Handler: GetStockByProductIdQueryHandler, CommitStockCommandHandler, ReserveStockCommandHandler, RevertCommitStockCommandHandler, ReleaseStockCommandHandler</remarks>
     public int AvailableAt(DateTimeOffset now) => Math.Max(0, Quantity - ActiveReservedQuantity(now));
 
     // Oversell tespiti: tedarikci OnHand'i aktif rezervasyonlarin altina dusurmus olabilir.
     // Log'lama aggregate'te degil handler'da yapilir (aggregate saf kalir).
     /// <summary>OnHand aktif rezervasyonlarin altina dusmus mu (oversell) tespit eder.</summary>
-    /// <remarks>Handler: GetStockByProductIdQueryHandler</remarks>
     public bool IsOversoldAt(DateTimeOffset now) => Quantity < ActiveReservedQuantity(now);
 
     // Sepete ekleme/artirma: kullanicinin bu urun icin rezervasyonunu mutlak adede getirir.
@@ -108,7 +100,6 @@ public class ProductStock : AggregateRoot
     // 017: expiresAt (sepet capasi) verilmisse HER durumda uygulanir — yeni rezervasyon onunla dogar,
     // mevcut rezervasyonun bitisi ona esitlenir (cagiran sabit capayi gecirir; rolling-TTL riski yok).
     /// <summary>Kullanicinin bu urun icin rezervasyonunu mutlak adede getirir (idempotent, TTL'li).</summary>
-    /// <remarks>Handler: ReserveStockCommandHandler</remarks>
     public ResultDomain SetReservedQuantity(Guid userId, int quantity, TimeSpan ttl, DateTimeOffset now,
         DateTimeOffset? expiresAt = null)
     {
@@ -131,7 +122,7 @@ public class ProductStock : AggregateRoot
 
         if (existing is null)
         {
-            _reservations.Add(new StockReservation(userId, quantity, expiresAt ?? now.Add(ttl)));
+            _reservations.Add(new ReservationEntry(userId, quantity, expiresAt ?? now.Add(ttl)));
         }
         else
         {
@@ -145,7 +136,6 @@ public class ProductStock : AggregateRoot
 
     // Sepetten cikarma: rezervasyonu tamamen birak (idempotent no-op).
     /// <summary>Kullanicinin rezervasyonunu tamamen birakir (idempotent no-op).</summary>
-    /// <remarks>Handler: ReleaseStockCommandHandler</remarks>
     public ResultDomain Release(Guid userId)
     {
         var existing = _reservations.FirstOrDefault(r => r.UserId == userId);
@@ -156,7 +146,6 @@ public class ProductStock : AggregateRoot
     // Siparis: gecerli rezervasyonu kalici stok dususune cevir (OnHand duser, hold kapanir).
     // 028: orderId idempotency anahtari — ayni siparisin mukerrer Commit'i no-op basari doner.
     /// <summary>Gecerli rezervasyonu kalici stok dususune cevirir; orderId ile idempotent.</summary>
-    /// <remarks>Handler: CommitStockCommandHandler</remarks>
     public ResultDomain Commit(Guid userId, int quantity, DateTimeOffset now, Guid orderId = default)
     {
         if (orderId != Guid.Empty && _processedOps.Contains(CommitKey(orderId)))
@@ -181,7 +170,6 @@ public class ProductStock : AggregateRoot
     // 028: saga telafisi — commit edilmis adedi stoga geri ekler. orderId ile idempotent;
     // yalniz daha once commit edilmis siparis geri alinabilir (kacak artis engellenir).
     /// <summary>Saga telafisi: commit edilmis adedi stoga geri ekler; orderId ile idempotent.</summary>
-    /// <remarks>Handler: RevertCommitStockCommandHandler</remarks>
     public ResultDomain RevertCommit(int quantity, Guid orderId)
     {
         if (orderId == Guid.Empty || quantity <= 0)
@@ -202,12 +190,11 @@ public class ProductStock : AggregateRoot
 
     // Sweep: suresi gecmis rezervasyonlari sil ve serbest birakilanlari dondur (event icin).
     /// <summary>Suresi gecmis rezervasyonlari siler ve serbest birakilanlari dondurur (event icin).</summary>
-    /// <remarks>Handler: ReservationSweepJob, SweepReservationHandler</remarks>
-    public ResultDomain<IReadOnlyList<StockReservation>> PurgeExpired(DateTimeOffset now)
+    public ResultDomain<IReadOnlyList<ReservationEntry>> PurgeExpired(DateTimeOffset now)
     {
         var expired = _reservations.Where(r => !r.IsActiveAt(now)).ToList();
         foreach (var e in expired) _reservations.Remove(e);
-        return ResultDomain<IReadOnlyList<StockReservation>>.Ok(expired);
+        return ResultDomain<IReadOnlyList<ReservationEntry>>.Ok(expired);
     }
 }
 

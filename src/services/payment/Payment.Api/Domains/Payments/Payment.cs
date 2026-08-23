@@ -9,7 +9,6 @@ public class Payment : AggregateRoot
     public PaymentStatus Status { get; private set; }
 
     /// <summary>Yeni bir Pending ödeme oluşturur; userId ve amount doğrulanır.</summary>
-    /// <remarks>Handler: CreatePaymentCommandHandler</remarks>
     public static ResultDomain<Payment> Create(Guid userId, decimal amount)
     {
         var messages = new List<MessageItem>();
@@ -32,7 +31,6 @@ public class Payment : AggregateRoot
     }
 
     /// <summary>Ödemenin durumunu verilen değere ayarlar.</summary>
-    /// <remarks>Handler: CreatePaymentCommandHandler</remarks>
     public ResultDomain SetStatus(PaymentStatus status)
     {
         Status = status;

@@ -1,11 +1,8 @@
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
-using Customer.Api.Domains.MerchantInformations;
 using Customer.Api.Options;
-using Microsoft.Extensions.Logging;
 
-namespace Customer.Api.Domains.Wallets.Tokenization;
+namespace Customer.Api.Infrastructure.Tokenization;
 
 /// <summary>
 /// Gerçek <see cref="ICardTokenizer"/>: DropShop gateway card vault (017) çağırır. PAN'ı gateway'e

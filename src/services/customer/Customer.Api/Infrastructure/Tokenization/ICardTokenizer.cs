@@ -1,4 +1,4 @@
-namespace Customer.Api.Domains.Wallets.Tokenization;
+namespace Customer.Api.Infrastructure.Tokenization;
 
 // Wallet'in ham PAN/CVV'ye dokunmadan token almasini saglayan soyut sinir. Bu iterasyonda
 // SimulatedCardTokenizer (stub) arkasindadir; PaymentGateway (ayri repo) gelince yalniz stub

@@ -7,7 +7,6 @@ public class AddressBook : AggregateRoot
     private AddressBook() { }
 
     /// <summary>Verilen kullanici icin bos bir adres defteri olusturur.</summary>
-    /// <remarks>Handler: AddAddressCommandHandler</remarks>
     public static AddressBook Create(Guid userId) => new() { UserId = userId };
 
     public Guid UserId { get; private set; }
@@ -15,11 +14,9 @@ public class AddressBook : AggregateRoot
     [JsonProperty("Addresses")] private List<SavedAddress> _addresses = new();
 
     /// <summary>Kayitli adresleri salt-okunur liste olarak dondurur.</summary>
-    /// <remarks>Handler: GetAddressesQueryHandler</remarks>
     [JsonIgnore] public IReadOnlyList<SavedAddress> Addresses => _addresses.AsReadOnly();
 
     /// <summary>Yeni bir kayitli adres olusturup deftere ekler ve dondurur.</summary>
-    /// <remarks>Handler: AddAddressCommandHandler</remarks>
     public ResultDomain<SavedAddress> AddAddress(Address value)
     {
         var address = SavedAddress.Create(value);
@@ -28,7 +25,6 @@ public class AddressBook : AggregateRoot
     }
 
     /// <summary>Id ile bulunan adresi gunceller; yoksa NotFound doner.</summary>
-    /// <remarks>Handler: UpdateAddressCommandHandler</remarks>
     public ResultDomain UpdateAddress(Guid addressId, Address value)
     {
         var address = _addresses.FirstOrDefault(x => x.Id == addressId);
@@ -39,7 +35,6 @@ public class AddressBook : AggregateRoot
     }
 
     /// <summary>Id ile bulunan adresi defterden siler; yoksa NotFound doner.</summary>
-    /// <remarks>Handler: DeleteAddressCommandHandler</remarks>
     public ResultDomain RemoveAddress(Guid addressId)
     {
         var address = _addresses.FirstOrDefault(x => x.Id == addressId);
@@ -50,7 +45,6 @@ public class AddressBook : AggregateRoot
     }
 
     /// <summary>Hedef adresi varsayilan yapar, digerlerini false ceker (≤1 varsayilan invariant).</summary>
-    /// <remarks>Handler: SetDefaultAddressCommandHandler</remarks>
     // ≤1 varsayilan invariant: hedef bulunur, digerleri false, hedef true (tek yazma — atomik).
     public ResultDomain SetDefaultAddress(Guid addressId)
     {

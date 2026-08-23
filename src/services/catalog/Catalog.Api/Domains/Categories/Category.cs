@@ -27,7 +27,6 @@ public class Category : AggregateRoot
     // JasperFxIgnore: statik Create fabrikası event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
     /// <summary>Ad'ı doğrular, normalize eder ve yeni bir Category üretir; ad boşsa hata döner.</summary>
-    /// <remarks>Handler: UpsertCategoryCommandHandler, CreateCategoryCommandHandler</remarks>
     [JasperFx.Core.JasperFxIgnore]
     public static ResultDomain<Category> Create(string name, string description = "",
         Guid? parentCategoryId = null, int displayOrder = 0)
@@ -51,7 +50,6 @@ public class Category : AggregateRoot
     }
 
     /// <summary>Kategori adını değiştirir; teklik anahtarı (NormalizedName) adla birlikte güncellenir.</summary>
-    /// <remarks>Handler: UpdateCategoryCommandHandler</remarks>
     public ResultDomain Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -64,7 +62,6 @@ public class Category : AggregateRoot
 
     /// <summary>Kategoriyi başka bir üst kategoriye taşır. Kendini ebeveyn yapmak reddedilir (döngü guard'ı).
     /// NOT: tam ağaç döngü kontrolü (torunu ebeveyn yapma) handler'da ağaç yüklenerek yapılır — burada tekil guard.</summary>
-    /// <remarks>Handler: UpdateCategoryCommandHandler</remarks>
     public ResultDomain SetParent(Guid? parentCategoryId)
     {
         if (parentCategoryId is not null && parentCategoryId == Id)
@@ -75,7 +72,6 @@ public class Category : AggregateRoot
     }
 
     /// <summary>Vitrin sıralamasını değiştirir.</summary>
-    /// <remarks>Handler: UpdateCategoryCommandHandler</remarks>
     public ResultDomain Reorder(int displayOrder)
     {
         DisplayOrder = displayOrder;
@@ -83,7 +79,6 @@ public class Category : AggregateRoot
     }
 
     /// <summary>Kategoriyi yayınlar/gizler (K8: ingestion yazımı publish eder).</summary>
-    /// <remarks>Handler: UpsertCategoryCommandHandler, CreateCategoryCommandHandler, UpdateCategoryCommandHandler</remarks>
     public ResultDomain SetPublished(bool published)
     {
         Published = published;
@@ -91,7 +86,6 @@ public class Category : AggregateRoot
     }
 
     /// <summary>SEO meta verisini günceller (040: feed'den dolmaz, Empty varsayılanla yaşar).</summary>
-    /// <remarks>Handler: UpdateCategoryCommandHandler</remarks>
     public ResultDomain SetSeo(SeoMetadata seo)
     {
         Seo = seo;
