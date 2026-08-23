@@ -117,7 +117,7 @@ public record RowDimensions
 }
 
 /// <summary>
-/// Barkodun birleştirilmiş kanonik içeriği (R9 Priority-merge + enrich overlay sonucu).
+/// Barkodun kanonik içeriği (047: tek listing'ten kurulur — priority-merge/enrich yok).
 /// IsComplete = Name + Description + Category dolu; ölçü/Sku eksikliği yayını BLOKLAMAZ (FR-010).
 /// </summary>
 public record CanonicalContent
@@ -201,49 +201,6 @@ public record CurrentOffer
 
     public static CurrentOffer Create(decimal price, int stock)
         => new() { Price = price, Stock = stock };
-}
-
-/// <summary>
-/// Enrich agent çıktısı + kaynak hash'i (cache: aynı eksik-girdi için AI tekrar çağrılmaz — FR-009).
-/// Yalnız İÇERİK alanları taşır; barkod/ölçü/fiyat/stok yapısal olarak taşınamaz (FR-010).
-/// </summary>
-public record EnrichmentResult
-{
-    public string SourceHash { get; private init; } = default!;
-    public string? Description { get; private init; }
-    public string? Category { get; private init; }
-    public string? SubCategory { get; private init; }
-    // 043: AI'ın kapalı listeden seçtiği çiftler (guard'dan geçmiş hali saklanır).
-    public IReadOnlyList<SpecValue> Specs { get; private init; } = [];
-    public DateTime EnrichedAtUtc { get; private init; }
-
-    private EnrichmentResult() { }
-
-    public static EnrichmentResult Create(string sourceHash, string? description, string? category,
-        string? subCategory, IReadOnlyList<SpecValue>? specs = null)
-        => new()
-        {
-            SourceHash = sourceHash,
-            Description = description,
-            Category = category,
-            SubCategory = subCategory,
-            Specs = specs ?? [],
-            EnrichedAtUtc = DateTime.UtcNow,
-        };
-}
-
-/// <summary>
-/// Kanonik taksonomi çifti (enrich'in seçim listesi — R3: Procurement kendi kopyasını taşır).
-/// </summary>
-public record CanonicalCategoryPair
-{
-    public string Category { get; private init; } = default!;
-    public string SubCategory { get; private init; } = default!;
-
-    private CanonicalCategoryPair() { }
-
-    public static CanonicalCategoryPair Create(string category, string subCategory)
-        => new() { Category = category, SubCategory = subCategory };
 }
 
 /// <summary>

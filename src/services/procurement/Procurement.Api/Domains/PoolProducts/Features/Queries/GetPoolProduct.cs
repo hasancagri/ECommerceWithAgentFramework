@@ -25,7 +25,6 @@ public static class GetPoolProduct
         // 047: buy-box söküldü — güncel teklif (fiyat/stok) tek listing'ten.
         public decimal CurrentPrice { get; set; }
         public int CurrentStock { get; set; }
-        public bool NeedsEnrichment { get; set; }
         // 047: barkod-başı tek tedarikçi (null = henüz listing yok).
         public PoolProductListingResponse? Listing { get; set; }
     }
@@ -69,7 +68,6 @@ public static class GetPoolProduct
                 Canonical = product.Canonical,
                 CurrentPrice = product.CurrentOffer.Price,
                 CurrentStock = product.CurrentOffer.Stock,
-                NeedsEnrichment = product.NeedsEnrichment,
                 Listing = product.Listing is null ? null : new PoolProductListingResponse
                 {
                     SupplierId = product.Listing.SupplierId,

@@ -4,7 +4,7 @@ namespace Procurement.Api.Domains.Suppliers;
 /// Tedarikçi — Procurement BC aggregate'i. Seed'le doğar (statik kimlik, R2): benzersiz Code feed
 /// ucu/adapter anahtarı, benzersiz Priority tie-break + merge önceliğidir (düşük kazanır; A=1, B=2).
 /// Kategori eşleme tablosu tedarikçiye özgü adları kanonik (Category, SubCategory) çiftine çevirir;
-/// yeni kategori feed'den DOĞMAZ (FR-007) — eşlenemeyen ad enrich'e düşer.
+/// yeni kategori feed'den DOĞMAZ (FR-007) — eşlenemeyen ad kategorisiz kalır (ürün Pending).
 /// </summary>
 public class Supplier : AggregateRoot
 {
@@ -50,7 +50,7 @@ public class Supplier : AggregateRoot
     }
 
     /// <summary>Tedarikçiye özgü ham kategori adını kanonik eşlemeye çözer. Boş/eşlenemeyen ad
-    /// Error döner — satır kategorisiz havuza girer, enrich tamamlar.</summary>
+    /// Error döner — satır kategorisiz havuza girer (kanonik eksik → Pending, yayınlanmaz).</summary>
     /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     public ResultDomain<CategoryMapping> ResolveCategory(string? rawName)
     {

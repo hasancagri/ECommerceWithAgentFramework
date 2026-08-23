@@ -49,7 +49,7 @@ public static class IntegrationEvents
         decimal Height,
         decimal Price,
         int Stock,
-        // 043: kanonik özellikler (attribute-başına merge + kapalı-liste enrich sonrası adlar).
+        // 043: kanonik özellikler (listing'ten gelen attribute adları).
         List<ProductSpec>? Specs = null,
         // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
         string? FamilyCode = null);

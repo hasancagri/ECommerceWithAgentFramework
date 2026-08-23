@@ -10,10 +10,6 @@ public static class OptionsExt
             .ValidateDataAnnotations().ValidateOnStart();
         services.AddSingleton<FeedPullOptions>(sp => sp.GetRequiredService<IOptions<FeedPullOptions>>().Value);
 
-        services.AddOptions<EnrichmentOptions>().BindConfiguration(EnrichmentOptions.SectionName)
-            .ValidateDataAnnotations().ValidateOnStart();
-        services.AddSingleton<EnrichmentOptions>(sp => sp.GetRequiredService<IOptions<EnrichmentOptions>>().Value);
-
         // 047: tedarikçi-başı feed ucu haritası (code → relatif path).
         services.AddOptions<SupplierFeedEndpointsOptions>().BindConfiguration(nameof(SupplierFeedEndpointsOptions))
             .ValidateOnStart();
