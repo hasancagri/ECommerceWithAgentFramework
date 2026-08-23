@@ -29,7 +29,6 @@ public class Review : AggregateRoot
     }
 
     /// <summary>Yeni yorumu Visible durumda olusturur; puan 1-5 tam, metin sinirli, ad zorunlu.</summary>
-    /// <remarks>Handler: SubmitReviewCommandHandler</remarks>
     public static ResultDomain<Review> Create(
         Guid productId, Guid userId, int rating, string? text,
         ValueObjects.ReviewerName reviewerName, DateTimeOffset now)
@@ -64,7 +63,6 @@ public class Review : AggregateRoot
     }
 
     /// <summary>Moderasyon kararini uygular: ihlalde gizler (Hidden), temizde yalniz damgalar; tekrar no-op.</summary>
-    /// <remarks>Handler: ReviewsEventHandlers</remarks>
     public ResultDomain ApplyModeration(ValueObjects.ModerationVerdict verdict, DateTimeOffset now)
     {
         // At-least-once teslimat: denetim tamamlanmissa ikinci karar durumu degistirmez (idempotent).

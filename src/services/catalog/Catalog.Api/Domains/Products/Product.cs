@@ -57,7 +57,6 @@ public class Product : AggregateRoot
 
     /// <summary>Yeni ürün oluşturur. Ad/SKU zorunluluğu + fiyat guard'ı handler/VO'da yapılır (staging
     /// konvansiyonu: factory düz aggregate döner).</summary>
-    /// <remarks>Handler: CreateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public static Product Create(string name, string sku, ProductType type, Money price,
         string shortDescription, string fullDescription)
     {
@@ -73,7 +72,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürün adını değiştirir. Boş ad reddedilir.</summary>
-    /// <remarks>Handler: UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -84,7 +82,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Kısa + tam açıklamayı günceller.</summary>
-    /// <remarks>Handler: UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain UpdateDescriptions(string shortDescription, string fullDescription)
     {
         ShortDescription = shortDescription;
@@ -93,7 +90,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Liste fiyatını değiştirir (negatif guard Money VO'da).</summary>
-    /// <remarks>Handler: UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain SetPrice(Money price)
     {
         Price = price;
@@ -101,7 +97,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Fiziksel ölçüleri günceller (040: feed'den dolmaz, Empty varsayılanla yaşar).</summary>
-    /// <remarks>Handler: SetProductDimensionsCommandHandler</remarks>
     public ResultDomain SetDimensions(ProductDimensions dimensions)
     {
         Dimensions = dimensions;
@@ -109,7 +104,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>SEO meta verisini günceller (040: feed'den dolmaz, Empty varsayılanla yaşar).</summary>
-    /// <remarks>Handler: SetProductSeoCommandHandler</remarks>
     public ResultDomain SetSeo(SeoMetadata seo)
     {
         Seo = seo;
@@ -117,7 +111,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürünü satışa/vitrine açar (FR-007: vitrin kararı Published bayrağında).</summary>
-    /// <remarks>Handler: CreateProductCommandHandler, UpdateProductCommandHandler, UpsertProductCommandHandler, SetProductPublishedCommandHandler</remarks>
     public ResultDomain Publish()
     {
         Published = true;
@@ -125,7 +118,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürünü vitrinden gizler (silmez). 040'ta akış bağlanmaz; 041 buy-box kullanacak.</summary>
-    /// <remarks>Handler: SetProductPublishedCommandHandler (041 event yolu da kullanacak)</remarks>
     public ResultDomain Unpublish()
     {
         Published = false;
@@ -133,7 +125,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürünü bir kategoriye atar. Aynı kategoriye ikinci kez atama reddedilir (invariant).</summary>
-    /// <remarks>Handler: CreateProductCommandHandler, UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain AssignToCategory(Guid categoryId, bool isFeatured, int displayOrder)
     {
         if (_categories.Any(c => c.CategoryId == categoryId))
@@ -144,7 +135,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürünü bir kategoriden çıkarır. Atanmamış kategori reddedilir.</summary>
-    /// <remarks>Handler: UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain RemoveFromCategory(Guid categoryId)
     {
         var link = _categories.FirstOrDefault(c => c.CategoryId == categoryId);
@@ -156,7 +146,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Ürüne etiket ekler (idempotent — zaten varsa sessiz geçer).</summary>
-    /// <remarks>Handler: AssignTagToProductCommandHandler</remarks>
     public ResultDomain AddTag(Guid tagId)
     {
         if (!_tagIds.Contains(tagId))
@@ -165,7 +154,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>Üründen etiket çıkarır (idempotent).</summary>
-    /// <remarks>Handler: RemoveTagFromProductCommandHandler</remarks>
     public ResultDomain RemoveTag(Guid tagId)
     {
         _tagIds.Remove(tagId);
@@ -174,7 +162,6 @@ public class Product : AggregateRoot
 
     /// <summary>Özellik atamalarını TAM-DEĞİŞTİRME ile yazar (043; boş liste = temizleme). Aynı
     /// attribute'un birden çok değeri reddedilir; hatada mevcut atamalar değişmez.</summary>
-    /// <remarks>Handler: CatalogEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
     public ResultDomain SetSpecifications(IReadOnlyList<ProductSpecificationAssignment> assignments)
     {
         if (assignments.GroupBy(a => a.AttributeId).Any(g => g.Count() > 1))
@@ -187,7 +174,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>045: varyant ailesi kodunu yazar (null/boş = aileden çıkar). Feed'den akan opak kimlik.</summary>
-    /// <remarks>Handler: CatalogEventHandlers (CanonicalProductUpserted upsert akışı)</remarks>
     public ResultDomain SetFamilyCode(string? familyCode)
     {
         FamilyCode = string.IsNullOrWhiteSpace(familyCode) ? null : familyCode.Trim();
@@ -195,7 +181,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>⊕ Marka ilişkisini atar (K6: Brand ana repo aggregate'i, Id ile referans).</summary>
-    /// <remarks>Handler: CreateProductCommandHandler, UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain SetBrand(Guid brandId)
     {
         BrandId = brandId;
@@ -203,7 +188,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>⊕ Görsel URL'ini atar/temizler (feed kaynaklı URL; iç serving servisi yok).</summary>
-    /// <remarks>Handler: CreateProductCommandHandler, UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain SetImage(string? imageUrl)
     {
         ImageUrl = imageUrl;
@@ -211,7 +195,6 @@ public class Product : AggregateRoot
     }
 
     /// <summary>⊕ Ürün kimlik alanlarını (Sku/Gtin/MPN) günceller. Boş SKU reddedilir.</summary>
-    /// <remarks>Handler: UpdateProductCommandHandler, UpsertProductCommandHandler</remarks>
     public ResultDomain SetIdentifiers(string sku, string? gtin, string? manufacturerPartNumber)
     {
         if (string.IsNullOrWhiteSpace(sku))

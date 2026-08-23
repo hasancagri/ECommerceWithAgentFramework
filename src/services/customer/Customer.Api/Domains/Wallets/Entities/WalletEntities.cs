@@ -1,4 +1,4 @@
-namespace Customer.Api.Domains.Wallets;
+namespace Customer.Api.Domains.Wallets.Entities;
 
 // Wallet icinde sade entity (base almaz — BasketItem deseni). Kimligi (Id) var, bagimsiz yasamaz.
 // HAM PAN/CVV TASIMAZ (tip duzeyinde yok, INV-3): tokenize sonrasi yalniz gosterilebilir alanlar.

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Customer.Api.Options;
 
-namespace Customer.Api.Domains.Wallets.Tokenization;
+namespace Customer.Api.Infrastructure.Tokenization;
 
 /// <summary>
 /// DropShop merchant OAuth token sağlayıcı: client_credentials (client_id=merchantId,

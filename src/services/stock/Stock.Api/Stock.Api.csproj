@@ -37,8 +37,4 @@
         <ProjectReference Include="..\..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Domains\Stocks\Features\Agent\" />
-    </ItemGroup>
-
 </Project>

@@ -40,7 +40,6 @@ public class PoolProduct : AggregateRoot
     // JasperFxIgnore: statik Create fabrikası event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
     /// <summary>Havuza yeni barkod açar. Boş barkod reddedilir (AI barkod ÜRETMEZ — FR-010).</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     [JasperFx.Core.JasperFxIgnore]
     public static ResultDomain<PoolProduct> Create(string barcode)
     {
@@ -53,7 +52,6 @@ public class PoolProduct : AggregateRoot
 
     /// <summary>Tedarikçi satırını upsert eder (047: tek listing, koşulsuz ezme — satır-düzeyi hash-diff
     /// yok). Boş ad ve negatif fiyat/stok reddedilir. İdempotency yayın kararında toplanır.</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     public ResultDomain UpsertListing(Guid supplierId, ListingRow row)
     {
         var messages = new List<MessageItem>();
@@ -77,7 +75,6 @@ public class PoolProduct : AggregateRoot
 
     /// <summary>Feed'de görünmeyen tedarikçi satırını işaretler (idempotent; silme yok). Delisted listing
     /// stok 0 verir; kanonik korunur (ürün vitrinde kalır).</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     public ResultDomain MarkDelisted(Guid supplierId)
     {
         if (Listing is null || Listing.SupplierId != supplierId || Listing.IsDelisted)
@@ -90,7 +87,6 @@ public class PoolProduct : AggregateRoot
 
     /// <summary>Kanonik içeriği tek listing'ten kurar (047: priority-merge YOK — tek tedarikçi). Delisted/
     /// yok ise son kanonik korunur. Eksik kalan içerik Status=Pending yapar (yayınlanmaz).</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     public ResultDomain RebuildCanonical()
     {
         if (Listing is null || Listing.IsDelisted)
@@ -117,7 +113,6 @@ public class PoolProduct : AggregateRoot
     /// <summary>Yayın kararı (047: tek kanal). Kanonik complete DEĞİLSE NoChange. İçerik hash'i VEYA
     /// güncel teklif (fiyat/stok) yayınlanmıştan farklıysa PublishCanonical; yayın-sonrası durum
     /// (PublishedContentHash/Price/Stock/Status) güncellenir. Buy-box olayı yok.</summary>
-    /// <remarks>Handler: PublishPoolProductCommandHandler</remarks>
     public ResultDomain<PublishDecision> TryTakePublish()
     {
         if (Canonical is null || !Canonical.IsComplete)

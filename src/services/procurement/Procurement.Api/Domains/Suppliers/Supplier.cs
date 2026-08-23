@@ -22,7 +22,6 @@ public class Supplier : AggregateRoot
     // JasperFxIgnore: statik Create fabrikası event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
     /// <summary>Yeni tedarikçi oluşturur. Boş kod/ad ve pozitif olmayan öncelik reddedilir.</summary>
-    /// <remarks>Handler: ProcurementSeedHostedService</remarks>
     [JasperFx.Core.JasperFxIgnore]
     public static ResultDomain<Supplier> Create(string code, string name, int priority)
     {
@@ -40,7 +39,6 @@ public class Supplier : AggregateRoot
     }
 
     /// <summary>Kategori eşleme tablosunu topluca değiştirir (seed idempotent günceller).</summary>
-    /// <remarks>Handler: ProcurementSeedHostedService</remarks>
     public ResultDomain SetCategoryMappings(IEnumerable<CategoryMapping> mappings)
     {
         _categoryMappings.Clear();
@@ -51,7 +49,6 @@ public class Supplier : AggregateRoot
 
     /// <summary>Tedarikçiye özgü ham kategori adını kanonik eşlemeye çözer. Boş/eşlenemeyen ad
     /// Error döner — satır kategorisiz havuza girer (kanonik eksik → Pending, yayınlanmaz).</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     public ResultDomain<CategoryMapping> ResolveCategory(string? rawName)
     {
         if (string.IsNullOrWhiteSpace(rawName))

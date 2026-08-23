@@ -14,7 +14,6 @@ public class Brand : AggregateRoot
     // JasperFxIgnore: tek parametreli statik Create, event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
     /// <summary>Ad boşsa hata döner; aksi halde ad'ı trimleyip normalize ederek yeni Brand üretir.</summary>
-    /// <remarks>Handler: UpsertBrandCommandHandler, CreateBrandCommandHandler</remarks>
     [JasperFx.Core.JasperFxIgnore]
     public static ResultDomain<Brand> Create(string name)
     {

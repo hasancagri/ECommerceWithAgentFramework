@@ -22,7 +22,6 @@ public class SpecificationAttribute : AggregateRoot
     }
 
     /// <summary>Yeni özellik tanımı oluşturur; boş ad reddedilir, NormalizedName teklik anahtarıdır.</summary>
-    /// <remarks>Handler: CreateSpecificationAttributeCommandHandler, CatalogSpecSeedHostedService</remarks>
     [JasperFx.Core.JasperFxIgnore]
     public static ResultDomain<SpecificationAttribute> Create(string name, bool filterable, int displayOrder)
     {
@@ -40,7 +39,6 @@ public class SpecificationAttribute : AggregateRoot
     }
 
     /// <summary>Tanım adını değiştirir; teklik anahtarı adla birlikte güncellenir.</summary>
-    /// <remarks>Handler: (ileride UpdateSpecificationAttribute)</remarks>
     public ResultDomain Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -52,7 +50,6 @@ public class SpecificationAttribute : AggregateRoot
     }
 
     /// <summary>Kapalı listeye yeni değer ekler; boş/mükerrer ad reddedilir. Üretilen Id döner.</summary>
-    /// <remarks>Handler: AddSpecificationAttributeOptionCommandHandler, CatalogSpecSeedHostedService</remarks>
     public ResultDomain<Guid> AddOption(string name, int displayOrder)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -70,7 +67,6 @@ public class SpecificationAttribute : AggregateRoot
     }
 
     /// <summary>Bu tanımın facet filtresine girip girmeyeceğini değiştirir.</summary>
-    /// <remarks>Handler: (ileride UpdateSpecificationAttribute)</remarks>
     public ResultDomain SetFilterable(bool filterable)
     {
         Filterable = filterable;
