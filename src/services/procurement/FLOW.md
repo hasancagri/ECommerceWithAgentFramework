@@ -8,7 +8,7 @@ eksik içeriği AI ile tamamlar, eksiksiz ürünü Catalog'a (satış) ve Stock'
 
 ## Süreç
 
-1. **Tedarikçi feed'i zamanlı çekilir.** Her tedarikçi kendi        `(FeedPullJob → PullSupplierFeed)`
+   1. **Tedarikçi feed'i zamanlı çekilir.** Her tedarikçi kendi        `(FeedPullJob → PullSupplierFeed)`
    ucundan, kendi feed şekliyle okunur; bir tedarikçinin hatası
    diğerini kesmez.
 2. **Yabancı feed şekli iç modele çevrilir** (Anti-Corruption).      `(ISupplierFeedAdapter)`
