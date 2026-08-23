@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace Procurement.Api.Infrastructure.Feeds.Adapters;

@@ -24,7 +24,7 @@ scripts/check-flow-links.sh                               # FLOW.md domain-süre
 - **Sistemi hep Aspire AppHost'tan başlat**, tek servis değil — servisler birbirini/DB/RabbitMQ'yu
   service discovery + conn-string enjeksiyonuyla bulur; tek API bağımsız açılmaz.
 - **Marten şeması otomatik kurulur** (`ApplyAllDatabaseChangesOnStartup`) — migration komutu yok.
-- **OpenAI kullanan servisler** (Procurement, Reviews, Storefront, ChatAgent) açılışta fail-fast:
+- **OpenAI kullanan servisler** (Reviews, Storefront, ChatAgent) açılışta fail-fast:
   `dotnet user-secrets set OpenAI:ApiKey <k> --project <proj>` (+ `OpenAI:Model`, ör. gpt-4o-mini).
 - **Paket sürümleri yalnız `Directory.Packages.props`'ta** (Central Package Management); `.csproj`
   `PackageReference`'ı sürümsüz listeler. Sürüm ekle/değiştir → yalnız props.
@@ -34,7 +34,7 @@ scripts/check-flow-links.sh                               # FLOW.md domain-süre
 .NET 10 (`Nullable`+`ImplicitUsings` açık) · **Marten** (Postgres = document/event store, Newtonsoft,
 non-public setter+ctor) · **Wolverine** (in-proc bus `IMessageBus` + RabbitMQ fanout; handler assembly
 taramasıyla) · **OpenIddict + ASP.NET Identity** (IdP) · **YARP** gateway · **MCP** (her API `/mcp`;
-ChatAgent istemci) · **Microsoft Agent Framework** + `Microsoft.Extensions.AI` (ChatAgent, EnrichmentAgent,
+ChatAgent istemci) · **Microsoft Agent Framework** + `Microsoft.Extensions.AI` (ChatAgent,
 ModerationAgent) · **Scrutor** (DI) · **xUnit + Shouldly** (saf domain birim testi).
 
 ## BC haritası
@@ -52,7 +52,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `stock` | stockDb | `ProductStock` (OnHand); feed = tek stok otoritesi; gRPC rezervasyon sunucu | `specs/014-supplier-stock-authority` |
 | `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; pgvector arama | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
-| `procurement` | procurementDb | Feed çek (Hangfire) → `PoolProduct` merge/buy-box/enrich → Catalog/Stock event | `specs/041-multi-supplier-buybox` |
+| `procurement` | procurementDb | Feed çek (Hangfire) → `PoolProduct` (barkod-tekil kanonik) → Catalog/Stock event | `specs/041-multi-supplier-buybox` |
 | `supplier` | — | Dış dünya maketi: rev'li statik JSON dataset döner (DB yok) | `specs/041-multi-supplier-buybox` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `personalization` | personalizationDb | **Python/FastAPI**; davranış-log ALS öneri; .NET bağlanmaz | `specs/042-behavior-personalization` |
@@ -64,10 +64,10 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 - **Procurement yazım yolu:** feed → `PoolProduct` (barkod-anahtarlı, Priority-merge, hash-diff, Delisted)
   → EKSİKSİZ + değişimde `CanonicalProductUpserted`/`BuyBoxChanged`/`ProductLinked` → Catalog/Stock.
   Saga YOK; dayanıklılık = idempotent upsert + hash-diff + retry + error queue.
-- **EnrichmentAgent (Procurement, in-proc) / ModerationAgent (ayrı `reviews-moderation-agent` worker'ı):**
-  Singleton ChatClientAgent (Temp=0, structured JSON, MCP'siz), retry→error queue. AI kimlik/ölçü/fiyat/
-  stok/barkod ÜRETMEZ; yalnız eksik içerik/karar. Moderasyon 046'da BC'den broker'lı worker'a taşındı
+- **ModerationAgent (ayrı `reviews-moderation-agent` worker'ı):** Singleton ChatClientAgent (Temp=0,
+  structured JSON, MCP'siz), retry→error queue. Moderasyon 046'da BC'den broker'lı worker'a taşındı
   (Reviews'te agent-framework yok; iletişim `ReviewModerationRequested`/`ReviewModerated` event'leriyle).
+  Not: Procurement AI enrichment söküldü (2026-08-23) — ürünler feed'den eksiksiz gelir.
 
 ## Projeye özel yetki + tuzaklar
 

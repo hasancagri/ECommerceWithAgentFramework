@@ -156,7 +156,7 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
 // Tedarikçi simülatörü: DB'siz mock — rev başına JSON dataset döner (041: iki tedarikçi + advance).
 var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
 
-// 041: Procurement BC — havuz + buy-box + enrich. WaitFor catalog/stock: tüketici kuyrukları
+// 041: Procurement BC — barkod-tekil havuz. WaitFor catalog/stock: tüketici kuyrukları
 // publisher'dan önce bağlansın (soğuk açılışta binding'siz fanout = sessiz kayıp — 007/012 dersi).
 var procurementDb = postgres.AddDatabase("procurementDb");
 builder.AddProject<Projects.Procurement_Api>("procurement-api")

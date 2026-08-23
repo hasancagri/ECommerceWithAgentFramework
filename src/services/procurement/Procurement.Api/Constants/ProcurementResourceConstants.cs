@@ -15,11 +15,6 @@ public abstract class ProcurementResourceConstants
     public const string SUPPLIER_PRIORITY_INVALID = "SUPPLIER_PRIORITY_INVALID";
     public const string CATEGORY_MAPPING_NOT_FOUND = "CATEGORY_MAPPING_NOT_FOUND";
 
-    // Enrich guard'ları
-    public const string ENRICHMENT_FORBIDDEN_FIELD = "ENRICHMENT_FORBIDDEN_FIELD";
-    public const string ENRICHMENT_CATEGORY_NOT_CANONICAL = "ENRICHMENT_CATEGORY_NOT_CANONICAL";
-    public const string ENRICHMENT_NOTHING_MISSING = "ENRICHMENT_NOTHING_MISSING";
-
     // Genel
     public const string POOL_PRODUCT_NOT_FOUND = "POOL_PRODUCT_NOT_FOUND";
     public const string LISTING_NOT_FOUND = "LISTING_NOT_FOUND";

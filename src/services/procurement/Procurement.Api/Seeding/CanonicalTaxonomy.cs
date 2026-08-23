@@ -26,9 +26,6 @@ public static class CanonicalTaxonomy
         ("Ofis", "Mouse", "Mice"),
     ];
 
-    public static IReadOnlyList<CanonicalCategoryPair> Pairs { get; } =
-        Tree.Select(t => CanonicalCategoryPair.Create(t.Top, t.Sub)).ToList();
-
     // supplier-a ham adı: "Üst/Alt" (örn. "Elektronik/Telefon").
     public static IReadOnlyList<CategoryMapping> SupplierAMappings { get; } =
         Tree.Select(t => CategoryMapping.Create($"{t.Top}/{t.Sub}", t.Top, t.Sub)).ToList();

@@ -6,7 +6,7 @@ namespace Procurement.Api.Domains.PoolProducts;
 /// birleştirilmiş kanonik içerik + durum tek aggregate'te yaşar. Marten identity Barcode'dur
 /// (Identity(x => x.Barcode), string); AggregateRoot.Id (Guid) denetim alanı olarak kalır.
 /// Silme yok: feed'den düşen listing Delisted işaretlenir (FR-006) → stok 0, kanonik korunur.
-/// Durum makinesi: Pending →(eksiksiz, AI'sız)→ Published; Pending →(enrich)→ Enriched →→ Published.
+/// Durum makinesi: Pending →(kanonik eksiksiz)→ Published (ürünler feed'den eksiksiz gelir — AI enrich yok).
 /// İdempotency tek noktada: TryTakePublish (PublishedContentHash/Price/Stock) — satır-düzeyi diff yok.
 /// </summary>
 public class PoolProduct : AggregateRoot
@@ -18,41 +18,24 @@ public class PoolProduct : AggregateRoot
 
     public CanonicalContent? Canonical { get; private set; }
     public PoolProductStatus Status { get; private set; } = PoolProductStatus.Pending;
-    public EnrichmentResult? Enrichment { get; private set; }
 
     // 047: yayınlanmış içerik + teklif (fiyat/stok) — tek publish-gate'in karşılaştırma temeli.
     public string? PublishedContentHash { get; private set; }
     public decimal? PublishedPrice { get; private set; }
     public int? PublishedStock { get; private set; }
 
-    // Enrich cache anahtarı: listing-merge'in (enrich overlay ÖNCESİ) hash'i. Aynı eksik-girdi
-    // için AI tekrar çağrılmaz (FR-009) — karşılaştırma Enrichment.SourceHash ile yapılır.
-    public string? MergedContentHash { get; private set; }
-
     private PoolProduct()
     {
     }
 
-    // Saf getter'lar (Result'a sarılmaz).
-    public bool NeedsEnrichment => Canonical is not null && !Canonical.IsComplete;
-    public bool HasFreshEnrichment => Enrichment is not null && Enrichment.SourceHash == MergedContentHash;
-
-    // 043: hiç spec'i olmayan kanonik enrich adayıdır — ama yayını BLOKLAMAZ (FR-005).
-    public bool NeedsSpecEnrichment => Canonical is not null && Canonical.Specs.Count == 0;
-
-    /// <summary>Barkodun güncel satış teklifi: aktif listing'in fiyat/stoğu; listing yok/delisted ise
-    /// stok 0 + fiyat son bilinen (PublishedPrice ?? listing fiyatı). Buy-box yok (tek tedarikçi).</summary>
-    public CurrentOffer CurrentOffer
-    {
-        get
-        {
-            if (Listing is null)
-                return CurrentOffer.Create(PublishedPrice ?? 0m, 0);
-            if (Listing.IsDelisted)
-                return CurrentOffer.Create(PublishedPrice ?? Listing.Price, 0);
-            return CurrentOffer.Create(Listing.Price, Listing.Stock);
-        }
-    }
+    // ─────────────────────────────────────────────────────────────────────────
+    // İŞLEM SIRASI: aşağıdaki metotlar bir barkodun yaşam döngüsünde bu sırayla çalışır.
+    //   1. Create           — havuza yeni barkod açılır
+    //   2. UpsertListing     — tedarikçi satırı işlenir  (VEYA MarkDelisted: feed'den düştüyse)
+    //   3. RebuildCanonical  — kanonik içerik kurulur
+    //   4. TryTakePublish    — kanonik eksiksiz + değişmişse yayınlanır
+    // (CurrentOffer getter'ı sınıfın SONUNDA — adım değil, türetilmiş "güncel teklif".)
+    // ─────────────────────────────────────────────────────────────────────────
 
     // JasperFxIgnore: statik Create fabrikası event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
@@ -106,22 +89,14 @@ public class PoolProduct : AggregateRoot
     }
 
     /// <summary>Kanonik içeriği tek listing'ten kurar (047: priority-merge YOK — tek tedarikçi). Delisted/
-    /// yok ise son kanonik korunur. Hâlâ eksik alanlar saklı enrich sonucundan dolar (overlay). Eksik
-    /// kalan içerik Status=Pending yapar (enrich yolu).</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler, EnrichPoolProductCommandHandler</remarks>
+    /// yok ise son kanonik korunur. Eksik kalan içerik Status=Pending yapar (yayınlanmaz).</summary>
+    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
     public ResultDomain RebuildCanonical()
     {
         if (Listing is null || Listing.IsDelisted)
             return ResultDomain.Ok(); // listing yok/delisted: son kanonik korunur (ürün vitrinde kalır)
 
         var l = Listing;
-        var name = l.Name ?? string.Empty;
-        var description = l.Description ?? string.Empty;
-        var brand = l.Brand ?? string.Empty;
-        var category = l.CanonicalCategory ?? string.Empty;
-        var subCategory = l.CanonicalSubCategory ?? string.Empty;
-        var sku = l.SupplierSku;
-        var dimensions = l.Dimensions;
 
         // 043: aynı attribute'un tekrarı düşer (tek kaynak; sıra-bağımsız değil, gerek yok).
         var specs = l.CanonicalSpecs
@@ -129,84 +104,12 @@ public class PoolProduct : AggregateRoot
             .Select(g => g.First())
             .ToList();
 
-        // 045: familyCode doğrudan listing'ten.
-        var familyCode = l.FamilyCode;
-
-        var merged = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs, familyCode);
-        MergedContentHash = merged.ComputeHash();
-
-        // Enrich overlay: yalnız hâlâ eksik içerik alanları saklı AI sonucundan dolar (FR-009).
-        if (string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(Enrichment?.Description))
-            description = Enrichment!.Description!;
-        if (string.IsNullOrWhiteSpace(category) && !string.IsNullOrWhiteSpace(Enrichment?.Category))
-        {
-            category = Enrichment!.Category!;
-            subCategory = Enrichment.SubCategory ?? string.Empty;
-        }
-
-        // 043 overlay: listing'in vermediği attribute'lar AI seçiminden dolar (merge daima önce).
-        if (Enrichment is not null)
-            specs = specs.Concat(Enrichment.Specs
-                    .Where(e => specs.All(s => s.Attribute != e.Attribute)))
-                .ToList();
-
-        Canonical = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs, familyCode);
+        Canonical = CanonicalContent.Create(l.Name, l.Description ?? string.Empty, l.Brand,
+            l.CanonicalCategory ?? string.Empty, l.CanonicalSubCategory ?? string.Empty,
+            l.SupplierSku, l.Dimensions, specs, l.FamilyCode);
         if (!Canonical.IsComplete)
             Status = PoolProductStatus.Pending;
 
-        UpdatedTime = DateTime.UtcNow;
-        return ResultDomain.Ok();
-    }
-
-    /// <summary>Enrich sonucunu uygular: yalnız eksik İÇERİK alanları dolar (kategori kanonik listeden
-    /// olmak zorunda); barkod/ölçü/fiyat/stok'a dokunuş yapısal olarak imkânsızdır (FR-010).
-    /// 043: AI spec çiftleri kapalı listeye süzülür — liste-dışı çift DÜŞER, akış durmaz (FR-004).</summary>
-    /// <remarks>Handler: EnrichPoolProductCommandHandler</remarks>
-    public ResultDomain ApplyEnrichment(EnrichmentResult result,
-        IReadOnlyCollection<CanonicalCategoryPair> canonicalCategories,
-        IReadOnlyCollection<SpecValue> canonicalSpecs)
-    {
-        if (!string.IsNullOrWhiteSpace(result.Category) &&
-            !canonicalCategories.Any(p => p.Category == result.Category && p.SubCategory == result.SubCategory))
-            return ResultDomain.Error(new MessageItem
-            { Property = nameof(result.Category), Code = ProcurementResourceConstants.ENRICHMENT_CATEGORY_NOT_CANONICAL });
-
-        // 043 guard: yalnız registry'deki çiftler yaşar; aynı attribute'un tekrarı da düşer.
-        var validSpecs = result.Specs
-            .Where(s => canonicalSpecs.Contains(s))
-            .GroupBy(s => s.Attribute)
-            .Select(g => g.First())
-            .ToList();
-        result = EnrichmentResult.Create(result.SourceHash, result.Description,
-            result.Category, result.SubCategory, validSpecs);
-
-        Enrichment = result;
-
-        // Overlay'i kanonik içeriğe hemen yansıt (yalnız eksik alanlar; merge her zaman önceliklidir).
-        if (Canonical is not null)
-        {
-            var description = Canonical.Description;
-            var category = Canonical.Category;
-            var subCategory = Canonical.SubCategory;
-
-            if (string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(result.Description))
-                description = result.Description!;
-            if (string.IsNullOrWhiteSpace(category) && !string.IsNullOrWhiteSpace(result.Category))
-            {
-                category = result.Category!;
-                subCategory = result.SubCategory ?? string.Empty;
-            }
-
-            // 043: merge'in vermediği attribute'lar AI seçiminden dolar.
-            var specs = Canonical.Specs
-                .Concat(validSpecs.Where(e => Canonical.Specs.All(s => s.Attribute != e.Attribute)))
-                .ToList();
-
-            Canonical = CanonicalContent.Create(Canonical.Name, description, Canonical.Brand,
-                category, subCategory, Canonical.Sku, Canonical.Dimensions, specs, Canonical.FamilyCode);
-        }
-
-        Status = PoolProductStatus.Enriched;
         UpdatedTime = DateTime.UtcNow;
         return ResultDomain.Ok();
     }
@@ -233,12 +136,25 @@ public class PoolProduct : AggregateRoot
         UpdatedTime = DateTime.UtcNow;
         return ResultDomain<PublishDecision>.Ok(PublishDecision.Publish());
     }
+
+    /// <summary>Barkodun güncel satış teklifi: aktif listing'in fiyat/stoğu; listing yok/delisted ise
+    /// stok 0 + fiyat son bilinen (PublishedPrice ?? listing fiyatı). Buy-box yok (tek tedarikçi).</summary>
+    public CurrentOffer CurrentOffer
+    {
+        get
+        {
+            if (Listing is null)
+                return CurrentOffer.Create(PublishedPrice ?? 0m, 0);
+            if (Listing.IsDelisted)
+                return CurrentOffer.Create(PublishedPrice ?? Listing.Price, 0);
+            return CurrentOffer.Create(Listing.Price, Listing.Stock);
+        }
+    }
 }
 
 /// <summary>Havuz kaydının yaşam döngüsü durumu (FR-006).</summary>
 public enum PoolProductStatus
 {
     Pending = 1,
-    Enriched = 2,
-    Published = 3,
+    Published = 2,
 }

@@ -135,7 +135,6 @@ public class PoolProductTests
 
         product.Canonical!.IsComplete.ShouldBeFalse();
         product.Status.ShouldBe(PoolProductStatus.Pending);
-        product.NeedsEnrichment.ShouldBeTrue();
     }
 
     // --- CurrentOffer ---
@@ -279,97 +278,5 @@ public class PoolProductTests
         product.RebuildCanonical();
 
         product.TryTakePublish().Data!.PublishCanonical.ShouldBeTrue();
-    }
-
-    // --- ApplyEnrichment (tek-listing overlay) ---
-
-    private static readonly IReadOnlyList<CanonicalCategoryPair> Canon =
-    [
-        CanonicalCategoryPair.Create("Elektronik", "Telefon"),
-        CanonicalCategoryPair.Create("Moda", "Çanta"),
-    ];
-
-    [Fact]
-    public void ApplyEnrichment_FillsOnlyMissingContentFields()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, Row(description: null, rawCategory: null,
-            canonicalCategory: null, canonicalSubCategory: null, price: 100m, stock: 5));
-        product.RebuildCanonical();
-
-        var result = EnrichmentResult.Create(product.MergedContentHash!,
-            "AI açıklaması", "Elektronik", "Telefon");
-        var apply = product.ApplyEnrichment(result, Canon, []);
-
-        apply.IsSuccess.ShouldBeTrue();
-        product.Status.ShouldBe(PoolProductStatus.Enriched);
-        product.Canonical!.Description.ShouldBe("AI açıklaması");
-        product.Canonical.Category.ShouldBe("Elektronik");
-        product.Canonical.IsComplete.ShouldBeTrue();
-        // Barkod/fiyat/stok DOKUNULMAZ (FR-010).
-        product.Barcode.ShouldBe("8690000000001");
-        product.Listing!.Price.ShouldBe(100m);
-        product.Listing.Stock.ShouldBe(5);
-    }
-
-    [Fact]
-    public void ApplyEnrichment_DoesNotOverrideExistingContent()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, Row(description: "Feed açıklaması"));
-        product.RebuildCanonical();
-
-        var result = EnrichmentResult.Create(product.MergedContentHash!, "AI açıklaması", "Moda", "Çanta");
-        product.ApplyEnrichment(result, Canon, []);
-
-        product.Canonical!.Description.ShouldBe("Feed açıklaması"); // feed her zaman önceliklidir
-        product.Canonical.Category.ShouldBe("Elektronik");
-    }
-
-    [Fact]
-    public void ApplyEnrichment_NonCanonicalCategory_Fails()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, Row(rawCategory: null, canonicalCategory: null, canonicalSubCategory: null));
-        product.RebuildCanonical();
-
-        var result = EnrichmentResult.Create(product.MergedContentHash!, null, "Uydurma", "Uydurma Alt");
-        var apply = product.ApplyEnrichment(result, Canon, []);
-
-        apply.IsSuccess.ShouldBeFalse();
-        apply.Messages.ShouldContain(m => m.Code == ProcurementResourceConstants.ENRICHMENT_CATEGORY_NOT_CANONICAL);
-        product.Enrichment.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Enrichment_SourceHashCache_SameInputSkips()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, Row(description: null));
-        product.RebuildCanonical();
-        product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
-            "AI açıklaması", null, null, []), Canon, []);
-
-        product.HasFreshEnrichment.ShouldBeTrue();
-
-        product.UpsertListing(SupplierA, Row(name: "Yeni Ad", description: null));
-        product.RebuildCanonical();
-        product.HasFreshEnrichment.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Enrichment_SurvivesRebuild_OverlayReapplied()
-    {
-        var product = Product();
-        product.UpsertListing(SupplierA, Row(description: null, price: 100m));
-        product.RebuildCanonical();
-        product.ApplyEnrichment(EnrichmentResult.Create(product.MergedContentHash!,
-            "AI açıklaması", null, null, []), Canon, []);
-
-        product.UpsertListing(SupplierA, Row(description: null, price: 90m)); // fiyat değişti → rebuild
-        product.RebuildCanonical();
-
-        product.Canonical!.Description.ShouldBe("AI açıklaması"); // saklı enrich overlay yeniden uygulanır
-        product.Canonical.IsComplete.ShouldBeTrue();
     }
 }

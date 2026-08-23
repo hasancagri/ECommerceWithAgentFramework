@@ -15,14 +15,6 @@ public static class CanonicalSpecs
         ("Enerji Sınıfı", [("A", "A"), ("B", "B"), ("C", "C")], "Energy Class"),
     ];
 
-    /// <summary>Geçerli (Attribute, Option) çiftlerinin kapalı listesi — enrich guard'ının girdisi.</summary>
-    public static IReadOnlyCollection<SpecValue> ValidPairs { get; } =
-        Registry.SelectMany(r => r.Options.Select(o => SpecValue.Create(r.Attribute, o.Option))).ToList();
-
-    /// <summary>Enrich prompt'u için attribute → option listesi.</summary>
-    public static IReadOnlyList<(string Attribute, IReadOnlyList<string> Options)> Definitions { get; } =
-        Registry.Select(r => (r.Attribute, (IReadOnlyList<string>)r.Options.Select(o => o.Option).ToList())).ToList();
-
     // supplier-a ham anahtar/değer = kanonik Türkçe adların kendisi (birebir).
     private static readonly Dictionary<(string Key, string Value), SpecValue> SupplierAMap =
         Registry.SelectMany(r => r.Options.Select(o =>
