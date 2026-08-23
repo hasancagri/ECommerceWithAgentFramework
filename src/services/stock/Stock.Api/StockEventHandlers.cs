@@ -32,10 +32,10 @@ public class StockEventHandlers
         await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(evt.ProductId, stock.Quantity));
     }
 
-    // US2: kazananın stoğu MUTLAK yazılır; kazanansız karar stok 0 getirir (satın alınamaz, FR-015).
-    // Eşleme (BarcodeLink) yoksa YOK SAY — ilk değer ProductLinked'le taşınır (yarış edge'i, R4).
+    // 047: buy-box söküldü — stok güncel kanonik olaydan MUTLAK yazılır; delisted/stoksuzda 0 (satın
+    // alınamaz). Eşleme (BarcodeLink) yoksa YOK SAY — ilk değer ProductLinked'le taşınır (yarış edge'i, R4).
     public async Task Handle(
-        IntegrationEvents.BuyBoxChanged evt,
+        IntegrationEvents.CanonicalProductUpserted evt,
         IDocumentSession session,
         IMessageBus bus,
         CancellationToken ct)

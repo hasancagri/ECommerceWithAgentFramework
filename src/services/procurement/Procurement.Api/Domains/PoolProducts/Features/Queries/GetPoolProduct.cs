@@ -10,7 +10,6 @@ public static class GetPoolProduct
     public class PoolProductListingResponse
     {
         public Guid SupplierId { get; set; }
-        public int SupplierPriority { get; set; }
         public string SupplierSku { get; set; } = default!;
         public decimal Price { get; set; }
         public int Stock { get; set; }
@@ -23,9 +22,12 @@ public static class GetPoolProduct
         public string Barcode { get; set; } = default!;
         public string Status { get; set; } = default!;
         public CanonicalContent? Canonical { get; set; }
-        public BuyBoxDecision? PublishedBuyBox { get; set; }
+        // 047: buy-box söküldü — güncel teklif (fiyat/stok) tek listing'ten.
+        public decimal CurrentPrice { get; set; }
+        public int CurrentStock { get; set; }
         public bool NeedsEnrichment { get; set; }
-        public List<PoolProductListingResponse> Listings { get; set; } = [];
+        // 047: barkod-başı tek tedarikçi (null = henüz listing yok).
+        public PoolProductListingResponse? Listing { get; set; }
     }
 
     public class GetPoolProductQueryHandler
@@ -65,17 +67,17 @@ public static class GetPoolProduct
                 Barcode = product.Barcode,
                 Status = product.Status.ToString(),
                 Canonical = product.Canonical,
-                PublishedBuyBox = product.PublishedBuyBox,
+                CurrentPrice = product.CurrentOffer.Price,
+                CurrentStock = product.CurrentOffer.Stock,
                 NeedsEnrichment = product.NeedsEnrichment,
-                Listings = product.Listings.Select(l => new PoolProductListingResponse
+                Listing = product.Listing is null ? null : new PoolProductListingResponse
                 {
-                    SupplierId = l.SupplierId,
-                    SupplierPriority = l.SupplierPriority,
-                    SupplierSku = l.SupplierSku,
-                    Price = l.Price,
-                    Stock = l.Stock,
-                    IsDelisted = l.IsDelisted,
-                    LastSeenUtc = l.LastSeenUtc,
-                }).ToList(),
+                    SupplierId = product.Listing.SupplierId,
+                    SupplierSku = product.Listing.SupplierSku,
+                    Price = product.Listing.Price,
+                    Stock = product.Listing.Stock,
+                    IsDelisted = product.Listing.IsDelisted,
+                    LastSeenUtc = product.Listing.LastSeenUtc,
+                },
             };
 }

@@ -1,26 +1,29 @@
 namespace Procurement.Api.Domains.PoolProducts;
 
 /// <summary>
-/// Havuz ürünü — Procurement BC'nin kök aggregate'i. Tutarlılık sınırı BARKOD'dur (R1): bir barkodun
-/// tüm tedarikçi satırları (SupplierListing), birleştirilmiş kanonik içeriği, durumu ve buy-box kararı
-/// tek aggregate'te yaşar — merge + buy-box atomik hesaplanır. Marten identity Barcode'dur
+/// Havuz ürünü — Procurement BC'nin kök aggregate'i. Tutarlılık sınırı BARKOD'dur (R1). 047: barkod
+/// global tekil → barkod-başı TEK tedarikçi (buy-box/çoklu-offer söküldü). Tek SupplierListing +
+/// birleştirilmiş kanonik içerik + durum tek aggregate'te yaşar. Marten identity Barcode'dur
 /// (Identity(x => x.Barcode), string); AggregateRoot.Id (Guid) denetim alanı olarak kalır.
-/// Silme yok: feed'den düşen listing Delisted işaretlenir (FR-006).
-/// Durum makinesi: Pending →(eksiksiz, AI'sız)→ Published; Pending →(enrich)→ Enriched →→ Published;
-/// Published →(listing değişimi)→ Pending/Published.
+/// Silme yok: feed'den düşen listing Delisted işaretlenir (FR-006) → stok 0, kanonik korunur.
+/// Durum makinesi: Pending →(eksiksiz, AI'sız)→ Published; Pending →(enrich)→ Enriched →→ Published.
+/// İdempotency tek noktada: TryTakePublish (PublishedContentHash/Price/Stock) — satır-düzeyi diff yok.
 /// </summary>
 public class PoolProduct : AggregateRoot
 {
     public string Barcode { get; private set; } = default!;
 
-    private readonly List<SupplierListing> _listings = new();
-    public IReadOnlyList<SupplierListing> Listings => _listings;
+    // 047: tek tedarikçi (barkod tekil). null = henüz listing yok.
+    public SupplierListing? Listing { get; private set; }
 
     public CanonicalContent? Canonical { get; private set; }
     public PoolProductStatus Status { get; private set; } = PoolProductStatus.Pending;
     public EnrichmentResult? Enrichment { get; private set; }
-    public BuyBoxDecision? PublishedBuyBox { get; private set; }
+
+    // 047: yayınlanmış içerik + teklif (fiyat/stok) — tek publish-gate'in karşılaştırma temeli.
     public string? PublishedContentHash { get; private set; }
+    public decimal? PublishedPrice { get; private set; }
+    public int? PublishedStock { get; private set; }
 
     // Enrich cache anahtarı: listing-merge'in (enrich overlay ÖNCESİ) hash'i. Aynı eksik-girdi
     // için AI tekrar çağrılmaz (FR-009) — karşılaştırma Enrichment.SourceHash ile yapılır.
@@ -37,6 +40,20 @@ public class PoolProduct : AggregateRoot
     // 043: hiç spec'i olmayan kanonik enrich adayıdır — ama yayını BLOKLAMAZ (FR-005).
     public bool NeedsSpecEnrichment => Canonical is not null && Canonical.Specs.Count == 0;
 
+    /// <summary>Barkodun güncel satış teklifi: aktif listing'in fiyat/stoğu; listing yok/delisted ise
+    /// stok 0 + fiyat son bilinen (PublishedPrice ?? listing fiyatı). Buy-box yok (tek tedarikçi).</summary>
+    public CurrentOffer CurrentOffer
+    {
+        get
+        {
+            if (Listing is null)
+                return CurrentOffer.Create(PublishedPrice ?? 0m, 0);
+            if (Listing.IsDelisted)
+                return CurrentOffer.Create(PublishedPrice ?? Listing.Price, 0);
+            return CurrentOffer.Create(Listing.Price, Listing.Stock);
+        }
+    }
+
     // JasperFxIgnore: statik Create fabrikası event-sourcing evolver konvansiyonuyla çakışır;
     // bu bir domain fabrikasıdır, projection değil (source generator'ı devre dışı bırakır).
     /// <summary>Havuza yeni barkod açar. Boş barkod reddedilir (AI barkod ÜRETMEZ — FR-010).</summary>
@@ -51,10 +68,10 @@ public class PoolProduct : AggregateRoot
         return ResultDomain<PoolProduct>.Ok(new PoolProduct { Barcode = barcode });
     }
 
-    /// <summary>Tedarikçi satırını upsert eder (hash-diff): aynı hash Unchanged, yeni satır Added,
-    /// değişen/yeniden listelenen satır Updated. Boş ad ve negatif fiyat/stok reddedilir.</summary>
+    /// <summary>Tedarikçi satırını upsert eder (047: tek listing, koşulsuz ezme — satır-düzeyi hash-diff
+    /// yok). Boş ad ve negatif fiyat/stok reddedilir. İdempotency yayın kararında toplanır.</summary>
     /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
-    public ResultDomain<ListingChange> UpsertListing(Guid supplierId, int supplierPriority, ListingRow row)
+    public ResultDomain UpsertListing(Guid supplierId, ListingRow row)
     {
         var messages = new List<MessageItem>();
         if (string.IsNullOrWhiteSpace(row.Name))
@@ -64,68 +81,56 @@ public class PoolProduct : AggregateRoot
         if (row.Stock < 0)
             messages.Add(new MessageItem { Property = nameof(row.Stock), Code = ProcurementResourceConstants.LISTING_STOCK_NEGATIVE });
         if (messages.Count > 0)
-            return ResultDomain<ListingChange>.Error(messages);
+            return ResultDomain.Error(messages);
 
-        var listing = _listings.FirstOrDefault(l => l.SupplierId == supplierId);
-        if (listing is null)
-        {
-            _listings.Add(SupplierListing.Create(supplierId, supplierPriority, row));
-            UpdatedTime = DateTime.UtcNow;
-            return ResultDomain<ListingChange>.Ok(ListingChange.Added);
-        }
+        if (Listing is null)
+            Listing = SupplierListing.Create(supplierId, row);
+        else
+            Listing.Refresh(row);
 
-        if (listing.ContentHash == row.ComputeContentHash() && !listing.IsDelisted)
-        {
-            listing.Touch();
-            return ResultDomain<ListingChange>.Ok(ListingChange.Unchanged);
-        }
-
-        listing.Refresh(supplierPriority, row);
-        UpdatedTime = DateTime.UtcNow;
-        return ResultDomain<ListingChange>.Ok(ListingChange.Updated);
-    }
-
-    /// <summary>Feed'de görünmeyen tedarikçi satırını yarıştan çıkarır (idempotent; silme yok).</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
-    public ResultDomain MarkDelisted(Guid supplierId)
-    {
-        var listing = _listings.FirstOrDefault(l => l.SupplierId == supplierId);
-        if (listing is null || listing.IsDelisted)
-            return ResultDomain.Ok();
-
-        listing.Delist();
         UpdatedTime = DateTime.UtcNow;
         return ResultDomain.Ok();
     }
 
-    /// <summary>Kanonik içeriği yeniden birleştirir (R9): alan bazında Priority sırasına göre ilk DOLU
-    /// değer kazanır; Delisted satır birleşmeye girmez; hâlâ eksik alanlar saklı enrich sonucundan dolar.
-    /// Sonuç sıra-bağımsızdır. Eksik kalan içerik Status=Pending yapar (enrich yolu).</summary>
+    /// <summary>Feed'de görünmeyen tedarikçi satırını işaretler (idempotent; silme yok). Delisted listing
+    /// stok 0 verir; kanonik korunur (ürün vitrinde kalır).</summary>
+    /// <remarks>Handler: PullSupplierFeedCommandHandler</remarks>
+    public ResultDomain MarkDelisted(Guid supplierId)
+    {
+        if (Listing is null || Listing.SupplierId != supplierId || Listing.IsDelisted)
+            return ResultDomain.Ok();
+
+        Listing.Delist();
+        UpdatedTime = DateTime.UtcNow;
+        return ResultDomain.Ok();
+    }
+
+    /// <summary>Kanonik içeriği tek listing'ten kurar (047: priority-merge YOK — tek tedarikçi). Delisted/
+    /// yok ise son kanonik korunur. Hâlâ eksik alanlar saklı enrich sonucundan dolar (overlay). Eksik
+    /// kalan içerik Status=Pending yapar (enrich yolu).</summary>
     /// <remarks>Handler: PullSupplierFeedCommandHandler, EnrichPoolProductCommandHandler</remarks>
     public ResultDomain RebuildCanonical()
     {
-        var active = _listings.Where(l => !l.IsDelisted).OrderBy(l => l.SupplierPriority).ToList();
-        if (active.Count == 0)
-            return ResultDomain.Ok(); // tüm satırlar delisted: son kanonik korunur (ürün vitrinde kalır)
+        if (Listing is null || Listing.IsDelisted)
+            return ResultDomain.Ok(); // listing yok/delisted: son kanonik korunur (ürün vitrinde kalır)
 
-        var name = active.Select(l => l.Name).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty;
-        var description = active.Select(l => l.Description).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty;
-        var brand = active.Select(l => l.Brand).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty;
-        var categorySource = active.FirstOrDefault(l => !string.IsNullOrWhiteSpace(l.CanonicalCategory));
-        var category = categorySource?.CanonicalCategory ?? string.Empty;
-        var subCategory = categorySource?.CanonicalSubCategory ?? string.Empty;
-        var sku = active[0].SupplierSku; // öncelikli tedarikçinin SKU'su
-        var dimensions = active.Select(l => l.Dimensions).FirstOrDefault(d => d is not null);
+        var l = Listing;
+        var name = l.Name ?? string.Empty;
+        var description = l.Description ?? string.Empty;
+        var brand = l.Brand ?? string.Empty;
+        var category = l.CanonicalCategory ?? string.Empty;
+        var subCategory = l.CanonicalSubCategory ?? string.Empty;
+        var sku = l.SupplierSku;
+        var dimensions = l.Dimensions;
 
-        // 043: attribute-başına merge — Priority sırasında ilk veren kazanır (sıra-bağımsız; R3).
-        var specs = active
-            .SelectMany(l => l.CanonicalSpecs)
+        // 043: aynı attribute'un tekrarı düşer (tek kaynak; sıra-bağımsız değil, gerek yok).
+        var specs = l.CanonicalSpecs
             .GroupBy(s => s.Attribute)
             .Select(g => g.First())
             .ToList();
 
-        // 045: familyCode alan-bazlı merge — Priority sırasında ilk DOLU değer kazanır (sıra-bağımsız).
-        var familyCode = active.Select(l => l.FamilyCode).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+        // 045: familyCode doğrudan listing'ten.
+        var familyCode = l.FamilyCode;
 
         var merged = CanonicalContent.Create(name, description, brand, category, subCategory, sku, dimensions, specs, familyCode);
         MergedContentHash = merged.ComputeHash();
@@ -139,7 +144,7 @@ public class PoolProduct : AggregateRoot
             subCategory = Enrichment.SubCategory ?? string.Empty;
         }
 
-        // 043 overlay: merge'in vermediği attribute'lar AI seçiminden dolar (merge daima önce).
+        // 043 overlay: listing'in vermediği attribute'lar AI seçiminden dolar (merge daima önce).
         if (Enrichment is not null)
             specs = specs.Concat(Enrichment.Specs
                     .Where(e => specs.All(s => s.Attribute != e.Attribute)))
@@ -206,44 +211,27 @@ public class PoolProduct : AggregateRoot
         return ResultDomain.Ok();
     }
 
-    /// <summary>Buy-box'ı saf hesaplar (yan etkisiz): stok>0 en ucuz; eşitlikte düşük Priority;
-    /// aday yoksa kazanansız karar (Stock 0, fiyat son bilinen).</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler, EnrichPoolProductCommandHandler</remarks>
-    public ResultDomain<BuyBoxDecision> EvaluateBuyBox()
-    {
-        var candidates = _listings.Where(l => !l.IsDelisted && l.Stock > 0).ToList();
-        if (candidates.Count == 0)
-        {
-            var lastKnownPrice = PublishedBuyBox?.Price
-                ?? _listings.Where(l => !l.IsDelisted)
-                    .OrderBy(l => l.Price).ThenBy(l => l.SupplierPriority)
-                    .FirstOrDefault()?.Price;
-            return ResultDomain<BuyBoxDecision>.Ok(BuyBoxDecision.NoWinner(lastKnownPrice));
-        }
-
-        var winner = candidates.OrderBy(l => l.Price).ThenBy(l => l.SupplierPriority).First();
-        return ResultDomain<BuyBoxDecision>.Ok(BuyBoxDecision.Winner(winner.SupplierId, winner.Price, winner.Stock));
-    }
-
-    /// <summary>Yayın kararını alır: kanonik complete DEĞİLSE NoChange; içerik hash'i değiştiyse
-    /// CanonicalProductUpserted, buy-box kararı değiştiyse BuyBoxChanged yayını işaretlenir ve
-    /// yayın-sonrası durum (PublishedContentHash/PublishedBuyBox/Status) güncellenir.</summary>
-    /// <remarks>Handler: PullSupplierFeedCommandHandler, EnrichPoolProductCommandHandler</remarks>
-    public ResultDomain<PublishDecision> TryTakePublish(BuyBoxDecision decision)
+    /// <summary>Yayın kararı (047: tek kanal). Kanonik complete DEĞİLSE NoChange. İçerik hash'i VEYA
+    /// güncel teklif (fiyat/stok) yayınlanmıştan farklıysa PublishCanonical; yayın-sonrası durum
+    /// (PublishedContentHash/Price/Stock/Status) güncellenir. Buy-box olayı yok.</summary>
+    /// <remarks>Handler: PublishPoolProductCommandHandler</remarks>
+    public ResultDomain<PublishDecision> TryTakePublish()
     {
         if (Canonical is null || !Canonical.IsComplete)
             return ResultDomain<PublishDecision>.Ok(PublishDecision.NoChange());
 
+        var offer = CurrentOffer;
         var contentChanged = Canonical.ComputeHash() != PublishedContentHash;
-        var buyBoxChanged = !decision.Equals(PublishedBuyBox);
-        if (!contentChanged && !buyBoxChanged)
+        var offerChanged = offer.Price != PublishedPrice || offer.Stock != PublishedStock;
+        if (!contentChanged && !offerChanged)
             return ResultDomain<PublishDecision>.Ok(PublishDecision.NoChange());
 
         PublishedContentHash = Canonical.ComputeHash();
-        PublishedBuyBox = decision;
+        PublishedPrice = offer.Price;
+        PublishedStock = offer.Stock;
         Status = PoolProductStatus.Published;
         UpdatedTime = DateTime.UtcNow;
-        return ResultDomain<PublishDecision>.Ok(PublishDecision.Create(contentChanged, buyBoxChanged));
+        return ResultDomain<PublishDecision>.Ok(PublishDecision.Publish());
     }
 }
 
@@ -253,12 +241,4 @@ public enum PoolProductStatus
     Pending = 1,
     Enriched = 2,
     Published = 3,
-}
-
-/// <summary>UpsertListing sonucu (outcome enum — Ok(outcome) ile taşınır).</summary>
-public enum ListingChange
-{
-    Unchanged = 0,
-    Added = 1,
-    Updated = 2,
 }

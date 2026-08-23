@@ -82,7 +82,7 @@ public static class PullSupplierFeed
                     existing[row.Barcode] = product;
                 }
 
-                var upsert = product.UpsertListing(supplier.Id, supplier.Priority, listingRow);
+                var upsert = product.UpsertListing(supplier.Id, listingRow);
                 if (!upsert.IsSuccess)
                 {
                     logger.LogWarning("Satır reddedildi ({Barcode}): {Codes}", row.Barcode,
@@ -91,13 +91,9 @@ public static class PullSupplierFeed
                     continue;
                 }
 
+                // 047: satır-düzeyi hash-diff yok — her satır koşulsuz işlenir; yayın kararı tek-gate'te
+                // (TryTakePublish) verilir → değişmemiş içerik/fiyat/stok yine sıfır event (SC-008).
                 response.Processed++;
-                if (upsert.Data == ListingChange.Unchanged)
-                {
-                    session.Store(product); // LastSeenUtc tazelendi; yayın tetiklenmez (hash aynı)
-                    continue;
-                }
-
                 product.RebuildCanonical();
                 session.Store(product);
                 response.Changed++;
@@ -107,11 +103,11 @@ public static class PullSupplierFeed
             // Delist taraması: bu tedarikçinin havuzda görünen ama feed'de OLMAYAN satırları (full snapshot).
             var feedBarcodes = barcodes.ToHashSet();
             var supplierProducts = await session.Query<PoolProduct>()
-                .Where(p => p.Listings.Any(l => l.SupplierId == supplier.Id))
+                .Where(p => p.Listing != null && p.Listing.SupplierId == supplier.Id)
                 .ToListAsync(ct);
             foreach (var product in supplierProducts)
             {
-                var listing = product.Listings.First(l => l.SupplierId == supplier.Id);
+                var listing = product.Listing!;
                 if (listing.IsDelisted || feedBarcodes.Contains(product.Barcode))
                     continue;
 

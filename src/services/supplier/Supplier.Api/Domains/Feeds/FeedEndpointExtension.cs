@@ -1,10 +1,11 @@
-using System.Collections.Concurrent;
-
 namespace Supplier.Api.Domains.Feeds;
 
-// 041 mock feed satırı (contracts/mock-feed-api.md). Barkod zorunlu kimliktir; dataset her satırda taşır.
-// 043: attributes — ham tedarikçi özellik sözlüğü (opsiyonel; eski rev dosyaları alansız geçerli).
-public record SupplierFeedRow(
+// 047 mock feed — HETEROJEN: her tedarikçi kendi route'unu + kendi FARKLI JSON şeklini döndürür
+// (gerçek dropship emsali). Veri Datasets/{supplierCode}.json'dan istek anında okunur (dosya değişikliği
+// restart'sız yansır — feed değişimi dosyayı ELLE düzenleyerek simüle edilir; advance/rev SÖKÜLDÜ).
+
+// Tedarikçi A şekli — "yerli" sözlük (barcode/name/price/stock).
+public record SupplierAFeedRow(
     string Barcode,
     string SupplierSku,
     string Name,
@@ -18,17 +19,27 @@ public record SupplierFeedRow(
     decimal Width,
     decimal Height,
     Dictionary<string, string>? Attributes = null,
-    // 045: opsiyonel varyant ailesi kodu — feed round-trip'te korunmalı (yok = ailesiz).
     string? FamilyCode = null);
 
-// 041: tedarikçi-kodlu mock uçlar. Veri Datasets/supplier-{kod}.rev{N}.json dosyalarından istek
-// anında okunur (dosya değişikliği restart'sız yansır — 005/R12 mirası). Rev başına AYRI dosya:
-// advance bellek-içi rev'i artırır, endpoint o rev'in dosyasını döner; rev dosyası yoksa mevcut en
-// yüksek rev'e düşer. Restart'ta rev=1'e döner (mock; kalıcılık bilinçli yok).
+// Tedarikçi B şekli — FARKLI sözlük (gtin/title/cost/warehouseQty). Procurement ACL adapter'ı normalize eder.
+public record SupplierBFeedRow(
+    string Gtin,
+    string Sku,
+    string Title,
+    string? Details,
+    string Manufacturer,
+    string? CategoryPath,
+    decimal Cost,
+    int WarehouseQty,
+    SupplierBDimensions? DimensionsCm,
+    Dictionary<string, string>? Specs = null,
+    string? VariantGroup = null);
+
+public record SupplierBDimensions(decimal W, decimal L, decimal Wd, decimal H);
+
 public static class FeedEndpointExtension
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private static readonly ConcurrentDictionary<string, int> Revisions = new();
 
     public static void AddFeedGroupEndpointExtension(this WebApplication app, ApiVersionSet apiVersionSet)
     {
@@ -36,51 +47,26 @@ public static class FeedEndpointExtension
             .WithTags("Feeds")
             .WithApiVersionSet(apiVersionSet);
 
-        // Güncel rev'e göre TAM snapshot (full feed). Bilinmeyen tedarikçi kodu → 404.
-        group.MapGet("{supplierCode}", async (string supplierCode, IHostEnvironment env, CancellationToken ct) =>
-            {
-                var rev = Revisions.GetValueOrDefault(supplierCode, 1);
-                var path = ResolveDatasetPath(env.ContentRootPath, supplierCode, rev);
-                if (path is null)
-                    return Results.NotFound();
+        // Her tedarikçi AYRI route + AYRI şekil (heterojen). Dosya istek anında okunur.
+        group.MapGet("supplier-a", (IHostEnvironment env, CancellationToken ct)
+                => ReadDatasetAsync<SupplierAFeedRow>(env.ContentRootPath, "supplier-a", ct))
+            .WithName("GetSupplierAFeed");
 
-                await using var stream = File.OpenRead(path);
-                var rows = await JsonSerializer
-                    .DeserializeAsync<List<SupplierFeedRow>>(stream, JsonOptions, ct) ?? [];
-                return Results.Ok(rows);
-            })
-            .WithName("GetSupplierFeed");
-
-        // Feed değişimini simüle eder: rev+1 sonraki dataset dosyasını devreye alır (US2 canlı testi).
-        group.MapPost("{supplierCode}/advance", (string supplierCode, IHostEnvironment env) =>
-            {
-                if (ResolveDatasetPath(env.ContentRootPath, supplierCode, rev: 1) is null)
-                    return Results.NotFound();
-
-                var rev = Revisions.AddOrUpdate(supplierCode, 2, (_, current) => current + 1);
-                return Results.Ok(new { supplierCode, rev });
-            })
-            .WithName("AdvanceSupplierFeed");
+        group.MapGet("supplier-b", (IHostEnvironment env, CancellationToken ct)
+                => ReadDatasetAsync<SupplierBFeedRow>(env.ContentRootPath, "supplier-b", ct))
+            .WithName("GetSupplierBFeed");
     }
 
-    // İstenen rev'in dosyası; yoksa o tedarikçinin mevcut EN YÜKSEK rev dosyası (advance taşması
-    // son bilinen feed'de sabitlenir); hiç dosya yoksa null (bilinmeyen tedarikçi → 404).
-    // Kod yalnız [a-z0-9-] kabul eder — route değeri dosya yoluna girdiği için path-traversal kapısı.
-    private static string? ResolveDatasetPath(string contentRoot, string supplierCode, int rev)
+    // Datasets/{code}.json → tipli liste. Dosya yoksa 404 (bilinmeyen tedarikçi).
+    private static async Task<IResult> ReadDatasetAsync<TRow>(
+        string contentRoot, string supplierCode, CancellationToken ct)
     {
-        if (supplierCode.Length == 0 ||
-            !supplierCode.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '-'))
-            return null;
+        var path = Path.Combine(contentRoot, "Datasets", $"{supplierCode}.json");
+        if (!File.Exists(path))
+            return Results.NotFound();
 
-        var datasets = Path.Combine(contentRoot, "Datasets");
-        var exact = Path.Combine(datasets, $"{supplierCode}.rev{rev}.json");
-        if (File.Exists(exact))
-            return exact;
-
-        return Directory.Exists(datasets)
-            ? Directory.EnumerateFiles(datasets, $"{supplierCode}.rev*.json")
-                .OrderByDescending(f => f, StringComparer.Ordinal)
-                .FirstOrDefault()
-            : null;
+        await using var stream = File.OpenRead(path);
+        var rows = await JsonSerializer.DeserializeAsync<List<TRow>>(stream, JsonOptions, ct) ?? [];
+        return Results.Ok(rows);
     }
 }

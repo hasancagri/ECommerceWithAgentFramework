@@ -67,11 +67,20 @@ public sealed class FeedPullJob(
 
         foreach (var code in codes)
         {
-            var result = await bus.InvokeAsync<FeatureObjectResultModel<PullSupplierFeed.PullSupplierFeedResponse>>(
-                new PullSupplierFeed.PullSupplierFeedCommand(code), ct);
-            if (!result.IsSuccess)
-                logger.LogWarning("Pull başarısız: {SupplierCode} ({Codes})", code,
-                    string.Join(",", result.Messages.Select(m => m.Code)));
+            // 047 (FR-005): bir tedarikçinin okuma/çeviri hatası (adapter yok, HTTP, bozuk gövde)
+            // YALITILIR — o tedarikçi atlanır + loglanır, diğerlerinin çekimi kesintisiz sürer.
+            try
+            {
+                var result = await bus.InvokeAsync<FeatureObjectResultModel<PullSupplierFeed.PullSupplierFeedResponse>>(
+                    new PullSupplierFeed.PullSupplierFeedCommand(code), ct);
+                if (!result.IsSuccess)
+                    logger.LogWarning("Pull başarısız: {SupplierCode} ({Codes})", code,
+                        string.Join(",", result.Messages.Select(m => m.Code)));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Tedarikçi çekimi atlandı (izolasyon): {SupplierCode}", code);
+            }
         }
     }
 }

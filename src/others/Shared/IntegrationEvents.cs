@@ -31,8 +31,9 @@ public static class IntegrationEvents
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
     public record ReservationExpired(Guid ProductId, Guid UserId);
 
-    // 041: Procurement → Catalog. Eksiksiz kanonik ürün (fat — yayın anındaki buy-box Price+Stock dahil,
-    // fiyatsız pencere olmaz). Yayın koşulu: kanonik complete VE (içerik hash veya buy-box değişti).
+    // 041/047: Procurement → Catalog + Stock. Eksiksiz kanonik ürün (fat — güncel Price+Stock dahil,
+    // fiyatsız pencere olmaz). 047: buy-box söküldü → bu TEK güncelleme kanalıdır; içerik VEYA fiyat VEYA
+    // stok değişince yayınlanır (ayrı BuyBoxChanged yok). Stock stoğu buradan mutlak yazar.
     // Kategori adları kanonik seed ağacından çözülür (NormalizedName); ölçüde 0 = bilinmiyor.
     public record CanonicalProductUpserted(
         string Barcode,
@@ -52,15 +53,6 @@ public static class IntegrationEvents
         List<ProductSpec>? Specs = null,
         // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
         string? FamilyCode = null);
-
-    // 041: Procurement → Catalog + Stock. Yalnız BuyBoxDecision değişince yayınlanır (value-eşitlik).
-    // SupplierId null = kazanan yok (tüm offer'lar stoksuz/delisted): fiyat son bilinen, stok 0.
-    // Bilinmeyen Barcode iki tüketicide de YOK SAYILIR (ilk değerler CanonicalProductUpserted'da taşındı).
-    public record BuyBoxChanged(
-        string Barcode,
-        Guid? SupplierId,
-        decimal Price,
-        int Stock);
 
     // 041: Catalog → Stock. Yalnız YENİ ürün oluşunca yayınlanır; Stock BarcodeLink eşlemesini kurar
     // ve OnHand'i InitialStock (CanonicalProductUpserted.Stock) ile mutlak yazar.

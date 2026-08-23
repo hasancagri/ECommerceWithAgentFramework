@@ -1,9 +1,9 @@
-using System.Net.Http.Json;
-using System.Text.Json;
+using Procurement.Api.Infrastructure.Feeds.Adapters;
 
 namespace Procurement.Api.Infrastructure.Feeds;
 
-// Mock feed satırının Procurement kopyası (contracts/mock-feed-api.md — BC'ler tip paylaşmaz).
+// Nötr iç feed satırı (ACL hedefi) — tedarikçi-bağımsız. Adapter'lar yabancı şekli buna çevirir.
+// (contracts/mock-feed-api.md — BC'ler tip paylaşmaz; bu Procurement'ın kopyasıdır.)
 public record SupplierFeedRowDto(
     string Barcode,
     string SupplierSku,
@@ -17,28 +17,21 @@ public record SupplierFeedRowDto(
     decimal Length,
     decimal Width,
     decimal Height,
-    // 043: ham tedarikçi attribute'ları (opsiyonel; eski rev dosyaları alansız geçerli).
+    // 043: ham tedarikçi attribute'ları (opsiyonel).
     Dictionary<string, string>? Attributes = null,
     // 045: opsiyonel varyant ailesi kodu (yok = ailesiz).
     string? FamilyCode = null);
 
-// Feed çekici: adres Aspire service discovery'den (Options istisnası — dinamik enjekte anahtar).
-// Feed çekimi kısa ömürlü GET; standart resilience yeterli (Gateway 007 emsali).
-public sealed class SupplierFeedClient(
-    IHttpClientFactory httpClientFactory,
-    IConfiguration configuration)
+// 047: feed çekim dispatcher'ı — code'a göre doğru ACL adapter'ı seçer (heterojen kaynaklar). HTTP +
+// yabancı-şekil çevirisi adapter'da; burası yalnız yönlendirir. Adapter yoksa hata (tüketici yalıtır).
+public sealed class SupplierFeedClient(IEnumerable<ISupplierFeedAdapter> adapters)
 {
     public const string HttpClientName = "supplier-feeds";
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task<List<SupplierFeedRowDto>> GetFeedAsync(string supplierCode, CancellationToken ct)
+    public Task<IReadOnlyList<SupplierFeedRowDto>> GetFeedAsync(string supplierCode, CancellationToken ct)
     {
-        var baseUrl = configuration["services:supplier-api:http:0"]
-            ?? throw new InvalidOperationException("supplier-api adresi service discovery'de yok");
-
-        var client = httpClientFactory.CreateClient(HttpClientName);
-        var rows = await client.GetFromJsonAsync<List<SupplierFeedRowDto>>(
-            $"{baseUrl}/v1/feeds/{supplierCode}", JsonOptions, ct);
-        return rows ?? [];
+        var adapter = adapters.FirstOrDefault(a => a.SupplierCode == supplierCode)
+            ?? throw new InvalidOperationException($"Tedarikçi için feed adapter'ı yok: {supplierCode}");
+        return adapter.FetchAsync(ct);
     }
 }

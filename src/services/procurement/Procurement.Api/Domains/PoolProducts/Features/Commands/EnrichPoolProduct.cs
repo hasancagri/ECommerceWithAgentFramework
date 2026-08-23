@@ -42,12 +42,10 @@ public static class EnrichPoolProduct
             EnrichmentAgent.EnrichmentOutput output;
             try
             {
-                var hints = product.Listings.Where(l => !l.IsDelisted)
-                    .Select(l => l.RawCategoryName)
-                    .Where(r => !string.IsNullOrWhiteSpace(r))
-                    .Select(r => r!)
-                    .Distinct()
-                    .ToList();
+                var hints = product.Listing is { IsDelisted: false, RawCategoryName: { } raw }
+                    && !string.IsNullOrWhiteSpace(raw)
+                    ? new List<string> { raw }
+                    : new List<string>();
                 output = await agent.CompleteAsync(canonical.Name, canonical.Brand,
                     canonical.Description, canonical.Category, hints,
                     canonical.Specs.Select(s => s.Attribute).ToList(), ct);
