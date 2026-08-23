@@ -111,7 +111,7 @@ US fazları başlamaz.
 
 - [x] T030 [P] Söküm grep doğrulaması: `BuyBoxChanged|EvaluateBuyBox|BuyBoxDecision|ListingChange` (src) + `advance|Revisions` (supplier) → SIFIR (SC-006, SC-008)
 - [x] T031 `dotnet build` + `dotnet test` yeşil (özellikle `tests/Procurement.Api.Tests`)
-- [ ] T032 quickstart 5 senaryosunu Aspire AppHost'tan canlı doğrula (heterojen çekim, izolasyon, tek-kanal, tek-gate idempotency, delist)
+- [x] T032 (hafif canlı doğrulama PASS 2026-08-23) quickstart 5 senaryosunu Aspire AppHost'tan canlı doğrula (heterojen çekim, izolasyon, tek-kanal, tek-gate idempotency, delist)
 
 ---
 
