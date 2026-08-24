@@ -42,6 +42,9 @@ public static class Config
             ["merchant.credentials.write"] = "customer.api",
             // 044: yorum yazma (Order purchase-check gRPC ucu da aynı scope'u ister — R4).
             ["reviews.write"] = "reviews.api",
+            // 048: gezinme sinyali ingest — audience personalization.api. WebApp (BFF) m2m istemcisi
+            // (webapp-signals) client_credentials ile talep eder; customer/admin kullanıcı token'ına binmez.
+            ["personalization.ingest"] = "personalization.api",
         };
 
     // WebApp BFF'nin talep ettiği 12 servis scope'u (apikeys.manage HARİÇ; bugünkü Duende paritesi).
@@ -110,6 +113,16 @@ public static class Config
             AllowClientCredentials = true,
             // 028: stock.reserve + basket.write; 039: basket.read (kalem okuma) + customer.read (odeme baglami).
             Scopes = ["stock.reserve", "basket.write", "basket.read", "customer.read"],
+        },
+        // 048: WebApp davranış-sinyali gönderimi m2m — anonim gezinme user token taşımaz,
+        // WebApp client_credentials ile personalization.ingest talep eder (BFF telemetri iletici).
+        new ClientSeed
+        {
+            ClientId = "webapp-signals",
+            ClientSecret = "webapp-signals-secret",
+            DisplayName = "WebApp behavior signals (m2m)",
+            AllowClientCredentials = true,
+            Scopes = ["personalization.ingest"],
         },
         // 041: ingestion-agent m2m istemcisi söküldü (IngestionAgent projesiyle birlikte) —
         // Procurement yazım yolu event'lidir, token gerektirmez.

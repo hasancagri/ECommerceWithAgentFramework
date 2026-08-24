@@ -71,4 +71,21 @@ public static class IntegrationEvents
     // 046: Reviews.Moderation worker → Reviews. Moderasyon karari; kategori kapali kume
     // (profanity/insult/personal_attack/none). Reviews ApplyModeration ile uygular.
     public record ReviewModerated(Guid ReviewId, bool Violation, string Category, string Reason);
+
+    // 048: Order → Personalization. YALNIZ odeme onayli tamamlanan siparis (CheckoutSaga basari)
+    // icin yayilir; olusturulan/odenmemis DEGIL. Kisisellestirme satin-alma sinyalini besler.
+    // Category/Brand nullable: Order bunlari tutmuyorsa null (BC izolasyonu; enrichment sonraki faz).
+    // Additive: yeni alan default'lu eklenir, eski tuketici kirilmaz.
+    public record OrderCompleted(
+        Guid OrderId,
+        Guid UserId,
+        DateTimeOffset OrderedAt,
+        IReadOnlyList<OrderCompletedItem> Items);
+
+    public record OrderCompletedItem(
+        Guid ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        string? Category = null,
+        string? Brand = null);
 }

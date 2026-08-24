@@ -25,6 +25,7 @@
       <ProjectReference Include="..\..\services\supplier\Supplier.Api\Supplier.Api.csproj" />
       <ProjectReference Include="..\..\services\procurement\Procurement.Api\Procurement.Api.csproj" />
       <ProjectReference Include="..\..\services\reviews\Reviews.Api\Reviews.Api.csproj" />
+      <ProjectReference Include="..\..\services\Personalization.Api\Personalization.Api.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -39,4 +39,8 @@ public static class AuthorizationScopes
     // identity (030 RBAC): IdP rol/scope/kullanici yonetim yuzeyi. Downstream servis zorlamaz;
     // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.
     public const string IdentityRolesManage = "identity.roles.manage";
+
+    // personalization.api (048): gezinme sinyali ingest ucu. WebApp (BFF) client_credentials
+    // MAKINE kimligiyle sunar (anonim gezinme user token tasimaz); son-kullanici kimligi payload'da.
+    public const string PersonalizationIngest = "personalization.ingest";
 }

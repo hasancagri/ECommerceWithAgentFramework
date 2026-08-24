@@ -231,6 +231,16 @@ public class CheckoutSaga : Saga
         {
             order.Confirm();
             session.Store(order);
+
+            // 048: siparis odeme onayli olarak tamamlandi (pivot) — Personalization satin-alma sinyali.
+            // Tam bir kez (Pending→Confirmed bloku) yayilir; transactional outbox ile guvenli.
+            // Category/Brand Order'da yok → null (D3). OrderedAt = siparis tarihi (CreatedTime).
+            var items = order.OrderItems
+                .Select(oi => new IntegrationEvents.OrderCompletedItem(
+                    oi.ProductId, oi.Quantity, oi.UnitPrice))
+                .ToList();
+            await bus.PublishAsync(new IntegrationEvents.OrderCompleted(
+                order.Id, UserId, new DateTimeOffset(order.CreatedTime, TimeSpan.Zero), items));
         }
 
         var result = await basketClient.ClearAsync(UserId, Id, ct);

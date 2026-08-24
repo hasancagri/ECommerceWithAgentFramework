@@ -26,6 +26,7 @@ public static class KnownScopes
             ["reviews.write"] = "Ürün yorumu yazma",
             ["apikeys.manage"] = "API anahtarı yönetimi",
             ["identity.roles.manage"] = "Rol/scope/kullanıcı yönetimi",
+            ["personalization.ingest"] = "Kişiselleştirme gezinme sinyali gönderimi (m2m)",
         };
 
     // Atanabilir tüm scope'lar (Config.AllApiScopes tek kaynak) + açıklama.

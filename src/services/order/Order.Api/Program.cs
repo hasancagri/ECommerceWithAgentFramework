@@ -30,8 +30,17 @@ builder.Host.UseWolverine(opts =>
     opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
 
     // 028: OrderCreated exchange kaldirildi; sepet temizligi CheckoutSaga gRPC adimi.
-    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
+    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
+
+    // 048: siparis odeme onayli tamamlaninca (CheckoutSaga pivot) Personalization'a yayinlanir.
+    // Yayinci yalniz exchange deklare eder; kuyruk + binding TUKETICIDE (007 dersi).
+    rabbit.DeclareExchange(RabbitMqConstants.OrderCompleted.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+    });
+    opts.PublishMessage<IntegrationEvents.OrderCompleted>()
+        .ToRabbitExchange(RabbitMqConstants.OrderCompleted.Exchange);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(

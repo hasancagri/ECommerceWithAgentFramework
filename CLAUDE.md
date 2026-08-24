@@ -55,7 +55,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `procurement` | procurementDb | Feed çek (Hangfire) → `PoolProduct` (barkod-tekil kanonik) → Catalog/Stock event | `specs/041-multi-supplier-buybox` |
 | `supplier` | — | Dış dünya maketi: rev'li statik JSON dataset döner (DB yok) | `specs/041-multi-supplier-buybox` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
-| `personalization` | personalizationDb | **Python/FastAPI**; davranış-log ALS öneri; .NET bağlanmaz | `specs/042-behavior-personalization` |
+| `personalization-api` | personalizationApiDb | **.NET** write-only signal store; gezinme (WebApp HTTP) + satın-alma (Order `OrderCompleted` event) sinyalleri; öneri/ML sonraki faz | `specs/048-personalization-signal-store` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
 | `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC | `specs/029-openiddict-migration` |
 | `chat-agent` | — | AI asistan (MAF); MCP istemci + A2A ödeme (uzak PaymentGateway) | `specs/024-a2a-payment-agent` |

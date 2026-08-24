@@ -172,22 +172,20 @@ builder.AddProject<Projects.Procurement_Api>("procurement-api")
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
 
-// 042: Personalization BC — sistemin ilk .NET-disi servisi (Python/FastAPI). WebApp'in yazdigi
-// davranis JSONL'ini kendi DB'sine indirir, ALS modeli egitir, /v1/recommendations sunar.
-// Kanal = paylasimli log dizini (tek uretici + tek tuketici; bkz. specs/042 R3/R7).
-var behaviorLogDir = Path.GetFullPath(
-    Path.Combine(builder.AppHostDirectory, "..", "..", "..", "artifacts", "behavior-logs"));
-Directory.CreateDirectory(behaviorLogDir);
-web.WithEnvironment("BehaviorLog__Directory", behaviorLogDir);
+// 048: Personalization.Api — write-only signal store (.NET). (042 Python/FastAPI servisi silindi;
+// yeni .NET BC sinyalleri toplar, ileride model egitimi ayrica ele alinir.) Kendi DB'si.
+// Gezinme = WebApp HTTP POST; satin-alma = Order 'OrderCompleted' event. Tuketici binding
+// yayincidan (order-api) once ayakta olsun (007 dersi).
+var personalizationApiDb = postgres.AddDatabase("personalizationApiDb");
+var personalizationApi = builder.AddProject<Projects.Personalization_Api>("personalization-api")
+    .WithReference(personalizationApiDb)
+    .WithReference(rabbit)
+    .WithReference(orderApi)
+    .WaitFor(personalizationApiDb)
+    .WaitFor(rabbit)
+    .WaitFor(orderApi);
 
-var personalizationDb = postgres.AddDatabase("personalizationDb");
-
-#pragma warning disable ASPIREHOSTINGPYTHON001 // AddPythonApp deneysel — dev ortami icin kabul (042 R2)
-builder.AddPythonApp("personalization", "../../services/personalization", "main.py")
-#pragma warning restore ASPIREHOSTINGPYTHON001
-    .WithHttpEndpoint(env: "PORT")
-    .WithReference(personalizationDb)
-    .WithEnvironment("BEHAVIOR_LOG_DIR", behaviorLogDir)
-    .WaitFor(personalizationDb);
+// WebApp gezinme sinyallerini personalization-api'ye POST eder → adres cozumu icin referans.
+web.WithReference(personalizationApi);
 
 await builder.Build().RunAsync();
