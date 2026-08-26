@@ -29,6 +29,9 @@ kampanya çalışmasının besleneceği güvenilir sinyal deposunu kurmak.
   WebApp bu fazda yalnız mevcut yakalama noktalarını (ProductViewed, ListShown,
   BasketItemAdded) HTTP hattına taşır. CategoryViewed/BrandViewed/SearchPerformed
   enstrümantasyonu sonraki faza bırakılır (endpoint şimdiden kabul eder).
+  > **GÜNCELLENDİ (049, kullanıcı kararı):** Hiçbir liste/sonuç sayfası sinyali
+  > KAYDEDİLMEZ. ListShown + CategoryViewed/BrandViewed/SearchPerformed tümüyle söküldü;
+  > yalnız ProductViewed (detay) + BasketItemAdded kalır. Bkz FR-007/007a (güncel).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -78,10 +81,9 @@ render olur ve hata vermez; sinyaller sessizce düşer.
 
 1. **Given** bir kullanıcı ürün detayını açar, **When** sayfa yüklenir, **Then**
    ürün görüntüleme sinyali (ürün/kategori/marka/fiyat + kimlik) depoya yazılır.
-2. **Given** kullanıcı bir listeyi görür veya sepete ürün ekler, **When** eylem
-   gerçekleşir, **Then** ilgili sinyal tipiyle (ListShown / BasketItemAdded) kayıt
-   yazılır. (CategoryViewed/BrandViewed/SearchPerformed arayüz enstrümantasyonu bu
-   fazda YOK; endpoint yine de bu tipleri kabul eder.)
+2. **Given** kullanıcı sepete ürün ekler, **When** ekleme başarılı olur, **Then**
+   `BasketItemAdded` sinyaliyle kayıt yazılır. (049: liste/sonuç sayfası sinyalleri —
+   ListShown/CategoryViewed/BrandViewed/SearchPerformed — KAYDEDİLMEZ, reddedilir.)
 3. **Given** Personalization servisi kapalı veya yavaş, **When** kullanıcı gezinir,
    **Then** sayfa akışı bloklanmaz, hata görülmez; sinyaller kaybolabilir.
 4. **Given** anlık sinyal yükü tampon kapasitesini aşar, **When** taşma olur,
@@ -151,13 +153,12 @@ servis geri gelince yakalanır; gezinme sinyalleri o pencere için kaybolabilir.
 
 **Gezinme sinyali (kayıp-toleranslı)**
 
-- **FR-007**: Sistem (depo/endpoint) şu gezinme sinyal tiplerinin tümünü kabul edip
-  yazabilmelidir: ProductViewed, ListShown, CategoryViewed, BrandViewed,
-  SearchPerformed, BasketItemAdded.
-- **FR-007a**: Bu fazda kullanıcı arayüzü yalnız mevcut yakalama noktalarından
-  (ProductViewed, ListShown, BasketItemAdded) sinyal üretir. CategoryViewed /
-  BrandViewed / SearchPerformed arayüz enstrümantasyonu sonraki faza bırakılır
-  (endpoint bunları şimdiden kabul eder; veri sonra akmaya başlar).
+- **FR-007** (049 güncel): Sistem (depo/endpoint) yalnız şu gezinme sinyal tiplerini
+  kabul edip yazar: **ProductViewed, BasketItemAdded**. Liste/sonuç sayfası sinyalleri
+  (ListShown, CategoryViewed, BrandViewed, SearchPerformed) REDDEDİLİR (bilinen kümede yok).
+- **FR-007a** (049 güncel): Kullanıcı arayüzü yalnız ürün detay ziyareti (ProductViewed)
+  + sepete ekleme (BasketItemAdded) sinyali üretir. **Hiçbir liste/sonuç sayfasında kayıt
+  YOK** (kullanıcı kararı). Marka/kategori gerekirse ProductId'den (katalog) türetilir.
 - **FR-008**: Gezinme sinyali kaydı **kullanıcı arayüzü akışını bloklamamalı**;
   sinyal gönderimi ana istek/sayfa yanıtının önünde beklememelidir.
 - **FR-009**: Personalization erişilemez/yavaş olduğunda gezinme sinyalleri sessizce

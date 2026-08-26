@@ -69,7 +69,7 @@ Stock.Api, Storefront.Api, CheckoutSaga, WebApp) çıkarıldı.
 - **Karar**: `POST /v1/signals` **statik scope** `personalization.ingest` ile
   `.RequireAuthorization`. WebApp bu scope'u **client_credentials makine token'ıyla**
   sunar (yeni OIDC client `webapp-personalization` veya mevcut makine kimliği + statik
-  scope). Son-kullanıcı kimliği payload'da (userId?/anonymousId/sessionId).
+  scope). Son-kullanıcı kimliği payload'da (userId?/anonymousId; 049: sessionId söküldü).
 - **Gerekçe**: Gezinme anonim son-kullanıcıyı kapsar → user token garanti değil; ama
   İlke V "her yüzey scope-gated". Makine kimliği = client_credentials + statik scope
   (İlke V). Açık anonim yazma endpoint'i (abuse) önlenir.
@@ -101,8 +101,8 @@ Stock.Api, Storefront.Api, CheckoutSaga, WebApp) çıkarıldı.
   sonra **drop** (gezinme kayıp-toleranslı). Sayfa hiç beklemez (Enqueue O(1)).
 - **Gerekçe**: SC-002 (sayfa gecikmesi yok) + SC-003 (servis kapalı → alışveriş bozulmaz).
   Batch HTTP overhead'i düşürür.
-- **Not**: Mevcut dosya yazımı bu akış için emekli; `BehaviorEvent` record'u (zaten
-  `Channel/SearchTerm/ShownProductIds/SchemaVersion` içerir) gövde olarak yeniden kullanılır.
+- **Not**: Mevcut dosya yazımı bu akış için emekli; `BehaviorEvent` record'u gövde olarak
+  yeniden kullanılır. (049: `SearchTerm/ShownProductIds/SchemaVersion/SessionId` alanları söküldü.)
 
 ## D10 — Retention / hacim
 

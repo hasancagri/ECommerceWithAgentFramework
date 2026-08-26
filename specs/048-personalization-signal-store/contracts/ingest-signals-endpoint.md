@@ -18,17 +18,13 @@ Gövde = sinyal dizisi (batch). Her öğe gezinme sinyali gövdesi (bkz
   {
     "eventType": "ProductViewed",
     "channel": "web",
-    "userId": "b1a2...",            // null olabilir (anonim)
-    "anonymousId": "9f3c...",       // zorunlu
-    "sessionId": "77aa...",         // zorunlu
+    "userId": "b1a2...",            // null olabilir (anonim gezinme)
+    "anonymousId": "9f3c...",       // zorunlu (anonim atıf kimliği)
     "productId": "c4d5...",
     "brand": "Acme",
     "category": "Electronics",
     "price": 199.90,
-    "searchTerm": null,
-    "shownProductIds": null,
-    "timestamp": "2026-08-24T10:12:00Z",
-    "schemaVersion": 1
+    "timestamp": "2026-08-24T10:12:00Z"
   }
 ]
 ```
@@ -47,13 +43,14 @@ Gövde = sinyal dizisi (batch). Her öğe gezinme sinyali gövdesi (bkz
   (log warning), geçerli öğe `IDocumentSession.Store` + `SaveChangesAsync` (batch).
 - **Kayıp-toleransı çağıranda**: WebApp `BehaviorLogWriter` kuyruğu doluysa/servis
   erişilemezse öğe düşer; endpoint down olsa bile sayfa etkilenmez (D9).
-- **CategoryViewed/BrandViewed/SearchPerformed** bu faz WebApp'te üretilmez ama endpoint
-  KABUL eder (FR-007/007a) — sonraki faz enstrümantasyonu için hazır.
+- **Liste/sonuç sayfası sinyalleri REDDEDİLİR** (049 kullanıcı kararı): ListShown /
+  CategoryViewed / BrandViewed / SearchPerformed bilinen kümede değil → geçersiz öğe atlanır.
+  Kalan sinyal = ProductViewed (detay) + BasketItemAdded (aksiyon).
 
 ## Versiyonlama
 
-- URL-segment `v1`. Gövde `schemaVersion` ile evrilir (additive alan + default;
-  eski/yeni üretici uyumlu).
+- URL-segment `v1`. Gövde tolerant-read ile evrilir (additive alan + default; tüketici
+  bilinmeyen alanı yok sayar). `schemaVersion` alanı 049'da söküldü (sadeleştirme).
 
 ## Endpoint iskeleti (referans)
 

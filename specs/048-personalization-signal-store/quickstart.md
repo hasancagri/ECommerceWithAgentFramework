@@ -29,11 +29,10 @@ yalnız çalıştırma + beklenen sonuç.
 1. Anonim (veya login) kullanıcı bir ürün detayını aç, listeye bak, sepete ekle.
 2. Beklenen: WebApp arka plan işçisi batch `POST /v1/signals` atar (scope
    `personalization.ingest`); sayfa gecikmesiz render olur.
-3. Doğrula: `personalizationApiDb`'de `BehaviorSignal` kayıtları (ProductViewed /
-   ListShown / BasketItemAdded); `userId` login'de dolu, anonimde null ama `anonymousId`
-   + `sessionId` dolu. PII yok.
-4. **Endpoint tolerans**: `CategoryViewed` gövdesiyle manuel `POST /v1/signals` → 202,
-   kayıt yazılır (WebApp üretmese de endpoint kabul eder).
+3. Doğrula: `personalizationApiDb`'de `BehaviorSignal` kayıtları (yalnız ProductViewed /
+   BasketItemAdded); `userId` login'de dolu, anonimde null ama `anonymousId` dolu. PII yok.
+4. **Liste sayfası kaydı YOK** (049): ana sayfa/ürün listesi gezme → hiç sinyal yazılmaz.
+   `ListShown`/`CategoryViewed` gövdesiyle manuel `POST /v1/signals` → öğe reddedilir (atlanır).
 
 ## Senaryo 3 — İzolasyon (US3, P3)
 
@@ -48,8 +47,8 @@ yalnız çalıştırma + beklenen sonuç.
 
 - `PurchaseSignal.Create`: boş kalem reddi, `Quantity>0`, `UnitPrice≥0`, geçerli oluşum.
 - `PurchaseSignalItem` / VO invariant'ları.
-- `BehaviorSignal.Create`: bilinmeyen `eventType` reddi, boş `anonymousId`/`sessionId`
-  reddi, geçerli oluşum.
+- `BehaviorSignal.Create`: bilinmeyen `eventType` reddi (liste tipleri dahil), boş
+  `anonymousId` reddi, geçerli oluşum (ProductViewed/BasketItemAdded).
 
 ## Başarı ölçütleri eşlemesi
 

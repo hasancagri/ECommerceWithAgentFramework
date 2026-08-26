@@ -43,22 +43,22 @@ Bir gezinme etkileşimi. Kayıp-toleranslı, yüksek-hacim, write-once.
 | Alan | Tip | Not |
 |---|---|---|
 | `Id` | `Guid` | Marten kimliği (yeni) |
-| `EventType` | `string` | ProductViewed / ListShown / CategoryViewed / BrandViewed / SearchPerformed / BasketItemAdded |
+| `EventType` | `string` | ProductViewed / BasketItemAdded |
 | `Channel` | `string` | "web" (varsayılan) |
-| `UserId` | `Guid?` | giriş yaptıysa |
-| `AnonymousId` | `Guid` | zorunlu |
-| `SessionId` | `Guid` | zorunlu |
+| `UserId` | `Guid?` | giriş yaptıysa (anonim gezinme opsiyonel) |
+| `AnonymousId` | `Guid` | zorunlu (anonim atıf kimliği) |
 | `ProductId` | `Guid?` | tipe göre |
 | `Brand` | `string?` | tipe göre |
 | `Category` | `string?` | tipe göre |
 | `Price` | `decimal?` | tipe göre |
-| `SearchTerm` | `string?` | SearchPerformed |
-| `ShownProductIds` | `IReadOnlyList<Guid>?` | ListShown |
 | `OccurredAt` | `DateTime` (UTC) | client Timestamp |
-| `SchemaVersion` | `int` | kontrat sürümü (additive uyum) |
+
+> **049 sadeleştirme (kullanıcı kararı):** Liste/sonuç sayfası sinyalleri (ListShown/
+> CategoryViewed/BrandViewed/SearchPerformed) KAYDEDİLMEZ; `SessionId`, `SearchTerm`,
+> `ShownProductIds`, `SchemaVersion` alanları söküldü. Kalan = ürün detay ziyareti + sepete ekleme.
 
 **Doğrulama (`Create` fabrikası — İlke VI test-first, minimal):**
-- `EventType` bilinen kümede olmalı; `AnonymousId` + `SessionId` boş-Guid olamaz.
+- `EventType` bilinen kümede (ProductViewed/BasketItemAdded) olmalı; `AnonymousId` boş-Guid olamaz.
 - Geçersizse `ResultDomain` hata (FR-013 — reddet, diğerlerini etkileme).
 - Not: Bu bir aggregate değil; fabrika yalnız telemetri kaydını doğrular (davranış yok).
 
@@ -72,7 +72,7 @@ x => x.AnonymousId)` (gelecekteki kullanıcı-bazlı okuma).
 
 ## Kontrat sürümleme
 
-- `BehaviorSignal` gövdesi versiyonlu (`SchemaVersion`); yeni alan additive + default
-  (eski üreticiyi kırmaz). Bkz `contracts/behavior-signal-line.md`.
+- `BehaviorSignal` gövdesi tolerant-read ile evrilir (additive alan + default; tüketici
+  bilinmeyen alanı yok sayar). `SchemaVersion` alanı 049'da söküldü. Bkz `contracts/behavior-signal-line.md`.
 - `OrderCompleted` event additive alanlarla genişler (default'lu). Bkz
   `contracts/order-completed-event.md`.
