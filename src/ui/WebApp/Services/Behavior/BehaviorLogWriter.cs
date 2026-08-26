@@ -54,9 +54,14 @@ public class BehaviorLogWriter(
                     logger.LogWarning("Davranış sinyali batch'i reddedildi ({Count} satır, {Status}) — atlandı.",
                         batch.Count, response.StatusCode);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                // Kayıp-toleranslı: Personalization erişilemez → batch atlanır, sayfa/host etkilenmez.
+                break; // gerçek host shutdown — döngüyü bırak.
+            }
+            catch (Exception ex)
+            {
+                // Kayıp-toleranslı: Personalization erişilemez (HttpClient 5s timeout = TaskCanceledException,
+                // shutdown DEĞİL) → batch atlanır, sayfa/host etkilenmez.
                 logger.LogWarning(ex, "Davranış sinyali gönderilemedi ({Count} satır) — atlandı.", batch.Count);
             }
         }
