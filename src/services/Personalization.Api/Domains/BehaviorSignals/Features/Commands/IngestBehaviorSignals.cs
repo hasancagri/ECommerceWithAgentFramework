@@ -10,15 +10,11 @@ public static class IngestBehaviorSignals
         string? Channel,
         Guid? UserId,
         Guid AnonymousId,
-        Guid SessionId,
         Guid? ProductId,
         string? Brand,
         string? Category,
         decimal? Price,
-        string? SearchTerm,
-        IReadOnlyList<Guid>? ShownProductIds,
-        DateTime Timestamp,
-        int SchemaVersion);
+        DateTime Timestamp);
 
     public record IngestBehaviorSignalsCommand(IReadOnlyList<BehaviorSignalItemDto> Signals);
 
@@ -37,9 +33,8 @@ public static class IngestBehaviorSignals
             foreach (var dto in cmd.Signals)
             {
                 var signal = BehaviorSignal.Create(
-                    dto.EventType, dto.Channel, dto.UserId, dto.AnonymousId, dto.SessionId,
-                    dto.ProductId, dto.Brand, dto.Category, dto.Price, dto.SearchTerm,
-                    dto.ShownProductIds, dto.Timestamp, dto.SchemaVersion);
+                    dto.EventType, dto.Channel, dto.UserId, dto.AnonymousId,
+                    dto.ProductId, dto.Brand, dto.Category, dto.Price, dto.Timestamp);
 
                 if (!signal.IsSuccess)
                 {

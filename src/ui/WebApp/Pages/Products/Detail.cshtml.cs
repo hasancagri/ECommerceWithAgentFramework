@@ -45,7 +45,7 @@ public class DetailModel(
         Family = await storefrontService.GetFamilyAsync(id);
 
         // 042: ProductViewed — alanlar render verisinden denormalize (FR-001).
-        var (anonymousId, sessionId, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
+        var (anonymousId, _, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
         behaviorLog.Enqueue(new BehaviorEvent
         {
             EventType = "ProductViewed",
@@ -55,7 +55,6 @@ public class DetailModel(
             Brand = Product.Brand,
             Category = Product.Category,
             Price = Product.Price,
-            SessionId = sessionId,
         });
 
         return Page();

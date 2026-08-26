@@ -18,6 +18,6 @@ public static class PersonalizationResourceConstants
     // Gezinme sinyali tipi bilinen kumede degil.
     public const string BEHAVIOR_SIGNAL_EVENT_TYPE_INVALID = "BEHAVIOR_SIGNAL_EVENT_TYPE_INVALID";
 
-    // AnonymousId/SessionId bos Guid olamaz (telemetri kimlik alanlari zorunlu).
+    // AnonymousId bos Guid olamaz (anonim atif kimligi zorunlu; login opsiyonel).
     public const string BEHAVIOR_SIGNAL_IDENTITY_REQUIRED = "BEHAVIOR_SIGNAL_IDENTITY_REQUIRED";
 }

@@ -5,10 +5,12 @@ namespace Personalization.Api.Domains.BehaviorSignals;
 // kimlik = Id. Create fabrikasi yalniz telemetriyi dogrular (bilinen tip + zorunlu kimlik).
 public class BehaviorSignal
 {
-    // Kabul edilen sinyal tipleri (endpoint hepsini kabul eder; WebApp bu faz sadece 3'unu uretir).
+    // Kabul edilen sinyal tipleri. Liste/sonuc sayfasi sinyalleri (ListShown/CategoryViewed/BrandViewed/
+    // SearchPerformed) KAYDEDILMEZ (kullanici karari): yalniz urun detay ziyareti + sepete ekleme aksiyonu.
+    // Marka/kategori gerekirse ProductId'den (katalog) turetilir — liste impression'i saklanmaz.
     public static readonly IReadOnlySet<string> KnownEventTypes = new HashSet<string>
     {
-        "ProductViewed", "ListShown", "CategoryViewed", "BrandViewed", "SearchPerformed", "BasketItemAdded"
+        "ProductViewed", "BasketItemAdded"
     };
 
     public Guid Id { get; private set; }
@@ -16,25 +18,20 @@ public class BehaviorSignal
     public string Channel { get; private set; } = "web";
     public Guid? UserId { get; private set; }
     public Guid AnonymousId { get; private set; }
-    public Guid SessionId { get; private set; }
     public Guid? ProductId { get; private set; }
     public string? Brand { get; private set; }
     public string? Category { get; private set; }
     public decimal? Price { get; private set; }
-    public string? SearchTerm { get; private set; }
-    public IReadOnlyList<Guid>? ShownProductIds { get; private set; }
     public DateTime OccurredAt { get; private set; }
-    public int SchemaVersion { get; private set; } = 1;
 
     private BehaviorSignal()
     {
     }
 
-    /// <summary>Gezinme telemetri kaydini dogrular ve olusturur; bilinen tip + dolu anonim/oturum kimligi sart.</summary>
+    /// <summary>Gezinme telemetri kaydini dogrular ve olusturur; bilinen tip + dolu anonim kimlik sart.</summary>
     public static ResultDomain<BehaviorSignal> Create(
-        string eventType, string? channel, Guid? userId, Guid anonymousId, Guid sessionId,
-        Guid? productId, string? brand, string? category, decimal? price,
-        string? searchTerm, IReadOnlyList<Guid>? shownProductIds, DateTime occurredAt, int schemaVersion)
+        string eventType, string? channel, Guid? userId, Guid anonymousId,
+        Guid? productId, string? brand, string? category, decimal? price, DateTime occurredAt)
     {
         var messages = new List<MessageItem>();
 
@@ -42,7 +39,7 @@ public class BehaviorSignal
             messages.Add(new MessageItem
                 { Property = nameof(EventType), Code = PersonalizationResourceConstants.BEHAVIOR_SIGNAL_EVENT_TYPE_INVALID });
 
-        if (anonymousId == Guid.Empty || sessionId == Guid.Empty)
+        if (anonymousId == Guid.Empty)
             messages.Add(new MessageItem
                 { Property = nameof(AnonymousId), Code = PersonalizationResourceConstants.BEHAVIOR_SIGNAL_IDENTITY_REQUIRED });
 
@@ -56,15 +53,11 @@ public class BehaviorSignal
             Channel = string.IsNullOrWhiteSpace(channel) ? "web" : channel,
             UserId = userId,
             AnonymousId = anonymousId,
-            SessionId = sessionId,
             ProductId = productId,
             Brand = brand,
             Category = category,
             Price = price,
-            SearchTerm = searchTerm,
-            ShownProductIds = shownProductIds,
             OccurredAt = occurredAt == default ? DateTime.UtcNow : occurredAt,
-            SchemaVersion = schemaVersion <= 0 ? 1 : schemaVersion,
         });
     }
 }
