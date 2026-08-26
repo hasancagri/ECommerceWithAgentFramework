@@ -32,9 +32,7 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<CreateOrderCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
     opts.PublishMessage<ConfirmOrderCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
     opts.PublishMessage<CancelOrderCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
-    opts.PublishMessage<AuthorizePaymentCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.PaymentCommandsQueue);
-    opts.PublishMessage<CapturePaymentCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.PaymentCommandsQueue);
-    opts.PublishMessage<VoidPaymentCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.PaymentCommandsQueue);
+    opts.PublishMessage<ChargePaymentCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.PaymentCommandsQueue);
     opts.PublishMessage<CommitStockCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.StockCommandsQueue);
     opts.PublishMessage<RevertCommitStockCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.StockCommandsQueue);
     opts.PublishMessage<ClearBasketCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.BasketCommandsQueue);

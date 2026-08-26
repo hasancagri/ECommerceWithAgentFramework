@@ -29,9 +29,7 @@ builder.Host.UseWolverine(opts =>
     // 049: checkout iki-faz ödeme komutlarını dinle; yanıtları orchestrator reply kuyruğuna yayınla.
     opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!).AutoProvision();
     opts.ListenToRabbitQueue(Shared.RabbitMqConstants.Checkout.PaymentCommandsQueue);
-    opts.PublishMessage<Shared.CheckoutMessages.PaymentAuthorized>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
-    opts.PublishMessage<Shared.CheckoutMessages.PaymentCaptured>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
-    opts.PublishMessage<Shared.CheckoutMessages.PaymentVoided>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
+    opts.PublishMessage<Shared.CheckoutMessages.PaymentCharged>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(

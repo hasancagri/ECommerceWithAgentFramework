@@ -11,10 +11,10 @@ public static class CheckoutMessages
     // Geçici (retry edilebilir) vs kalıcı (telafi/iptal gerektiren) hata ayrımı (FR-025).
     public enum ErrorClass { None = 0, Transient = 1, Permanent = 2 }
 
-    // Ödeme kaynağı (FR-030). TwoPhase: mock Payment BC Authorize→Capture (WebApp). AlreadyCaptured:
-    // ödeme dış PaymentGateway A2A ile ÖNCEDEN çekildi (chat/039) → orchestrator authorize/capture ATLAR
+    // Ödeme kaynağı (FR-030). Charge: mock Payment BC tek-faz tahsilat (WebApp) — saga'nın SON pivot adımı.
+    // AlreadyCaptured: ödeme dış PaymentGateway A2A ile ÖNCEDEN çekildi (chat/039) → orchestrator charge ATLAR
     // (çift-tahsilat yok). AlreadyCaptured'da sipariş ZATEN oluşturulmuştur (OrderId dolu gelir).
-    public enum PaymentMode { TwoPhase = 0, AlreadyCaptured = 1 }
+    public enum PaymentMode { Charge = 0, AlreadyCaptured = 1 }
 
     // Kalem: stok commit ProductId+Quantity kullanır; Order ayrıca Name+UnitPrice ister (varsayılanlı —
     // lean kullanım kırılmaz). Her checkout iki-faz mock Payment BC kullanır (tek süreç, FR-030).
@@ -33,8 +33,8 @@ public static class CheckoutMessages
         OrderAddress Address,
         string CardRef,
         int Installments = 1,
-        // 049: TwoPhase (web, mock ödeme) varsayılan; AlreadyCaptured (chat, dış PG çekti) OrderId dolu gelir.
-        PaymentMode PaymentMode = PaymentMode.TwoPhase,
+        // 049: Charge (web, mock tek-faz ödeme) varsayılan; AlreadyCaptured (chat, dış PG çekti) OrderId dolu gelir.
+        PaymentMode PaymentMode = PaymentMode.Charge,
         Guid OrderId = default);
 
     // --- Adım komutları (orchestrator → hedef BC) + yanıt-event'leri (→ orchestrator) ---
@@ -44,14 +44,13 @@ public static class CheckoutMessages
     public record CreateOrderCommand(Guid CheckoutId, Guid UserId, IReadOnlyList<CheckoutItem> Items, decimal Amount, OrderAddress Address, string CardRef, string IdempotencyKey);
     public record OrderCreated([property: SagaIdentity] Guid CheckoutId, Guid OrderId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
 
-    public record AuthorizePaymentCommand(Guid CheckoutId, Guid UserId, decimal Amount, int Installments, string IdempotencyKey);
-    public record PaymentAuthorized([property: SagaIdentity] Guid CheckoutId, Guid PaymentId, string AuthorizationRef, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
-
     public record CommitStockCommand(Guid CheckoutId, Guid OrderId, Guid ProductId, Guid UserId, int Quantity, string IdempotencyKey);
     public record StockCommitted([property: SagaIdentity] Guid CheckoutId, Guid ProductId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
 
-    public record CapturePaymentCommand(Guid CheckoutId, Guid PaymentId, string IdempotencyKey);
-    public record PaymentCaptured([property: SagaIdentity] Guid CheckoutId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
+    // Tek-faz tahsilat (pivot): stok commit sonrası SON adım. Void/refund yok — başarısızsa telafi = stok
+    // revert + sipariş cancel (para hareket etmez); başarılıysa geri-alma yok.
+    public record ChargePaymentCommand(Guid CheckoutId, Guid UserId, decimal Amount, int Installments, string IdempotencyKey);
+    public record PaymentCharged([property: SagaIdentity] Guid CheckoutId, Guid PaymentId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
 
     public record ConfirmOrderCommand(Guid CheckoutId, Guid OrderId, string IdempotencyKey);
     public record OrderConfirmed([property: SagaIdentity] Guid CheckoutId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
@@ -63,9 +62,6 @@ public static class CheckoutMessages
 
     public record RevertCommitStockCommand(Guid CheckoutId, Guid OrderId, Guid ProductId, Guid UserId, int Quantity, string IdempotencyKey);
     public record StockCommitReverted([property: SagaIdentity] Guid CheckoutId, Guid ProductId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
-
-    public record VoidPaymentCommand(Guid CheckoutId, Guid PaymentId, string IdempotencyKey);
-    public record PaymentVoided([property: SagaIdentity] Guid CheckoutId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
 
     public record CancelOrderCommand(Guid CheckoutId, Guid OrderId, string ReasonCode, string IdempotencyKey);
     public record OrderCancelled([property: SagaIdentity] Guid CheckoutId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);

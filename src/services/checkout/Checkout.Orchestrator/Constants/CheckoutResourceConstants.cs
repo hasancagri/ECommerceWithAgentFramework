@@ -4,8 +4,7 @@ namespace Checkout.Orchestrator.Constants;
 public static class CheckoutResourceConstants
 {
     public static readonly string CHECKOUT_STOCK_STEP_FAILED = "CHECKOUT_STOCK_STEP_FAILED";
-    public static readonly string CHECKOUT_PAYMENT_AUTHORIZE_FAILED = "CHECKOUT_PAYMENT_AUTHORIZE_FAILED";
-    public static readonly string CHECKOUT_PAYMENT_CAPTURE_FAILED = "CHECKOUT_PAYMENT_CAPTURE_FAILED";
+    public static readonly string CHECKOUT_PAYMENT_CHARGE_FAILED = "CHECKOUT_PAYMENT_CHARGE_FAILED";
     public static readonly string CHECKOUT_ORDER_CREATE_FAILED = "CHECKOUT_ORDER_CREATE_FAILED";
     public static readonly string CHECKOUT_TIMEOUT = "CHECKOUT_TIMEOUT";
     public static readonly string CHECKOUT_EMPTY_ITEMS = "CHECKOUT_EMPTY_ITEMS";
