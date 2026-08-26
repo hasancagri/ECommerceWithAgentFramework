@@ -25,6 +25,7 @@ var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
 var customerDb = postgres.AddDatabase("customerDb");
+var checkoutDb = postgres.AddDatabase("checkoutDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -82,8 +83,10 @@ var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api"
 
 var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WithReference(paymentDb)
+    .WithReference(rabbit)
     .WithReference(redis)
     .WaitFor(paymentDb)
+    .WaitFor(rabbit)
     .WaitFor(redis);
 
 // 022: Customer BC — Wallet (kayitli kart) + AddressBook (adres defteri). Kendi DB'si;
@@ -99,6 +102,20 @@ var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
 // 039: chat siparis tamamlama — Order.Api odeme baglamini (buyer+vaultToken+adres) Customer'dan
 // yapisal REST ile ceker (customerApi orderApi'den SONRA tanimli oldugu icin referans burada eklenir).
 orderApi.WithReference(customerApi).WaitFor(customerApi);
+
+// 049: Checkout.Orchestrator — ayrı BC (checkoutDb), broker-only saga. Komutları hedef BC'lere
+// yayınlar, yanıtları reply kuyruğundan dinler. BC komut-kuyruğu tüketicileri önce ayağa kalksın
+// (soğuk-açılış binding dersi, 007). Giriş endpoint'i checkout.write ile korunur (identity).
+var checkoutOrchestrator = builder.AddProject<Projects.Checkout_Orchestrator>("checkout-orchestrator")
+    .WithReference(checkoutDb)
+    .WithReference(rabbit)
+    .WithReference(identityServer)
+    .WaitFor(checkoutDb)
+    .WaitFor(rabbit)
+    .WaitFor(orderApi)
+    .WaitFor(stockApi)
+    .WaitFor(paymentApi)
+    .WaitFor(basketApi);
 
 // 044: Reviews BC — satin-alma sartli yorum + puan ozeti. Satin-alma kaniti icin Order gRPC'sine
 // senkron sorar (fail-closed); ozet ReviewSummaryChanged fanout'uyla Storefront'a akar.
@@ -187,5 +204,8 @@ var personalizationApi = builder.AddProject<Projects.Personalization_Api>("perso
 
 // WebApp gezinme sinyallerini personalization-api'ye POST eder → adres cozumu icin referans.
 web.WithReference(personalizationApi);
+
+// 049: WebApp checkout girişi Checkout.Orchestrator'a POST eder → adres çözümü için referans.
+web.WithReference(checkoutOrchestrator);
 
 await builder.Build().RunAsync();

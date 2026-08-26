@@ -40,6 +40,10 @@ builder.Host.UseWolverine(opts =>
 
     opts.ListenToRabbitQueue(RabbitMqConstants.ReservationExpired.Queues.Basket);
 
+    // 049: checkout sepet temizleme komutunu dinle; yanıtı orchestrator reply kuyruğuna.
+    opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.BasketCommandsQueue);
+    opts.PublishMessage<CheckoutMessages.BasketCleared>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),

@@ -26,11 +26,20 @@ builder.Host.UseWolverine(opts =>
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
 
+    // 049: checkout iki-faz ödeme komutlarını dinle; yanıtları orchestrator reply kuyruğuna yayınla.
+    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!).AutoProvision();
+    opts.ListenToRabbitQueue(Shared.RabbitMqConstants.Checkout.PaymentCommandsQueue);
+    opts.PublishMessage<Shared.CheckoutMessages.PaymentAuthorized>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
+    opts.PublishMessage<Shared.CheckoutMessages.PaymentCaptured>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
+    opts.PublishMessage<Shared.CheckoutMessages.PaymentVoided>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
+
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif *EventHandlers sınıfını atlayabiliyor → açık kayıt (Stock emsali).
+    opts.Discovery.IncludeType(typeof(Payment.Api.PaymentEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>

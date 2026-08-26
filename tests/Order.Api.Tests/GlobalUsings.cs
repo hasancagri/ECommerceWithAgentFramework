@@ -7,4 +7,3 @@ global using Order.Api.Domains.Orders.ValueObjects;
 global using OrderAggregate = Order.Api.Domains.Orders.Order;
 // --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Order.Api.Grpc;
-global using Order.Api.Sagas;

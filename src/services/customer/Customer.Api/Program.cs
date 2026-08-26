@@ -87,6 +87,8 @@ app.AddWalletGroupEndpointExtension(apiVersionSet);
 app.AddMerchantInformationGroupEndpointExtension(apiVersionSet);
 // 039: Order.Api chat siparis tamamlama yapisal odeme-baglami ucu (customer.read makine token'i).
 app.AddPaymentContextInternalEndpoint(apiVersionSet);
+// 049: Order.Api charge/reconcile merchant API key ucu (customer.read); MerchantKey agent'a cikmaz.
+app.AddMerchantKeyInternalEndpoint(apiVersionSet);
 
 app.MapMcp("/mcp");
 

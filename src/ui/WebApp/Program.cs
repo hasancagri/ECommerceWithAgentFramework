@@ -75,6 +75,12 @@ builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(config
         configure.BaseAddress = new Uri("http://order-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
+// 049: checkout girişi ayrı Checkout.Orchestrator'a (kullanıcı token'i BFF handler ile taşınır).
+builder.Services.AddRefitClient<ICheckoutRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://checkout-orchestrator");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+
 
 builder.Services.AddRefitClient<IPaymentRefitService>().ConfigureHttpClient(configure =>
     {

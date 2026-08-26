@@ -21,6 +21,15 @@ Tamamla" (POST)** ile niyeti bağlayıcı sürece çevirdiği andır. Sepete atm
 (Stock BC, geçici TTL hold); checkout = **süreç başlangıcı** (saga doğar). İkisi farklı an,
 farklı sahip.
 
+## Clarifications
+
+### Session 2026-08-25
+
+- Q: İki-fazlı ödeme durum makinesini (Authorized→Captured|Voided) hangi BC sahiplenir? → A: Mevcut Payment BC genişletilir; durum makinesi Payment aggregate'inde yaşar, orchestrator broker komut/yanıt ile sürer (yeni servis/DB açılmaz).
+- Q: Saga adım sırası — Order oluşturma mı Payment authorize mı önce? → A: Önce CreateOrder(Pending) → Authorize → Commit → Capture → Confirm → ClearBasket; authorize düşerse Order Cancelled(sebep) olur (hiç-oluşturulmaz seçeneği elenir).
+- Q: Checkout girişi + downstream komut yetkilendirmesi? → A: Giriş endpoint'i kullanıcı scope'u (`checkout.write`) ile korunur (WebApp BFF token enjekte eder). Düzeltme (implement bulgusu): broker komut handler'ları `[RequiredScope]` KULLANMAZ — `ScopeAuthorizationMiddleware` yalnız HttpContext'ten okur, RabbitMQ mesajında yoktur; broker trust = bağlantı auth + tek yayıncı. Orchestrator m2m token taşımaz (HTTP/gRPC çağrısı yok).
+- Q: 028 saga iki entry'de paylaşılıyor (WebApp `CreateOrder` + chat `PaymentOrderCreator`). Chat ayrı süreç/ödeme (dış PG A2A) mi olsun? → A: HAYIR — **tek tip süreç**. Tıkla (WebApp) ya da yaz (chat) fark etmez; arka uç orchestrasyonu BİREBİR aynıdır, yalnız tetikleyen **handler adı** farklıdır (CQRS'te Command/Query gibi). Chat girişi bir `Features/Agents/…ForAgent` ince slice'ıdır (kendi handler'ını taşır, konvansiyon). Taksit = sürece taşınan **parametre** (mock Payment iki-faz kaydeder; ayrı ödeme modeli/mod YOK). 039'un dış A2A çekim + `PaymentOrderCreator` sipariş yolu bu tek sürece devredilir.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Başarılı checkout uçtan uca (Priority: P1)
@@ -127,7 +136,7 @@ ve nihai durum (Confirmed/Cancelled) tek ve doğru olur.
 - **Rezervasyon TTL'i checkout ÖNCESİ dolmuş:** POST giriş guard'ında yakalanır (mevcut `Order/Create` sayfası `IsReservationExpired`), alıcı sepete döndürülür. Saga hiç doğmaz, auth alınmaz → geri sarılacak bir şey yok.
 - **Rezervasyon TTL'i saga İÇİNDE dolmuş (yarış penceresi):** Guard geçti ama commit anında düştü. TTL yapısal olarak **daima pivot öncesindedir** (capture yalnız tüm kalemler commit olunca gelir), dolayısıyla daima temiz geri sarma + void + iptal (asla refund). Bkz. US2.
 - **Çift checkout (aynı sepet iki kez POST):** Aynı süreç iki kez başlatılamaz (idempotent başlatma anahtarı); ikinci istek yeni paralel süreç doğurmaz.
-- **Authorize başarısız (yetersiz limit):** Süreç en baştan durur; hiç kalem kesinleşmez, sipariş Cancelled (veya hiç oluşturulmaz — bkz. FR-004/FR-014).
+- **Authorize başarısız (yetersiz limit):** Order zaten Pending oluşturuldu (ilk adım); hiç kalem kesinleşmez, sipariş Cancelled(sebep) olur (bkz. FR-004/FR-014).
 - **Capture başarısız (nadir, authorize sonrası):** Kesinleşmiş kalemler geri sarılır, auth void edilir, sipariş Cancelled — capture henüz pivot'u tamamlamadığı için iptal serbest.
 - **Bir adımın yanıtı hiç gelmez:** Per-step timeout devreye girer; adım hata sınıfına göre retry veya telafiye yönlendirilir.
 - **Tamamlanmış sürece geç mesaj:** Sessizce düşürülür (no-op), yan etki üretmez.
@@ -140,8 +149,9 @@ ve nihai durum (Confirmed/Cancelled) tek ve doğru olur.
 **Süreç sahipliği & giriş**
 
 - **FR-001**: Sistem, checkout sürecini Order BC dışında, kendi kalıcı durum deposuna sahip **ayrı bir orchestration bileşeni** üzerinden yürütmelidir.
-- **FR-002**: Mevcut Order BC-içi checkout saga'sı **tamamen kaldırılmalıdır**; iki süreç aynı anda koşmamalıdır.
-- **FR-003**: Checkout'un giriş noktası orchestration bileşeni olmalıdır; alıcının "Ödemeyi Tamamla" isteği bu bileşene ulaşır ve süreç orada doğar.
+- **FR-002**: Mevcut Order BC-içi checkout saga'sı **tamamen kaldırılmalıdır**; iki süreç aynı anda koşmamalıdır. Saga'yı tetikleyen **HER iki giriş** (WebApp tıklama + chat metin) tek orchestrator'a yönlenir; orchestrator tek süreç sahibidir.
+- **FR-030**: Checkout, giriş kanalından **bağımsız olarak birebir aynı** orchestrasyonu yürütmelidir: WebApp Command yüzü ile chat Agent yüzü (`Features/Agents/…ForAgent` ince slice, kendi handler'ıyla) teknik olarak aynı süreci tetikler; yalnız handler adları farklıdır (İlke III + Agent-slice konvansiyonu). Taksit sayısı sürece taşınan bir **parametredir** (mock Payment iki-faz kaydeder); giriş kanalına göre farklı ödeme modeli/dalı YOKTUR. 039'un dış PaymentGateway A2A çekim yolu sipariş oluşturma için bu tek sürece devredilir.
+- **FR-003**: Checkout'un giriş noktası orchestration bileşeni olmalıdır; alıcının "Ödemeyi Tamamla" isteği bu bileşene ulaşır ve süreç orada doğar. Giriş endpoint'i **kullanıcı scope'u** ile korunur (WebApp BFF alıcının token'ını enjekte eder, mevcut desen). Orchestrator downstream broker komutlarını **`client_credentials` makine kimliği + statik scope** ile sürer (anayasa İlke V, `order-saga` örneği).
 - **FR-004**: Sipariş kaydının oluşturulması sürecin **ilk adımı** olmalıdır (Order'a uzaktan komut); sipariş, süreç boyunca Pending doğar.
 
 **Aggregate davranışının korunması**
@@ -164,7 +174,7 @@ ve nihai durum (Confirmed/Cancelled) tek ve doğru olur.
 
 - **FR-012**: Ödeme iki fazlı olmalıdır: önce **authorize** (blokaj), tüm kalemler kesinleştikten sonra **capture** (tahsil).
 - **FR-013**: Bir pivot-öncesi adım başarısız olursa, tahsil edilmemiş blokaj **void** edilmelidir (gerçek para iadesi gerekmeden).
-- **FR-014**: Payment bileşeni bir ödeme durum makinesi tutmalıdır: Authorized → Captured | Voided; geçersiz geçişler reddedilir.
+- **FR-014**: İki-fazlı ödeme durum makinesi (Authorized → Captured | Voided; geçersiz geçişler reddedilir) **mevcut Payment BC'de** yaşar — Payment aggregate genişletilir, yeni servis/DB açılmaz. Orchestrator bu davranışı yalnız broker komutuyla tetikler (FR-005), durumu Payment tutar.
 - **FR-015**: Payment bileşeninin dış ödeme sağlayıcısına (PaymentGateway) giden gerçek para hop'u bu feature'da **stub'lanır** (yerel olarak Authorized/Captured/Voided döner); sınır net çizilir, ileride gerçek entegrasyona açık bırakılır.
 
 **Telafi & pivot**
@@ -192,8 +202,8 @@ ve nihai durum (Confirmed/Cancelled) tek ve doğru olur.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Checkout Süreci (Saga)**: Bir siparişin checkout yaşam döngüsünün durumu. Nitelikler: süreç kimliği (sipariş kimliğiyle ilişkili), alıcı, kalemler, kesinleşen kalemler, mevcut faz (stok kesinleştirme / telafi / geç adım), deneme sayacı, ödeme referansı, telafi-başarısız bayrağı. Sürecin **tek doğruluk kaynağıdır** (saga log).
-- **Ödeme (iki-fazlı)**: Bir checkout için ödeme durumu. Nitelikler: tutar, durum (Authorized/Captured/Voided), authorize referansı, idempotency anahtarı.
+- **Checkout Süreci (Saga)**: Bir checkout yaşam döngüsünün durumu. Kimlik = **CheckoutId** (alıcı + sepetten deterministik türetilir; idempotent başlatma). Sipariş kimliği (**OrderId**) AYRI bir alandır ve sürecin ilk adımı (CreateOrder) tamamlanınca dolar. Diğer nitelikler: alıcı, kalemler, kesinleşen kalemler, mevcut faz (stok kesinleştirme / telafi / geç adım), deneme sayacı, ödeme referansı, telafi-başarısız bayrağı. Sürecin **tek doğruluk kaynağıdır** (saga log).
+- **Ödeme (iki-fazlı)**: **Payment BC aggregate'i** (genişletilir; orchestrator DB'sinde değil). Bir checkout için ödeme durumu. Nitelikler: tutar, durum (Authorized/Captured/Voided), authorize referansı, idempotency anahtarı. Orchestrator broker komutuyla tetikler, durumu Payment tutar.
 - **Sipariş**: Order BC'nin aggregate'i (bu feature onu değiştirmez, yalnız uzaktan tetikler). İlgili durumlar: Pending → Confirmed | Cancelled + iptal sebebi.
 - **Rezervasyon**: Stock BC'nin geçici hold'u (sepete atma anında; TTL'li; commit ile kalıcı düşüşe çevrilir). Bu feature onu tüketir, oluşturmaz.
 - **Orchestration Komutu / Yanıtı**: Adımı tetikleyen komut (idempotency anahtarı + korelasyon kimliği taşır) ve hedef servisin döndürdüğü sonuç (başarı/başarısızlık + hata sınıfı).

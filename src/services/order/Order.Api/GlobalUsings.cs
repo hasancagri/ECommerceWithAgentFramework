@@ -36,7 +36,6 @@ global using Grpc.Core;
 global using ModelContextProtocol.Server;
 global using Newtonsoft.Json;
 global using Order.Api.Domains.Orders.Features.Agents;
-global using Order.Api.Sagas;
 global using Shared.Grpc.Basket;
 global using System.ComponentModel;
 global using Wolverine.Persistence.Sagas;

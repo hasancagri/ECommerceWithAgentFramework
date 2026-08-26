@@ -61,6 +61,11 @@ builder.Host.UseWolverine(opts =>
     });
     opts.ListenToRabbitQueue(RabbitMqConstants.ProcurementEvents.StockQueue).Sequential();
 
+    // 049: checkout stok komutlarını (Commit/RevertCommit) dinle; yanıtları orchestrator reply kuyruğuna.
+    opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.StockCommandsQueue);
+    opts.PublishMessage<CheckoutMessages.StockCommitted>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+    opts.PublishMessage<CheckoutMessages.StockCommitReverted>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+
     opts.Policies.UseDurableLocalQueues();
     // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.
     // REST + MCP ortak yetki noktasi.

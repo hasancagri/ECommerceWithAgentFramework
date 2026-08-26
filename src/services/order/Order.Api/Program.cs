@@ -42,11 +42,21 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<IntegrationEvents.OrderCompleted>()
         .ToRabbitExchange(RabbitMqConstants.OrderCompleted.Exchange);
 
+    // 049: checkout sipariş komutlarını (Create/Confirm/Cancel) dinle; yanıtları reply kuyruğuna.
+    opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
+    // 049: chat (AlreadyCaptured) checkout'u StartCheckout ile orchestrator'a tetikler (cross-service).
+    opts.PublishMessage<CheckoutMessages.StartCheckout>().ToRabbitQueue(RabbitMqConstants.Checkout.StartQueue);
+    opts.PublishMessage<CheckoutMessages.OrderCreated>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+    opts.PublishMessage<CheckoutMessages.OrderConfirmed>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+    opts.PublishMessage<CheckoutMessages.OrderCancelled>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Konvansiyonel keşif *EventHandlers sınıfını atlayabiliyor → açık kayıt (Stock emsali).
+    opts.Discovery.IncludeType(typeof(Order.Api.OrderEventHandlers));
 });
 
 
@@ -98,28 +108,13 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("order");
 builder.Services.AddHttpContextAccessor();
 
-// 028: saga adimlari arka planda kosar (HttpContext yok) — kullanici bearer'i yerine
-// client-credentials makine token'i (order-saga) SagaTokenHandler ile eklenir.
+// 039: makine token'i (order-saga client-credentials) — chat place_order gRPC/HTTP istemcilerinde kullanılır.
+// (049: 028 checkout saga gRPC adımları söküldü; Stock commit/BasketClear artık orchestrator broker işi.)
 builder.Services.AddTransient<SagaTokenHandler>();
-// gRPC balancer'inin Aspire service-discovery cozumleyicisi YOK; 'stock-api' adini Aspire'in
-// enjekte ettigi cozumlenmis endpoint'ten alip somut adresi veriyoruz.
-var stockGrpcAddress = builder.Configuration["services:stock-api:https:0"]
-    ?? builder.Configuration["services:stock-api:http:0"]
-    ?? "https://stock-api";
-builder.Services
-    .AddGrpcClient<StockReservation.StockReservationClient>(o => o.Address = new Uri(stockGrpcAddress))
-    .AddHttpMessageHandler<SagaTokenHandler>();
-// Proxy'yi somut tipiyle kaydet: saga handler'lari onu concrete type ile ister.
-builder.Services.AddScoped<StockCommitClientProxy>();
 
-// 028: ClearBasket gRPC istemcisi (saga pivot-sonrasi adimi).
 var basketGrpcAddress = builder.Configuration["services:basket-api:https:0"]
     ?? builder.Configuration["services:basket-api:http:0"]
     ?? "https://basket-api";
-builder.Services
-    .AddGrpcClient<Shared.Grpc.Basket.BasketClear.BasketClearClient>(o => o.Address = new Uri(basketGrpcAddress))
-    .AddHttpMessageHandler<SagaTokenHandler>();
-builder.Services.AddScoped<BasketClearClientProxy>();
 
 // 039: GetBasketItems gRPC istemcisi (place_order kalem sentezi; makine token'i basket.read).
 builder.Services
@@ -135,12 +130,18 @@ builder.Services
     .AddHttpClient<CustomerPaymentContextClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
     .AddHttpMessageHandler<SagaTokenHandler>();
 
-// 039: PaymentGateway (dis repo) cekim/retrieve HTTP istemcisi — auth merchant API key (kullanici JWT degil).
+// 049: merchant API key istemcisi (charge/reconcile X-Api-Key kaynagi; customer.read makine token'i).
+// Key MerchantInformation'dan cozulur -> statik config anahtari (senkron derdi) kalkti.
+builder.Services
+    .AddHttpClient<MerchantKeyClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+
+// 039: PaymentGateway (dis repo) cekim/retrieve HTTP istemcisi — auth merchant API key (kullanici JWT
+// degil). 049: X-Api-Key PER-REQUEST verilir (MerchantKeyClient'tan cozulur) — statik header YOK.
 builder.Services.AddHttpClient<PaymentGatewayClient>((sp, c) =>
 {
     var pg = sp.GetRequiredService<PaymentGatewayOption>();
     c.BaseAddress = new Uri(pg.BaseUrl.TrimEnd('/') + "/");
-    c.DefaultRequestHeaders.Add(PaymentGatewayClient.ApiKeyHeader, pg.ApiKey);
     c.Timeout = TimeSpan.FromSeconds(60);
 });
 

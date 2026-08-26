@@ -50,12 +50,9 @@ public static class CreateOrder
 
             session.Store(order); // Id burada atanir (Marten)
 
-            // Outbox: StartCheckout, Marten commit'iyle atomik yayinlanir — siparis kaydi olmadan
-            // saga baslamaz, saga baslamadan siparis kaydi kalmaz.
-            await bus.PublishAsync(new StartCheckout(
-                order.Id,
-                userId,
-                cmd.Items.Select(i => new CheckoutItem(i.ProductId, i.Quantity)).ToList()));
+            // 049: 028 checkout saga söküldü. WebApp checkout artık ayrı Checkout.Orchestrator'a POST eder;
+            // bu HTTP uç LEGACY (WebApp çağırmaz). Order oluşturma checkout'ta orchestrator broker komutuyla
+            // (OrderEventHandlers.CreateOrderCommand) yapılır. Bu uç yalnız DTO'ları paylaşır (PlaceOrderForAgent).
 
             return FeatureObjectResultModel<CreateOrderResponse>.Ok(new CreateOrderResponse
             {

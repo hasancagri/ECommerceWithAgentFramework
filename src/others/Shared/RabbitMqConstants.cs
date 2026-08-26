@@ -109,7 +109,7 @@ public static class RabbitMqConstants
         }
     }
 
-    // 048: Order yayınlar (CheckoutSaga başarı), Personalization tüketir (kendi kuyruğunu bağlar, 007).
+    // 048: Order yayınlar (checkout başarı), Personalization tüketir (kendi kuyruğunu bağlar, 007).
     public static class OrderCompleted
     {
         public const string Exchange = "order.completed";
@@ -118,5 +118,22 @@ public static class RabbitMqConstants
         {
             public const string Personalization = "personalization.order-completed";
         }
+    }
+
+    // 049: Checkout orchestrator hedefli komut/yanıt (broker; İlke I v1.11.0). Her BC kendi komut
+    // kuyruğunu bağlar; yanıtlar orchestrator'ın tek yanıt kuyruğuna döner (korelasyon = CheckoutId).
+    public static class Checkout
+    {
+        // Giriş: WebApp endpoint + chat (Order) StartCheckout'u buraya yayınlar; orchestrator dinler → saga doğar.
+        public const string StartQueue = "checkout.start";
+
+        // Orchestrator → hedef BC komut kuyrukları (tüketici bağlar).
+        public const string OrderCommandsQueue = "checkout.order-commands";
+        public const string PaymentCommandsQueue = "checkout.payment-commands";
+        public const string StockCommandsQueue = "checkout.stock-commands";
+        public const string BasketCommandsQueue = "checkout.basket-commands";
+
+        // Hedef BC → orchestrator yanıt kuyruğu (orchestrator bağlar).
+        public const string RepliesQueue = "checkout.replies";
     }
 }

@@ -13,4 +13,5 @@ public abstract class SchemaConstants
     public const string ProcurementSchemaName = "procurementManagement";
     public const string ReviewsSchemaName = "reviewsManagement";
     public const string PersonalizationApiSchemaName = "personalizationApiManagement";
+    public const string CheckoutSchemaName = "checkoutManagement";
 }

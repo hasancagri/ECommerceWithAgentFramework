@@ -15,6 +15,7 @@ public class PaymentReconcileHandler
         ReconcileTick message,
         IDocumentSession session,
         IMessageBus bus,
+        MerchantKeyClient merchantKey,
         PaymentGatewayClient gateway,
         CheckoutReconcile cfg,
         ILogger<PaymentReconcileHandler> logger,
@@ -25,7 +26,12 @@ public class PaymentReconcileHandler
         if (attempt is null || attempt.IsTerminal)
             return; // bulunamadi / zaten terminal -> no-op (bayat/gec tick)
 
-        var retrieve = await gateway.RetrieveAsync(attempt.Id, attempt.MerchantId, ct);
+        // 049: PG X-Api-Key MerchantInformation'dan cozulur. Key erisilemezse retrieve'i Ambiguous say ->
+        // OnReconcileTick normal backoff/deadline yolunu isletir (sonsuz degil, cift cekim yok).
+        var apiKey = await merchantKey.GetKeyAsync(attempt.MerchantId, ct);
+        var retrieve = apiKey is null
+            ? RetrieveResult.Unknown
+            : await gateway.RetrieveAsync(attempt.Id, attempt.MerchantId, apiKey, ct);
         var now = DateTimeOffset.UtcNow;
         var decision = attempt.OnReconcileTick(retrieve.Outcome, retrieve.PaymentId, retrieve.Price, now, cfg);
 

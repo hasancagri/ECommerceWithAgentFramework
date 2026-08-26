@@ -17,6 +17,7 @@ global using System.Reflection;
 global using System;
 global using Wolverine.Attributes;
 global using Wolverine.Marten;
+global using Wolverine.RabbitMQ;
 global using Wolverine;
 global using Common.Utils.Constants;
 global using Payment.Api.Constants;
