@@ -68,38 +68,6 @@ public class SearchStorefrontProductsTests
         messages.ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.INVALID_VALUE);
     }
 
-    [Fact]
-    public void Validate_SearchTextAlone_IsValid()
-    {
-        Validate(new SearchStorefrontProductsQuery(SearchText: "kış sporu ayakkabısı")).ShouldBeEmpty();
-    }
-
-    // US3: hibrit istek — searchText filtrelerle birlikte gecerli; filtre kurallari yine uygulanir.
-    [Fact]
-    public void Validate_SearchTextWithFilters_IsValid()
-    {
-        var query = new SearchStorefrontProductsQuery(
-            SearchText: "kış sporu ayakkabısı", MaxPrice: 3000m, MinStock: 1);
-
-        Validate(query).ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Validate_SearchTextWithInvalidRange_StillReturnsRangeError()
-    {
-        var query = new SearchStorefrontProductsQuery(
-            SearchText: "kış sporu ayakkabısı", MinPrice: 3000m, MaxPrice: 1000m);
-
-        Validate(query).ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.INVALID_RANGE);
-    }
-
-    [Fact]
-    public void Validate_WhitespaceSearchText_IsNotACriteria()
-    {
-        var messages = Validate(new SearchStorefrontProductsQuery(SearchText: "   "));
-
-        messages.ShouldHaveSingleItem().Code.ShouldBe(StorefrontResourceConstants.VALUE_IS_REQUIRED);
-    }
 
     // --- MaxResults kırpma (FR-009) ---
 

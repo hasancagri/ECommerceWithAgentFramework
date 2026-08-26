@@ -24,7 +24,7 @@ scripts/check-flow-links.sh                               # FLOW.md domain-süre
 - **Sistemi hep Aspire AppHost'tan başlat**, tek servis değil — servisler birbirini/DB/RabbitMQ'yu
   service discovery + conn-string enjeksiyonuyla bulur; tek API bağımsız açılmaz.
 - **Marten şeması otomatik kurulur** (`ApplyAllDatabaseChangesOnStartup`) — migration komutu yok.
-- **OpenAI kullanan servisler** (Reviews, Storefront, ChatAgent) açılışta fail-fast:
+- **OpenAI kullanan servisler** (ChatAgent, ModerationAgent) açılışta fail-fast:
   `dotnet user-secrets set OpenAI:ApiKey <k> --project <proj>` (+ `OpenAI:Model`, ör. gpt-4o-mini).
 - **Paket sürümleri yalnız `Directory.Packages.props`'ta** (Central Package Management); `.csproj`
   `PackageReference`'ı sürümsüz listeler. Sürüm ekle/değiştir → yalnız props.
@@ -50,7 +50,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `order` | orderDb | Sipariş + `CheckoutSaga` (durable, pivot-kurallı); satın-alma kanıtı gRPC | `specs/028-checkout-saga` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount) | — |
 | `stock` | stockDb | `ProductStock` (OnHand); feed = tek stok otoritesi; gRPC rezervasyon sunucu | `specs/014-supplier-stock-authority` |
-| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; pgvector arama | `specs/003-storefront-read-model` |
+| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
 | `procurement` | procurementDb | Feed çek (Hangfire) → `PoolProduct` (barkod-tekil kanonik) → Catalog/Stock event | `specs/041-multi-supplier-buybox` |
 | `supplier` | — | Dış dünya maketi: rev'li statik JSON dataset döner (DB yok) | `specs/041-multi-supplier-buybox` |
