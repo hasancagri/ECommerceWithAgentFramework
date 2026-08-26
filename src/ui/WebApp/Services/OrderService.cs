@@ -8,8 +8,11 @@ public class OrderService(
     ICheckoutRefitService checkoutService,
     ILogger<OrderService> logger)
 {
+    // Sipariş geçmişi tarihleri UTC saklanır (Marten audit) → gösterim için yerel saate (Türkiye) çevrilir.
+    private static readonly TimeZoneInfo TurkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+
     // 049: checkout artık ayrı Checkout.Orchestrator'a gider. Payment ön-yaratımı KALKTI — orchestrator
-    // iki-faz mock ödemeyi (Authorize→Capture) + stok commit + onay + sepet temizliği saga'yla yürütür.
+    // tek-faz mock ödemeyi (Charge, pivot) + stok commit + onay + sepet temizliği saga'yla yürütür.
     // WebApp yalnız seçili adres+kart+kalemleri POST eder, 202 alır; süreç arka planda ilerler (FR-027).
     public async Task<ServiceResult> CreateOrder(CreateOrderViewModel viewModel)
     {
@@ -63,8 +66,12 @@ public class OrderService(
                 _ => ("Bilinmiyor", "bg-secondary")
             };
 
+            var localCreated = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.SpecifyKind(orderResponse.CreatedTime, DateTimeKind.Utc), TurkeyTimeZone);
+
             var newOrderHistory =
-                new OrderHistoryViewModel(orderResponse.CreatedTime.ToLongDateString(),
+                new OrderHistoryViewModel(
+                    $"{localCreated.ToLongDateString()} {localCreated.ToShortTimeString()}",
                     orderResponse.TotalPrice.ToString("C"),
                     statusText,
                     badgeClass,
