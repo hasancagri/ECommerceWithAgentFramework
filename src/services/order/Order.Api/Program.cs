@@ -153,9 +153,6 @@ builder.Services
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
 builder.Services.AddApiKeyAuthentication(builder.Configuration);
 
-// 044: satin-alma kaniti gRPC sunucusu (Reviews istemci; kullanici bearer'i forward edilir).
-builder.Services.AddGrpc();
-
 var app = builder.Build();
 app.MapScalarDocumentation();
 
@@ -169,10 +166,6 @@ app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 app.AddOrderGroupEndpointExtension(apiVersionSet);
-
-// 044: sub==user_id guard'i serviste; yetki endpoint seviyesinde (reviews.write).
-app.MapGrpcService<Order.Api.Grpc.OrderPurchaseGrpcService>()
-    .RequireAuthorization(AuthorizationScopes.ReviewsWrite);
 
 app.MapMcp("/mcp");
 

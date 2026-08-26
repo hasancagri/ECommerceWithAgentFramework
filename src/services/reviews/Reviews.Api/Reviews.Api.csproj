@@ -27,11 +27,6 @@
         </PackageReference>
     </ItemGroup>
 
-    <!-- 044: satin-alma kaniti — Order.Api sunucu, biz istemciyiz (paylasilan proto). -->
-    <ItemGroup>
-        <Protobuf Include="..\..\..\others\Shared\Protos\order_purchase.proto" GrpcServices="Client" />
-    </ItemGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\..\..\others\Common\Common.csproj" />
         <ProjectReference Include="..\..\..\others\Shared\Shared.csproj" />

@@ -13,7 +13,6 @@ public class ReviewsService(
         {
             ["REVIEW_PURCHASE_REQUIRED"] = "Yalnızca bu ürünü satın alanlar yorum yapabilir.",
             ["REVIEW_ALREADY_EXISTS"] = "Bu ürüne zaten bir yorumunuz var.",
-            ["REVIEW_PURCHASE_CHECK_UNAVAILABLE"] = "Yorum şu an gönderilemiyor; lütfen daha sonra tekrar deneyin.",
             ["REVIEW_RATING_INVALID"] = "Puan 1-5 arası tam sayı olmalı.",
             ["REVIEW_TEXT_TOO_LONG"] = "Yorum metni en fazla 2000 karakter olabilir.",
         };

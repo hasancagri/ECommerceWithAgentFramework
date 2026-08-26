@@ -15,6 +15,9 @@ builder.Services.AddMarten(opts =>
         opts.Schema.For<Review>()
             .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.UserId, x => x.ProductId)
             .Index(x => x.ProductId);
+
+        // 049: satın-alma kanıtı read-model (Id = "{userId:N}:{productId:N}"; eligibility PK lookup).
+        opts.Schema.For<PurchasedProduct>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -24,9 +27,6 @@ builder.Host.UseWolverine(opts =>
     // Dev: tek dugum (Solo) — repo konvansiyonu (hayalet-node gurultusunu onler).
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
-
-    // 012 dersi: gRPC tipli client (AddGrpcClient) opaque factory — handler codegen service-location ister.
-    opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
 
     var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
         .AutoProvision();
@@ -58,6 +58,15 @@ builder.Host.UseWolverine(opts =>
     });
     opts.ListenToRabbitQueue(RabbitMqConstants.ReviewModerated.Queues.Reviews);
 
+    // 049: Order 'OrderCompleted' tüketilir → satın-alma kanıtı read-model. Tüketici kendi kuyruğunu
+    // deklare edilen exchange'e bağlar (007) + dinler. Durable → Reviews kapalıyken kaybolmaz.
+    rabbit.DeclareExchange(RabbitMqConstants.OrderCompleted.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.OrderCompleted.Queues.Reviews);
+    });
+    opts.ListenToRabbitQueue(RabbitMqConstants.OrderCompleted.Queues.Reviews);
+
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
@@ -82,18 +91,6 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
-
-// 044: Order satin-alma kaniti gRPC istemcisi; kullanici bearer'i BearerForwardingHandler ile tasinir.
-builder.Services.AddTransient<Reviews.Api.Grpc.BearerForwardingHandler>();
-// gRPC balancer'inin Aspire service-discovery cozumleyicisi YOK — somut adres (012 emsali).
-var orderGrpcAddress = builder.Configuration["services:order-api:https:0"]
-    ?? builder.Configuration["services:order-api:http:0"]
-    ?? "https://order-api";
-builder.Services
-    .AddGrpcClient<OrderPurchase.OrderPurchaseClient>(o => o.Address = new Uri(orderGrpcAddress))
-    .AddHttpMessageHandler<Reviews.Api.Grpc.BearerForwardingHandler>();
-// Proxy somut tipiyle kaydedilir (Scrutor marker'i somut cozumu vermez — Basket emsali).
-builder.Services.AddScoped<OrderPurchaseClientProxy>();
 
 var app = builder.Build();
 app.MapDefaultEndpoints();

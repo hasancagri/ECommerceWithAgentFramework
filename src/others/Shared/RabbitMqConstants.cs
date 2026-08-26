@@ -110,6 +110,7 @@ public static class RabbitMqConstants
     }
 
     // 048: Order yayınlar (checkout başarı), Personalization tüketir (kendi kuyruğunu bağlar, 007).
+    // 049: Reviews da tüketir — satın-alma kanıtı read-model'i (gRPC yerine event-fed projeksiyon).
     public static class OrderCompleted
     {
         public const string Exchange = "order.completed";
@@ -117,6 +118,7 @@ public static class RabbitMqConstants
         public static class Queues
         {
             public const string Personalization = "personalization.order-completed";
+            public const string Reviews = "reviews.order-completed";
         }
     }
 

@@ -6,9 +6,6 @@ public static class ReviewsResourceConstants
     // FR-001: o urunu iceren Confirmed siparis yok.
     public const string REVIEW_PURCHASE_REQUIRED = "REVIEW_PURCHASE_REQUIRED";
 
-    // FR-008: Order gRPC erisilemez — yazma fail-closed reddedilir.
-    public const string REVIEW_PURCHASE_CHECK_UNAVAILABLE = "REVIEW_PURCHASE_CHECK_UNAVAILABLE";
-
     // FR-003/R9: ayni kullanici + urun icin ikinci yorum (unique index yarisi dahil).
     public const string REVIEW_ALREADY_EXISTS = "REVIEW_ALREADY_EXISTS";
 
