@@ -43,35 +43,15 @@ public static class RabbitMqConstants
         }
     }
 
-    // 041: tüketici başına TEK sıralı kuyruk (storefront.events emsali) — aynı barkodun
-    // event'leri sıralı işlenir. Catalog iki exchange'i, Stock iki exchange'i aynı kuyruğa bağlar.
-    public static class ProcurementEvents
-    {
-        public const string CatalogQueue = "catalog.procurement-events";
-        public const string StockQueue = "stock.procurement-events";
-    }
-
-    // 041/047: Procurement yayınlar; Catalog (içerik+fiyat) + Stock (OnHand) tüketir. 047'de buy-box
-    // söküldü → fiyat/stok bu TEK kanaldan akar (ayrı BuyBoxChanged yok).
-    public static class CanonicalProduct
-    {
-        public const string Exchange = "procurement.canonical-product";
-
-        public static class Queues
-        {
-            public const string Catalog = ProcurementEvents.CatalogQueue;
-            public const string Stock = ProcurementEvents.StockQueue;
-        }
-    }
-
-    // 041: Catalog yeni üründe yayınlar, Stock barkod↔ProductId eşlemesini kurar.
+    // 050: Catalog yeni üründe yayınlar, Stock barkod↔ProductId eşlemesini kurar + ilk OnHand'i yazar.
+    // Tüketici başına TEK sıralı kuyruk (aynı barkod sıralı işlenir); binding'i tüketici kurar (007).
     public static class ProductLinked
     {
         public const string Exchange = "catalog.product-linked";
 
         public static class Queues
         {
-            public const string Stock = ProcurementEvents.StockQueue;
+            public const string Stock = "stock.product-linked";
         }
     }
 

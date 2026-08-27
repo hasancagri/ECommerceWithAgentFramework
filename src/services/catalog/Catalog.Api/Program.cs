@@ -13,7 +13,7 @@ builder.Services.AddMarten(opts =>
                 s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
         
-        // 041: Gtin (barkod) Procurement upsert anahtarıdır — lookup index'i.
+        // Gtin (barkod) ürün lookup/teklik anahtarıdır — lookup index'i.
         // 045: FamilyCode agent okumaları için ucuz lookup index'i (gruplama Storefront'ta).
         opts.Schema.For<Product>().Index(x => x.Gtin).Index(x => x.FamilyCode);
 
@@ -52,17 +52,8 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ProductChangedEvent>()
         .ToRabbitExchange(RabbitMqConstants.ProductChanged.Exchange);
 
-    // 041: Procurement yayınlarının tüketicisi — TEK sıralı kuyruk (aynı barkod sıralı işlenir).
-    // Binding'i TÜKETİCİ kurar (007 dersi); iki exchange de aynı kuyruğa bağlanır.
-    // 047: buy-box söküldü → Catalog tek exchange (CanonicalProduct) dinler; fiyat da buradan gelir.
-    rabbit.DeclareExchange(RabbitMqConstants.CanonicalProduct.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.CanonicalProduct.Queues.Catalog);
-    });
-    opts.ListenToRabbitQueue(RabbitMqConstants.ProcurementEvents.CatalogQueue).Sequential();
-
-    // 041: yeni üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
+    // 050: yeni üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
+    // Ürün-CRUD yazım yolu bunu yayınlar (feed sökülünce dormant; ürün ekleme gelince canlanır).
     rabbit.DeclareExchange(RabbitMqConstants.ProductLinked.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
@@ -75,8 +66,6 @@ builder.Host.UseWolverine(opts =>
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Konvansiyonel keşif event-handler sınıfını atlayabiliyor (Storefront emsali) — açık kayıt garantili yol.
-    opts.Discovery.IncludeType(typeof(Catalog.Api.CatalogEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>
@@ -93,10 +82,10 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// 041: kanonik Category>SubCategory ağacı (Procurement kopyasıyla ad-hizalı; idempotent).
+// Kanonik Category>SubCategory ağacı (ürün atamalarının çözüldüğü taksonomi; idempotent seed).
 builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogTaxonomySeedHostedService>();
 
-// 043: kanonik özellik registry'si (Procurement CanonicalSpecs ile ad-hizalı; idempotent).
+// 043: kanonik özellik registry'si (ürün spec atamalarının çözüldüğü kayıt; idempotent seed).
 builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogSpecSeedHostedService>();
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).

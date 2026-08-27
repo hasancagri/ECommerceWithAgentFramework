@@ -31,31 +31,8 @@ public static class IntegrationEvents
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
     public record ReservationExpired(Guid ProductId, Guid UserId);
 
-    // 041/047: Procurement → Catalog + Stock. Eksiksiz kanonik ürün (fat — güncel Price+Stock dahil,
-    // fiyatsız pencere olmaz). 047: buy-box söküldü → bu TEK güncelleme kanalıdır; içerik VEYA fiyat VEYA
-    // stok değişince yayınlanır (ayrı BuyBoxChanged yok). Stock stoğu buradan mutlak yazar.
-    // Kategori adları kanonik seed ağacından çözülür (NormalizedName); ölçüde 0 = bilinmiyor.
-    public record CanonicalProductUpserted(
-        string Barcode,
-        string Name,
-        string Description,
-        string Brand,
-        string Category,
-        string SubCategory,
-        string Sku,
-        decimal Weight,
-        decimal Length,
-        decimal Width,
-        decimal Height,
-        decimal Price,
-        int Stock,
-        // 043: kanonik özellikler (listing'ten gelen attribute adları).
-        List<ProductSpec>? Specs = null,
-        // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
-        string? FamilyCode = null);
-
-    // 041: Catalog → Stock. Yalnız YENİ ürün oluşunca yayınlanır; Stock BarcodeLink eşlemesini kurar
-    // ve OnHand'i InitialStock (CanonicalProductUpserted.Stock) ile mutlak yazar.
+    // 050: Catalog → Stock. Yalnız YENİ ürün oluşunca yayınlanır; Stock BarcodeLink eşlemesini kurar
+    // ve OnHand'i InitialStock ile mutlak yazar. Ürün-CRUD yazım yolu yayınlar (feed söküldü).
     public record ProductLinked(
         string Barcode,
         Guid ProductId,

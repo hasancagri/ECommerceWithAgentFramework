@@ -124,8 +124,8 @@ public static class Config
             AllowClientCredentials = true,
             Scopes = ["personalization.ingest"],
         },
-        // 041: ingestion-agent m2m istemcisi söküldü (IngestionAgent projesiyle birlikte) —
-        // Procurement yazım yolu event'lidir, token gerektirmez.
+        // 050: çok-tedarikçi feed (Procurement/Supplier + eski ingestion-agent) söküldü — first-party
+        // ürün-CRUD yazım yolu, ayrı m2m istemci gerektirmez.
         // WebApp (Razor Pages BFF): yalnız kullanıcı login'i (code+PKCE+refresh, confidential).
         // 031: anonim okuma artık gerçekten anonim (storefront AllowAnonymous) → client_credentials KALKTI.
         new ClientSeed

@@ -22,11 +22,9 @@
     <Project Path="src/services/order/Order.Api/Order.Api.csproj" />
     <Project Path="src/services/payment/Payment.Api/Payment.Api.csproj" />
     <Project Path="src/services/Personalization.Api/Personalization.Api.csproj" />
-    <Project Path="src/services/procurement/Procurement.Api/Procurement.Api.csproj" />
     <Project Path="src/services/reviews/Reviews.Api/Reviews.Api.csproj" />
     <Project Path="src/services/stock/Stock.Api/Stock.Api.csproj" />
     <Project Path="src/services/storefront/Storefront.Api/Storefront.Api.csproj" />
-    <Project Path="src/services/supplier/Supplier.Api/Supplier.Api.csproj" />
   </Folder>
   <Folder Name="/src/ui/">
     <Project Path="src/ui/WebApp/WebApp.csproj" />
@@ -39,12 +37,10 @@
     <Project Path="tests/Identity.Server.Tests/Identity.Server.Tests.csproj" />
     <Project Path="tests/Order.Api.Tests/Order.Api.Tests.csproj" />
     <Project Path="tests/Payment.Api.Tests/Payment.Api.Tests.csproj" />
-    <Project Path="tests/Procurement.Api.Tests/Procurement.Api.Tests.csproj" />
     <Project Path="tests/Reviews.Api.Tests/Reviews.Api.Tests.csproj" />
     <Project Path="tests/Personalization.Api.Tests/Personalization.Api.Tests.csproj" />
     <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />
     <Project Path="tests/Storefront.Api.Tests/Storefront.Api.Tests.csproj" />
-    <Project Path="tests/Supplier.Api.Tests/Supplier.Api.Tests.csproj" />
     <Project Path="tests/WebApp.Tests/WebApp.Tests.csproj" />
   </Folder>
 </Solution>

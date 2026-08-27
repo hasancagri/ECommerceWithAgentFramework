@@ -2,9 +2,8 @@ using Catalog.Api.Domains.SpecificationAttributes;
 
 namespace Catalog.Api.Seeding;
 
-// 043: kanonik özellik registry'sinin Catalog kopyası (Procurement CanonicalSpecs ile AD-hizalı;
-// iki BC'de AYRI seed — taksonomi deseni). İdempotent get-or-create: NormalizedName teklik anahtarı;
-// mevcut attribute'a eksik option'lar da idempotent eklenir (AddOption mükerrer guard'ı).
+// 043: kanonik özellik registry'si — ürün spec atamalarının çözüldüğü kayıt. İdempotent get-or-create:
+// NormalizedName teklik anahtarı; mevcut attribute'a eksik option'lar da idempotent eklenir (AddOption guard'ı).
 public sealed class CatalogSpecSeedHostedService(
     IDocumentStore store,
     ILogger<CatalogSpecSeedHostedService> logger) : IHostedService

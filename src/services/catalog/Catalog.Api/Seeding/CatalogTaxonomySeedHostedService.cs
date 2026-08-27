@@ -1,7 +1,6 @@
 namespace Catalog.Api.Seeding;
 
-// 041: kanonik Category>SubCategory ağacının Catalog kopyası (R3 — iki BC'de AYRI seed; sözleşme AD'dır).
-// Procurement kendi kopyasını CanonicalTaxonomy ile taşır; adlar birebir aynı olmak zorunda.
+// Kanonik Category>SubCategory ağacı — ürün kategori atamalarının çözüldüğü taksonomi.
 // İdempotent get-or-create: NormalizedName teklik anahtarıdır (016 düzeni).
 public sealed class CatalogTaxonomySeedHostedService(
     IDocumentStore store,
