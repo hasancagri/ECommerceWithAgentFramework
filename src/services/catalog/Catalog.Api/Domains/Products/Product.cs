@@ -110,9 +110,13 @@ public class Product : AggregateRoot
         return ResultDomain.Ok();
     }
 
-    /// <summary>Ürünü satışa/vitrine açar (FR-007: vitrin kararı Published bayrağında).</summary>
+    /// <summary>Ürünü satışa/vitrine açar. 051: yayın kapısı = fiyat>0 (fiyatsız = satılamaz kart, reddedilir;
+    /// taslak kalır, sonra fiyat gelince yeniden denenir). Kapı aggregate'te (İLKE II).</summary>
     public ResultDomain Publish()
     {
+        if (Price.Amount <= 0)
+            return ResultDomain.Error(new MessageItem
+            { Property = nameof(Price), Code = CatalogResourceConstants.PRODUCT_PRICE_REQUIRED_FOR_PUBLISH });
         Published = true;
         return ResultDomain.Ok();
     }

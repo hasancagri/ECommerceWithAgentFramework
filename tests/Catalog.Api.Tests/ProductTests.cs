@@ -156,16 +156,36 @@ public class ProductTests
     }
 
     // --- Publish / Unpublish (vitrin kararı Published bayrağında, FR-007) ---
+    // 051: yayın kapısı = fiyat>0 (satılamaz kart engellenir). Kapı aggregate'te (İLKE II).
 
     [Fact]
-    public void Publish_Unpublish_TogglesFlag()
+    public void Create_LeavesProductAsDraft()
+    {
+        NewProduct().Published.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Publish_WithPositivePrice_PublishesAndTogglesBack()
     {
         var product = NewProduct();
+        product.SetPrice(Money.Create(100m)!);
 
         product.Publish().IsSuccess.ShouldBeTrue();
         product.Published.ShouldBeTrue();
 
         product.Unpublish().IsSuccess.ShouldBeTrue();
+        product.Published.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Publish_WithZeroPrice_ReturnsErrorAndStaysDraft()
+    {
+        var product = NewProduct(); // Money.Zero()
+
+        var result = product.Publish();
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages!.ShouldContain(m => m.Code == CatalogResourceConstants.PRODUCT_PRICE_REQUIRED_FOR_PUBLISH);
         product.Published.ShouldBeFalse();
     }
 

@@ -13,7 +13,7 @@ builder.Services.AddMarten(opts =>
         // 012: son-urun yarisi optimistic concurrency ile cozulur (cift satis yok / SC-001).
         opts.Schema.For<ProductStock>().Index(x => x.ProductId).UseOptimisticConcurrency(true);
 
-        // barkod ↔ ProductId eşlemesi (Catalog ProductLinked yazar).
+        // barkod ↔ ProductId eşlemesi (Catalog ProductAdded yazar).
         opts.Schema.For<BarcodeLink>();
     })
     .IntegrateWithWolverine()
@@ -47,14 +47,14 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ReservationExpired>()
         .ToRabbitExchange(RabbitMqConstants.ReservationExpired.Exchange);
 
-    // 050: Catalog ProductLinked tüketicisi — barkod↔ProductId eşlemesi + ilk OnHand (binding'i tüketici kurar).
-    // Sıralı kuyruk (aynı barkod sıralı işlenir). Feed sökülünce tek stok-giriş kanalı budur.
-    rabbit.DeclareExchange(RabbitMqConstants.ProductLinked.Exchange, e =>
+    // 050/051: Catalog ProductAdded tüketicisi — barkod↔ProductId eşlemesi + ilk OnHand (binding'i tüketici kurar).
+    // Sıralı kuyruk (aynı barkod sıralı işlenir). İlk yayıncı = kitap import (051); feed söküldü (050).
+    rabbit.DeclareExchange(RabbitMqConstants.ProductAdded.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ProductLinked.Queues.Stock);
+        e.BindQueue(RabbitMqConstants.ProductAdded.Queues.Stock);
     });
-    opts.ListenToRabbitQueue(RabbitMqConstants.ProductLinked.Queues.Stock).Sequential();
+    opts.ListenToRabbitQueue(RabbitMqConstants.ProductAdded.Queues.Stock).Sequential();
 
     // 049: checkout stok komutlarını (Commit/RevertCommit) dinle; yanıtları orchestrator reply kuyruğuna.
     opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.StockCommandsQueue);

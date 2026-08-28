@@ -43,15 +43,15 @@ public static class RabbitMqConstants
         }
     }
 
-    // 050: Catalog yeni üründe yayınlar, Stock barkod↔ProductId eşlemesini kurar + ilk OnHand'i yazar.
+    // 050/051: Catalog yeni ürün YAYINLANINCA yayınlar, Stock barkod↔ProductId eşlemesini kurar + ilk OnHand.
     // Tüketici başına TEK sıralı kuyruk (aynı barkod sıralı işlenir); binding'i tüketici kurar (007).
-    public static class ProductLinked
+    public static class ProductAdded
     {
-        public const string Exchange = "catalog.product-linked";
+        public const string Exchange = "catalog.product-added";
 
         public static class Queues
         {
-            public const string Stock = "stock.product-linked";
+            public const string Stock = "stock.product-added";
         }
     }
 

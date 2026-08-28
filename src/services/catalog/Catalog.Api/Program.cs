@@ -52,14 +52,14 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ProductChangedEvent>()
         .ToRabbitExchange(RabbitMqConstants.ProductChanged.Exchange);
 
-    // 050: yeni üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
-    // Ürün-CRUD yazım yolu bunu yayınlar (feed sökülünce dormant; ürün ekleme gelince canlanır).
-    rabbit.DeclareExchange(RabbitMqConstants.ProductLinked.Exchange, e =>
+    // 050/051: yayınlanan üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
+    // İlk yayıncı = kitap import (051); feed 050'de söküldü.
+    rabbit.DeclareExchange(RabbitMqConstants.ProductAdded.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
     });
-    opts.PublishMessage<Shared.IntegrationEvents.ProductLinked>()
-        .ToRabbitExchange(RabbitMqConstants.ProductLinked.Exchange);
+    opts.PublishMessage<Shared.IntegrationEvents.ProductAdded>()
+        .ToRabbitExchange(RabbitMqConstants.ProductAdded.Exchange);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
@@ -82,11 +82,9 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// Kanonik Category>SubCategory ağacı (ürün atamalarının çözüldüğü taksonomi; idempotent seed).
-builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogTaxonomySeedHostedService>();
-
-// 043: kanonik özellik registry'si (ürün spec atamalarının çözüldüğü kayıt; idempotent seed).
-builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogSpecSeedHostedService>();
+// 051: kitap toplu import seeder'ı — books.json'dan idempotent yazar; taksonomi/marka kitap verisinden
+// get-or-create edilir (eski elektronik-demo taksonomi + spec seed'leri söküldü).
+builder.Services.AddHostedService<Catalog.Api.Seeding.BookImportHostedService>();
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)

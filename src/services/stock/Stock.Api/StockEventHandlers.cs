@@ -29,11 +29,11 @@ public class StockEventHandlers
             : new StockCommitReverted(cmd.CheckoutId, cmd.ProductId, false, ErrorClass.Permanent, r.Messages.FirstOrDefault()?.Code);
     }
 
-    // 050: Catalog ProductLinked tüketicisi. Yeni üründe barkod↔ProductId eşlemesini kurar ve ilk
-    // OnHand'i (InitialStock) MUTLAK yazar. Stok otoritesi artık ürün-CRUD yazım yoludur (feed söküldü).
+    // 050/051: Catalog ProductAdded tüketicisi. Yayınlanan üründe barkod↔ProductId eşlemesini kurar ve ilk
+    // OnHand'i (InitialStock) MUTLAK yazar. İlk yayıncı = kitap import (051); feed söküldü (050).
     [Transactional]
     public async Task Handle(
-        IntegrationEvents.ProductLinked evt,
+        IntegrationEvents.ProductAdded evt,
         IDocumentSession session,
         IMessageBus bus,
         CancellationToken ct)

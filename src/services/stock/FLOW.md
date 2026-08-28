@@ -7,12 +7,12 @@ ilk OnHand'i yazar, sepet için TTL'li rezervasyon tutar, sipariş anında rezer
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
 
 > **050 pivot notu:** Feed (Procurement) söküldü; OnHand'i besleyen kanonik-ürün olayı kalktı.
-> İlk stok `ProductLinked` ile gelir; sonraki stok güncellemeleri ürün-CRUD yazım yoluyla (gelecek feature).
+> İlk stok `ProductAdded` ile gelir (051: ilk yayıncı kitap import); sonraki güncellemeler ürün-CRUD yoluyla.
 
 ## Süreç
 
 1. **Ürün ilk eşlendiğinde barkod↔ProductId eşlemesi kurulur** ve      `(StockEventHandlers`
-   OnHand başlangıç değeriyle yazılır (idempotent upsert).             ` → ProductLinked)`
+   OnHand başlangıç değeriyle yazılır (idempotent upsert).             ` → ProductAdded)`
 2. **Stok her değişiminde vitrine bildirilir** — Storefront read-      `(IntegrationEvents`
    model'i güncel OnHand'i alır.                                       ` .StockChangedEvent)`
 4. **Sepete ekleme TTL'li rezervasyon tutar** (gRPC, fail-closed).     `(ReserveStock`
@@ -29,7 +29,7 @@ ilk OnHand'i yazar, sepet için TTL'li rezervasyon tutar, sipariş anında rezer
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
-- **OnHand otoritesi = Stock (050).** İlk OnHand `ProductLinked`'ten mutlak yazılır; sonraki güncelleme ürün-CRUD yazım yoluyla. Negatif reddedilir `(ProductStock.SetQuantity)`.
+- **OnHand otoritesi = Stock (050).** İlk OnHand `ProductAdded`'ten mutlak yazılır; sonraki güncelleme ürün-CRUD yazım yoluyla. Negatif reddedilir `(ProductStock.SetQuantity)`.
 - **Available türetilir, OnHand'i ezmez.** Available = OnHand − aktif rezervasyonlar, 0'a kırpılır `(ProductStock.AvailableAt)`; oversell tespit edilir `(ProductStock.IsOversoldAt)`.
 - **Rezervasyon fail-closed + sabit TTL.** Yetersiz stokta gRPC reddeder; ExpiresAt yenilenmez (rolling-TTL yok).
 - **Commit/Revert idempotent (028).** orderId anahtarıyla mükerrer teslimat no-op; commit'siz revert reddedilir `(_processedOps)`.

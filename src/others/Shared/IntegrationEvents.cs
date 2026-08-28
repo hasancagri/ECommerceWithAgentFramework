@@ -31,9 +31,9 @@ public static class IntegrationEvents
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
     public record ReservationExpired(Guid ProductId, Guid UserId);
 
-    // 050: Catalog → Stock. Yalnız YENİ ürün oluşunca yayınlanır; Stock BarcodeLink eşlemesini kurar
-    // ve OnHand'i InitialStock ile mutlak yazar. Ürün-CRUD yazım yolu yayınlar (feed söküldü).
-    public record ProductLinked(
+    // 050/051: Catalog → Stock. Yalnız YENİ ürün YAYINLANINCA yayılır; Stock BarcodeLink eşlemesini kurar
+    // ve OnHand'i InitialStock ile mutlak yazar. 051: ilk yayıncısı = kitap import ("Linked" feed-adı düştü).
+    public record ProductAdded(
         string Barcode,
         Guid ProductId,
         int InitialStock);
