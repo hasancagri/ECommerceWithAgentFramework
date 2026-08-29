@@ -11,6 +11,7 @@
             <div class="card shadow-lg border-0">
 
                 <img class="card-img-top product-detail-img" alt="@Model.Product!.Name"
+                     onerror="this.onerror=null;this.src='/images/NoImage.jpeg';"
                      src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/NoImage.jpeg" : Model.Product.ImageUrl)">
                 <div class="card-body">
                     <h2 class="mb-2">@Model.Product.Name</h2>

@@ -7,6 +7,7 @@
         <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId" class="book-card-cover">
             <img
                 src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/NoImage.jpeg" : Model.ImageUrl)"
+                onerror="this.onerror=null;this.src='/images/NoImage.jpeg';"
                 class="product-thumb" alt="@Model.Name">
             @* FR-009: stok null = bilinmiyor, rozet yok; kapak köşesinde durum. *@
             @if (Model.IsInStock == false)

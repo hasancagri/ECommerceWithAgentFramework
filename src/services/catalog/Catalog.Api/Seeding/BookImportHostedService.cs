@@ -33,6 +33,17 @@ public sealed class BookImportHostedService(
         using var scope = services.CreateScope();
         var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
 
+        // Idempotent atlama guard'ı: zaten tam seed'liyse (Product sayısı ≥ dosyadaki kitap) import'u geç.
+        // 20k ardışık get-or-create her açılışta tekrarlanmasın (dev-döngüsü hızlanır). Eksik/ilk seed → çalışır.
+        var session = scope.ServiceProvider.GetRequiredService<IQuerySession>();
+        var existing = await session.Query<Product>().CountAsync(cancellationToken);
+        if (existing >= books.Count)
+        {
+            logger.LogInformation("Kitap import atlandı: zaten seed'li ({Existing} ürün ≥ {Total} kitap)",
+                existing, books.Count);
+            return;
+        }
+
         var published = 0;
         var draft = 0;
         foreach (var b in books)
