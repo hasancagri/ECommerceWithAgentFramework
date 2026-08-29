@@ -13,7 +13,7 @@ builder.Services.AddMarten(opts =>
         // 012: son-urun yarisi optimistic concurrency ile cozulur (cift satis yok / SC-001).
         opts.Schema.For<ProductStock>().Index(x => x.ProductId).UseOptimisticConcurrency(true);
 
-        // 041/047: barkod ↔ ProductId eşlemesi (ProductLinked yazar; kanonik güncelleme tüketimi çözer).
+        // barkod ↔ ProductId eşlemesi (Catalog ProductAdded yazar).
         opts.Schema.For<BarcodeLink>();
     })
     .IntegrateWithWolverine()
@@ -47,19 +47,19 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ReservationExpired>()
         .ToRabbitExchange(RabbitMqConstants.ReservationExpired.Exchange);
 
-    // 041: Procurement/Catalog yayınlarının tüketicisi — TEK sıralı kuyruk (binding'i tüketici kurar).
-    rabbit.DeclareExchange(RabbitMqConstants.ProductLinked.Exchange, e =>
+    // 050/051: Catalog ProductAdded tüketicisi — barkod↔ProductId eşlemesi + ilk OnHand (binding'i tüketici kurar).
+    // Sıralı kuyruk (aynı barkod sıralı işlenir). İlk yayıncı = kitap import (051); feed söküldü (050).
+    rabbit.DeclareExchange(RabbitMqConstants.ProductAdded.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ProductLinked.Queues.Stock);
+        e.BindQueue(RabbitMqConstants.ProductAdded.Queues.Stock);
     });
-    // 047: buy-box söküldü → Stock stoğu CanonicalProductUpserted'tan mutlak yazar (ayrı BuyBoxChanged yok).
-    rabbit.DeclareExchange(RabbitMqConstants.CanonicalProduct.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.CanonicalProduct.Queues.Stock);
-    });
-    opts.ListenToRabbitQueue(RabbitMqConstants.ProcurementEvents.StockQueue).Sequential();
+    opts.ListenToRabbitQueue(RabbitMqConstants.ProductAdded.Queues.Stock).Sequential();
+
+    // 049: checkout stok komutlarını (Commit/RevertCommit) dinle; yanıtları orchestrator reply kuyruğuna.
+    opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.StockCommandsQueue);
+    opts.PublishMessage<CheckoutMessages.StockCommitted>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+    opts.PublishMessage<CheckoutMessages.StockCommitReverted>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
 
     opts.Policies.UseDurableLocalQueues();
     // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.

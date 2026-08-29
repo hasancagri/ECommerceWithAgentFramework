@@ -13,7 +13,7 @@ builder.Services.AddMarten(opts =>
                 s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
         
-        // 041: Gtin (barkod) Procurement upsert anahtarıdır — lookup index'i.
+        // Gtin (barkod) ürün lookup/teklik anahtarıdır — lookup index'i.
         // 045: FamilyCode agent okumaları için ucuz lookup index'i (gruplama Storefront'ta).
         opts.Schema.For<Product>().Index(x => x.Gtin).Index(x => x.FamilyCode);
 
@@ -23,7 +23,11 @@ builder.Services.AddMarten(opts =>
         // 016: NormalizedName teklik anahtarıdır (R4) — computed unique index son güvence.
         // Legacy Brand migrasyonu YOK (kullanıcı kararı): DB sıfırlanarak başlatılır, katalog feed'den dolar.
         opts.Schema.For<Category>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
-        opts.Schema.For<Brand>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+        // 052: Brand→Author rename + yeni Publisher — ikisi de NormalizedName teklik anahtarı (get-or-create güvencesi).
+        opts.Schema.For<Catalog.Api.Domains.Authors.Author>()
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+        opts.Schema.For<Catalog.Api.Domains.Publishers.Publisher>()
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
 
         // 043: özellik registry'si — NormalizedName teklik anahtarı (seed get-or-create güvencesi).
         opts.Schema.For<Catalog.Api.Domains.SpecificationAttributes.SpecificationAttribute>()
@@ -52,31 +56,20 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ProductChangedEvent>()
         .ToRabbitExchange(RabbitMqConstants.ProductChanged.Exchange);
 
-    // 041: Procurement yayınlarının tüketicisi — TEK sıralı kuyruk (aynı barkod sıralı işlenir).
-    // Binding'i TÜKETİCİ kurar (007 dersi); iki exchange de aynı kuyruğa bağlanır.
-    // 047: buy-box söküldü → Catalog tek exchange (CanonicalProduct) dinler; fiyat da buradan gelir.
-    rabbit.DeclareExchange(RabbitMqConstants.CanonicalProduct.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.CanonicalProduct.Queues.Catalog);
-    });
-    opts.ListenToRabbitQueue(RabbitMqConstants.ProcurementEvents.CatalogQueue).Sequential();
-
-    // 041: yeni üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
-    rabbit.DeclareExchange(RabbitMqConstants.ProductLinked.Exchange, e =>
+    // 050/051: yayınlanan üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
+    // İlk yayıncı = kitap import (051); feed 050'de söküldü.
+    rabbit.DeclareExchange(RabbitMqConstants.ProductAdded.Exchange, e =>
     {
         e.ExchangeType = ExchangeType.Fanout;
     });
-    opts.PublishMessage<Shared.IntegrationEvents.ProductLinked>()
-        .ToRabbitExchange(RabbitMqConstants.ProductLinked.Exchange);
+    opts.PublishMessage<Shared.IntegrationEvents.ProductAdded>()
+        .ToRabbitExchange(RabbitMqConstants.ProductAdded.Exchange);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Konvansiyonel keşif event-handler sınıfını atlayabiliyor (Storefront emsali) — açık kayıt garantili yol.
-    opts.Discovery.IncludeType(typeof(Catalog.Api.CatalogEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>
@@ -93,11 +86,9 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// 041: kanonik Category>SubCategory ağacı (Procurement kopyasıyla ad-hizalı; idempotent).
-builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogTaxonomySeedHostedService>();
-
-// 043: kanonik özellik registry'si (Procurement CanonicalSpecs ile ad-hizalı; idempotent).
-builder.Services.AddHostedService<Catalog.Api.Seeding.CatalogSpecSeedHostedService>();
+// 051: kitap toplu import seeder'ı — books.json'dan idempotent yazar; taksonomi/marka kitap verisinden
+// get-or-create edilir (eski elektronik-demo taksonomi + spec seed'leri söküldü).
+builder.Services.AddHostedService<Catalog.Api.Seeding.BookImportHostedService>();
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -131,7 +122,7 @@ app.UseAuthorization();
 app.AddProductGroupEndpointExtension(apiVersionSet);
 app.AddProductTagGroupEndpointExtension(apiVersionSet);
 app.AddCategoryGroupEndpointExtension(apiVersionSet);
-app.AddBrandGroupEndpointExtension(apiVersionSet);
+app.AddAuthorGroupEndpointExtension(apiVersionSet);
 app.AddSpecificationAttributeGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");

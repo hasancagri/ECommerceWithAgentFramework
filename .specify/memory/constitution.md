@@ -1,16 +1,18 @@
-<!-- Sync Impact Report — v1.9.0 → v1.10.0 (2026-08-23, MINOR)
-     Added: İlke VII — Domain Süreci Legibility (EventStorming-belgelenmiş süreç). Her BC'nin
-     domain süreci ubiquitous dille, EventStorming altitude'unda belgelenir ve süreç değiştikçe
-     güncel tutulur; süreç belgesi olmayan/bayat BC kabul edilemez. Süreç disiplinidir (İlke VI
-     emsali); anayasa yalnız ne+neden der, dosya adı/format/guard "nasıl" olarak conventions.md/
-     CLAUDE.md'ye bırakılır.
-     Gerekçe: koda uzun süre uzak kalan sahibin bile süreci geri yükleyebilmesi; domain'in
-     teknolojinin ardında kaybolmaması (DDD çekirdeği = domain legibility).
-     Modified/Removed principles: yok (mevcut ilkeler bozulmadı).
+<!-- Sync Impact Report — v1.10.0 → v1.11.0 (2026-08-25, MINOR)
+     Modified: İlke I — orkestre saga adım/telafi kanalı genişletildi. Sürecin sahibi saga, hedefli
+     adım/telafi komutlarını tipli senkron RPC (gRPC/HTTP) YA DA hedefli asenkron broker komut/yanıtı
+     (korelasyon kimliği + idempotency anahtarı; fanout DEĞİL) ile yürütebilir. (b) temporal decoupling /
+     at-least-once dayanıklılık gerektiğinde ya da saga ayrı orchestration servisinde host edildiğinde
+     seçilir. Her iki biçim de bilinçli sözleşmeyle (Shared/Protos ya da Shared/*Messages) yapılır,
+     DB izolasyonunu bozmaz.
+     Gerekçe: 049-checkout-orchestrator — checkout saga'sı ayrı Checkout.Orchestrator servisine taşındı;
+     broker-only komut/yanıt öğrenme + temporal decoupling hedefi. gRPC'ye ek meşru kanal, gRPC'yi
+     kaldırmaz (028 gRPC örneği geçerli kalır). Backward-compatible → MINOR.
+     Added/Removed principles: yok (İlke I genişledi; diğerleri bozulmadı).
      Templates: plan/spec/tasks ✅ değişiklik gerekmez (Constitution Check anayasadan türetilir).
-     Runtime docs: CLAUDE.md ⚠ pending (FLOW.md guard komutu + kural pointer eklenecek);
-     conventions.md ⚠ pending (FLOW.md "nasıl" — format + tetik + guard); src/services/*/FLOW.md
-     ⚠ pending (Procurement pilot yazıldı, kalan BC'ler + scripts/check-flow-links.sh sırada). -->
+     Runtime docs: conventions.md ⚠ pending (servisler-arası desenler — "Sanksiyonlu gRPC" yanına
+     broker saga-komut biçimi eklenecek); CLAUDE.md ⚠ pending (BC haritası + checkout satırı 049 ile);
+     specs/049 plan.md ⚠ pending (İlke I "gerekçeli sapma" → "uyumlu" olarak güncellenecek). -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -40,6 +42,15 @@ kendi Postgres veritabanı, kendi Marten şeması ve kendi domain modeli vardır
   Örnekler: stok rezervasyonu (012) Basket/Order→Stock gRPC (request/response zorunlu; async
   event anlık karar veremez); checkout saga adımları (028) Order→Stock/Basket gRPC (hedefli
   komut + telafi, süreç bilgisi yalnız saga'da).
+- **Orkestre saga adım/telafi kanalı — iki meşru biçim (v1.11.0):** Sürecin sahibi saga, hedefli
+  adım/telafi komutlarını (a) **tipli senkron RPC (gRPC/HTTP)** ile ya da (b) **hedefli asenkron
+  broker komut/yanıtı** (korelasyon kimliği + idempotency anahtarı taşıyan komut → yanıt-event) ile
+  yürütebilir. (b) fanout DEĞİLDİR (tek hedef, koreografi değil orkestrasyon); temporal decoupling /
+  at-least-once dayanıklılık gerektiğinde ya da saga ayrı bir orchestration servisinde host
+  edildiğinde seçilir. İki biçim de bilinçli sözleşme (`Shared/Protos` ya da
+  `Shared.IntegrationEvents`/`Shared/*Messages`) üzerinden yapılır ve DB izolasyonunu bozmaz.
+  Örnekler: 028 Order-içi saga → gRPC; 049 ayrı Checkout.Orchestrator → broker komut/yanıt
+  (hedefli, korelasyonlu, idempotent).
 - **MCP'yi yalnız agent'lar tüketir** (v1.8.1): MCP tool'ları LLM tool-seçim yüzeyidir;
   agent olmayan kod (WebApp, servisler) imperatif `CallToolAsync` ile MCP süremez.
   Yapısal (LLM'siz) servisler-arası ihtiyaç REST/gRPC sözleşmesiyle karşılanır.
@@ -265,7 +276,14 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.10.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-23
+**Version**: 1.11.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-25
+
+<!-- v1.11.0 (2026-08-25, MINOR): İlke I orkestre saga adım/telafi kanalı genişletildi — sürecin
+     sahibi saga, hedefli komutları tipli senkron RPC (gRPC/HTTP) YA DA hedefli asenkron broker
+     komut/yanıtı (korelasyon + idempotency; fanout değil) ile yürütebilir. (b) temporal decoupling/
+     at-least-once ya da ayrı orchestration servisi host'unda seçilir; bilinçli sözleşmeyle, DB
+     izolasyonu korunur. Örnek: 028 gRPC, 049 broker. gRPC'yi kaldırmaz (ek meşru kanal) → MINOR.
+     Gerekçe: 049-checkout-orchestrator ayrı Checkout.Orchestrator + broker-only komut/yanıt. -->
 
 <!-- v1.10.0 (2026-08-23, MINOR): İlke VII eklendi — Domain Süreci Legibility. Her BC'nin domain
      süreci EventStorming altitude'unda, ubiquitous dille belgelenir ve süreç değiştikçe (yeni/silinen

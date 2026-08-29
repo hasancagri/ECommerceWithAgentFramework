@@ -19,13 +19,13 @@ public static class GetProductMcpTool
 public static class GetProductByNameMcpTool
 {
     [McpServerTool(Name = "search_products")]
-    [Description("Urunu gostermek/aramak icin: isme gore en iyi eslesen urunun detay sayfasi linkini doner. Kategori ve/veya marka adiyla daraltilabilir.")]
+    [Description("Urunu gostermek/aramak icin: isme gore en iyi eslesen urunun detay sayfasi linkini doner. Kategori ve/veya yazar adiyla daraltilabilir.")]
     public static Task<FeatureObjectResultModel<SearchProductsForAgent.SearchProductResponse>> SearchProductsAsync(
         [Description("Aranacak urun adi (kismi eslesme yeterli)")] string name,
         IMessageBus bus,
         CancellationToken ct,
         [Description("Opsiyonel kategori adi (tam ad; buyuk/kucuk harf ve bosluk toleransli)")] string? category = null,
-        [Description("Opsiyonel marka adi (tam ad; buyuk/kucuk harf ve bosluk toleransli)")] string? brand = null)
+        [Description("Opsiyonel yazar adi (tam ad; buyuk/kucuk harf ve bosluk toleransli)")] string? author = null)
         => bus.InvokeAsync<FeatureObjectResultModel<SearchProductsForAgent.SearchProductResponse>>(
-            new SearchProductsForAgent.SearchProductsQuery(name, category, brand), ct);
+            new SearchProductsForAgent.SearchProductsQuery(name, category, author), ct);
 }

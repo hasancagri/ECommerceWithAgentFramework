@@ -35,4 +35,9 @@
       <Folder Include="Domains\Products\Features\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <!-- 051: İş1 çıktısı süzülmüş kitap verisi; açılış seeder'ı çalışma dizininden okur. -->
+      <Content Update="Seeding\Data\books.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>

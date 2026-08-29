@@ -28,6 +28,7 @@ public static class PlaceOrderForAgent
         IMessageBus bus,
         BasketItemsClientProxy basket,
         CustomerPaymentContextClient customer,
+        MerchantKeyClient merchantKey,
         PaymentGatewayClient gateway,
         CorrelationKeyOption keyOption,
         CheckoutReconcile reconcileCfg)
@@ -49,6 +50,12 @@ public static class PlaceOrderForAgent
             if (ctx is null)
                 return Reject("Odeme icin kayitli kart veya varsayilan adres bulunamadi.");
 
+            // 2b) Merchant API key — PG X-Api-Key (yapisal S2S; MerchantInformation tek kaynak). Yoksa red
+            // (fail-closed: onboarding eksik/anahtar girilmemis -> cekim denenmez).
+            var apiKey = await merchantKey.GetKeyAsync(ctx.MerchantId, ct);
+            if (apiKey is null)
+                return Reject("Odeme altyapisi anahtari bulunamadi. Lutfen sonra tekrar dene.");
+
             // 3) Correlation-key — deterministik + HMAC (sahiplik + idempotency capasi). Sunucu uretir.
             var key = CorrelationKey.Create(cmd.UserId, snapshot.ContentHash, installment, keyOption.ServerSecret).Value;
 
@@ -65,7 +72,7 @@ public static class PlaceOrderForAgent
                 snapshot.Items, address, DateTimeOffset.UtcNow, reconcileCfg);
 
             // 5) PG cekim — idempotent (correlation-key). Yanit kaybolursa Ambiguous -> reconcile.
-            var charge = await gateway.ChargeAsync(key, ctx.MerchantId, ctx, amount, installment, ct);
+            var charge = await gateway.ChargeAsync(key, ctx.MerchantId, apiKey, ctx, amount, installment, ct);
             var decision = attempt.OnChargeResult(
                 charge.Outcome, charge.PaymentId, charge.Price, DateTimeOffset.UtcNow, reconcileCfg);
 

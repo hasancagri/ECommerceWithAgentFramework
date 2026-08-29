@@ -6,11 +6,11 @@ public class StorefrontService(
     ILogger<StorefrontService> logger)
 {
     public async Task<ServiceResult<PagedProductListViewModel>> GetProductsAsync(
-        int pageNumber = 1, int pageSize = 12, Guid? categoryId = null, Guid? brandId = null,
-        string[]? specs = null)
+        int pageNumber = 1, int pageSize = 12, Guid? categoryId = null,
+        Guid? authorId = null, Guid? publisherId = null, string[]? specs = null)
     {
-        var productsAsResult = await storefrontRefitService.GetProducts(pageNumber, pageSize, categoryId, brandId,
-            specs is { Length: > 0 } ? specs : null);
+        var productsAsResult = await storefrontRefitService.GetProducts(pageNumber, pageSize, categoryId,
+            authorId, publisherId, specs is { Length: > 0 } ? specs : null);
 
         // 011 FR-006: boş vitrin / aralık dışı sayfa API'de NotFound(400) döner; UI boş durum gösterir.
         if (productsAsResult.StatusCode == HttpStatusCode.BadRequest)
@@ -25,9 +25,11 @@ public class StorefrontService(
 
         var content = productsAsResult.Content!;
         var products = content.Data
-            .Select(p => new StorefrontProductViewModel(p.ProductId, p.Name, p.Description, p.Brand,
+            .Select(p => new StorefrontProductViewModel(p.ProductId, p.Name, p.Description,
+                (p.Authors ?? []).Select(a => new AuthorViewModel(a.Id, a.Name)).ToList(),
+                p.Publisher, p.PublisherId,
                 p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
-                p.CategoryId, p.BrandId,
+                p.CategoryId,
                 RatingAverage: p.RatingAverage, RatingCount: p.RatingCount,
                 VariantCount: p.VariantCount))
             .ToList();
@@ -50,7 +52,8 @@ public class StorefrontService(
         var content = response.Content!;
         return new FilterOptionsViewModel(
             content.Categories.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
-            content.Brands.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
+            (content.Authors ?? []).Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
+            (content.Publishers ?? []).Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList(),
             (content.Specifications ?? []).Select(s => new SpecFacetViewModel(s.Name,
                 s.Options.Select(o => new SpecFacetOptionViewModel(o.Name, o.Count, $"{s.Name}|{o.Name}"))
                     .ToList())).ToList());
@@ -71,9 +74,11 @@ public class StorefrontService(
                 "Ürün bulunamadı.", "Ürün vitrinde değil veya henüz yayınlanmadı.");
 
         return ServiceResult<StorefrontProductViewModel>.Success(new StorefrontProductViewModel(
-            p.ProductId, p.Name, p.Description ?? string.Empty, p.Brand ?? string.Empty,
+            p.ProductId, p.Name, p.Description ?? string.Empty,
+            (p.Authors ?? []).Select(a => new AuthorViewModel(a.Id, a.Name)).ToList(),
+            p.Publisher, p.PublisherId,
             p.Price.Value, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
-            p.CategoryId, p.BrandId,
+            p.CategoryId,
             (p.Specs ?? []).Select(s => new ProductSpecViewModel(s.Attribute, s.Option)).ToList(),
             RatingAverage: p.RatingAverage, RatingCount: p.RatingCount));
     }

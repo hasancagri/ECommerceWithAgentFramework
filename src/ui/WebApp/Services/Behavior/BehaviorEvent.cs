@@ -20,11 +20,7 @@ public record BehaviorEvent
     public string? Brand { get; init; }
     public string? Category { get; init; }
     public decimal? Price { get; init; }
-    public string? SearchTerm { get; init; }
-    public IReadOnlyList<Guid>? ShownProductIds { get; init; }
-    public required Guid SessionId { get; init; }
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
-    public int SchemaVersion { get; init; } = 1;
 
     public string ToJsonLine() => JsonSerializer.Serialize(this, JsonOptions);
 }

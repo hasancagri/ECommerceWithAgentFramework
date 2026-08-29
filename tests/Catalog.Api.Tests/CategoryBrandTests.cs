@@ -143,29 +143,12 @@ public class CategoryBrandTests
         category.Published.ShouldBeFalse();
     }
 
-    // --- Brand.Create (aynı desen) ---
-
-    [Fact]
-    public void BrandCreate_ValidName_SetsNameAndNormalizedName()
-    {
-        var result = Brand.Create(" samsung ");
-
-        result.IsSuccess.ShouldBeTrue();
-        result.Data!.Name.ShouldBe("samsung");
-        result.Data.NormalizedName.ShouldBe("SAMSUNG");
-    }
-
-    [Fact]
-    public void BrandCreate_EmptyName_ReturnsError()
-    {
-        Brand.Create("  ").IsSuccess.ShouldBeFalse();
-    }
+    // 052: Brand→Author rename — Author/Publisher fabrika testleri ayrı dosyalarda (AuthorTests/PublisherTests).
 
     // --- Ad immutability: aggregate rename API'si sunmaz ---
 
     [Theory]
     [InlineData(typeof(Category))]
-    [InlineData(typeof(Brand))]
     public void Aggregates_ExposeNoPublicMutators(Type aggregateType)
     {
         var nameSetter = aggregateType.GetProperty("Name")!.SetMethod;

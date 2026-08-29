@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- 049: checkout reply mesajları [SagaIdentity] taşır (broker saga korelasyonu). -->
+    <PackageReference Include="WolverineFx" />
+  </ItemGroup>
+
 </Project>

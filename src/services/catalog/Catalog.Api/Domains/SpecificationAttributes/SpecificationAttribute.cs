@@ -2,10 +2,9 @@ namespace Catalog.Api.Domains.SpecificationAttributes;
 
 /// <summary>
 /// Kanonik özellik tanımı (043) — filtrelenebilir, kapalı-listeli tanımlayıcı (ör. "Renk",
-/// "Materyal"). Seed'le doğar (CatalogSpecSeedHostedService); feed'den yeni tanım DOĞMAZ.
-/// Procurement tarafındaki registry ile sözleşme AD üzerindendir (bilinçli tekrar — taksonomi
-/// deseni). Değerler child <see cref="SpecificationAttributeOption"/> listesinde; Product ataması
-/// bu aggregate'e AttributeId+OptionId ile referans verir (İlke II).
+/// "Materyal"). Seed'le doğar (CatalogSpecSeedHostedService). Değerler child
+/// <see cref="SpecificationAttributeOption"/> listesinde; Product ataması bu aggregate'e
+/// AttributeId+OptionId ile referans verir (İlke II).
 /// </summary>
 public class SpecificationAttribute : AggregateRoot
 {

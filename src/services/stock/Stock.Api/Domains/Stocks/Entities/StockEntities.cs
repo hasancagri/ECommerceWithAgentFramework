@@ -30,7 +30,7 @@ public class ReservationEntry
 }
 
 // 041: barkod ↔ ProductId eşleme dokümanı (aggregate DEĞİL — read-model satırı gibi düz eşleme).
-// ProductLinked handler'ı yazar (idempotent upsert); kanonik güncelleme tüketimi bu eşlemeden çözer.
+// ProductAdded handler'ı yazar (idempotent upsert); kanonik güncelleme tüketimi bu eşlemeden çözer.
 public class BarcodeLink
 {
     public string Id { get; private set; } = default!; // barkod

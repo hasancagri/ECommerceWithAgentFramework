@@ -4,7 +4,7 @@ namespace Catalog.Api.Domains.Products;
 /// Ürün — Catalog BC'nin kök aggregate'i (040: staging CustomNopCommerce'ten zengin model extract'i).
 /// nopCommerce'in ~100 alanlık god-entity'si staging'de BÖLÜNMÜŞTÜ: envanter → Stock BC, indirim →
 /// (silindi), vs. Product'ta yalnız KATALOG kimliği + sunum + liste fiyatı + ölçü + SEO + kategori/etiket
-/// eşlemesi kalır. Ana repoya özgü ⊕ alanlar: BrandId (K6), ImageUrl (K7). Tutarlılık sınırı köktür:
+/// eşlemesi kalır. Ana repoya özgü ⊕ alanlar: AuthorIds + PublisherId (052 kitap künyesi), ImageUrl (K7). Tutarlılık sınırı köktür:
 /// koleksiyonlar private, mutasyon yalnız davranış metotlarından.
 /// 016 kararları sürer: ürün silme yolu yok (IsDeleted event kontratı gereği durur, hep false yayınlanır).
 /// </summary>
@@ -47,8 +47,11 @@ public class Product : AggregateRoot
     private readonly List<ProductSpecificationAssignment> _specifications = new();
     public IReadOnlyList<ProductSpecificationAssignment> Specifications => _specifications;
 
-    // ⊕ Ana repo işlevleri: marka ilişkisi (016 düzeni) + görsel URL (feed'den gelir; serving servisi yok).
-    public Guid BrandId { get; private set; }
+    // ⊕ 052: kitap künyesi — çok-yazar (Id listesi, çok-çok) + tek yayınevi (çok-bir). Yazarlar/yayınevi
+    // Catalog aggregate'leri, Id ile referanslanır (İLKE II). Görsel URL feed'den gelir; serving servisi yok.
+    private readonly List<Guid> _authorIds = new();
+    public IReadOnlyList<Guid> AuthorIds => _authorIds;
+    public Guid PublisherId { get; private set; }
     public string? ImageUrl { get; private set; }
 
     private Product()
@@ -110,9 +113,13 @@ public class Product : AggregateRoot
         return ResultDomain.Ok();
     }
 
-    /// <summary>Ürünü satışa/vitrine açar (FR-007: vitrin kararı Published bayrağında).</summary>
+    /// <summary>Ürünü satışa/vitrine açar. 051: yayın kapısı = fiyat>0 (fiyatsız = satılamaz kart, reddedilir;
+    /// taslak kalır, sonra fiyat gelince yeniden denenir). Kapı aggregate'te (İLKE II).</summary>
     public ResultDomain Publish()
     {
+        if (Price.Amount <= 0)
+            return ResultDomain.Error(new MessageItem
+            { Property = nameof(Price), Code = CatalogResourceConstants.PRODUCT_PRICE_REQUIRED_FOR_PUBLISH });
         Published = true;
         return ResultDomain.Ok();
     }
@@ -180,10 +187,27 @@ public class Product : AggregateRoot
         return ResultDomain.Ok();
     }
 
-    /// <summary>⊕ Marka ilişkisini atar (K6: Brand ana repo aggregate'i, Id ile referans).</summary>
-    public ResultDomain SetBrand(Guid brandId)
+    /// <summary>⊕ 052: kitabın yazar(lar)ını TAM-DEĞİŞTİRME ile atar (çok-çok, Id ile referans). Boş liste
+    /// reddedilir (yayınlanan ürün ≥1 yazar); Id'ler tekilleştirilir (aynı yazar iki kez eklenmez).</summary>
+    public ResultDomain SetAuthors(IEnumerable<Guid> authorIds)
     {
-        BrandId = brandId;
+        var deduped = authorIds.Distinct().ToList();
+        if (deduped.Count == 0)
+            return ResultDomain.Error(new MessageItem
+            { Property = nameof(authorIds), Code = CatalogResourceConstants.VALUE_EMPTY });
+
+        _authorIds.Clear();
+        _authorIds.AddRange(deduped);
+        return ResultDomain.Ok();
+    }
+
+    /// <summary>⊕ 052: kitabın tek yayınevini atar (çok-bir, zorunlu). Boş Id reddedilir.</summary>
+    public ResultDomain SetPublisher(Guid publisherId)
+    {
+        if (publisherId == Guid.Empty)
+            return ResultDomain.Error(new MessageItem
+            { Property = nameof(publisherId), Code = CatalogResourceConstants.VALUE_EMPTY });
+        PublisherId = publisherId;
         return ResultDomain.Ok();
     }
 

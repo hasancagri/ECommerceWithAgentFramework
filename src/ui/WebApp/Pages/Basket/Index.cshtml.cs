@@ -42,17 +42,17 @@ public class IndexModel(StorefrontService storefrontService, BasketService baske
         if (result.IsFail) return ErrorPage(result, "Index");
 
         // 042: BasketItemAdded — yalnız başarılı eklemede; alanlar vitrin satırından denormalize (FR-004).
-        var (anonymousId, sessionId, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
+        var (anonymousId, _, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
         behaviorLog.Enqueue(new BehaviorEvent
         {
             EventType = "BasketItemAdded",
             UserId = userId,
             AnonymousId = anonymousId,
             ProductId = product.Data.ProductId,
-            Brand = product.Data.Brand,
+            // 052: kişiselleştirme sinyali "Brand" alanı — kitapta birincil yazar adıyla beslenir.
+            Brand = product.Data.Authors.FirstOrDefault()?.Name,
             Category = product.Data.Category,
             Price = product.Data.Price,
-            SessionId = sessionId,
         });
 
         return SuccessPage("Ürün sepete eklendi", "Index");

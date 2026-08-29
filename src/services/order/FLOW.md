@@ -31,8 +31,8 @@ herhangi bir adım kırılırsa commit edilmiş stoğu geri alıp siparişi ipta
 8. **Belirsiz çekim sınırlı reconcile edilir.** PG retrieve →       `(PaymentReconcileHandler`
    gecikmeli başarı siparişi kurar; deadline dolarsa terminal          ` → OnReconcileTick ← ReconcileTick)`
    (NeedsReconciliation, ops görünürlük). Asla çift çekim/sonsuz.
-9. **Satın-alma kanıtı Reviews'e gRPC ile açılır.** Confirmed       `(OrderPurchaseGrpcService`
-   sipariş = yorum yetkisi; `sub==user_id` guard'ı.                    ` → HasConfirmedPurchase)`
+9. **Satın-alma kanıtı olayla yayılır.** Confirmed sipariş →        `(OrderEventHandlers`
+   `OrderCompleted` (fanout); Reviews/Personalization tüketir (gRPC yok). ` → OrderCompleted)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 

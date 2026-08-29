@@ -27,10 +27,22 @@ internal static class PaymentOrderCreator
 
         session.Store(order);
 
-        // Outbox: StartCheckout Marten commit'iyle atomik — siparis kaydi olmadan saga baslamaz.
-        await bus.PublishAsync(new StartCheckout(
-            order.Id, attempt.UserId,
-            attempt.Items.Select(i => new CheckoutItem(i.ProductId, i.Quantity)).ToList()));
+        // 049: sipariş oluştu (ödeme dış PG A2A ile ÖNCEDEN çekildi). Checkout orchestrator'ı
+        // AlreadyCaptured modda tetikle (cross-service, checkout.start kuyruğu): authorize/capture ATLA,
+        // yalnız stok commit + onay + sepet temizle. CheckoutId = OrderId (deterministik; idempotent başlatma).
+        var items = attempt.Items
+            .Select(i => new Shared.CheckoutMessages.CheckoutItem(i.ProductId, i.Quantity, i.ProductName, i.UnitPrice))
+            .ToList();
+        await bus.PublishAsync(new Shared.CheckoutMessages.StartCheckout(
+            CheckoutId: order.Id,
+            UserId: attempt.UserId,
+            Items: items,
+            Amount: order.TotalPrice,
+            Address: new Shared.CheckoutMessages.OrderAddress(a.Province, a.District, a.Street, a.ZipCode, a.Line),
+            CardRef: "",
+            Installments: attempt.Installment,
+            PaymentMode: Shared.CheckoutMessages.PaymentMode.AlreadyCaptured,
+            OrderId: order.Id));
 
         return (order.Id, order.Code);
     }

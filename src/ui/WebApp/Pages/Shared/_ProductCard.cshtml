@@ -53,19 +53,35 @@
                 }
             </p>
             <p class="card-text">@Model.TruncateDescription(100)</p>
-            <p class="card-text">
-                @* Id varsa marka o markaya filtreli /Products'a link olur (tek facet). *@
-                <small class="text-muted">Marka:
-                    @if (Model.BrandId is not null)
-                    {
-                        <a asp-page="/Products/Index" asp-route-brandId="@Model.BrandId"><strong>@Model.Brand</strong></a>
-                    }
-                    else
-                    {
-                        <strong>@Model.Brand</strong>
-                    }
-                </small>
-            </p>
+            @* 052: yazar(lar) — her biri o yazara filtreli /Products'a link (çok-yazar). *@
+            @if (Model.Authors.Count > 0)
+            {
+                <p class="card-text">
+                    <small class="text-muted">Yazar:
+                        @for (var i = 0; i < Model.Authors.Count; i++)
+                        {
+                            var author = Model.Authors[i];
+                            <a asp-page="/Products/Index" asp-route-authorId="@author.Id"><strong>@author.Name</strong></a>@(i < Model.Authors.Count - 1 ? ", " : "")
+                        }
+                    </small>
+                </p>
+            }
+            @* 052: yayınevi — o yayınevine filtreli link. *@
+            @if (!string.IsNullOrEmpty(Model.Publisher))
+            {
+                <p class="card-text">
+                    <small class="text-muted">Yayınevi:
+                        @if (Model.PublisherId is not null)
+                        {
+                            <a asp-page="/Products/Index" asp-route-publisherId="@Model.PublisherId"><strong>@Model.Publisher</strong></a>
+                        }
+                        else
+                        {
+                            <strong>@Model.Publisher</strong>
+                        }
+                    </small>
+                </p>
+            }
             <p class="card-text">
                 <strong>@Model.Price.ToString("C")</strong>
             </p>

@@ -18,8 +18,11 @@ public class StorefrontView
     public string? Name { get; private set; }
     public string? Description { get; private set; }
     public decimal? Price { get; private set; }
-    public Guid? BrandId { get; private set; }
-    public string? Brand { get; private set; }
+    // 052: Brand→çok-yazar (Authors) + tek yayınevi (Publisher). AuthorRef read-model'in KENDİ küçük
+    // record'u (BC izolasyonu — Shared tipini sızdırmaz, aynı kavram farklı model). null = Catalog raporlamadı.
+    public List<AuthorRef> Authors { get; private set; } = [];
+    public Guid? PublisherId { get; private set; }
+    public string? Publisher { get; private set; }
     public Guid? CategoryId { get; private set; }
     public string? Category { get; private set; }
     public string? ImageUrl { get; private set; }
@@ -48,15 +51,17 @@ public class StorefrontView
         new() { ProductId = productId };
 
     public void ApplyCatalog(string name, string description, decimal price,
-        Guid brandId, string brand, Guid categoryId, string category,
+        IReadOnlyList<AuthorRef> authors, Guid publisherId, string publisher,
+        Guid categoryId, string category,
         string? imageUrl, bool isDeleted, IReadOnlyList<SpecPair>? specs = null,
         string? familyCode = null)
     {
         Name = name;
         Description = description;
         Price = price;
-        BrandId = brandId;
-        Brand = brand;
+        Authors = authors.ToList();
+        PublisherId = publisherId;
+        Publisher = publisher;
         CategoryId = categoryId;
         Category = category;
         ImageUrl = imageUrl;
@@ -76,6 +81,10 @@ public class StorefrontView
         RatingCount = count;
     }
 }
+
+// 052: read-model'in KENDİ yazar record'u (Id+ad). Shared.IntegrationEvents.AuthorRef'ten AYRI —
+// BC izolasyonu (aynı kavram farklı model); event tipini read-model'e sızdırmaz.
+public record AuthorRef(Guid Id, string Name);
 
 // 043: satirdaki tek ozellik cifti (kanonik ADlar — event sozlesmesi). Key = "Attribute|Option".
 public record SpecPair

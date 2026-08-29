@@ -24,7 +24,7 @@ scripts/check-flow-links.sh                               # FLOW.md domain-süre
 - **Sistemi hep Aspire AppHost'tan başlat**, tek servis değil — servisler birbirini/DB/RabbitMQ'yu
   service discovery + conn-string enjeksiyonuyla bulur; tek API bağımsız açılmaz.
 - **Marten şeması otomatik kurulur** (`ApplyAllDatabaseChangesOnStartup`) — migration komutu yok.
-- **OpenAI kullanan servisler** (Reviews, Storefront, ChatAgent) açılışta fail-fast:
+- **OpenAI kullanan servisler** (ChatAgent, ModerationAgent) açılışta fail-fast:
   `dotnet user-secrets set OpenAI:ApiKey <k> --project <proj>` (+ `OpenAI:Model`, ör. gpt-4o-mini).
 - **Paket sürümleri yalnız `Directory.Packages.props`'ta** (Central Package Management); `.csproj`
   `PackageReference`'ı sürümsüz listeler. Sürüm ekle/değiştir → yalnız props.
@@ -45,29 +45,26 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 
 | Servis | DB | Ne yapar | Origin spec |
 |---|---|---|---|
-| `catalog` | catalogDb | Zengin `Product`+`Category`+`Brand`+`ProductTag`+`SpecificationAttribute` | `specs/040-catalog-domain-extract` |
+| `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi) | `specs/040-catalog-domain-extract` |
 | `basket` | basketDb | Sepet + kalem; Stock'a gRPC rezervasyon (fail-closed) | `specs/012-stock-reservation` |
 | `order` | orderDb | Sipariş + `CheckoutSaga` (durable, pivot-kurallı); satın-alma kanıtı gRPC | `specs/028-checkout-saga` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount) | — |
-| `stock` | stockDb | `ProductStock` (OnHand); feed = tek stok otoritesi; gRPC rezervasyon sunucu | `specs/014-supplier-stock-authority` |
-| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; pgvector arama | `specs/003-storefront-read-model` |
+| `stock` | stockDb | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; gRPC rezervasyon sunucu | `specs/014-supplier-stock-authority` |
+| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
-| `procurement` | procurementDb | Feed çek (Hangfire) → `PoolProduct` (barkod-tekil kanonik) → Catalog/Stock event | `specs/041-multi-supplier-buybox` |
-| `supplier` | — | Dış dünya maketi: rev'li statik JSON dataset döner (DB yok) | `specs/041-multi-supplier-buybox` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
-| `personalization` | personalizationDb | **Python/FastAPI**; davranış-log ALS öneri; .NET bağlanmaz | `specs/042-behavior-personalization` |
+| `personalization-api` | personalizationApiDb | **.NET** write-only signal store; gezinme (WebApp HTTP) + satın-alma (Order `OrderCompleted` event) sinyalleri; öneri/ML sonraki faz | `specs/048-personalization-signal-store` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
 | `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC | `specs/029-openiddict-migration` |
 | `chat-agent` | — | AI asistan (MAF); MCP istemci + A2A ödeme (uzak PaymentGateway) | `specs/024-a2a-payment-agent` |
 | `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 
-- **Procurement yazım yolu:** feed → `PoolProduct` (barkod-anahtarlı, Priority-merge, hash-diff, Delisted)
-  → EKSİKSİZ + değişimde `CanonicalProductUpserted`/`BuyBoxChanged`/`ProductLinked` → Catalog/Stock.
-  Saga YOK; dayanıklılık = idempotent upsert + hash-diff + retry + error queue.
+- **Ürün yazım yolu (050 pivot — first-party):** Çok-tedarikçi feed (Procurement + Supplier) SÖKÜLDÜ;
+  mallar mağazanın. Ürün girişi = ürün-CRUD (SONRAKİ feature). Catalog yeni üründe `ProductLinked` → Stock
+  (ilk OnHand) + `ProductChangedEvent` → Storefront. Silme yok (016 sürer).
 - **ModerationAgent (ayrı `reviews-moderation-agent` worker'ı):** Singleton ChatClientAgent (Temp=0,
   structured JSON, MCP'siz), retry→error queue. Moderasyon 046'da BC'den broker'lı worker'a taşındı
   (Reviews'te agent-framework yok; iletişim `ReviewModerationRequested`/`ReviewModerated` event'leriyle).
-  Not: Procurement AI enrichment söküldü (2026-08-23) — ürünler feed'den eksiksiz gelir.
 
 ## Projeye özel yetki + tuzaklar
 
@@ -79,10 +76,8 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 
 ## Yapma listesi
 
-- **Sökülenleri geri getirme:** Supplier.Gateway / IngestionAgent LLM-yazıcı zinciri (söküldü);
-  MCP ile yazım (`upsert_*`/`set_stock`) — tek yazım yolu Procurement event'leri. Gerekçe ADR'de.
-- **Mock veriyi kodla üretme** — `supplier/Datasets/*.json` her zaman ELLE düzenlenir (yeni feed alanı =
-  hem `Supplier.Api` feed modeli hem Procurement DTO'suna eklenir, yoksa round-trip'te düşer).
+- **Çok-tedarikçi feed zincirini geri getirme:** Procurement + Supplier (+ eski Supplier.Gateway /
+  IngestionAgent) 050'de SÖKÜLDÜ — model first-party, mallar mağazanın. Ürün girişi = ürün-CRUD.
 - **`IConfiguration`'dan doğrudan okuma** (Options pattern istisnaları hariç).
 - **MCP'yi agent-dışı koddan** imperatif çağırma.
 - **Yeni saga için ayrı orchestration servisi** açma (god-service) — saga sürecin sahibi BC'de host edilir.

@@ -29,6 +29,11 @@ var identitySettings = builder.Configuration.GetSection("IdentityServer").Get<Id
                        ?? throw new InvalidOperationException("'IdentityServer' configuration section is missing.");
 builder.Services.AddSingleton(identitySettings);
 
+// 048: davranış sinyali m2m istemci kimligi (webapp-signals client_credentials).
+var signalsAuth = builder.Configuration.GetSection("SignalsAuth").Get<SignalsAuth>()
+                  ?? throw new InvalidOperationException("'SignalsAuth' configuration section is missing.");
+builder.Services.AddSingleton(signalsAuth);
+
 // TokenService'in M2M/refresh icin kullandigi adsiz-degil "identity" client'i.
 builder.Services.AddHttpClient("identity");
 
@@ -70,6 +75,12 @@ builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(config
         configure.BaseAddress = new Uri("http://order-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
+// 049: checkout girişi ayrı Checkout.Orchestrator'a (kullanıcı token'i BFF handler ile taşınır).
+builder.Services.AddRefitClient<ICheckoutRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://checkout-orchestrator");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+
 
 builder.Services.AddRefitClient<IPaymentRefitService>().ConfigureHttpClient(configure =>
     {
@@ -102,6 +113,18 @@ builder.Services.AddRefitClient<IReviewsRefitService>().ConfigureHttpClient(conf
     {
         configure.BaseAddress = new Uri("http://reviews-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+
+
+// 048: Personalization.Api gezinme sinyali ingest — m2m token (webapp-signals; personalization.ingest).
+// Kullanici token'i DEGIL (anonim gezinme de gonderir); PersonalizationSignalsTokenHandler ekler.
+builder.Services.AddTransient<PersonalizationSignalsTokenHandler>();
+builder.Services.AddRefitClient<IPersonalizationRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://personalization-api");
+        // US3: telemetri yan-etki; Personalization yavaş/kapalı olsa arka plan drain kısa sürede
+        // vazgeçer (batch atlanır), asılmaz. Sayfa akışı zaten Enqueue ile bağımsız.
+        configure.Timeout = TimeSpan.FromSeconds(5);
+    }).AddHttpMessageHandler<PersonalizationSignalsTokenHandler>();
 
 
 builder.Services.AddAuthentication(configureOption =>

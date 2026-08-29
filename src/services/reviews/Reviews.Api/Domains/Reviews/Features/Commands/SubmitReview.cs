@@ -23,7 +23,6 @@ public static class SubmitReview
         public async Task<FeatureObjectResultModel<SubmitReviewResponse>> Handle(
             SubmitReviewCommand cmd,
             IDocumentSession session,
-            OrderPurchaseClientProxy orderPurchase,
             IMessageBus bus,
             CancellationToken ct)
         {
@@ -31,12 +30,10 @@ public static class SubmitReview
             if (!name.IsSuccess)
                 return FeatureObjectResultModel<SubmitReviewResponse>.Error(name.Messages);
 
-            // FR-001/FR-008: satin-alma kaniti senkron sorulur; kanal yoksa fail-closed RED.
-            var hasPurchase = await orderPurchase.HasConfirmedPurchaseAsync(cmd.UserId, cmd.ProductId, ct);
-            if (hasPurchase is null)
-                return FeatureObjectResultModel<SubmitReviewResponse>.Error(
-                    new MessageItem { Code = ReviewsResourceConstants.REVIEW_PURCHASE_CHECK_UNAVAILABLE });
-            if (hasPurchase is false)
+            // FR-001: satin-alma kaniti lokal read-model'den (OrderCompleted event-fed). Yoksa RED.
+            var purchased = await session.LoadAsync<PurchasedProduct>(
+                PurchasedProduct.KeyFor(cmd.UserId, cmd.ProductId), ct);
+            if (purchased is null)
                 return FeatureObjectResultModel<SubmitReviewResponse>.Error(
                     new MessageItem { Code = ReviewsResourceConstants.REVIEW_PURCHASE_REQUIRED });
 

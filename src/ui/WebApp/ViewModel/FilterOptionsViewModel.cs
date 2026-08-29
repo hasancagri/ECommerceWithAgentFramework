@@ -10,8 +10,10 @@ public record SpecFacetViewModel(string Name, List<SpecFacetOptionViewModel> Opt
 
 public record FilterOptionsViewModel(
     List<FilterOptionViewModel> Categories,
-    List<FilterOptionViewModel> Brands,
+    // 052: Brands → Authors + Publishers facet.
+    List<FilterOptionViewModel> Authors,
+    List<FilterOptionViewModel> Publishers,
     List<SpecFacetViewModel> Specifications)
 {
-    public static FilterOptionsViewModel Empty => new([], [], []);
+    public static FilterOptionsViewModel Empty => new([], [], [], []);
 }

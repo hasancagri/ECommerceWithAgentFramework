@@ -19,6 +19,8 @@ public sealed record RetrieveResult(PaymentOutcome Outcome, string? PaymentId, d
 // 039: Order -> PaymentGateway (dis repo) server-to-server REST. Auth: merchant API key (kullanici
 // JWT degil). Charge idempotent (correlationKey); retrieve verify + reconcile icin. Yanit kaybolursa
 // (timeout/kesinti) Ambiguous doner -> saga reconcile eder (asla cift cekim: ayni key -> var olan odeme).
+// 049: X-Api-Key PER-REQUEST verilir (statik default header degil) — key artik MerchantInformation'dan
+// (MerchantKeyClient) cozulur; caller merchantId'ye ait key'i gecer.
 public sealed class PaymentGatewayClient(HttpClient http)
 {
     public const string ApiKeyHeader = "X-Api-Key";
@@ -34,7 +36,7 @@ public sealed class PaymentGatewayClient(HttpClient http)
     private sealed record PaymentReply(string? paymentId, string? status, decimal price, decimal paidPrice);
 
     public async Task<ChargeResult> ChargeAsync(
-        string correlationKey, Guid merchantId, PaymentContext ctx, decimal amount, int installment,
+        string correlationKey, Guid merchantId, string apiKey, PaymentContext ctx, decimal amount, int installment,
         CancellationToken ct)
     {
         var body = new ChargeRequest(
@@ -44,9 +46,15 @@ public sealed class PaymentGatewayClient(HttpClient http)
 
         try
         {
-            using var response = await http.PostAsJsonAsync($"merchants/{merchantId}/payments", body, ct);
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"merchants/{merchantId}/payments")
+            {
+                Content = JsonContent.Create(body)
+            };
+            request.Headers.Add(ApiKeyHeader, apiKey);
+
+            using var response = await http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
-                return ChargeResult.Unknown; // HTTP hatasi -> belirsiz (reconcile)
+                return ChargeResult.Unknown; // HTTP hatasi (401/timeout dahil) -> belirsiz (reconcile)
 
             var reply = await response.Content.ReadFromJsonAsync<PaymentReply>(cancellationToken: ct);
             return Map(reply) is var (outcome, id, price) ? new ChargeResult(outcome, id, price) : ChargeResult.Unknown;
@@ -62,12 +70,15 @@ public sealed class PaymentGatewayClient(HttpClient http)
     }
 
     public async Task<RetrieveResult> RetrieveAsync(
-        string correlationKey, Guid merchantId, CancellationToken ct)
+        string correlationKey, Guid merchantId, string apiKey, CancellationToken ct)
     {
         try
         {
-            using var response = await http.GetAsync(
-                $"merchants/{merchantId}/payments?correlationKey={correlationKey}", ct);
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get, $"merchants/{merchantId}/payments?correlationKey={correlationKey}");
+            request.Headers.Add(ApiKeyHeader, apiKey);
+
+            using var response = await http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
                 return RetrieveResult.Unknown;
 

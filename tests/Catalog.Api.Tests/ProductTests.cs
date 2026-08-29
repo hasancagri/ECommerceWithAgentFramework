@@ -156,11 +156,19 @@ public class ProductTests
     }
 
     // --- Publish / Unpublish (vitrin kararı Published bayrağında, FR-007) ---
+    // 051: yayın kapısı = fiyat>0 (satılamaz kart engellenir). Kapı aggregate'te (İLKE II).
 
     [Fact]
-    public void Publish_Unpublish_TogglesFlag()
+    public void Create_LeavesProductAsDraft()
+    {
+        NewProduct().Published.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Publish_WithPositivePrice_PublishesAndTogglesBack()
     {
         var product = NewProduct();
+        product.SetPrice(Money.Create(100m)!);
 
         product.Publish().IsSuccess.ShouldBeTrue();
         product.Published.ShouldBeTrue();
@@ -169,17 +177,21 @@ public class ProductTests
         product.Published.ShouldBeFalse();
     }
 
+    [Fact]
+    public void Publish_WithZeroPrice_ReturnsErrorAndStaysDraft()
+    {
+        var product = NewProduct(); // Money.Zero()
+
+        var result = product.Publish();
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages!.ShouldContain(m => m.Code == CatalogResourceConstants.PRODUCT_PRICE_REQUIRED_FOR_PUBLISH);
+        product.Published.ShouldBeFalse();
+    }
+
     // --- ⊕ Ana repoya özgü metotlar (K6/K7 + kimlik alanları) ---
 
-    [Fact]
-    public void SetBrand_AssignsBrandId()
-    {
-        var product = NewProduct();
-        var brandId = Guid.NewGuid();
-
-        product.SetBrand(brandId).IsSuccess.ShouldBeTrue();
-        product.BrandId.ShouldBe(brandId);
-    }
+    // 052: SetBrand → SetAuthors/SetPublisher; kapsamı ProductAuthorsTests + ProductPublisherTests taşır.
 
     [Fact]
     public void SetImage_AssignsAndClearsUrl()

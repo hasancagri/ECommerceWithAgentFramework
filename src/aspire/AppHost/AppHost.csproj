@@ -11,6 +11,7 @@
     <ItemGroup>
       <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
       <ProjectReference Include="..\..\services\catalog\Catalog.Api\Catalog.Api.csproj" />
+      <ProjectReference Include="..\..\services\checkout\Checkout.Orchestrator\Checkout.Orchestrator.csproj" />
       <ProjectReference Include="..\..\services\customer\Customer.Api\Customer.Api.csproj" />
       <ProjectReference Include="..\..\services\stock\Stock.Api\Stock.Api.csproj" />
       <ProjectReference Include="..\..\services\basket\Basket.Api\Basket.Api.csproj" />
@@ -22,9 +23,8 @@
       <ProjectReference Include="..\..\others\Identity.Server\Identity.Server.csproj" />
       <ProjectReference Include="..\..\agents\ChatAgent\ChatAgent.csproj" />
       <ProjectReference Include="..\..\agents\Reviews.Moderation\Reviews.Moderation.csproj" />
-      <ProjectReference Include="..\..\services\supplier\Supplier.Api\Supplier.Api.csproj" />
-      <ProjectReference Include="..\..\services\procurement\Procurement.Api\Procurement.Api.csproj" />
       <ProjectReference Include="..\..\services\reviews\Reviews.Api\Reviews.Api.csproj" />
+      <ProjectReference Include="..\..\services\Personalization.Api\Personalization.Api.csproj" />
     </ItemGroup>
 
     <ItemGroup>

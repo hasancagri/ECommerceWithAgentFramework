@@ -13,8 +13,9 @@ public static class GetStorefrontProductList
         int PageSize = DefaultPageSize,
         Guid? CategoryId = null,
         string? Category = null,
-        Guid? BrandId = null,
-        string? Brand = null,
+        // 052: marka filtresi → yazar (Id ile) + yayınevi (Id ile).
+        Guid? AuthorId = null,
+        Guid? PublisherId = null,
         // 043: "Attribute|Option" anahtarları; aynı attribute OR, farklı attribute AND (FR-008).
         string[]? Specs = null)
     {
@@ -23,20 +24,22 @@ public static class GetStorefrontProductList
         public static int NormalizePageSize(int pageSize) => pageSize < 1 ? DefaultPageSize : pageSize;
     }
 
-    // Saf, test edilebilir filtre çekirdeği: Id verilmişse Id, yoksa ad eşleşmesi; filtreler AND'lenir.
+    // Saf, test edilebilir filtre çekirdeği: kategori (Id/ad) + yazar (jsonb dizi üyeliği) + yayınevi (Id);
+    // filtreler AND'lenir. 052: yazar = Authors.Any(a=>a.Id==x) (Marten jsonb), yayınevi = eşitlik.
     public static IQueryable<StorefrontView> ApplyFilters(
         IQueryable<StorefrontView> source,
-        Guid? categoryId, string? category, Guid? brandId, string? brand)
+        Guid? categoryId, string? category, Guid? authorId, Guid? publisherId)
     {
         if (categoryId is not null)
             source = source.Where(x => x.CategoryId == categoryId);
         else if (!string.IsNullOrWhiteSpace(category))
             source = source.Where(x => x.Category == category);
 
-        if (brandId is not null)
-            source = source.Where(x => x.BrandId == brandId);
-        else if (!string.IsNullOrWhiteSpace(brand))
-            source = source.Where(x => x.Brand == brand);
+        if (authorId is not null)
+            source = source.Where(x => x.Authors.Any(a => a.Id == authorId));
+
+        if (publisherId is not null)
+            source = source.Where(x => x.PublisherId == publisherId);
 
         return source;
     }
@@ -77,8 +80,10 @@ public static class GetStorefrontProductList
         public Guid ProductId { get; set; }
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;
-        public Guid? BrandId { get; set; }
-        public string Brand { get; set; } = null!;
+        // 052: kart künyesi — yazar listesi + tek yayınevi (eski tek Brand alanının yerine).
+        public List<AuthorRef> Authors { get; set; } = [];
+        public Guid? PublisherId { get; set; }
+        public string? Publisher { get; set; }
         public Guid? CategoryId { get; set; }
         public string? Category { get; set; }
         public decimal Price { get; set; }
@@ -100,8 +105,9 @@ public static class GetStorefrontProductList
             ProductId = view.ProductId,
             Name = view.Name!,
             Description = view.Description ?? string.Empty,
-            BrandId = view.BrandId,
-            Brand = view.Brand ?? string.Empty,
+            Authors = view.Authors,
+            PublisherId = view.PublisherId,
+            Publisher = view.Publisher,
             CategoryId = view.CategoryId,
             Category = view.Category,
             Price = view.Price!.Value,
@@ -149,7 +155,7 @@ public static class GetStorefrontProductList
             var filtered = ApplyFilters(
                 session.Query<StorefrontView>()
                     .Where(x => !x.IsDeleted && x.Name != null && x.Price != null),
-                query.CategoryId, query.Category, query.BrandId, query.Brand);
+                query.CategoryId, query.Category, query.AuthorId, query.PublisherId);
 
             // 043: spec kesişimi — grup içi OR, gruplar arası AND (FR-008).
             filtered = ApplySpecFilters(filtered, ParseSpecGroups(query.Specs ?? []));
@@ -190,14 +196,14 @@ public static class GetStorefrontProductListEndpoint
                 int pageSize = GetStorefrontProductList.DefaultPageSize,
                 Guid? categoryId = null,
                 string? category = null,
-                Guid? brandId = null,
-                string? brand = null,
+                Guid? authorId = null,
+                Guid? publisherId = null,
                 // 043: çoklu spec anahtarı (?spec=Renk|Siyah&spec=Materyal|Çelik)
                 [FromQuery(Name = "spec")] string[]? spec = null) =>
             {
                 var result = await bus.InvokeAsync<FeaturePagedResultModel<GetStorefrontProductList.StorefrontProductResponse>>(
                     new GetStorefrontProductList.GetStorefrontProductListQuery(
-                        page, pageSize, categoryId, category, brandId, brand, spec));
+                        page, pageSize, categoryId, category, authorId, publisherId, spec));
 
                 // Sayfa meta'sı (toplam kayıt/sayfa) istemciye lazım; Data yerine result'ın tamamı döner.
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);

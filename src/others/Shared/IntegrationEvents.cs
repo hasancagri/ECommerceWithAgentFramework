@@ -12,13 +12,19 @@ public static class IntegrationEvents
     // Additive + opsiyonel: eski yayıncı/tüketici kırılmaz; null = özellik bilgisi yok (boş sayılır).
     public record ProductSpec(string Attribute, string Option);
 
+    // 052: kitap künyesi — yazar (Id+ad çifti; paralel-liste kırılganlığı olmadan taşınır).
+    public record AuthorRef(Guid Id, string Name);
+
+    // 052: kırıcı evrim (tek tüketici Storefront, aynı PR, DB sıfırdan seed). BrandId/Brand çıktı;
+    // çok-yazar (Authors) + tek yayınevi (PublisherId+Publisher, fat: tüketici lookup yapmaz) geldi.
     public record ProductChangedEvent(
         Guid ProductId,
         string Name,
         string Description,
         decimal Price,
-        Guid BrandId,
-        string Brand,
+        List<AuthorRef> Authors,
+        Guid PublisherId,
+        string Publisher,
         Guid CategoryId,
         string Category,
         string? ImageUrl,
@@ -31,32 +37,9 @@ public static class IntegrationEvents
     // 012-stock-reservation: TTL dolunca Stock yayinlar; Basket ilgili sepet satirini siler.
     public record ReservationExpired(Guid ProductId, Guid UserId);
 
-    // 041/047: Procurement → Catalog + Stock. Eksiksiz kanonik ürün (fat — güncel Price+Stock dahil,
-    // fiyatsız pencere olmaz). 047: buy-box söküldü → bu TEK güncelleme kanalıdır; içerik VEYA fiyat VEYA
-    // stok değişince yayınlanır (ayrı BuyBoxChanged yok). Stock stoğu buradan mutlak yazar.
-    // Kategori adları kanonik seed ağacından çözülür (NormalizedName); ölçüde 0 = bilinmiyor.
-    public record CanonicalProductUpserted(
-        string Barcode,
-        string Name,
-        string Description,
-        string Brand,
-        string Category,
-        string SubCategory,
-        string Sku,
-        decimal Weight,
-        decimal Length,
-        decimal Width,
-        decimal Height,
-        decimal Price,
-        int Stock,
-        // 043: kanonik özellikler (listing'ten gelen attribute adları).
-        List<ProductSpec>? Specs = null,
-        // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
-        string? FamilyCode = null);
-
-    // 041: Catalog → Stock. Yalnız YENİ ürün oluşunca yayınlanır; Stock BarcodeLink eşlemesini kurar
-    // ve OnHand'i InitialStock (CanonicalProductUpserted.Stock) ile mutlak yazar.
-    public record ProductLinked(
+    // 050/051: Catalog → Stock. Yalnız YENİ ürün YAYINLANINCA yayılır; Stock BarcodeLink eşlemesini kurar
+    // ve OnHand'i InitialStock ile mutlak yazar. 051: ilk yayıncısı = kitap import ("Linked" feed-adı düştü).
+    public record ProductAdded(
         string Barcode,
         Guid ProductId,
         int InitialStock);
@@ -71,4 +54,21 @@ public static class IntegrationEvents
     // 046: Reviews.Moderation worker → Reviews. Moderasyon karari; kategori kapali kume
     // (profanity/insult/personal_attack/none). Reviews ApplyModeration ile uygular.
     public record ReviewModerated(Guid ReviewId, bool Violation, string Category, string Reason);
+
+    // 048: Order → Personalization. YALNIZ odeme onayli tamamlanan siparis (CheckoutSaga basari)
+    // icin yayilir; olusturulan/odenmemis DEGIL. Kisisellestirme satin-alma sinyalini besler.
+    // Category/Brand nullable: Order bunlari tutmuyorsa null (BC izolasyonu; enrichment sonraki faz).
+    // Additive: yeni alan default'lu eklenir, eski tuketici kirilmaz.
+    public record OrderCompleted(
+        Guid OrderId,
+        Guid UserId,
+        DateTimeOffset OrderedAt,
+        IReadOnlyList<OrderCompletedItem> Items);
+
+    public record OrderCompletedItem(
+        Guid ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        string? Category = null,
+        string? Brand = null);
 }

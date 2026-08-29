@@ -1,18 +1,19 @@
 # Stock — Domain Süreci
 
-**BC ne yapar:** Her ürünün fiziksel stoğunun (**OnHand**) tek otoritesidir. Feed'in kanonik olayından
-OnHand'i mutlak yazar, sepet için TTL'li rezervasyon tutar, sipariş anında rezervasyonu kalıcı düşüşe çevirir.
+**BC ne yapar:** Her ürünün fiziksel stoğunun (**OnHand**) tek otoritesidir. Catalog'un ürün-bağ olayından
+ilk OnHand'i yazar, sepet için TTL'li rezervasyon tutar, sipariş anında rezervasyonu kalıcı düşüşe çevirir.
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
 
+> **050 pivot notu:** Feed (Procurement) söküldü; OnHand'i besleyen kanonik-ürün olayı kalktı.
+> İlk stok `ProductAdded` ile gelir (051: ilk yayıncı kitap import); sonraki güncellemeler ürün-CRUD yoluyla.
+
 ## Süreç
 
 1. **Ürün ilk eşlendiğinde barkod↔ProductId eşlemesi kurulur** ve      `(StockEventHandlers`
-   OnHand başlangıç değeriyle yazılır (idempotent upsert).             ` → ProductLinked)`
-2. **Feed her yayınında OnHand MUTLAK yazılır.** Kazanan offer'ın      `(StockEventHandlers`
-   stoğu; toplam değil, mutlak (047). Eşleme yoksa yok say.            ` → CanonicalProductUpserted)`
-3. **Stok her değişiminde vitrine bildirilir** — Storefront read-      `(IntegrationEvents`
+   OnHand başlangıç değeriyle yazılır (idempotent upsert).             ` → ProductAdded)`
+2. **Stok her değişiminde vitrine bildirilir** — Storefront read-      `(IntegrationEvents`
    model'i güncel OnHand'i alır.                                       ` .StockChangedEvent)`
 4. **Sepete ekleme TTL'li rezervasyon tutar** (gRPC, fail-closed).     `(ReserveStock`
    Available = OnHand − aktif rezervasyonlar; yetmezse reddedilir.     ` → ProductStock.SetReservedQuantity)`
@@ -28,7 +29,7 @@ OnHand'i mutlak yazar, sepet için TTL'li rezervasyon tutar, sipariş anında re
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
-- **Feed = OnHand otoritesi (014).** OnHand yalnız kanonik olaydan mutlak yazılır; elle CRUD yok. Negatif reddedilir `(ProductStock.SetQuantity)`.
+- **OnHand otoritesi = Stock (050).** İlk OnHand `ProductAdded`'ten mutlak yazılır; sonraki güncelleme ürün-CRUD yazım yoluyla. Negatif reddedilir `(ProductStock.SetQuantity)`.
 - **Available türetilir, OnHand'i ezmez.** Available = OnHand − aktif rezervasyonlar, 0'a kırpılır `(ProductStock.AvailableAt)`; oversell tespit edilir `(ProductStock.IsOversoldAt)`.
 - **Rezervasyon fail-closed + sabit TTL.** Yetersiz stokta gRPC reddeder; ExpiresAt yenilenmez (rolling-TTL yok).
 - **Commit/Revert idempotent (028).** orderId anahtarıyla mükerrer teslimat no-op; commit'siz revert reddedilir `(_processedOps)`.
@@ -36,5 +37,5 @@ OnHand'i mutlak yazar, sepet için TTL'li rezervasyon tutar, sipariş anında re
 
 ## Sınır (bu BC'nin dokunmadığı)
 
-Ürün içeriği/kimlik/fiyat üretmez (Procurement otoritesi). Sepet/sipariş/ödeme sahibi değil — yalnız
+Ürün içeriği/kimlik/fiyat üretmez (Catalog otoritesi). Sepet/sipariş/ödeme sahibi değil — yalnız
 rezervasyon + commit hizmeti verir. Fiziksel depo/lojistik kapsam dışı.

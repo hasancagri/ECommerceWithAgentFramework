@@ -1,7 +1,7 @@
 namespace Reviews.Api.Domains.Reviews.Features.Queries;
 
 // 044 SC-001: WebApp form goster/gizle ongorusu. Uc karar VERMEZ — nihai guard SubmitReview'da
-// (yarista 400). gRPC erisilemezse canReview=false (fail-closed ile tutarli form gizlenir).
+// (yarista 400). 049: satin-alma kaniti lokal read-model (OrderCompleted event-fed) — gRPC yok.
 public static class GetReviewEligibility
 {
     public record GetReviewEligibilityQuery(Guid UserId, Guid ProductId);
@@ -17,20 +17,20 @@ public static class GetReviewEligibility
         public async Task<FeatureObjectResultModel<ReviewEligibilityResponse>> Handle(
             GetReviewEligibilityQuery query,
             IQuerySession session,
-            OrderPurchaseClientProxy orderPurchase,
             CancellationToken ct)
         {
-            // Mevcut yorum varsa gRPC'ye hic gidilmez (tek-yorum hakki kullanilmis).
+            // Mevcut yorum varsa kanit sorulmaz (tek-yorum hakki kullanilmis).
             var exists = await session.Query<Review>()
                 .Where(x => x.UserId == query.UserId && x.ProductId == query.ProductId)
                 .AnyAsync(ct);
             if (exists)
                 return Result(false, ReviewsResourceConstants.REVIEW_ALREADY_EXISTS);
 
-            var hasPurchase = await orderPurchase.HasConfirmedPurchaseAsync(query.UserId, query.ProductId, ct);
-            if (hasPurchase is null)
-                return Result(false, ReviewsResourceConstants.REVIEW_PURCHASE_CHECK_UNAVAILABLE);
-            if (hasPurchase is false)
+            // Satin-alma kaniti: lokal read-model PK lookup (OrderCompleted'tan beslenir). Henuz
+            // event islenmemisse (eventual consistency) false — yorum sonra yapildigindan pratikte sorun degil.
+            var purchased = await session.LoadAsync<PurchasedProduct>(
+                PurchasedProduct.KeyFor(query.UserId, query.ProductId), ct);
+            if (purchased is null)
                 return Result(false, ReviewsResourceConstants.REVIEW_PURCHASE_REQUIRED);
 
             return Result(true, null);

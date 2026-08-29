@@ -19,7 +19,9 @@ public static class GetStorefrontFilterOptions
     public class StorefrontFilterOptionsResponse
     {
         public List<FilterOptionResponse> Categories { get; set; } = [];
-        public List<FilterOptionResponse> Brands { get; set; } = [];
+        // 052: Brands → çok-değerli Authors facet + tek-değerli Publishers facet (eski Brand kalıbı).
+        public List<FilterOptionResponse> Authors { get; set; } = [];
+        public List<FilterOptionResponse> Publishers { get; set; } = [];
 
         // 043: spec facet'leri — Name + option'lar + ürün sayısı (count birebirlik SC-006).
         public List<SpecFacetResponse> Specifications { get; set; } = [];
@@ -49,10 +51,20 @@ public static class GetStorefrontFilterOptions
             .OrderBy(x => x.Name)
             .ToList();
 
-        var brands = rows
-            .Where(x => x.BrandId is not null && !string.IsNullOrWhiteSpace(x.Brand))
-            .GroupBy(x => x.BrandId!.Value)
-            .Select(g => new FilterOptionResponse { Id = g.Key, Name = g.First().Brand! })
+        // 052: çok-değerli yazar facet'i — satırın Authors listesi düzleştirilir, Id'ye gruplanır (A-Z).
+        // Çok-yazarlı kitap her yazar facet'ine katkı verir (SC-003).
+        var authors = rows
+            .SelectMany(x => x.Authors)
+            .GroupBy(a => a.Id)
+            .Select(g => new FilterOptionResponse { Id = g.Key, Name = g.First().Name })
+            .OrderBy(x => x.Name)
+            .ToList();
+
+        // 052: tek-değerli yayınevi facet'i (eski Brand kalıbı birebir).
+        var publishers = rows
+            .Where(x => x.PublisherId is not null && !string.IsNullOrWhiteSpace(x.Publisher))
+            .GroupBy(x => x.PublisherId!.Value)
+            .Select(g => new FilterOptionResponse { Id = g.Key, Name = g.First().Publisher! })
             .OrderBy(x => x.Name)
             .ToList();
 
@@ -76,7 +88,7 @@ public static class GetStorefrontFilterOptions
             .ToList();
 
         return new StorefrontFilterOptionsResponse
-        { Categories = categories, Brands = brands, Specifications = specifications };
+        { Categories = categories, Authors = authors, Publishers = publishers, Specifications = specifications };
     }
 
     public class GetStorefrontFilterOptionsQueryHandler

@@ -14,9 +14,10 @@ public static class GetProductStorefrontView
         public string? ImageUrl { get; set; }
         public bool IsDeleted { get; set; }
 
-        // 016 US4: kimlik + ad birlikte (R7). null = Catalog henuz raporlamadi (kismi satir).
-        public Guid? BrandId { get; set; }
-        public string? Brand { get; set; }
+        // 052: künye — tüm yazarlar (liste) + tek yayınevi. null/boş = Catalog henüz raporlamadı.
+        public List<AuthorRef> Authors { get; set; } = [];
+        public Guid? PublisherId { get; set; }
+        public string? Publisher { get; set; }
         public Guid? CategoryId { get; set; }
         public string? Category { get; set; }
 
@@ -45,8 +46,9 @@ public static class GetProductStorefrontView
             Price = view.Price,
             ImageUrl = view.ImageUrl,
             IsDeleted = view.IsDeleted,
-            BrandId = view.BrandId,
-            Brand = view.Brand,
+            Authors = view.Authors,
+            PublisherId = view.PublisherId,
+            Publisher = view.Publisher,
             CategoryId = view.CategoryId,
             Category = view.Category,
             StockQuantity = view.StockQuantity,

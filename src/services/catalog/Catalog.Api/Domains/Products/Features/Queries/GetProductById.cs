@@ -15,7 +15,8 @@ public static class GetProductById
         public string? ManufacturerPartNumber { get; set; }
         public decimal Price { get; set; }
         public bool Published { get; set; }
-        public Guid BrandId { get; set; }
+        public List<Guid> AuthorIds { get; set; } = [];
+        public Guid PublisherId { get; set; }
         public string? ImageUrl { get; set; }
         public List<Guid> CategoryIds { get; set; } = [];
         public List<Guid> TagIds { get; set; } = [];
@@ -48,7 +49,8 @@ public static class GetProductById
                 ManufacturerPartNumber = product.ManufacturerPartNumber,
                 Price = product.Price.Amount,
                 Published = product.Published,
-                BrandId = product.BrandId,
+                AuthorIds = product.AuthorIds.ToList(),
+                PublisherId = product.PublisherId,
                 ImageUrl = product.ImageUrl,
                 CategoryIds = product.Categories.Select(x => x.CategoryId).ToList(),
                 TagIds = product.TagIds.ToList(),

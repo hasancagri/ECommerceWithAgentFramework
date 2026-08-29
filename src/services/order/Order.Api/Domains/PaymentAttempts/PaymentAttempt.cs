@@ -11,12 +11,12 @@ namespace Order.Api.Domains.PaymentAttempts;
 // saf On* metotlarindadir (birim testli, Ilke VI). Bkz. [[028-checkout-saga]], reconcile 026 deseni.
 public class PaymentAttempt
 {
-    public string Id { get; set; } = default!;      // = CorrelationKey.Value (hex HMAC)
+    public string Id { get; set; } = default!; // = CorrelationKey.Value (hex HMAC)
     public Guid UserId { get; set; }
-    public Guid MerchantId { get; set; }             // PG retrieve/charge hedefi
+    public Guid MerchantId { get; set; } // PG retrieve/charge hedefi
     public int Installment { get; set; }
     public decimal Amount { get; set; }
-    public string? ProviderPaymentId { get; set; }   // PG saglayici kimligi (iz/referans)
+    public string? ProviderPaymentId { get; set; } // PG saglayici kimligi (iz/referans)
     public PaymentAttemptStatus Status { get; set; }
     public int AttemptCount { get; set; }
     public DateTimeOffset? NextCheckAt { get; set; }
@@ -29,7 +29,8 @@ public class PaymentAttempt
     public List<CreateOrder.OrderItemDto> Items { get; set; } = [];
     public CreateOrder.AddressDto Address { get; set; } = new("", "", "", "", "");
 
-    [JsonIgnore] public bool IsTerminal =>
+    [JsonIgnore]
+    public bool IsTerminal =>
         Status is PaymentAttemptStatus.Succeeded or PaymentAttemptStatus.Failed
             or PaymentAttemptStatus.NeedsReconciliation;
 
@@ -72,6 +73,7 @@ public class PaymentAttempt
                     Status = PaymentAttemptStatus.NeedsReconciliation;
                     return new(PaymentAttemptAction.VerifyFailed); // tutar uyusmaz -> siparis yok
                 }
+
                 Status = PaymentAttemptStatus.Succeeded;
                 return new(PaymentAttemptAction.CreateOrder);
 
@@ -106,6 +108,7 @@ public class PaymentAttempt
                     Status = PaymentAttemptStatus.Failed;
                     return new(PaymentAttemptAction.VerifyFailed);
                 }
+
                 Status = PaymentAttemptStatus.Succeeded;
                 ProviderPaymentId = providerPaymentId;
                 return new(PaymentAttemptAction.CreateOrder);
@@ -120,6 +123,7 @@ public class PaymentAttempt
                     Status = PaymentAttemptStatus.NeedsReconciliation; // terminal, ops gorunurluk
                     return new(PaymentAttemptAction.Terminal);
                 }
+
                 var delay = NextBackoff(cfg);
                 NextCheckAt = now + delay;
                 return new(PaymentAttemptAction.ScheduleReconcile, delay);
@@ -147,12 +151,12 @@ public enum PaymentAttemptStatus
 // Saf karar cikti: handler yorumlar (order olustur / basarisiz bildir / reconcile zamanla / terminal).
 public enum PaymentAttemptAction
 {
-    CreateOrder,        // basari + tutar dogru -> siparis olustur
-    NotifyFailed,       // PG kesin basarisiz -> payment_failed
-    VerifyFailed,       // tutar/dogrulama uyusmaz -> red (siparis yok)
-    ScheduleReconcile,  // belirsiz -> ReconcileTick zamanla, kullaniciya pending
-    Terminal,           // deadline doldu / zaten terminal -> ops gorunurluk
-    AlreadyCompleted    // idempotent re-entry -> var olan siparis
+    CreateOrder, // basari + tutar dogru -> siparis olustur
+    NotifyFailed, // PG kesin basarisiz -> payment_failed
+    VerifyFailed, // tutar/dogrulama uyusmaz -> red (siparis yok)
+    ScheduleReconcile, // belirsiz -> ReconcileTick zamanla, kullaniciya pending
+    Terminal, // deadline doldu / zaten terminal -> ops gorunurluk
+    AlreadyCompleted // idempotent re-entry -> var olan siparis
 }
 
 public sealed record PaymentAttemptDecision(PaymentAttemptAction Action, TimeSpan? ReconcileDelay = null);

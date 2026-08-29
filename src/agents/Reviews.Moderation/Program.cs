@@ -45,7 +45,7 @@ builder.Host.UseWolverine(opts =>
 
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
     // *EventHandlers (çoğul) Wolverine isim-konvansiyonunca keşfedilMEZ — elle dahil et
-    // (Catalog.ProcurementEventHandlers / Storefront.StorefrontEventHandlers emsali).
+    // (Storefront.StorefrontEventHandlers emsali).
     opts.Discovery.IncludeType(typeof(ReviewModerationEventHandlers));
 });
 

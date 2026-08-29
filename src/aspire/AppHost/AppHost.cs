@@ -25,6 +25,7 @@ var stockDb = postgres.AddDatabase("stockDb");
 var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
 var customerDb = postgres.AddDatabase("customerDb");
+var checkoutDb = postgres.AddDatabase("checkoutDb");
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
@@ -82,8 +83,10 @@ var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api"
 
 var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
     .WithReference(paymentDb)
+    .WithReference(rabbit)
     .WithReference(redis)
     .WaitFor(paymentDb)
+    .WaitFor(rabbit)
     .WaitFor(redis);
 
 // 022: Customer BC — Wallet (kayitli kart) + AddressBook (adres defteri). Kendi DB'si;
@@ -99,6 +102,20 @@ var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
 // 039: chat siparis tamamlama — Order.Api odeme baglamini (buyer+vaultToken+adres) Customer'dan
 // yapisal REST ile ceker (customerApi orderApi'den SONRA tanimli oldugu icin referans burada eklenir).
 orderApi.WithReference(customerApi).WaitFor(customerApi);
+
+// 049: Checkout.Orchestrator — ayrı BC (checkoutDb), broker-only saga. Komutları hedef BC'lere
+// yayınlar, yanıtları reply kuyruğundan dinler. BC komut-kuyruğu tüketicileri önce ayağa kalksın
+// (soğuk-açılış binding dersi, 007). Giriş endpoint'i checkout.write ile korunur (identity).
+var checkoutOrchestrator = builder.AddProject<Projects.Checkout_Orchestrator>("checkout-orchestrator")
+    .WithReference(checkoutDb)
+    .WithReference(rabbit)
+    .WithReference(identityServer)
+    .WaitFor(checkoutDb)
+    .WaitFor(rabbit)
+    .WaitFor(orderApi)
+    .WaitFor(stockApi)
+    .WaitFor(paymentApi)
+    .WaitFor(basketApi);
 
 // 044: Reviews BC — satin-alma sartli yorum + puan ozeti. Satin-alma kaniti icin Order gRPC'sine
 // senkron sorar (fail-closed); ozet ReviewSummaryChanged fanout'uyla Storefront'a akar.
@@ -153,41 +170,26 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithReference(web)
     .WaitFor(gateway);
 
-// Tedarikçi simülatörü: DB'siz mock — rev başına JSON dataset döner (041: iki tedarikçi + advance).
-var supplierApi = builder.AddProject<Projects.Supplier_Api>("supplier-api");
-
-// 041: Procurement BC — barkod-tekil havuz. WaitFor catalog/stock: tüketici kuyrukları
-// publisher'dan önce bağlansın (soğuk açılışta binding'siz fanout = sessiz kayıp — 007/012 dersi).
-var procurementDb = postgres.AddDatabase("procurementDb");
-builder.AddProject<Projects.Procurement_Api>("procurement-api")
-    .WithReference(procurementDb)
-    .WithReference(rabbit)
-    .WithReference(supplierApi)
-    .WaitFor(procurementDb)
-    .WaitFor(rabbit)
-    .WaitFor(supplierApi)
-    .WaitFor(catalogApi)
-    .WaitFor(stockApi);
-
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
 
-// 042: Personalization BC — sistemin ilk .NET-disi servisi (Python/FastAPI). WebApp'in yazdigi
-// davranis JSONL'ini kendi DB'sine indirir, ALS modeli egitir, /v1/recommendations sunar.
-// Kanal = paylasimli log dizini (tek uretici + tek tuketici; bkz. specs/042 R3/R7).
-var behaviorLogDir = Path.GetFullPath(
-    Path.Combine(builder.AppHostDirectory, "..", "..", "..", "artifacts", "behavior-logs"));
-Directory.CreateDirectory(behaviorLogDir);
-web.WithEnvironment("BehaviorLog__Directory", behaviorLogDir);
+// 048: Personalization.Api — write-only signal store (.NET). (042 Python/FastAPI servisi silindi;
+// yeni .NET BC sinyalleri toplar, ileride model egitimi ayrica ele alinir.) Kendi DB'si.
+// Gezinme = WebApp HTTP POST; satin-alma = Order 'OrderCompleted' event. Tuketici binding
+// yayincidan (order-api) once ayakta olsun (007 dersi).
+var personalizationApiDb = postgres.AddDatabase("personalizationApiDb");
+var personalizationApi = builder.AddProject<Projects.Personalization_Api>("personalization-api")
+    .WithReference(personalizationApiDb)
+    .WithReference(rabbit)
+    .WithReference(orderApi)
+    .WaitFor(personalizationApiDb)
+    .WaitFor(rabbit)
+    .WaitFor(orderApi);
 
-var personalizationDb = postgres.AddDatabase("personalizationDb");
+// WebApp gezinme sinyallerini personalization-api'ye POST eder → adres cozumu icin referans.
+web.WithReference(personalizationApi);
 
-#pragma warning disable ASPIREHOSTINGPYTHON001 // AddPythonApp deneysel — dev ortami icin kabul (042 R2)
-builder.AddPythonApp("personalization", "../../services/personalization", "main.py")
-#pragma warning restore ASPIREHOSTINGPYTHON001
-    .WithHttpEndpoint(env: "PORT")
-    .WithReference(personalizationDb)
-    .WithEnvironment("BEHAVIOR_LOG_DIR", behaviorLogDir)
-    .WaitFor(personalizationDb);
+// 049: WebApp checkout girişi Checkout.Orchestrator'a POST eder → adres çözümü için referans.
+web.WithReference(checkoutOrchestrator);
 
 await builder.Build().RunAsync();

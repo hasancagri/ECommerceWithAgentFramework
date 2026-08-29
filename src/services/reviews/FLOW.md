@@ -8,8 +8,8 @@ AYRI worker'da async koşar, ihlalde yorumu gizler ve vitrin özetini Storefront
 
 ## Süreç
 
-1. **Yorum yalnız satın-alanlar tarafından yazılır.** Order'a           `(OrderPurchaseClientProxy`
-   senkron gRPC ile kanıt sorulur; kanal yoksa fail-closed RED.          ` → HasConfirmedPurchaseAsync)`
+1. **Yorum yalnız satın-alanlar tarafından yazılır.** Kanıt lokal       `(ReviewsEventHandlers ← OrderCompleted`
+   read-model'den (OrderCompleted event-fed); yoksa RED.                 ` → PurchasedProduct)`
 2. **Kullanıcı × ürün için tek yorum.** Uygulama önce kontrol eder,     `(SubmitReviewCommandHandler)`
    son sözü Marten unique index söyler (yarış kaybedeni nazik hata).
 3. **Yorum Visible durumda doğar** — puan 1-5 tam, metin ≤2000, ad      `(Review.Create)`

@@ -5,39 +5,29 @@ namespace WebApp.Services;
 
 public class OrderService(
     IOrderRefitService orderService,
-    PaymentService paymentService,
+    ICheckoutRefitService checkoutService,
     ILogger<OrderService> logger)
 {
+    // Sipariş geçmişi tarihleri UTC saklanır (Marten audit) → gösterim için yerel saate (Türkiye) çevrilir.
+    private static readonly TimeZoneInfo TurkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+
+    // 049: checkout artık ayrı Checkout.Orchestrator'a gider. Payment ön-yaratımı KALKTI — orchestrator
+    // tek-faz mock ödemeyi (Charge, pivot) + stok commit + onay + sepet temizliği saga'yla yürütür.
+    // WebApp yalnız seçili adres+kart+kalemleri POST eder, 202 alır; süreç arka planda ilerler (FR-027).
     public async Task<ServiceResult> CreateOrder(CreateOrderViewModel viewModel)
     {
-        // 1) Once odeme: client dogrudan Payment'a (kullanici token'i).
-        // 023: PAN/CVV yok; secili kayitli kartin gorunur alanlari doldurulur (Payment zaten yalniz
-        // Amount kullanir). CardNumber = son 4 hane; CVV bos.
         var card = viewModel.SelectedCard!;
-        var paymentRequest = new CreatePaymentRequest(
-            card.Last4,
-            card.Label ?? card.Brand,
-            $"{card.ExpiryMonth:D2}/{card.ExpiryYear}",
-            string.Empty,
-            viewModel.TotalPrice);
-
-        var paymentResult = await paymentService.CreatePayment(paymentRequest);
-        if (paymentResult.IsFail)
-            return ServiceResult.Error(paymentResult.Fail!);
-
-        // 2) Sonra siparis: donen paymentId + secili kayitli adres ile.
         var selected = viewModel.SelectedAddress!;
-        var address = new AddressDto(selected.Province, selected.District,
-            selected.Street, selected.ZipCode, selected.Line);
 
-        var orderItems = viewModel.OrderItems
-            .Select(x => new OrderItemDto(x.ProductId, x.ProductName, x.UnitPrice, x.Quantity))
-            .ToList();
+        var request = new StartCheckoutRequest(
+            Items: viewModel.OrderItems
+                .Select(x => new CheckoutItemRequest(x.ProductId, x.Quantity, x.ProductName, x.UnitPrice))
+                .ToList(),
+            Address: new CheckoutAddressRequest(selected.Province, selected.District, selected.Street, selected.ZipCode, selected.Line),
+            CardRef: card.Id.ToString(),
+            Installments: 1);
 
-        var createOrderRequest = new CreateOrderRequest(
-            address, paymentResult.Data, orderItems);
-
-        var response = await orderService.CreateOrder(createOrderRequest);
+        var response = await checkoutService.StartCheckout(request);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -45,7 +35,7 @@ public class OrderService(
                 return ServiceResult.FailFromProblemDetails(response.Error);
 
             logger.LogProblemDetails(response.Error);
-            return ServiceResult.Error("An error occurred while creating the order");
+            return ServiceResult.Error("An error occurred while starting checkout");
         }
 
         return ServiceResult.Success();
@@ -76,8 +66,12 @@ public class OrderService(
                 _ => ("Bilinmiyor", "bg-secondary")
             };
 
+            var localCreated = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.SpecifyKind(orderResponse.CreatedTime, DateTimeKind.Utc), TurkeyTimeZone);
+
             var newOrderHistory =
-                new OrderHistoryViewModel(orderResponse.CreatedTime.ToLongDateString(),
+                new OrderHistoryViewModel(
+                    $"{localCreated.ToLongDateString()} {localCreated.ToShortTimeString()}",
                     orderResponse.TotalPrice.ToString("C"),
                     statusText,
                     badgeClass,

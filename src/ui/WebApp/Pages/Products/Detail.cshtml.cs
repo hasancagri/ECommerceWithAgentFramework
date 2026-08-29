@@ -45,17 +45,17 @@ public class DetailModel(
         Family = await storefrontService.GetFamilyAsync(id);
 
         // 042: ProductViewed — alanlar render verisinden denormalize (FR-001).
-        var (anonymousId, sessionId, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
+        var (anonymousId, _, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
         behaviorLog.Enqueue(new BehaviorEvent
         {
             EventType = "ProductViewed",
             UserId = userId,
             AnonymousId = anonymousId,
             ProductId = Product.ProductId,
-            Brand = Product.Brand,
+            // 052: kişiselleştirme sinyali "Brand" alanı — kitapta birincil yazar adıyla beslenir.
+            Brand = Product.Authors.FirstOrDefault()?.Name,
             Category = Product.Category,
             Price = Product.Price,
-            SessionId = sessionId,
         });
 
         return Page();

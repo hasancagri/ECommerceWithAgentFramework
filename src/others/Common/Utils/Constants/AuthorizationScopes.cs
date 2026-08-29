@@ -13,6 +13,10 @@ public static class AuthorizationScopes
     public const string OrderRead = "order.read";
     public const string OrderWrite = "order.write";
 
+    // checkout.orchestrator (049): checkout giriş endpoint'i kullanıcı scope'u (tıkla/yaz aynı süreç).
+    // Broker komut handler'ları scope-guard DEĞİL (HttpContext yok); yalnız HTTP giriş korunur.
+    public const string CheckoutWrite = "checkout.write";
+
     // payment.api
     public const string PaymentRead = "payment.read";
     public const string PaymentWrite = "payment.write";
@@ -39,4 +43,8 @@ public static class AuthorizationScopes
     // identity (030 RBAC): IdP rol/scope/kullanici yonetim yuzeyi. Downstream servis zorlamaz;
     // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.
     public const string IdentityRolesManage = "identity.roles.manage";
+
+    // personalization.api (048): gezinme sinyali ingest ucu. WebApp (BFF) client_credentials
+    // MAKINE kimligiyle sunar (anonim gezinme user token tasimaz); son-kullanici kimligi payload'da.
+    public const string PersonalizationIngest = "personalization.ingest";
 }
