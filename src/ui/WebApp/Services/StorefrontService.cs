@@ -7,10 +7,11 @@ public class StorefrontService(
 {
     public async Task<ServiceResult<PagedProductListViewModel>> GetProductsAsync(
         int pageNumber = 1, int pageSize = 12, Guid? categoryId = null,
-        Guid? authorId = null, Guid? publisherId = null, string[]? specs = null)
+        Guid? authorId = null, Guid? publisherId = null, string? q = null, string[]? specs = null)
     {
         var productsAsResult = await storefrontRefitService.GetProducts(pageNumber, pageSize, categoryId,
-            authorId, publisherId, specs is { Length: > 0 } ? specs : null);
+            authorId, publisherId, string.IsNullOrWhiteSpace(q) ? null : q,
+            specs is { Length: > 0 } ? specs : null);
 
         // 011 FR-006: boş vitrin / aralık dışı sayfa API'de NotFound(400) döner; UI boş durum gösterir.
         if (productsAsResult.StatusCode == HttpStatusCode.BadRequest)

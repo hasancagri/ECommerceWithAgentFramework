@@ -16,6 +16,8 @@ public static class GetStorefrontProductList
         // 052: marka filtresi → yazar (Id ile) + yayınevi (Id ile).
         Guid? AuthorId = null,
         Guid? PublisherId = null,
+        // 052-arama: serbest metin — kitap adı / yazar adı / yayınevi (case-insensitive, herhangi biri).
+        string? Q = null,
         // 043: "Attribute|Option" anahtarları; aynı attribute OR, farklı attribute AND (FR-008).
         string[]? Specs = null)
     {
@@ -42,6 +44,17 @@ public static class GetStorefrontProductList
             source = source.Where(x => x.PublisherId == publisherId);
 
         return source;
+    }
+
+    // 052-arama: saf, test edilebilir serbest-metin eşleşmesi — kitap adı / yazar adı / yayınevi
+    // (case-insensitive substring). Bellekte uygulanır (jsonb çeviri riski yok; ~yüzlerce satır ölçeği).
+    public static bool MatchesSearch(StorefrontView v, string q)
+    {
+        var term = q.Trim();
+        if (term.Length == 0) return true;
+        return (v.Name?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+               || (v.Publisher?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+               || v.Authors.Any(a => a.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
     }
 
     // 043: "Attribute|Option" anahtarlarını attribute-gruplarına ayırır; geçersiz girdi yok sayılır
@@ -163,6 +176,11 @@ public static class GetStorefrontProductList
             // 045: filtreleme DB'de (test edilmiş LINQ/jsonb SQL); aile gruplama + temsilci bellekte
             // (yüzlerce ürün ölçeği — DISTINCT ON raw SQL 043 kırılganlığını geri getirirdi, ELENDİ).
             var members = await filtered.ToListAsync(ct);
+ 
+            // 052-arama: serbest metin filtresi bellekte (grup/sayfalama ÖNCESİ; ad/yazar/yayınevi).
+            if (!string.IsNullOrWhiteSpace(query.Q))
+                members = members.Where(m => MatchesSearch(m, query.Q!)).ToList();
+
             var groups = GroupToRepresentatives(members)
                 .OrderBy(g => g.Representative.Name)
                 .ToList();
@@ -198,12 +216,14 @@ public static class GetStorefrontProductListEndpoint
                 string? category = null,
                 Guid? authorId = null,
                 Guid? publisherId = null,
+                // 052-arama: serbest metin (kitap adı/yazar/yayınevi).
+                string? q = null,
                 // 043: çoklu spec anahtarı (?spec=Renk|Siyah&spec=Materyal|Çelik)
                 [FromQuery(Name = "spec")] string[]? spec = null) =>
             {
                 var result = await bus.InvokeAsync<FeaturePagedResultModel<GetStorefrontProductList.StorefrontProductResponse>>(
                     new GetStorefrontProductList.GetStorefrontProductListQuery(
-                        page, pageSize, categoryId, category, authorId, publisherId, spec));
+                        page, pageSize, categoryId, category, authorId, publisherId, q, spec));
 
                 // Sayfa meta'sı (toplam kayıt/sayfa) istemciye lazım; Data yerine result'ın tamamı döner.
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);

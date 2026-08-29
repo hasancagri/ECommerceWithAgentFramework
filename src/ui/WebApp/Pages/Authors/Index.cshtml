@@ -1,0 +1,23 @@
+@page
+@model WebApp.Pages.Authors.IndexModel
+@{
+    ViewData["Title"] = "Yazarlar";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Yazarlar</h2>
+
+    @if (Model.Authors.Count == 0)
+    {
+        <div class="alert alert-warning">Henüz yazar yok.</div>
+    }
+    else
+    {
+        <div class="kp-index-grid">
+            @foreach (var author in Model.Authors)
+            {
+                <a class="kp-index-item" asp-page="/Products/Index" asp-route-authorId="@author.Id">@author.Name</a>
+            }
+        </div>
+    }
+</div>

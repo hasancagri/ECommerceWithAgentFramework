@@ -6,7 +6,16 @@
 }
 
 <div class="container mt-5">
-    <h2 class="mb-4">Tüm Ürünler</h2>
+    <h2 class="mb-4">
+        @if (Model.SearchQuery is not null)
+        {
+            <span>"@Model.SearchQuery" için sonuçlar</span>
+        }
+        else
+        {
+            <span>Tüm Kitaplar</span>
+        }
+    </h2>
 
     @* 016 US1/US2: kategori+marka filtreleri (AND) — seçenekler gerçek veriden; seçim yeni GET ile 1. sayfadan başlar. *@
     <form method="get" class="row g-2 mb-4">
@@ -43,7 +52,7 @@
                 }
             </select>
         </div>
-        @if (Model.SelectedCategoryId is not null || Model.SelectedAuthorId is not null || Model.SelectedPublisherId is not null || Model.SelectedSpecs.Count > 0)
+        @if (Model.SelectedCategoryId is not null || Model.SelectedAuthorId is not null || Model.SelectedPublisherId is not null || Model.SearchQuery is not null || Model.SelectedSpecs.Count > 0)
         {
             <div class="col-auto">
                 <a class="btn btn-outline-secondary" href="/Products">Temizle</a>

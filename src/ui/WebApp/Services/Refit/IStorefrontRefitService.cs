@@ -8,6 +8,7 @@ public interface IStorefrontRefitService
     [Get("/api/v1/storefront/products")]
     Task<ApiResponse<StorefrontProductPagedDto>> GetProducts(
         int page, int pageSize, Guid? categoryId = null, Guid? authorId = null, Guid? publisherId = null,
+        string? q = null,
         [Query(CollectionFormat.Multi)] [AliasAs("spec")] string[]? spec = null);
 
     [Get("/api/v1/storefront/products/filters")]

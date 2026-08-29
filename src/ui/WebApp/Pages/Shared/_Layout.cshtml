@@ -12,81 +12,100 @@
     <link rel="stylesheet" href="~/WebApp.styles.css" asp-append-version="true"/>
 </head>
 <body>
-<header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-        <div class="container">
-            <a class="navbar-brand" asp-area="" asp-page="/Index">WebApp</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-page="/Index">Ana Sayfa</a>
+<header class="kp-header">
+    @* Marka barı: logo + merkezi arama + hesap/sepet (kitapyurdu üst bant). *@
+    <div class="kp-topbar">
+        <div class="container d-flex align-items-center gap-3 py-2">
+            <a class="kp-brand" asp-area="" asp-page="/Index">
+                <span class="kp-brand-mark">📚</span> Kitap Dünyası
+            </a>
+
+            @* Arama kutusu — görsel kimlik; metin-arama backend'i ayrı feature (şimdilik /Products'a gider). *@
+            <form class="kp-search flex-grow-1" method="get" asp-page="/Products/Index" role="search">
+                <input type="search" name="q" class="form-control" placeholder="Kitap, yazar veya yayınevi ara..."
+                       aria-label="Ara"/>
+                <button type="submit" class="kp-search-btn" aria-label="Ara">🔍</button>
+            </form>
+
+            <ul class="navbar-nav flex-row align-items-center gap-3 kp-account">
+                @if (User.Identity!.IsAuthenticated)
+                {
+                    @await Component.InvokeAsync("BasketCountdown")
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            👤 @User.Identity.Name
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" asp-page="/Basket/Index">Sepetim</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-page="/Account/Profile">Profilim</a>
+                            </li>
+                            @* 030 RBAC: admin'e yönetim paneli girişi (IdP /Admin/Roles). *@
+                            @if (User.IsInRole("admin"))
+                            {
+                                <li>
+                                    <a class="dropdown-item" href="https://localhost:5001/Admin/Roles">Yönetim Paneli</a>
+                                </li>
+                                @* 032: admin metinle merchant onboarding ekrani. *@
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Admin/Onboarding">Merchant Onboarding</a>
+                                </li>
+                            }
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-page="/Auth/SignIn" asp-page-handler="SignOut">Çıkış Yap</a>
+                            </li>
+                        </ul>
                     </li>
-                </ul>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="kp-btn-orange" asp-area="" asp-page="/Auth/SignIn">Giriş Yap</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="kp-btn-orange" asp-area="" asp-page="/Auth/SignUp">Üye Ol</a>
+                    </li>
+                }
+                @* Sepet ikonu — her zaman sağ üst köşede (anon tıklarsa login'e yönlendirilir). *@
+                <li class="nav-item">
+                    <a class="nav-link kp-basket" asp-page="/Basket/Index" title="Sepetim">
+                        🛒 <span class="d-none d-lg-inline">Sepetim</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 
-                <ul class="navbar-nav">
-                    @if (User.Identity!.IsAuthenticated)
-                    {
-                        @await Component.InvokeAsync("BasketCountdown")
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                @User.Identity.Name
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-
-
-                                <li>
-                                    <a class="dropdown-item" asp-page="/Basket/Index">Sepetim</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-page="/Account/Profile">Profilim</a>
-                                </li>
-                                @* 030 RBAC: admin'e yönetim paneli girişi (IdP /Admin/Roles). *@
-                                @if (User.IsInRole("admin"))
-                                {
-                                    <li>
-                                        <a class="dropdown-item" href="https://localhost:5001/Admin/Roles">Yönetim Paneli</a>
-                                    </li>
-                                    @* 032: admin metinle merchant onboarding ekrani. *@
-                                    <li>
-                                        <a class="dropdown-item" asp-page="/Admin/Onboarding">Merchant Onboarding</a>
-                                    </li>
-                                }
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-page="/Auth/SignIn" asp-page-handler="SignOut">Çıkış Yap</a>
-                                </li>
-                            </ul>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Auth/SignIn">Giriş Yap</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Auth/SignUp">Kayıt Ol</a>
-                        </li>
-                    }
-                </ul>
-            </div>
+    @* Kategori şeridi (kitapyurdu ikincil menü). *@
+    <nav class="kp-catnav">
+        <div class="container d-flex align-items-center gap-4 py-2">
+            <a asp-area="" asp-page="/Index">Ana Sayfa</a>
+            <a asp-area="" asp-page="/Products/Index">Tüm Kitaplar</a>
+            <a asp-area="" asp-page="/Authors/Index">Yazarlar</a>
+            <a asp-area="" asp-page="/Publishers/Index">Yayınevleri</a>
         </div>
     </nav>
 </header>
+
 <div class="container">
     <main role="main" class="pb-3">
-
-
         <partial name="_Error"/>
         <partial name="_Success"/>
         @RenderBody()
     </main>
 </div>
+
+<footer class="kp-footer mt-5">
+    <div class="container py-4 text-center">
+        <div class="kp-footer-brand mb-1"><span>📚</span> Kitap Dünyası</div>
+        <small class="text-muted">Kitaplar, yazarlar ve yayınevleri — tek çatı altında.</small>
+    </div>
+</footer>
 
 <partial name="_ChatWidget"/>
 

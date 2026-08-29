@@ -1,93 +1,68 @@
 @model WebApp.ViewModel.StorefrontProductViewModel
 
-@* 011: ana sayfa ve Tüm Ürünler aynı kartı çizer (FR-008); 006 rozet kuralları korunur. *@
+@* 011: ana sayfa ve Tüm Ürünler aynı kartı çizer (FR-008); 006 rozet kuralları korunur.
+   052-görsel: kitapyurdu kitap-kartı hiyerarşisi — kapak → başlık → yazar → yayınevi → puan → fiyat. *@
 <div class="col">
-    <div class="card h-100 shadow-lg border-0">
-        <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId">
+    <div class="card h-100 book-card border-0">
+        <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId" class="book-card-cover">
             <img
                 src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/NoImage.jpeg" : Model.ImageUrl)"
-                class="card-img-top product-thumb" alt="@Model.Name">
-        </a>
-
-        <div class="card-body">
-            <h5 class="card-title">@Model.Name</h5>
-            @* 044: yildiz rozeti — yorumsuz urunde cizilmez (FR-006). *@
-            @if (Model.RatingCount > 0 && Model.RatingAverage is not null)
+                class="product-thumb" alt="@Model.Name">
+            @* FR-009: stok null = bilinmiyor, rozet yok; kapak köşesinde durum. *@
+            @if (Model.IsInStock == false)
             {
-                <p class="card-text mb-1">
-                    <span class="text-warning">★</span>
-                    <strong>@Model.RatingAverage.Value.ToString("0.0")</strong>
-                    <small class="text-muted">(@Model.RatingCount)</small>
-                </p>
+                <span class="badge bg-secondary book-card-stock">Stokta Yok</span>
             }
-            @* 045: varyant ailesi rozeti — >1 uye varsa cizilir (FR-008). *@
+            @* 045: varyant ailesi rozeti — >1 uye varsa kapak köşesinde. *@
             @if (Model.VariantCount > 1)
             {
-                <p class="card-text mb-1">
-                    <span class="badge bg-primary-subtle text-primary border">@Model.VariantCount varyant</span>
-                </p>
+                <span class="badge text-bg-light border book-card-variant">@Model.VariantCount varyant</span>
             }
-            <p class="card-text">
-                @* FR-009: stok null = bilinmiyor, rozet yok; 0 = stokta yok; >0 = stokta. *@
-                @if (Model.IsInStock == true)
-                {
-                    <span class="badge bg-success">Stokta</span>
-                }
-                else if (Model.IsInStock == false)
-                {
-                    <span class="badge bg-secondary">Stokta Yok</span>
-                }
-                @* 016: kategori rozeti; null/boş = Catalog raporlamadı, çizilmez. *@
-                @* Id varsa rozet o kategoriye filtreli /Products'a link olur (tek facet). *@
-                @if (!string.IsNullOrEmpty(Model.Category))
-                {
-                    @if (Model.CategoryId is not null)
-                    {
-                        <a asp-page="/Products/Index" asp-route-categoryId="@Model.CategoryId"
-                           class="badge bg-info text-decoration-none">@Model.Category</a>
-                    }
-                    else
-                    {
-                        <span class="badge bg-info">@Model.Category</span>
-                    }
-                }
-            </p>
-            <p class="card-text">@Model.TruncateDescription(100)</p>
+        </a>
+
+        <div class="card-body d-flex flex-column">
+            <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId" class="book-card-title" title="@Model.Name">@Model.Name</a>
+
             @* 052: yazar(lar) — her biri o yazara filtreli /Products'a link (çok-yazar). *@
             @if (Model.Authors.Count > 0)
             {
-                <p class="card-text">
-                    <small class="text-muted">Yazar:
-                        @for (var i = 0; i < Model.Authors.Count; i++)
-                        {
-                            var author = Model.Authors[i];
-                            <a asp-page="/Products/Index" asp-route-authorId="@author.Id"><strong>@author.Name</strong></a>@(i < Model.Authors.Count - 1 ? ", " : "")
-                        }
-                    </small>
-                </p>
+                <div class="book-card-author">
+                    @for (var i = 0; i < Model.Authors.Count; i++)
+                    {
+                        var author = Model.Authors[i];
+                        <a asp-page="/Products/Index" asp-route-authorId="@author.Id">@author.Name</a>@(i < Model.Authors.Count - 1 ? ", " : "")
+                    }
+                </div>
             }
+
             @* 052: yayınevi — o yayınevine filtreli link. *@
             @if (!string.IsNullOrEmpty(Model.Publisher))
             {
-                <p class="card-text">
-                    <small class="text-muted">Yayınevi:
-                        @if (Model.PublisherId is not null)
-                        {
-                            <a asp-page="/Products/Index" asp-route-publisherId="@Model.PublisherId"><strong>@Model.Publisher</strong></a>
-                        }
-                        else
-                        {
-                            <strong>@Model.Publisher</strong>
-                        }
-                    </small>
-                </p>
+                <div class="book-card-publisher">
+                    @if (Model.PublisherId is not null)
+                    {
+                        <a asp-page="/Products/Index" asp-route-publisherId="@Model.PublisherId">@Model.Publisher</a>
+                    }
+                    else
+                    {
+                        <span>@Model.Publisher</span>
+                    }
+                </div>
             }
-            <p class="card-text">
-                <strong>@Model.Price.ToString("C")</strong>
-            </p>
-        </div>
-        <div class="card-footer">
-            <a asp-page="/Products/Detail" asp-route-id="@Model.ProductId" class="btn btn-primary mt-2">Detay</a>
+
+            @* 044: yildiz rozeti — yorumsuz urunde cizilmez (FR-006). *@
+            @if (Model.RatingCount > 0 && Model.RatingAverage is not null)
+            {
+                <div class="book-card-rating">
+                    <span class="text-warning">★</span>
+                    <strong>@Model.RatingAverage.Value.ToString("0.0")</strong>
+                    <small class="text-muted">(@Model.RatingCount)</small>
+                </div>
+            }
+
+            <div class="mt-auto pt-2">
+                <div class="book-card-price">@Model.Price.ToString("C")</div>
+            </div>
         </div>
     </div>
 </div>

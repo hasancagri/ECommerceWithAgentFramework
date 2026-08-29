@@ -27,11 +27,193 @@ html {
   text-align: start;
 }
 
-/* Ürün kartı görselleri sabit, ölçülü bir yükseklikte tutulur; contain ile ürün kırpılmaz. */
+/* 052-görsel: kitapyurdu tema paleti — bordo aksan. Tek yerden swap. */
+:root {
+  --kp-accent: #b3122a;        /* kitapyurdu bordo/kırmızı */
+  --kp-accent-dark: #8f0e21;
+  --kp-price: #b3122a;
+  --kp-ink: #2b2b2b;
+  --kp-bg: #f4f4f4;
+  --kp-orange: #f39200;        /* giriş/üye ol vurgu butonu */
+  --kp-orange-dark: #d97e00;
+}
+
+body {
+  background: var(--kp-bg);
+  color: var(--kp-ink);
+}
+
+/* --- Header / kitapyurdu üst bant --- */
+.kp-topbar {
+  background: var(--kp-accent);
+  color: #fff;
+}
+.kp-brand {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.kp-brand:hover { color: #fff; opacity: .92; }
+.kp-brand-mark { font-size: 1.4rem; }
+
+.kp-search {
+  position: relative;
+  max-width: 620px;
+}
+.kp-search .form-control {
+  border: none;
+  border-radius: 999px;
+  padding-right: 3rem;
+  height: 42px;
+}
+.kp-search-btn {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: var(--kp-accent-dark);
+  color: #fff;
+  line-height: 1;
+}
+
+/* Giriş Yap / Üye Ol — turuncu vurgu butonları (marka barında). */
+.kp-btn-orange {
+  display: inline-block;
+  background: var(--kp-orange);
+  color: #fff;
+  font-weight: 700;
+  font-size: .85rem;
+  text-decoration: none;
+  padding: .4rem .9rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.kp-btn-orange:hover { background: var(--kp-orange-dark); color: #fff; }
+
+.kp-account .nav-link { color: #fff; white-space: nowrap; }
+.kp-account .nav-link:hover { color: #fff; opacity: .9; }
+.kp-account .dropdown-menu .dropdown-item { color: var(--kp-ink); }
+
+/* Kategori şeridi. */
+.kp-catnav {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+  margin-bottom: 1.5rem;
+  font-size: .9rem;
+}
+.kp-catnav a {
+  color: var(--kp-ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+.kp-catnav a:hover { color: var(--kp-accent); }
+
+/* Footer. */
+.kp-footer {
+  background: #fff;
+  border-top: 3px solid var(--kp-accent);
+}
+.kp-footer-brand { font-weight: 800; color: var(--kp-accent); }
+
+/* --- Yazarlar / Yayınevleri dizin sayfası --- */
+.kp-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: .5rem;
+}
+.kp-index-item {
+  display: block;
+  padding: .55rem .8rem;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: .4rem;
+  color: var(--kp-ink);
+  text-decoration: none;
+  font-size: .9rem;
+  transition: border-color .12s ease, color .12s ease;
+}
+.kp-index-item:hover {
+  border-color: var(--kp-accent);
+  color: var(--kp-accent);
+}
+
+/* --- Kitap kartı (kitapyurdu hiyerarşisi) --- */
+.book-card {
+  background: #fff;
+  border-radius: .5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+  transition: transform .15s ease, box-shadow .15s ease;
+  overflow: hidden;
+}
+.book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+}
+
+/* Kapak alanı: portre kitap kapağı, üstte konumlu rozetler. */
+.book-card-cover {
+  position: relative;
+  display: block;
+  padding: 1rem 1rem .5rem;
+}
+/* Kitap kapağı portre (~2:3); contain ile kırpılmaz, ortalanır. */
 .product-thumb {
-  height: 170px;
+  display: block;
+  width: 100%;
+  height: 230px;
   object-fit: contain;
-  background-color: #f8f9fa;
+  background-color: #fff;
+}
+.book-card-stock,
+.book-card-variant {
+  position: absolute;
+  top: .6rem;
+  font-size: .7rem;
+}
+.book-card-stock { right: .6rem; }
+.book-card-variant { left: .6rem; }
+
+/* Başlık: en çok 2 satır, tıklanabilir, koyu. */
+.book-card-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
+  font-size: .95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #212529;
+  text-decoration: none;
+}
+.book-card-title:hover { color: var(--kp-accent); }
+
+/* Yazar / yayınevi: sessiz, küçük; linkler aksanla vurgulanır. */
+.book-card-author,
+.book-card-publisher {
+  font-size: .8rem;
+  color: #6c757d;
+  margin-top: .25rem;
+  line-height: 1.25;
+}
+.book-card-author a { color: #495057; text-decoration: none; }
+.book-card-author a:hover { color: var(--kp-accent); text-decoration: underline; }
+.book-card-publisher a { color: #6c757d; text-decoration: none; }
+.book-card-publisher a:hover { color: var(--kp-accent); text-decoration: underline; }
+
+.book-card-rating { font-size: .85rem; margin-top: .4rem; }
+
+/* Fiyat: kartın en güçlü öğesi. */
+.book-card-price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--kp-price);
 }
 
 /* Detay sayfası görseli ölçülü tutulur; contain ile ürün kırpılmaz, ortalanır. */

@@ -1,0 +1,23 @@
+@page
+@model WebApp.Pages.Publishers.IndexModel
+@{
+    ViewData["Title"] = "Yayınevleri";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Yayınevleri</h2>
+
+    @if (Model.Publishers.Count == 0)
+    {
+        <div class="alert alert-warning">Henüz yayınevi yok.</div>
+    }
+    else
+    {
+        <div class="kp-index-grid">
+            @foreach (var publisher in Model.Publishers)
+            {
+                <a class="kp-index-item" asp-page="/Products/Index" asp-route-publisherId="@publisher.Id">@publisher.Name</a>
+            }
+        </div>
+    }
+</div>
