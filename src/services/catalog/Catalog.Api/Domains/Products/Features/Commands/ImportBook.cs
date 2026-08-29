@@ -37,7 +37,12 @@ public static class ImportBook
             var authors = await GetOrCreateAuthorsAsync(session, cmd.Authors, ct);
             var publisher = await GetOrCreatePublisherAsync(session, cmd.Publisher, ct);
             var mid = await GetOrCreateCategoryAsync(session, cmd.CategoryMid, parentId: null, ct);
-            var leaf = await GetOrCreateCategoryAsync(session, cmd.CategoryLeaf, parentId: mid.Id, ct);
+            // leaf == mid (kategori sadeleştirmesi sonrası olağan): aynı transaction'da ikinci get-or-create
+            // commit olmamış mid'i göremez → çift Store → Category NormalizedName unique index ihlali.
+            // Aynıysa mid'i doğrudan kullan (ikinci kayıt açma).
+            var leaf = NameNormalization.Normalize(cmd.CategoryLeaf) == mid.NormalizedName
+                ? mid
+                : await GetOrCreateCategoryAsync(session, cmd.CategoryLeaf, parentId: mid.Id, ct);
 
             // Fiyat: null → 0 (taslak kalır). Money.Create negatifte null döner; import negatif taşımaz.
             var price = Money.Create(cmd.PriceTry ?? 0m) ?? Money.Zero();

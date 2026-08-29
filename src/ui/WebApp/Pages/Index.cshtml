@@ -34,21 +34,4 @@
             </div>
         }
     </section>
-
-    @* Kategori kuşakları. *@
-    @foreach (var band in Model.Bands)
-    {
-        <section class="kp-band">
-            <div class="kp-band-head">
-                <h3 class="kp-band-title">@band.CategoryName</h3>
-                <a asp-page="/Products/Index" asp-route-categoryId="@band.CategoryId" class="kp-band-more">Tümünü Gör →</a>
-            </div>
-            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
-                @foreach (var product in band.Books)
-                {
-                    <partial name="_ProductCard" model="product"/>
-                }
-            </div>
-        </section>
-    }
 </div>

@@ -1,0 +1,23 @@
+@page
+@model WebApp.Pages.Categories.IndexModel
+@{
+    ViewData["Title"] = "Tüm Kategoriler";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Tüm Kategoriler</h2>
+
+    @if (Model.Categories.Count == 0)
+    {
+        <div class="alert alert-warning">Henüz kategori yok.</div>
+    }
+    else
+    {
+        <div class="kp-index-grid">
+            @foreach (var category in Model.Categories)
+            {
+                <a class="kp-index-item" asp-page="/Products/Index" asp-route-categoryId="@category.Id">@category.Name</a>
+            }
+        </div>
+    }
+</div>
