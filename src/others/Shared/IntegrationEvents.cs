@@ -12,13 +12,19 @@ public static class IntegrationEvents
     // Additive + opsiyonel: eski yayıncı/tüketici kırılmaz; null = özellik bilgisi yok (boş sayılır).
     public record ProductSpec(string Attribute, string Option);
 
+    // 052: kitap künyesi — yazar (Id+ad çifti; paralel-liste kırılganlığı olmadan taşınır).
+    public record AuthorRef(Guid Id, string Name);
+
+    // 052: kırıcı evrim (tek tüketici Storefront, aynı PR, DB sıfırdan seed). BrandId/Brand çıktı;
+    // çok-yazar (Authors) + tek yayınevi (PublisherId+Publisher, fat: tüketici lookup yapmaz) geldi.
     public record ProductChangedEvent(
         Guid ProductId,
         string Name,
         string Description,
         decimal Price,
-        Guid BrandId,
-        string Brand,
+        List<AuthorRef> Authors,
+        Guid PublisherId,
+        string Publisher,
         Guid CategoryId,
         string Category,
         string? ImageUrl,

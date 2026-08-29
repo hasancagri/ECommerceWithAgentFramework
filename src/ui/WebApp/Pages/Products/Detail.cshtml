@@ -34,8 +34,12 @@
             <div class="card shadow-lg border-0">
                 <div class="card-body">
 
-                    <h5 class="card-title">Marka</h5>
-                    <p class="card-text">@Model.Product.Brand</p>
+                    <h5 class="card-title">Yazar</h5>
+                    <p class="card-text">@(Model.Product.Authors.Count > 0 ? string.Join(", ", Model.Product.Authors.Select(a => a.Name)) : "—")</p>
+                    <hr>
+
+                    <h5 class="card-title">Yayınevi</h5>
+                    <p class="card-text">@(Model.Product.Publisher ?? "—")</p>
                     <hr>
 
                     <h5 class="card-title">Kategori</h5>

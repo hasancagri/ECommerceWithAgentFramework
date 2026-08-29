@@ -6,8 +6,10 @@ public record StorefrontProductDetailDto(
     string? Name,
     string? Description,
     decimal? Price,
-    string? Brand,
-    Guid? BrandId,
+    // 052: marka → çok-yazar + tek yayınevi.
+    List<AuthorRefDto> Authors,
+    string? Publisher,
+    Guid? PublisherId,
     string? Category,
     Guid? CategoryId,
     string? ImageUrl,

@@ -9,7 +9,8 @@ public static class ImportBook
     public record ImportBookCommand(
         string Isbn,          // kimlik; ProductId deterministik türetilir; Gtin+Sku+barkod
         string Title,
-        string Brand,         // dataset brand alanı verbatim (get-or-create)
+        string[] Authors,     // 052: çok-yazar (her ad get-or-create); en az bir (İş1 "Unknown" fallback)
+        string Publisher,     // 052: tek yayınevi (İş1 uydurma, ISBN-kararlı; get-or-create)
         decimal? PriceTry,    // null = fiyatsız → taslak kalır
         string? ImageUrl,
         string CategoryMid,
@@ -33,7 +34,8 @@ public static class ImportBook
             IMessageBus bus,
             CancellationToken ct)
         {
-            var brand = await GetOrCreateBrandAsync(session, cmd.Brand, ct);
+            var authors = await GetOrCreateAuthorsAsync(session, cmd.Authors, ct);
+            var publisher = await GetOrCreatePublisherAsync(session, cmd.Publisher, ct);
             var mid = await GetOrCreateCategoryAsync(session, cmd.CategoryMid, parentId: null, ct);
             var leaf = await GetOrCreateCategoryAsync(session, cmd.CategoryLeaf, parentId: mid.Id, ct);
 
@@ -54,7 +56,8 @@ public static class ImportBook
             }
 
             product.SetIdentifiers(cmd.Isbn, gtin: cmd.Isbn, manufacturerPartNumber: null);
-            product.SetBrand(brand.Id);
+            product.SetAuthors(authors.Select(a => a.Id));
+            product.SetPublisher(publisher.Id);
             product.SetImage(cmd.ImageUrl);
             // Primary kategori = leaf; re-run'da zaten atanmışsa çift-atama guard'ı sessiz reddeder.
             product.AssignToCategory(leaf.Id, isFeatured: false, displayOrder: 0);
@@ -69,7 +72,8 @@ public static class ImportBook
                 await bus.PublishAsync(new IntegrationEvents.ProductAdded(cmd.Isbn, product.Id, InitialStock));
                 await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
                     product.Id, product.Name, "", product.Price.Amount,
-                    brand.Id, brand.Name, leaf.Id, leaf.Name,
+                    authors.Select(a => new IntegrationEvents.AuthorRef(a.Id, a.Name)).ToList(),
+                    publisher.Id, publisher.Name, leaf.Id, leaf.Name,
                     product.ImageUrl, IsDeleted: false));
             }
 
@@ -82,17 +86,42 @@ public static class ImportBook
 
 
 
-        // Brand get-or-create (NormalizedName teklik; 016 düzeni). Verbatim ad — yorumlanmaz.
-        private static async Task<Brand> GetOrCreateBrandAsync(IDocumentSession session, string name, CancellationToken ct)
+        // 052: Author get-or-create listesi (her ad NormalizedName teklik; sıra korunur). Verbatim ad.
+        // İş1 boş yazarı ["Unknown"]'a çevirdi → Create hep başarılı. Aynı normalize ad tek Author'a düşer.
+        private static async Task<List<Author>> GetOrCreateAuthorsAsync(
+            IDocumentSession session, string[] names, CancellationToken ct)
+        {
+            var result = new List<Author>();
+            var seen = new HashSet<string>();
+            foreach (var name in names)
+            {
+                var normalized = NameNormalization.Normalize(name);
+                if (!seen.Add(normalized))
+                    continue; // aynı kitapta yinelenen yazar adı tekilleşir
+                var existing = result.FirstOrDefault(a => a.NormalizedName == normalized)
+                               ?? await session.Query<Author>().FirstOrDefaultAsync(a => a.NormalizedName == normalized, ct);
+                if (existing is null)
+                {
+                    existing = Author.Create(name).Data!;
+                    session.Store(existing);
+                }
+                result.Add(existing);
+            }
+            return result;
+        }
+
+        // 052: Publisher get-or-create (NormalizedName teklik; 4 uydurma ad get-or-create'le tekilleşir).
+        private static async Task<Publisher> GetOrCreatePublisherAsync(
+            IDocumentSession session, string name, CancellationToken ct)
         {
             var normalized = NameNormalization.Normalize(name);
-            var existing = await session.Query<Brand>().FirstOrDefaultAsync(b => b.NormalizedName == normalized, ct);
+            var existing = await session.Query<Publisher>().FirstOrDefaultAsync(p => p.NormalizedName == normalized, ct);
             if (existing is not null)
                 return existing;
 
-            var brand = Brand.Create(name).Data!; // İş1 boş brand'i "Unknown"a çevirdi; Create hep başarılı
-            session.Store(brand);
-            return brand;
+            var publisher = Publisher.Create(name).Data!;
+            session.Store(publisher);
+            return publisher;
         }
 
         // Category get-or-create ağacı (mid parent, leaf child). SetPublished(true) — tür ağacı görünür.

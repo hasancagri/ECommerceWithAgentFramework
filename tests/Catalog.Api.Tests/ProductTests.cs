@@ -191,15 +191,7 @@ public class ProductTests
 
     // --- ⊕ Ana repoya özgü metotlar (K6/K7 + kimlik alanları) ---
 
-    [Fact]
-    public void SetBrand_AssignsBrandId()
-    {
-        var product = NewProduct();
-        var brandId = Guid.NewGuid();
-
-        product.SetBrand(brandId).IsSuccess.ShouldBeTrue();
-        product.BrandId.ShouldBe(brandId);
-    }
+    // 052: SetBrand → SetAuthors/SetPublisher; kapsamı ProductAuthorsTests + ProductPublisherTests taşır.
 
     [Fact]
     public void SetImage_AssignsAndClearsUrl()

@@ -7,7 +7,8 @@ public static class CreateProduct
         string Description,
         decimal Price,
         string Sku,
-        Guid BrandId,
+        List<Guid> AuthorIds,
+        Guid PublisherId,
         Guid CategoryId,
         string? ImageUrl);
 
@@ -25,12 +26,22 @@ public static class CreateProduct
             IMessageBus bus,
             CancellationToken ct)
         {
-            // 016: marka ve kategori zorunludur ve var olmalıdır (doğum yalnız feed'den).
-            var brand = await session.LoadAsync<Brand>(cmd.BrandId, ct);
-            if (brand is null || brand.IsDeleted)
+            // 052: yazar(lar) ve yayınevi zorunludur ve var olmalıdır (doğum import get-or-create yolundan).
+            var authors = new List<Author>();
+            foreach (var authorId in (cmd.AuthorIds ?? []).Distinct())
+            {
+                var author = await session.LoadAsync<Author>(authorId, ct);
+                if (author is null || author.IsDeleted)
+                    return FeatureObjectResultModel<CreateProductResponse>.Error(new MessageItem
+                    { Property = nameof(cmd.AuthorIds), Code = CatalogResourceConstants.RECORD_NOT_FOUND });
+                authors.Add(author);
+            }
+
+            var publisher = await session.LoadAsync<Publisher>(cmd.PublisherId, ct);
+            if (publisher is null || publisher.IsDeleted)
                 return FeatureObjectResultModel<CreateProductResponse>.Error(new MessageItem
                 {
-                    Property = nameof(cmd.BrandId),
+                    Property = nameof(cmd.PublisherId),
                     Code = CatalogResourceConstants.RECORD_NOT_FOUND
                 });
 
@@ -67,7 +78,12 @@ public static class CreateProduct
             // Feed → model eşlemesi (data-model): Description iki alana aynı değerle yazılır.
             var product = Product.Create(cmd.Name, cmd.Sku, ProductType.Simple, price,
                 cmd.Description, cmd.Description);
-            product.SetBrand(cmd.BrandId);
+            var setAuthors = product.SetAuthors(authors.Select(a => a.Id));
+            if (!setAuthors.IsSuccess)
+                return FeatureObjectResultModel<CreateProductResponse>.Error(setAuthors.Messages);
+            var setPublisher = product.SetPublisher(cmd.PublisherId);
+            if (!setPublisher.IsSuccess)
+                return FeatureObjectResultModel<CreateProductResponse>.Error(setPublisher.Messages);
             product.SetImage(cmd.ImageUrl);
 
             var assign = product.AssignToCategory(cmd.CategoryId, isFeatured: false, displayOrder: 0);
@@ -85,7 +101,8 @@ public static class CreateProduct
             // 040 K2/K4: kontrat SABİT — decimal fiyat = Price.Amount, kategori = primary atama.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
                 product.Id, product.Name, product.FullDescription, product.Price.Amount,
-                brand.Id, brand.Name, category.Id, category.Name,
+                authors.Select(a => new IntegrationEvents.AuthorRef(a.Id, a.Name)).ToList(),
+                publisher.Id, publisher.Name, category.Id, category.Name,
                 product.ImageUrl, IsDeleted: false));
 
             return FeatureObjectResultModel<CreateProductResponse>.Ok(new CreateProductResponse { Id = product.Id });

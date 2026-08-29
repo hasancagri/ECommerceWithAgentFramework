@@ -23,7 +23,11 @@ builder.Services.AddMarten(opts =>
         // 016: NormalizedName teklik anahtarıdır (R4) — computed unique index son güvence.
         // Legacy Brand migrasyonu YOK (kullanıcı kararı): DB sıfırlanarak başlatılır, katalog feed'den dolar.
         opts.Schema.For<Category>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
-        opts.Schema.For<Brand>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+        // 052: Brand→Author rename + yeni Publisher — ikisi de NormalizedName teklik anahtarı (get-or-create güvencesi).
+        opts.Schema.For<Catalog.Api.Domains.Authors.Author>()
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+        opts.Schema.For<Catalog.Api.Domains.Publishers.Publisher>()
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
 
         // 043: özellik registry'si — NormalizedName teklik anahtarı (seed get-or-create güvencesi).
         opts.Schema.For<Catalog.Api.Domains.SpecificationAttributes.SpecificationAttribute>()
@@ -118,7 +122,7 @@ app.UseAuthorization();
 app.AddProductGroupEndpointExtension(apiVersionSet);
 app.AddProductTagGroupEndpointExtension(apiVersionSet);
 app.AddCategoryGroupEndpointExtension(apiVersionSet);
-app.AddBrandGroupEndpointExtension(apiVersionSet);
+app.AddAuthorGroupEndpointExtension(apiVersionSet);
 app.AddSpecificationAttributeGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");

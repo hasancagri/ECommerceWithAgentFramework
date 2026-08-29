@@ -10,8 +10,8 @@
 
 1. **Üç kaynak event'i TEK sıralı kuyruğa akar.** Catalog, Stock,       `(storefront.events`
    Reviews aynı kuyruğa bağlanır → satır yarışı yok.                     ` → Sequential)`
-2. **Catalog içeriği satıra yazılır.** Ad/fiyat/marka/kategori +        `(ProductChangedEvent`
-   kanonik spec'ler + varyant aile kodu, kaynak tek alan grubu.          ` → ApplyCatalog)`
+2. **Catalog içeriği satıra yazılır.** Ad/fiyat/yazarlar/yayınevi/      `(ProductChangedEvent`
+   kategori + kanonik spec'ler + varyant aile kodu, tek alan grubu.      ` → ApplyCatalog)`
 3. **Stok adedi satıra yazılır.** Yalnız `StockQuantity`; diğer         `(StockChangedEvent`
    kaynakların alanlarına dokunmaz.                                      ` → ApplyStock)`
 4. **Puan özeti satıra yazılır.** Mutlak değer; Count=0 rozeti          `(ReviewSummaryChanged`
@@ -22,7 +22,7 @@
    spec kesişimi; aile başına tek temsilci + kart-bazlı sayfalama.
 7. **Facet seçenekleri satılabilir satırlardan türetilir** (cache'li).  `(GetStorefrontFilterOptions)`
 8. **Varyant ailesi + filtre araması sunulur.** Aile eksenleri;         `(GetProductFamily,`
-   marka/fiyat/stok filtresi (Name ASC, deterministik).                 ` SearchStorefrontProductsForAgent)`
+   yazar/fiyat/stok filtresi (Name ASC, deterministik).                 ` SearchStorefrontProductsForAgent)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 

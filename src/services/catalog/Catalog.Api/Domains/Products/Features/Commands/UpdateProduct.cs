@@ -8,7 +8,8 @@ public static class UpdateProduct
         string Description,
         decimal Price,
         string Sku,
-        Guid BrandId,
+        List<Guid> AuthorIds,
+        Guid PublisherId,
         Guid CategoryId,
         string? ImageUrl);
 
@@ -30,11 +31,21 @@ public static class UpdateProduct
             if (product is null || product.IsDeleted)
                 return FeatureObjectResultModel<UpdateProductResponse>.NotFound();
 
-            var brand = await session.LoadAsync<Brand>(cmd.BrandId, ct);
-            if (brand is null || brand.IsDeleted)
+            var authors = new List<Author>();
+            foreach (var authorId in (cmd.AuthorIds ?? []).Distinct())
+            {
+                var author = await session.LoadAsync<Author>(authorId, ct);
+                if (author is null || author.IsDeleted)
+                    return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
+                    { Property = nameof(cmd.AuthorIds), Code = CatalogResourceConstants.RECORD_NOT_FOUND });
+                authors.Add(author);
+            }
+
+            var publisher = await session.LoadAsync<Publisher>(cmd.PublisherId, ct);
+            if (publisher is null || publisher.IsDeleted)
                 return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
                 {
-                    Property = nameof(cmd.BrandId),
+                    Property = nameof(cmd.PublisherId),
                     Code = CatalogResourceConstants.RECORD_NOT_FOUND
                 });
 
@@ -65,7 +76,12 @@ public static class UpdateProduct
 
             product.UpdateDescriptions(cmd.Description, cmd.Description);
             product.SetPrice(price);
-            product.SetBrand(cmd.BrandId);
+            var setAuthors = product.SetAuthors(authors.Select(a => a.Id));
+            if (!setAuthors.IsSuccess)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(setAuthors.Messages);
+            var setPublisher = product.SetPublisher(cmd.PublisherId);
+            if (!setPublisher.IsSuccess)
+                return FeatureObjectResultModel<UpdateProductResponse>.Error(setPublisher.Messages);
             product.SetImage(cmd.ImageUrl);
 
             // K4: dış kontrat tek kategori görür — hedef kategori atanmamışsa eski atamalar sökülüp
@@ -87,7 +103,8 @@ public static class UpdateProduct
             // 040 K2/K4: kontrat SABİT — decimal fiyat = Price.Amount, kategori = primary atama.
             await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
                 product.Id, product.Name, product.FullDescription, product.Price.Amount,
-                brand.Id, brand.Name, category.Id, category.Name,
+                authors.Select(a => new IntegrationEvents.AuthorRef(a.Id, a.Name)).ToList(),
+                publisher.Id, publisher.Name, category.Id, category.Name,
                 product.ImageUrl, IsDeleted: false));
 
             return FeatureObjectResultModel<UpdateProductResponse>.Ok(new UpdateProductResponse { Id = product.Id });

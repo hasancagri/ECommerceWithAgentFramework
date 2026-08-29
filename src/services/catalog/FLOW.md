@@ -1,6 +1,6 @@
 # Catalog — Domain Süreci
 
-**BC ne yapar:** Satılabilir zengin ürünü (ad/fiyat/marka/kategori/ölçü/SEO/özellik) tutar, vitrine açar
+**BC ne yapar:** Satılabilir zengin ürünü (ad/fiyat/yazar/yayınevi/kategori/ölçü/SEO/özellik) tutar, vitrine açar
 ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi ekler/günceller (feed yok).
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
@@ -19,8 +19,9 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 1. **Ürün komutla oluşturulur/güncellenir** (051 kitap import veya       `(ImportBook, Product.Create,`
    gelecek ürün-CRUD; ISBN/ad/fiyat girdi). Deterministik id ile        ` Product.Rename, Product.SetPrice)`
    bulun-veya-kur (idempotent upsert).
-2. **Marka bulun-veya-doğur.** Ad normalize edilip aranır; yoksa        `(Brand.Create,`
-   girdiden doğar. Marka Id ile referanslanır.                          ` Product.SetBrand)`
+2. **Yazar(lar) + yayınevi bulun-veya-doğur.** Her yazar adı           `(Author.Create, Product.SetAuthors,`
+   normalize+aranır (çok-çok, Id listesi); yayınevi tek (çok-bir).      ` Publisher.Create, Product.SetPublisher)`
+   Yoksa girdiden doğar, Id ile referanslanır.
 3. **Kategori seed'li ağaçtan çözülür.** Primary atama = seçilen        `(NameNormalization.Normalize,`
    kategori; bayat atamalar düşürülür.                                  ` Product.AssignToCategory, Product.RemoveFromCategory)`
 4. **Kimlik + aile yazılır.** SKU/GTIN girdiden, aile kodu opsiyonel    `(Product.SetIdentifiers,`
@@ -32,7 +33,8 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 7. **Ürün satışa/vitrine açılır — yayın kapısı fiyat>0.** Fiyatsız       `(Product.Publish)`
    reddedilir, taslak kalır; sonra fiyat gelince yeniden denenir.
 8. **Değişim Storefront'a KANONİK yayınlanır.** Fiyat decimal,          `(ProductChangedEvent)`
-   kategori = primary; özellikler ADLA taşınır (Id çıkmaz).
+   kategori = primary; yazarlar (Id+ad çifti) + yayınevi + özellikler
+   ADLA taşınır (fat event; tüketici lookup yapmaz).
 9. **Yalnız YAYINLANAN üründe Stock'a bağ kurulur.** Barkod→ürün         `(ProductAdded)`
    eşlemesi + ilk OnHand yazılır (taslak = event yok).
 

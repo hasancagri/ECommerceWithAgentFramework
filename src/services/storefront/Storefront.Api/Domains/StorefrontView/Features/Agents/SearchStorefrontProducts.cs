@@ -2,14 +2,14 @@
 namespace Storefront.Api.Domains.StorefrontView.Features.Agents;
 
 // Vitrin arama — yapısal filtre yolu: Marten LINQ + saf in-memory çekirdek (deterministik Name ASC).
-// Filtreler kesindir (marka OR, fiyat aralığı, asgari stok). Anlamsal/embedding yolu söküldü.
+// Filtreler kesindir (yazar OR, fiyat aralığı, asgari stok). Anlamsal/embedding yolu söküldü.
 public static class SearchStorefrontProductsForAgent
 {
     public const int DefaultMaxResults = 8;
     public const int MaxResultsLimit = 20;
 
     public record SearchStorefrontProductsQuery(
-        string[]? Brands = null,
+        string[]? Authors = null,
         decimal? MinPrice = null,
         decimal? MaxPrice = null,
         int? MinStock = null,
@@ -23,7 +23,7 @@ public static class SearchStorefrontProductsForAgent
     {
         var messages = new List<MessageItem>();
 
-        var hasCriteria = query.Brands is { Length: > 0 }
+        var hasCriteria = query.Authors is { Length: > 0 }
                           || query.MinPrice is not null
                           || query.MaxPrice is not null
                           || query.MinStock is not null;
@@ -75,13 +75,14 @@ public static class SearchStorefrontProductsForAgent
     {
         var rows = sellableRows;
 
-        if (query.Brands is { Length: > 0 })
+        if (query.Authors is { Length: > 0 })
         {
-            var brands = query.Brands
-                .Where(b => !string.IsNullOrWhiteSpace(b))
-                .Select(b => b.Trim().ToLowerInvariant())
+            // 052: yazar adı OR (case-insensitive tam ad). Çok-yazarlı kitap herhangi bir yazarı uyarsa eşleşir.
+            var authors = query.Authors
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Select(a => a.Trim().ToLowerInvariant())
                 .ToHashSet();
-            rows = rows.Where(x => x.Brand is not null && brands.Contains(x.Brand.Trim().ToLowerInvariant()));
+            rows = rows.Where(x => x.Authors.Any(a => authors.Contains(a.Name.Trim().ToLowerInvariant())));
         }
 
         if (query.MinPrice is not null)
@@ -101,7 +102,9 @@ public static class SearchStorefrontProductsForAgent
     {
         public Guid ProductId { get; set; }
         public string Name { get; set; } = null!;
-        public string Brand { get; set; } = null!;
+        // 052: künye — yazar adları + tek yayınevi (eski tek Brand alanının yerine).
+        public string[] Authors { get; set; } = [];
+        public string? Publisher { get; set; }
         public string? Category { get; set; }
         public decimal Price { get; set; }
         public int? StockQuantity { get; set; }
@@ -111,7 +114,8 @@ public static class SearchStorefrontProductsForAgent
         {
             ProductId = view.ProductId,
             Name = view.Name!,
-            Brand = view.Brand ?? string.Empty,
+            Authors = view.Authors.Select(a => a.Name).ToArray(),
+            Publisher = view.Publisher,
             Category = view.Category,
             Price = view.Price!.Value,
             StockQuantity = view.StockQuantity,
@@ -150,7 +154,7 @@ public static class SearchStorefrontProductsEndpoint
     {
         group.MapGet("/search", async (IMessageBus bus,
                 CancellationToken ct,
-                string[]? brands = null,
+                string[]? authors = null,
                 decimal? minPrice = null,
                 decimal? maxPrice = null,
                 int? minStock = null,
@@ -158,7 +162,7 @@ public static class SearchStorefrontProductsEndpoint
             {
                 var result = await bus.InvokeAsync<FeatureListResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductItem>>(
                     new SearchStorefrontProductsForAgent.SearchStorefrontProductsQuery(
-                        brands, minPrice, maxPrice, minStock, maxResults), ct);
+                        authors, minPrice, maxPrice, minStock, maxResults), ct);
 
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })

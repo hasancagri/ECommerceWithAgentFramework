@@ -45,7 +45,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 
 | Servis | DB | Ne yapar | Origin spec |
 |---|---|---|---|
-| `catalog` | catalogDb | Zengin `Product`+`Category`+`Brand`+`ProductTag`+`SpecificationAttribute` | `specs/040-catalog-domain-extract` |
+| `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi) | `specs/040-catalog-domain-extract` |
 | `basket` | basketDb | Sepet + kalem; Stock'a gRPC rezervasyon (fail-closed) | `specs/012-stock-reservation` |
 | `order` | orderDb | Sipariş + `CheckoutSaga` (durable, pivot-kurallı); satın-alma kanıtı gRPC | `specs/028-checkout-saga` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount) | — |

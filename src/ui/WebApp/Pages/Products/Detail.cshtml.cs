@@ -52,7 +52,8 @@ public class DetailModel(
             UserId = userId,
             AnonymousId = anonymousId,
             ProductId = Product.ProductId,
-            Brand = Product.Brand,
+            // 052: kişiselleştirme sinyali "Brand" alanı — kitapta birincil yazar adıyla beslenir.
+            Brand = Product.Authors.FirstOrDefault()?.Name,
             Category = Product.Category,
             Price = Product.Price,
         });

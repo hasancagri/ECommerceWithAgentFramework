@@ -11,7 +11,7 @@ public sealed class BookImportHostedService(
     ILogger<BookImportHostedService> logger) : IHostedService
 {
     private sealed record BookRecord(
-        string Isbn, string Title, string Brand, decimal? PriceTry,
+        string Isbn, string Title, string[] Authors, string Publisher, decimal? PriceTry,
         string? ImageUrl, string CategoryMid, string CategoryLeaf);
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -39,7 +39,7 @@ public sealed class BookImportHostedService(
         {
             var result = await bus.InvokeAsync<FeatureObjectResultModel<ImportBook.ImportBookResponse>>(
                 new ImportBook.ImportBookCommand(
-                    b.Isbn, b.Title, b.Brand, b.PriceTry, b.ImageUrl, b.CategoryMid, b.CategoryLeaf),
+                    b.Isbn, b.Title, b.Authors, b.Publisher, b.PriceTry, b.ImageUrl, b.CategoryMid, b.CategoryLeaf),
                 cancellationToken);
 
             if (result.IsSuccess && result.Data!.Published) published++;

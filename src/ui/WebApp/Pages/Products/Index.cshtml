@@ -22,17 +22,28 @@
             </select>
         </div>
         <div class="col-auto">
-            <select name="brandId" class="form-select" onchange="this.form.submit()">
-                <option value="">Tüm Markalar</option>
-                @foreach (var brand in Model.FilterOptions.Brands)
+            <select name="authorId" class="form-select" onchange="this.form.submit()">
+                <option value="">Tüm Yazarlar</option>
+                @foreach (var author in Model.FilterOptions.Authors)
                 {
-                    <option value="@brand.Id" selected="@(brand.Id == Model.SelectedBrandId)">
-                        @brand.Name
+                    <option value="@author.Id" selected="@(author.Id == Model.SelectedAuthorId)">
+                        @author.Name
                     </option>
                 }
             </select>
         </div>
-        @if (Model.SelectedCategoryId is not null || Model.SelectedBrandId is not null || Model.SelectedSpecs.Count > 0)
+        <div class="col-auto">
+            <select name="publisherId" class="form-select" onchange="this.form.submit()">
+                <option value="">Tüm Yayınevleri</option>
+                @foreach (var publisher in Model.FilterOptions.Publishers)
+                {
+                    <option value="@publisher.Id" selected="@(publisher.Id == Model.SelectedPublisherId)">
+                        @publisher.Name
+                    </option>
+                }
+            </select>
+        </div>
+        @if (Model.SelectedCategoryId is not null || Model.SelectedAuthorId is not null || Model.SelectedPublisherId is not null || Model.SelectedSpecs.Count > 0)
         {
             <div class="col-auto">
                 <a class="btn btn-outline-secondary" href="/Products">Temizle</a>

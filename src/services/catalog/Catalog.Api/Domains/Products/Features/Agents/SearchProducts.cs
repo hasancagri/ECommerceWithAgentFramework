@@ -2,8 +2,8 @@ namespace Catalog.Api.Domains.Products.Features.Agents;
 
 public static class SearchProductsForAgent
 {
-    // 016: opsiyonel kategori/marka daraltması (FR-012) — ad normalize edilip Id'ye çözülür, filtre Id ile.
-    public record SearchProductsQuery(string Name, string? Category = null, string? Brand = null);
+    // 016/052: opsiyonel kategori/yazar daraltması — ad normalize edilip Id'ye çözülür, filtre Id ile.
+    public record SearchProductsQuery(string Name, string? Category = null, string? Author = null);
 
     public class SearchProductResponse
     {
@@ -38,15 +38,16 @@ public static class SearchProductsForAgent
                     $"[{{\"CategoryId\": \"{category.Id}\"}}]"));
             }
 
-            if (!string.IsNullOrWhiteSpace(query.Brand))
+            if (!string.IsNullOrWhiteSpace(query.Author))
             {
-                var normalized = NameNormalization.Normalize(query.Brand);
-                var brand = await session.Query<Brand>()
+                var normalized = NameNormalization.Normalize(query.Author);
+                var author = await session.Query<Author>()
                     .FirstOrDefaultAsync(x => x.NormalizedName == normalized, ct);
-                if (brand is null)
-                    return FeatureObjectResultModel<SearchProductResponse>.Ok(null); // bilinmeyen marka → sonuç yok
+                if (author is null)
+                    return FeatureObjectResultModel<SearchProductResponse>.Ok(null); // bilinmeyen yazar → sonuç yok
 
-                products = products.Where(x => x.BrandId == brand.Id);
+                // 052: çok-yazar jsonb dizi üyeliği (List<Guid>.Contains → Marten containment).
+                products = products.Where(x => x.AuthorIds.Contains(author.Id));
             }
 
             var row = await products

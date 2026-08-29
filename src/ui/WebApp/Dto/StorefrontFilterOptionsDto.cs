@@ -10,5 +10,7 @@ public record SpecFacetDto(string Name, List<SpecFacetOptionDto> Options);
 
 public record StorefrontFilterOptionsDto(
     List<FilterOptionDto> Categories,
-    List<FilterOptionDto> Brands,
+    // 052: Brands → çok-değerli Authors + tek-değerli Publishers facet'i.
+    List<FilterOptionDto> Authors,
+    List<FilterOptionDto> Publishers,
     List<SpecFacetDto>? Specifications);
