@@ -5,19 +5,59 @@
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4">Yazarlar</h2>
+    <div class="d-flex align-items-baseline justify-content-between flex-wrap mb-3">
+        <h2 class="mb-0">Yazarlar</h2>
+        <span class="text-muted small">@Model.TotalAuthors yazar</span>
+    </div>
 
-    @if (Model.Authors.Count == 0)
+    @* Sayfa-içi arama — görüntülenen harfin listesini istemci-tarafı süzer. *@
+    <input type="search" id="authorSearch" class="form-control kp-index-search mb-3"
+           placeholder="Bu harfteki yazarlarda ara..." aria-label="Yazar ara"/>
+
+    @* A-Z harf indeksi. *@
+    <div class="kp-letters mb-4">
+        @foreach (var l in "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".Select(c => c.ToString()))
+        {
+            @if (Model.Letters.Contains(l))
+            {
+                <a class="kp-letter @(l == Model.SelectedLetter ? "active" : "")"
+                   asp-page="/Authors/Index" asp-route-letter="@l">@l</a>
+            }
+            else
+            {
+                <span class="kp-letter disabled">@l</span>
+            }
+        }
+    </div>
+
+    @if (Model.AuthorsForLetter.Count == 0)
     {
-        <div class="alert alert-warning">Henüz yazar yok.</div>
+        <div class="alert alert-warning">Bu harfte yazar yok.</div>
     }
     else
     {
-        <div class="kp-index-grid">
-            @foreach (var author in Model.Authors)
+        <div class="kp-index-grid" id="authorList">
+            @foreach (var author in Model.AuthorsForLetter)
             {
                 <a class="kp-index-item" asp-page="/Products/Index" asp-route-authorId="@author.Id">@author.Name</a>
             }
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        // Sayfa-içi filtre: görüntülenen harfin yazarlarını istemci-tarafı ada göre süzer.
+        (function () {
+            const box = document.getElementById('authorSearch');
+            const items = Array.from(document.querySelectorAll('#authorList .kp-index-item'));
+            if (!box) return;
+            box.addEventListener('input', function () {
+                const q = this.value.trim().toLowerCase();
+                items.forEach(function (el) {
+                    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        })();
+    </script>
+}

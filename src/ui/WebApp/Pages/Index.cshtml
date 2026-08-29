@@ -4,24 +4,51 @@
     ViewData["Title"] = "Ana Sayfa";
 }
 
-<div class="container mt-5">
-    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
-
-
-        @if (!Model.Products.Any())
-        {
-            <div class="col">
-                <div class="alert alert-warning" role="alert">
-                    Ürün bulunamadı!
-                </div>
-            </div>
-            return;
-        }
-
-        @* 011 US2: kart, Tüm Ürünler ile ortak partial'dan çizilir (FR-008). *@
-        @foreach (var product in Model.Products!)
-        {
-            <partial name="_ProductCard" model="product"/>
-        }
+@* Hero — kitapyurdu-tarzı sıcak karşılama. *@
+<div class="kp-hero">
+    <div class="container text-center py-5">
+        <h1 class="kp-hero-title">📚 Binlerce Kitap, Tek Çatı Altında</h1>
+        <p class="kp-hero-sub">Yazarlar, yayınevleri ve türler — aradığın kitap burada.</p>
+        <a asp-page="/Products/Index" class="btn kp-hero-btn">Tüm Kitaplara Göz At</a>
     </div>
+</div>
+
+<div class="container mt-4">
+    @* Öne çıkanlar kuşağı. *@
+    <section class="kp-band">
+        <div class="kp-band-head">
+            <h3 class="kp-band-title">Öne Çıkan Kitaplar</h3>
+            <a asp-page="/Products/Index" class="kp-band-more">Tümünü Gör →</a>
+        </div>
+        @if (!Model.Featured.Any())
+        {
+            <div class="alert alert-warning">Henüz kitap yok.</div>
+        }
+        else
+        {
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
+                @foreach (var product in Model.Featured)
+                {
+                    <partial name="_ProductCard" model="product"/>
+                }
+            </div>
+        }
+    </section>
+
+    @* Kategori kuşakları. *@
+    @foreach (var band in Model.Bands)
+    {
+        <section class="kp-band">
+            <div class="kp-band-head">
+                <h3 class="kp-band-title">@band.CategoryName</h3>
+                <a asp-page="/Products/Index" asp-route-categoryId="@band.CategoryId" class="kp-band-more">Tümünü Gör →</a>
+            </div>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
+                @foreach (var product in band.Books)
+                {
+                    <partial name="_ProductCard" model="product"/>
+                }
+            </div>
+        </section>
+    }
 </div>

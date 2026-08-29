@@ -86,6 +86,7 @@
         <div class="container d-flex align-items-center gap-4 py-2">
             <a asp-area="" asp-page="/Index">Ana Sayfa</a>
             <a asp-area="" asp-page="/Products/Index">Tüm Kitaplar</a>
+            @await Component.InvokeAsync("CategoryNav")
             <a asp-area="" asp-page="/Authors/Index">Yazarlar</a>
             <a asp-area="" asp-page="/Publishers/Index">Yayınevleri</a>
         </div>

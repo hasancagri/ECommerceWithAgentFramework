@@ -2,108 +2,145 @@
 @using WebApp.ViewModel
 @model WebApp.Pages.Products.IndexModel
 @{
-    ViewData["Title"] = "Tüm Ürünler";
+    ViewData["Title"] = "Tüm Kitaplar";
+    var selectedCategory = Model.SelectedCategoryId is null ? null
+        : Model.FilterOptions.Categories.FirstOrDefault(c => c.Id == Model.SelectedCategoryId)?.Name;
+    var selectedAuthor = Model.SelectedAuthorId is null ? null
+        : Model.FilterOptions.Authors.FirstOrDefault(a => a.Id == Model.SelectedAuthorId)?.Name;
+    var selectedPublisher = Model.SelectedPublisherId is null ? null
+        : Model.FilterOptions.Publishers.FirstOrDefault(p => p.Id == Model.SelectedPublisherId)?.Name;
+    var anyFilter = Model.SelectedCategoryId is not null || Model.SelectedAuthorId is not null
+        || Model.SelectedPublisherId is not null || Model.SearchQuery is not null || Model.SelectedSpecs.Count > 0;
 }
 
-<div class="container mt-5">
-    <h2 class="mb-4">
-        @if (Model.SearchQuery is not null)
-        {
-            <span>"@Model.SearchQuery" için sonuçlar</span>
-        }
-        else
-        {
-            <span>Tüm Kitaplar</span>
-        }
-    </h2>
+<div class="container mt-4">
+    <div class="row g-4">
+        @* --- Sol filtre paneli --- *@
+        <aside class="col-lg-3">
+            <form method="get" class="kp-sidebar">
+                @* Diğer aktif filtreler form gönderiminde korunur (kategori/spec değişince kaybolmasın). *@
+                @if (Model.SelectedAuthorId is not null)
+                {
+                    <input type="hidden" name="authorId" value="@Model.SelectedAuthorId"/>
+                }
+                @if (Model.SelectedPublisherId is not null)
+                {
+                    <input type="hidden" name="publisherId" value="@Model.SelectedPublisherId"/>
+                }
+                @if (Model.SearchQuery is not null)
+                {
+                    <input type="hidden" name="q" value="@Model.SearchQuery"/>
+                }
 
-    @* 016 US1/US2: kategori+marka filtreleri (AND) — seçenekler gerçek veriden; seçim yeni GET ile 1. sayfadan başlar. *@
-    <form method="get" class="row g-2 mb-4">
-        <div class="col-auto">
-            <select name="categoryId" class="form-select" onchange="this.form.submit()">
-                <option value="">Tüm Kategoriler</option>
-                @foreach (var category in Model.FilterOptions.Categories)
-                {
-                    <option value="@category.Id" selected="@(category.Id == Model.SelectedCategoryId)">
-                        @category.Name
-                    </option>
-                }
-            </select>
-        </div>
-        <div class="col-auto">
-            <select name="authorId" class="form-select" onchange="this.form.submit()">
-                <option value="">Tüm Yazarlar</option>
-                @foreach (var author in Model.FilterOptions.Authors)
-                {
-                    <option value="@author.Id" selected="@(author.Id == Model.SelectedAuthorId)">
-                        @author.Name
-                    </option>
-                }
-            </select>
-        </div>
-        <div class="col-auto">
-            <select name="publisherId" class="form-select" onchange="this.form.submit()">
-                <option value="">Tüm Yayınevleri</option>
-                @foreach (var publisher in Model.FilterOptions.Publishers)
-                {
-                    <option value="@publisher.Id" selected="@(publisher.Id == Model.SelectedPublisherId)">
-                        @publisher.Name
-                    </option>
-                }
-            </select>
-        </div>
-        @if (Model.SelectedCategoryId is not null || Model.SelectedAuthorId is not null || Model.SelectedPublisherId is not null || Model.SearchQuery is not null || Model.SelectedSpecs.Count > 0)
-        {
-            <div class="col-auto">
-                <a class="btn btn-outline-secondary" href="/Products">Temizle</a>
-            </div>
-        }
+                <div class="kp-sidebar-box">
+                    <div class="kp-sidebar-title">Kategori</div>
+                    <select name="categoryId" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">Tüm Kategoriler</option>
+                        @foreach (var category in Model.FilterOptions.Categories)
+                        {
+                            <option value="@category.Id" selected="@(category.Id == Model.SelectedCategoryId)">
+                                @category.Name
+                            </option>
+                        }
+                    </select>
+                </div>
 
-        @* 043 US1: spec facet'leri — aynı özellik içi OR, özellikler arası AND; seçim yeni GET ile gider. *@
-        @if (Model.FilterOptions.Specifications.Count > 0)
-        {
-            <div class="col-12">
-                <div class="row g-3 mt-1">
-                    @foreach (var facet in Model.FilterOptions.Specifications)
+                @if (Model.FilterOptions.Specifications.Count > 0)
+                {
+                    <div class="kp-sidebar-box">
+                        <div class="kp-sidebar-title">Özellikler</div>
+                        @foreach (var facet in Model.FilterOptions.Specifications)
+                        {
+                            <div class="kp-facet-group">
+                                <div class="kp-facet-name">@facet.Name</div>
+                                @foreach (var option in facet.Options)
+                                {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="spec"
+                                               value="@option.Key" id="spec-@option.Key.GetHashCode()"
+                                               checked="@Model.SelectedSpecs.Contains(option.Key)"
+                                               onchange="this.form.submit()"/>
+                                        <label class="form-check-label small" for="spec-@option.Key.GetHashCode()">
+                                            @option.Name (@option.Count)
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (anyFilter)
+                {
+                    <a class="btn btn-sm btn-outline-secondary w-100" href="/Products">Filtreleri Temizle</a>
+                }
+            </form>
+        </aside>
+
+        @* --- Sonuç alanı --- *@
+        <div class="col-lg-9">
+            <div class="d-flex align-items-baseline justify-content-between flex-wrap mb-3">
+                <h2 class="mb-0">
+                    @if (Model.SearchQuery is not null)
                     {
-                        <div class="col-auto">
-                            <div class="fw-semibold small mb-1">@facet.Name</div>
-                            @foreach (var option in facet.Options)
-                            {
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" name="spec"
-                                           value="@option.Key" id="spec-@option.Key.GetHashCode()"
-                                           checked="@Model.SelectedSpecs.Contains(option.Key)"
-                                           onchange="this.form.submit()"/>
-                                    <label class="form-check-label small" for="spec-@option.Key.GetHashCode()">
-                                        @option.Name (@option.Count)
-                                    </label>
-                                </div>
-                            }
-                        </div>
+                        <span>"@Model.SearchQuery" için sonuçlar</span>
+                    }
+                    else
+                    {
+                        <span>Tüm Kitaplar</span>
+                    }
+                </h2>
+                <span class="text-muted small">@Model.TotalCount kitap</span>
+            </div>
+
+            @* Aktif filtre chip'leri — her biri kaldırılabilir (diğerlerini korur). *@
+            @if (anyFilter)
+            {
+                <div class="kp-chips mb-3">
+                    @if (selectedCategory is not null)
+                    {
+                        <a class="kp-chip" asp-page="/Products/Index"
+                           asp-route-authorId="@Model.SelectedAuthorId" asp-route-publisherId="@Model.SelectedPublisherId"
+                           asp-route-q="@Model.SearchQuery">Kategori: @selectedCategory ✕</a>
+                    }
+                    @if (selectedAuthor is not null)
+                    {
+                        <a class="kp-chip" asp-page="/Products/Index"
+                           asp-route-categoryId="@Model.SelectedCategoryId" asp-route-publisherId="@Model.SelectedPublisherId"
+                           asp-route-q="@Model.SearchQuery">Yazar: @selectedAuthor ✕</a>
+                    }
+                    @if (selectedPublisher is not null)
+                    {
+                        <a class="kp-chip" asp-page="/Products/Index"
+                           asp-route-categoryId="@Model.SelectedCategoryId" asp-route-authorId="@Model.SelectedAuthorId"
+                           asp-route-q="@Model.SearchQuery">Yayınevi: @selectedPublisher ✕</a>
+                    }
+                    @if (Model.SearchQuery is not null)
+                    {
+                        <a class="kp-chip" asp-page="/Products/Index"
+                           asp-route-categoryId="@Model.SelectedCategoryId" asp-route-authorId="@Model.SelectedAuthorId"
+                           asp-route-publisherId="@Model.SelectedPublisherId">Arama: "@Model.SearchQuery" ✕</a>
                     }
                 </div>
-            </div>
-        }
-    </form>
-
-    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
-        @if (!Model.Products.Any())
-        {
-            <div class="col">
-                <div class="alert alert-warning" role="alert">
-                    Ürün bulunamadı!
-                </div>
-            </div>
-        }
-        else
-        {
-            @foreach (var product in Model.Products)
-            {
-                <partial name="_ProductCard" model="product"/>
             }
-        }
-    </div>
 
-    <partial name="_Pager" model="new PagerViewModel(Model.PageNumber, Model.PageCount, Model.FilterQuery)"/>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @if (!Model.Products.Any())
+                {
+                    <div class="col-12">
+                        <div class="alert alert-warning" role="alert">Ürün bulunamadı!</div>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var product in Model.Products)
+                    {
+                        <partial name="_ProductCard" model="product"/>
+                    }
+                }
+            </div>
+
+            <partial name="_Pager" model="new PagerViewModel(Model.PageNumber, Model.PageCount, Model.FilterQuery)"/>
+        </div>
+    </div>
 </div>

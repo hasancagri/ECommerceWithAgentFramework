@@ -1,20 +1,33 @@
-
-
 namespace WebApp.Pages;
 
-// 006: ana sayfa Storefront vitrininden beslenir; katalog listesine ayrıca çağrı yapılmaz (FR-001).
-// 011: dashboard kısaltıldı — ilk 8 ürün + Tüm Ürünler linki (US2); tamamı /Products'ta.
+// 006: ana sayfa Storefront vitrininden beslenir (FR-001).
+// 052-görsel: kitapyurdu-tarzı — hero + öne çıkanlar + birkaç kategori kuşağı (her biri "Tümünü Gör").
 public class IndexModel(StorefrontService storefrontService) : BasePageModel
 {
-    private const int HomeProductCount = 8;
+    private const int FeaturedCount = 12;
+    private const int BandCount = 6;   // kuşak başına kitap
+    private const int MaxBands = 4;    // kaç kategori kuşağı
 
-    public List<StorefrontProductViewModel>? Products { get; set; } = [];
+    public record HomeBand(Guid CategoryId, string CategoryName, List<StorefrontProductViewModel> Books);
+
+    public List<StorefrontProductViewModel> Featured { get; set; } = [];
+    public List<HomeBand> Bands { get; set; } = [];
+
     public async Task<IActionResult> OnGet()
     {
-        var productsAsResult = await storefrontService.GetProductsAsync(pageNumber: 1, pageSize: HomeProductCount);
+        var featured = await storefrontService.GetProductsAsync(pageNumber: 1, pageSize: FeaturedCount);
+        if (featured.IsFail) return ErrorPage(featured);
+        Featured = featured.Data!.Products;
 
-        if (productsAsResult.IsFail) return ErrorPage(productsAsResult);
-        Products = productsAsResult.Data!.Products;
+        // Kategori kuşakları: facet'ten ilk birkaç kategori, her biri kendi vitrin dilimini yükler.
+        var options = await storefrontService.GetFilterOptionsAsync();
+        foreach (var category in options.Categories.Take(MaxBands))
+        {
+            var band = await storefrontService.GetProductsAsync(
+                pageNumber: 1, pageSize: BandCount, categoryId: category.Id);
+            if (band.IsSuccess && band.Data!.Products.Count > 0)
+                Bands.Add(new HomeBand(category.Id, category.Name, band.Data.Products));
+        }
 
         return Page();
     }

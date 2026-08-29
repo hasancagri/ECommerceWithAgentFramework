@@ -1,132 +1,139 @@
 @page "{id:guid}"
 @model WebApp.Pages.Products.DetailModel
 @{
+    ViewData["Title"] = Model.Product?.Name;
 }
-<div class="container mt-5">
+<div class="container mt-4">
 
-    <div class="row">
-
-
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0">
-
-                <img class="card-img-top product-detail-img" alt="@Model.Product!.Name"
+    @* --- Künye: kapak + bilgi --- *@
+    <div class="row g-4 kp-detail">
+        <div class="col-md-4">
+            <div class="kp-detail-cover">
+                <img alt="@Model.Product!.Name"
                      onerror="this.onerror=null;this.src='/images/NoImage.jpeg';"
                      src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "/images/NoImage.jpeg" : Model.Product.ImageUrl)">
-                <div class="card-body">
-                    <h2 class="mb-2">@Model.Product.Name</h2>
-                    @* 044: yildiz ozeti — yorumsuz urunde hic cizilmez (FR-006). *@
-                    @if (Model.Product.RatingCount > 0 && Model.Product.RatingAverage is not null)
-                    {
-                        <p class="mb-3">
-                            <span class="text-warning">★</span>
-                            <strong>@Model.Product.RatingAverage.Value.ToString("0.0")</strong>
-                            <span class="text-muted">(@Model.Product.RatingCount yorum)</span>
-                        </p>
-                    }
-                    <h5 class="card-title">Açıklama</h5>
-                    <p>@Model.Product.Description</p>
-                </div>
             </div>
         </div>
 
+        <div class="col-md-8">
+            <h1 class="kp-detail-title">@Model.Product.Name</h1>
 
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0">
-                <div class="card-body">
-
-                    <h5 class="card-title">Yazar</h5>
-                    <p class="card-text">@(Model.Product.Authors.Count > 0 ? string.Join(", ", Model.Product.Authors.Select(a => a.Name)) : "—")</p>
-                    <hr>
-
-                    <h5 class="card-title">Yayınevi</h5>
-                    <p class="card-text">@(Model.Product.Publisher ?? "—")</p>
-                    <hr>
-
-                    <h5 class="card-title">Kategori</h5>
-                    <p class="card-text">@Model.Product.Category</p>
-                    <hr>
-
-                    <h5 class="card-title">Fiyat</h5>
-                    <p class="card-text">
-                        <strong>@Model.Product.Price.ToString("C")</strong>
-                    </p>
-                    <hr>
-
-                    @* 045: varyant seçici — yalnız aileli üründe (ayrışan eksen varsa); ailesizde hiç yok. *@
-                    @if (Model.Family is { HasSelector: true })
-                    {
-                        foreach (var selector in Model.Family.BuildSelectors())
+            <div class="kp-detail-meta">
+                @if (Model.Product.Authors.Count > 0)
+                {
+                    <div><span class="kp-detail-label">Yazar:</span>
+                        @for (var i = 0; i < Model.Product.Authors.Count; i++)
                         {
-                            <h5 class="card-title">@selector.Attribute</h5>
-                            <div class="mb-3 d-flex flex-wrap gap-2">
-                                @foreach (var opt in selector.Options)
-                                {
-                                    @if (opt.IsCurrent)
-                                    {
-                                        <span class="btn btn-primary btn-sm disabled">@opt.Value</span>
-                                    }
-                                    else if (opt.TargetProductId is not null)
-                                    {
-                                        <a class="btn btn-outline-primary btn-sm @(opt.IsInStock ? "" : "opacity-50")"
-                                           asp-page="/Products/Detail" asp-route-id="@opt.TargetProductId">
-                                            @opt.Value@(opt.IsInStock ? "" : " (stok yok)")
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <span class="btn btn-outline-secondary btn-sm disabled">@opt.Value</span>
-                                    }
-                                }
-                            </div>
+                            var author = Model.Product.Authors[i];
+                            <a asp-page="/Products/Index" asp-route-authorId="@author.Id">@author.Name</a>@(i < Model.Product.Authors.Count - 1 ? ", " : "")
                         }
-                        <hr>
-                    }
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Product.Publisher))
+                {
+                    <div><span class="kp-detail-label">Yayınevi:</span>
+                        <a asp-page="/Products/Index" asp-route-publisherId="@Model.Product.PublisherId">@Model.Product.Publisher</a>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Product.Category))
+                {
+                    <div><span class="kp-detail-label">Kategori:</span>
+                        <a asp-page="/Products/Index" asp-route-categoryId="@Model.Product.CategoryId">@Model.Product.Category</a>
+                    </div>
+                }
+            </div>
 
-                    @* 043 US2: kanonik ozellik tablosu — ozelliksiz urunde bolum hic gorunmez. *@
+            @if (Model.Product.RatingCount > 0 && Model.Product.RatingAverage is not null)
+            {
+                <p class="kp-detail-rating mb-2">
+                    <span class="text-warning">★</span>
+                    <strong>@Model.Product.RatingAverage.Value.ToString("0.0")</strong>
+                    <span class="text-muted">(@Model.Product.RatingCount yorum)</span>
+                </p>
+            }
+
+            <div class="kp-detail-price">@Model.Product.Price.ToString("C")</div>
+
+            <p class="mb-3">
+                @if (Model.StockQuantity <= 0)
+                {
+                    <span class="badge bg-danger">Stokta yok</span>
+                }
+                else if (Model.StockQuantity <= 5)
+                {
+                    <span class="badge bg-warning text-dark">Son @Model.StockQuantity adet</span>
+                }
+                else
+                {
+                    <span class="badge bg-success">Stokta</span>
+                }
+            </p>
+
+            @* 045: varyant seçici — yalnız aileli üründe. *@
+            @if (Model.Family is { HasSelector: true })
+            {
+                foreach (var selector in Model.Family.BuildSelectors())
+                {
+                    <div class="mb-2">
+                        <div class="fw-semibold small mb-1">@selector.Attribute</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var opt in selector.Options)
+                            {
+                                @if (opt.IsCurrent)
+                                {
+                                    <span class="btn btn-sm kp-detail-add disabled">@opt.Value</span>
+                                }
+                                else if (opt.TargetProductId is not null)
+                                {
+                                    <a class="btn btn-outline-secondary btn-sm @(opt.IsInStock ? "" : "opacity-50")"
+                                       asp-page="/Products/Detail" asp-route-id="@opt.TargetProductId">
+                                        @opt.Value@(opt.IsInStock ? "" : " (stok yok)")
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-outline-secondary btn-sm disabled">@opt.Value</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            @if (Model.StockQuantity > 0)
+            {
+                <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.ProductId"
+                   class="btn kp-detail-add btn-lg">🛒 Sepete Ekle</a>
+            }
+            else
+            {
+                <button class="btn kp-detail-add btn-lg" disabled>Sepete Ekle</button>
+            }
+        </div>
+    </div>
+
+    @* --- Açıklama + özellikler --- *@
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="kp-section-title">Kitap Hakkında</h5>
+                    <p>@(string.IsNullOrWhiteSpace(Model.Product.Description) ? "Açıklama yok." : Model.Product.Description)</p>
+
                     @if (Model.Product.Specs is { Count: > 0 })
                     {
-                        <h5 class="card-title">Özellikler</h5>
-                        <table class="table table-sm mb-3">
+                        <h5 class="kp-section-title mt-4">Özellikler</h5>
+                        <table class="table table-sm mb-0">
                             <tbody>
                             @foreach (var spec in Model.Product.Specs)
                             {
                                 <tr>
-                                    <th scope="row" class="fw-semibold w-50">@spec.Attribute</th>
+                                    <th scope="row" class="fw-semibold w-25">@spec.Attribute</th>
                                     <td>@spec.Option</td>
                                 </tr>
                             }
                             </tbody>
                         </table>
-                        <hr>
-                    }
-
-                    <h5 class="card-title">Stok</h5>
-                    <p class="card-text">
-                        @* 012 (US5): Available'dan turetilmis stok rozeti — az kaldiginda "son N adet". *@
-                        @if (Model.StockQuantity <= 0)
-                        {
-                            <span class="badge bg-danger">Stokta yok</span>
-                        }
-                        else if (Model.StockQuantity <= 5)
-                        {
-                            <span class="badge bg-warning text-dark">Son @Model.StockQuantity adet</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">Stokta: @Model.StockQuantity</span>
-                        }
-                    </p>
-                    <hr>
-
-                    @if (Model.StockQuantity > 0)
-                    {
-                        <a asp-page="/basket/index" asp-page-handler="AddBasket" asp-route-productId="@Model.Product.ProductId"
-                           class="btn btn-primary">Sepete Ekle</a>
-                    }
-                    else
-                    {
-                        <button class="btn btn-primary" disabled>Sepete Ekle</button>
                     }
                 </div>
             </div>
@@ -136,9 +143,9 @@
     @* 044: yorumlar — liste herkese acik; form yalniz uygun (satin almis) login'li kullaniciya. *@
     <div class="row mt-4">
         <div class="col-12">
-            <div class="card shadow-lg border-0">
+            <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h4 class="card-title mb-3">Yorumlar</h4>
+                    <h5 class="kp-section-title mb-3">Yorumlar</h5>
 
                     @if (!string.IsNullOrEmpty(Model.ReviewSuccess))
                     {
@@ -167,7 +174,7 @@
                                 <label class="form-label fw-semibold">Yorumunuz (isteğe bağlı)</label>
                                 <textarea name="text" class="form-control" rows="3" maxlength="2000"></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">Yorumu Gönder</button>
+                            <button type="submit" class="btn kp-detail-add">Yorumu Gönder</button>
                         </form>
                         <hr>
                     }

@@ -113,6 +113,21 @@ body {
   font-weight: 600;
 }
 .kp-catnav a:hover { color: var(--kp-accent); }
+.kp-catnav-dropdown { display: inline-block; }
+.kp-catnav-dropdown .dropdown-toggle {
+  color: var(--kp-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.kp-catnav-dropdown .dropdown-toggle:hover { color: var(--kp-accent); }
+.kp-catnav-menu {
+  max-height: 60vh;
+  overflow-y: auto;
+  columns: 2;
+  min-width: 360px;
+}
+.kp-catnav-menu .dropdown-item { color: var(--kp-ink); }
+.kp-catnav-menu .dropdown-item:hover { background: var(--kp-bg); color: var(--kp-accent); }
 
 /* Footer. */
 .kp-footer {
@@ -120,6 +135,67 @@ body {
   border-top: 3px solid var(--kp-accent);
 }
 .kp-footer-brand { font-weight: 800; color: var(--kp-accent); }
+
+/* --- Ana sayfa: hero + kategori kuşakları --- */
+.kp-hero {
+  background: linear-gradient(135deg, var(--kp-accent) 0%, var(--kp-accent-dark) 100%);
+  color: #fff;
+}
+.kp-hero-title { font-weight: 800; font-size: 2rem; }
+.kp-hero-sub { opacity: .92; margin-bottom: 1.2rem; }
+.kp-hero-btn {
+  background: var(--kp-orange);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: .5rem 1.4rem;
+}
+.kp-hero-btn:hover { background: var(--kp-orange-dark); color: #fff; }
+
+.kp-band { margin: 2rem 0; }
+.kp-band-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--kp-accent);
+  padding-bottom: .4rem;
+  margin-bottom: 1rem;
+}
+.kp-band-title { font-weight: 700; font-size: 1.25rem; margin: 0; color: var(--kp-ink); }
+.kp-band-more { color: var(--kp-accent); text-decoration: none; font-size: .9rem; font-weight: 600; }
+.kp-band-more:hover { text-decoration: underline; }
+
+/* --- Liste sayfası: sol filtre paneli + aktif-filtre chip'leri --- */
+.kp-sidebar-box {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: .5rem;
+  padding: .9rem;
+  margin-bottom: 1rem;
+}
+.kp-sidebar-title {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--kp-ink);
+  margin-bottom: .6rem;
+  padding-bottom: .4rem;
+  border-bottom: 2px solid var(--kp-accent);
+}
+.kp-facet-group { margin-bottom: .6rem; }
+.kp-facet-name { font-weight: 600; font-size: .8rem; color: #6c757d; margin-bottom: .2rem; }
+
+.kp-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.kp-chip {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid var(--kp-accent);
+  color: var(--kp-accent);
+  border-radius: 999px;
+  padding: .2rem .7rem;
+  font-size: .8rem;
+  text-decoration: none;
+}
+.kp-chip:hover { background: var(--kp-accent); color: #fff; }
 
 /* --- Yazarlar / Yayınevleri dizin sayfası --- */
 .kp-index-grid {
@@ -141,6 +217,78 @@ body {
 .kp-index-item:hover {
   border-color: var(--kp-accent);
   color: var(--kp-accent);
+}
+.kp-index-search { max-width: 420px; }
+
+/* A-Z harf indeksi. */
+.kp-letters { display: flex; flex-wrap: wrap; gap: .3rem; }
+.kp-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: .35rem;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  color: var(--kp-ink);
+  font-weight: 700;
+  font-size: .85rem;
+  text-decoration: none;
+}
+.kp-letter:hover { border-color: var(--kp-accent); color: var(--kp-accent); }
+.kp-letter.active { background: var(--kp-accent); border-color: var(--kp-accent); color: #fff; }
+.kp-letter.disabled { color: #ccc; background: #f8f8f8; pointer-events: none; }
+
+/* --- Pager (Hepsiburada tarzı) --- */
+.kp-pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: .35rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.kp-pager li { display: inline-flex; }
+.kp-pager-num,
+.kp-pager-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 .6rem;
+  border: 1px solid #e0e0e0;
+  border-radius: .5rem;
+  background: #fff;
+  color: var(--kp-ink);
+  font-weight: 600;
+  font-size: .9rem;
+  text-decoration: none;
+  transition: border-color .12s ease, background .12s ease, color .12s ease;
+}
+.kp-pager-num:hover,
+.kp-pager-nav:hover {
+  border-color: var(--kp-orange);
+  color: var(--kp-orange);
+}
+.kp-pager-num.active {
+  background: var(--kp-orange);
+  border-color: var(--kp-orange);
+  color: #fff;
+}
+.kp-pager .disabled .kp-pager-nav {
+  color: #ccc;
+  pointer-events: none;
+  background: #f8f8f8;
+}
+.kp-pager-gap {
+  min-width: 30px;
+  text-align: center;
+  color: #999;
+  align-items: flex-end;
 }
 
 /* --- Kitap kartı (kitapyurdu hiyerarşisi) --- */
@@ -222,4 +370,46 @@ body {
   object-fit: contain;
   background-color: #f8f9fa;
   padding: 1rem;
+}
+
+/* --- Ürün detay (kitapyurdu künye) --- */
+.kp-detail-cover {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: .5rem;
+  padding: 1.2rem;
+  text-align: center;
+}
+.kp-detail-cover img {
+  max-height: 420px;
+  max-width: 100%;
+  object-fit: contain;
+}
+.kp-detail-title { font-weight: 700; font-size: 1.6rem; line-height: 1.25; }
+.kp-detail-meta { margin: .8rem 0; font-size: .95rem; }
+.kp-detail-meta > div { margin-bottom: .25rem; }
+.kp-detail-label { color: #6c757d; margin-right: .3rem; }
+.kp-detail-meta a { color: var(--kp-accent); text-decoration: none; font-weight: 600; }
+.kp-detail-meta a:hover { text-decoration: underline; }
+.kp-detail-price {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--kp-price);
+  margin: .5rem 0;
+}
+.kp-detail-add {
+  background: var(--kp-orange);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+}
+.kp-detail-add:hover { background: var(--kp-orange-dark); color: #fff; }
+.kp-detail-add.disabled, .kp-detail-add:disabled { opacity: .55; }
+
+.kp-section-title {
+  font-weight: 700;
+  color: var(--kp-ink);
+  border-bottom: 2px solid var(--kp-accent);
+  padding-bottom: .4rem;
+  margin-bottom: 1rem;
 }

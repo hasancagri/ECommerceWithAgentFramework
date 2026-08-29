@@ -17,6 +17,7 @@ public class IndexModel(StorefrontService storefrontService) : BasePageModel
     public HashSet<string> SelectedSpecs { get; set; } = [];
     public int PageNumber { get; set; } = 1;
     public int PageCount { get; set; }
+    public int TotalCount { get; set; }
 
     // Pager linklerine eklenen hazır query eki — Guid'ler + encode'lu spec anahtarları (043).
     public string? FilterQuery { get; set; }
@@ -53,6 +54,7 @@ public class IndexModel(StorefrontService storefrontService) : BasePageModel
         Products = productsAsResult.Data!.Products;
         PageNumber = productsAsResult.Data.PageNumber;
         PageCount = productsAsResult.Data.PageCount;
+        TotalCount = productsAsResult.Data.TotalItemCount;
 
         return Page();
     }

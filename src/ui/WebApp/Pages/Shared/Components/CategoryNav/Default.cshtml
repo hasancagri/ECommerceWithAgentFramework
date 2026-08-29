@@ -1,0 +1,19 @@
+@model List<WebApp.ViewModel.FilterOptionViewModel>
+
+@* 052-görsel: kategori açılır menüsü (kitapyurdu ikincil nav). Boşsa çizilmez. *@
+@if (Model.Count > 0)
+{
+    <div class="dropdown kp-catnav-dropdown">
+        <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Kategoriler
+        </a>
+        <ul class="dropdown-menu kp-catnav-menu">
+            @foreach (var category in Model)
+            {
+                <li>
+                    <a class="dropdown-item" asp-page="/Products/Index" asp-route-categoryId="@category.Id">@category.Name</a>
+                </li>
+            }
+        </ul>
+    </div>
+}

@@ -1,24 +1,42 @@
 @model WebApp.ViewModel.PagerViewModel
 
-@* 011 FR-003/004: numaralı pager + Önceki/Sonraki; tek sayfa varsa hiç çizilmez. *@
-@* asp-route-page kasıtlı olarak kullanılmaz: "page" adı asp-page tarafından ayrılmış
-   route-value anahtarıyla çakışır ve query string'i sessizce düşürür. *@
-@* 016: FilterQuery eki filtreyi sayfa geçişlerinde korur (US1-2). *@
+@* 011 FR-003/004: numaralı pager + Önceki/Sonraki; tek sayfa varsa hiç çizilmez.
+   052-görsel: Hepsiburada-tarzı pencereli pager — ilk/son + geçerli çevresi, arada ellipsis
+   (20k/12 ≈ 1667 sayfa → hepsini basmak imkânsız).
+   asp-route-page kasıtlı kullanılmaz: "page" adı asp-page ayrılmış anahtarıyla çakışır. *@
 @if (Model.PageCount > 1)
 {
+    var pc = Model.PageCount;
+    var cur = Model.PageNumber;
+    const int win = 2;
+    var pages = new SortedSet<int> { 1, pc };
+    for (var i = cur - win; i <= cur + win; i++)
+    {
+        if (i >= 1 && i <= pc) pages.Add(i);
+    }
+    var ordered = pages.ToList();
+
     <nav class="mt-4" aria-label="Ürün sayfaları">
-        <ul class="pagination justify-content-center">
-            <li class="page-item @(Model.HasPreviousPage ? null : "disabled")">
-                <a class="page-link" href="/Products?page=@(Model.PageNumber - 1)@Model.FilterQuery">Önceki</a>
+        <ul class="kp-pager">
+            <li class="@(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="kp-pager-nav" href="/Products?page=@(cur - 1)@Model.FilterQuery" aria-label="Önceki">‹</a>
             </li>
-            @for (var i = 1; i <= Model.PageCount; i++)
+
+            @{ var prev = 0; }
+            @foreach (var p in ordered)
             {
-                <li class="page-item @(i == Model.PageNumber ? "active" : null)">
-                    <a class="page-link" href="/Products?page=@i@Model.FilterQuery">@i</a>
+                @if (prev > 0 && p - prev > 1)
+                {
+                    <li class="kp-pager-gap">…</li>
+                }
+                <li>
+                    <a class="kp-pager-num @(p == cur ? "active" : "")" href="/Products?page=@p@Model.FilterQuery">@p</a>
                 </li>
+                prev = p;
             }
-            <li class="page-item @(Model.HasNextPage ? null : "disabled")">
-                <a class="page-link" href="/Products?page=@(Model.PageNumber + 1)@Model.FilterQuery">Sonraki</a>
+
+            <li class="@(Model.HasNextPage ? "" : "disabled")">
+                <a class="kp-pager-nav" href="/Products?page=@(cur + 1)@Model.FilterQuery" aria-label="Sonraki">›</a>
             </li>
         </ul>
     </nav>
