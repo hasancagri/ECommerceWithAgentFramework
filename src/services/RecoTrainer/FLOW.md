@@ -1,37 +1,39 @@
 # RecoTrainer — Domain Süreci (053 kişiselleştirme beyni, Python)
 
-**BC ne yapar:** Gezinme + arama + satın-alma sinyallerini tek feature store'da toplar; kullanıcının
-**zevk profilini** (ilgi kümeleri + öznitelik ağırlıkları + oran + gerekçe) anlık türetir. Ürün SIRALAMAZ
-(o Storefront'un işi); yalnız "kullanıcı neyi sever"i üretir (FR-015/016 sorumluluk sınırı).
+**BC ne yapar:** Gezinme + arama + satın-alma sinyallerini tek feature store'da toplar; periyodik bir işte
+kullanıcının **zevk profilini** (ilgi kümeleri + öznitelik ağırlıkları + oran + gerekçe) **precompute** eder.
+Ürün SIRALAMAZ (o Storefront'un işi); yalnız "kullanıcı neyi sever"i üretir (FR-015/016 sorumluluk sınırı).
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Anchor = Python sınıf/fonksiyon adı. Süreç değişince (yeni/silinen adım-event) bu dosya güncellenir.
 
 ## Süreç
 
-1. **Gezinme/arama sinyali HTTP ile düşer.** WebApp batch POST eder;         `(SignalIn`
-   geçersiz öge atlanır (kayıp-toleranslı), geçerliler yazılır → 202.        ` → ingest_signals)`
-2. **Satın-alma sinyali broker'dan gelir.** Storefront `PurchaseEnriched`     `(PurchaseEnrichedIn`
-   yayar; her kalem bir `Purchased` satırı olur.                             ` → purchase_consumer)`
-3. **Hepsi tek tabloya yazılır.** Gezinme/arama insert; satın-alma            `(Signal`
-   `unique(dedup_key)` ile idempotent (çift teslim no-op).                    ` → upsert_purchased)`
-4. **İstekte profil türetilir.** Kimlikle (userId OR anonymousId,             `(get_taste_profile`
-   dikiş) sinyaller çekilir; precompute yok (faz-1).                         ` → build_profile)`
-5. **Ağırlık hesaplanır.** Her öznitelik: Σ (typeWeight × recencyDecay),      `(compute_attribute_weights)`
-   sonra sqrt (sublinear) × IDF (kendi korpusundan).
-6. **Segmentlenir + oranlanır.** Kategori = küme tohumu, yazarlar bağlanır;   `(build_profile,`
-   calibrated share (Σ≈1) + azınlık taban kotası; keşif kuşağı.              ` InterestCluster)`
-7. **SABİT sözleşmeyle sunulur.** `TasteProfile` (clusters + discovery);      `(TasteProfileOut)`
-   bookId ÜRETMEZ — ranking Storefront'ta.
+1. **Gezinme/arama sinyali HTTP ile düşer.** WebApp batch POST eder; geçersiz     `(SignalIn`
+   öge atlanır (kayıp-toleranslı), geçerliler `Signal`'a yazılır → 202.           ` → ProfileService)`
+2. **Satın-alma sinyali broker'dan gelir.** Storefront `PurchaseEnriched` yayar;   `(PurchaseEnrichedIn`
+   her kalem bir `Purchased` satırı; `unique(dedup_key)` idempotent.               ` → ProfileService)`
+3. **Zamanlanmış iş tüm sinyalleri okur.** Periyodik + açılışta (scheduler);       `(RecomputeProfilesJob)`
+   her sinyal ağırlıklı noktaya çevrilir (typeWeight × recency = sample_weight).   `(SignalPoint)`
+4. **FIT — korpus modeli eğitilir.** Tek `TfidfVectorizer` (vocab/encoding + IDF)  `(TfidfVectorizer)`
+   korpusta fit; **saf-dosya** registry'ye versiyonlu joblib yazılır.
+5. **TRANSFORM — her subject segmentlenir.** `KMeans` (k=3) ilgi kümelerine        `(KMeans →`
+   böler; calibrated share (Σ≈1) + azınlık taban kotası.                          ` InterestCluster)`
+6. **Profil kalıcı yazılır.** `TasteProfileRecord` (subject + JSON payload);        `(TasteProfileRecord)`
+   tam yeniden hesap (eskiler silinip taze yazılır).
+7. **Serving OKUR, hesaplamaz.** Kimlikle (userId OR anonymousId, dikiş) precompute `(ProfileService`
+   satırı okunur; SABİT `TasteProfile` sözleşmesi döner. bookId YOK.               ` → TasteProfileOut)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Beyin bookId üretmez (FR-023).** Yalnız öznitelik + ağırlık + oran + gerekçe; ürün seçimi katalog sahibinin.
-- **type_weight politika, veri değil.** event_type→ağırlık config'te (satın-alma>sepet>tıklama>arama); tabloda donmaz (tunable).
-- **Tek birleşik `Signal` tablosu.** Satın-alma ayrı aggregate değil — yüksek öncelikli satır. Profil = GROUP BY.
+- **Precompute — serving hesaplamaz.** Profil bir işte üretilir, DB'den okunur; bayatlık = recompute aralığı (kabul).
+- **sklearn DOĞRUDAN (wrapper yok).** `TfidfVectorizer` fit/transform + `KMeans` çıplak kullanılır; fit/transform ayrımı faz-2 train/infer seam'idir.
+- **Model saf-dosya registry.** Fitted vectorizer versiyonlu joblib dosyası (`models/`, gitignore); DB'de değil.
+- **typeWeight geniş makas.** Satın-alma domine, tıklama ≈ gürültü (sqrt sublinear → ~7:1 efektif); recency decay eskiyi söndürür (window yok).
+- **Tek birleşik `Signal` tablosu.** Satın-alma ayrı aggregate değil — yüksek ağırlıklı satır.
 - **İdempotency son hatta.** Satın-alma `unique(dedup_key)`; üst hat Storefront durable-inbox (exactly-once).
-- **Kayıp-toleranslı gezinme.** Geçersiz/eksik sinyal atlanır, akış bozulmaz; telemetri (v1.9.0 istisnası).
-- **Calibrated dağıtım (FR-025).** Argmax değil; oransal + azınlık taban kotası + çoklu-kuşak balonu kırar.
+- **Calibrated dağıtım (FR-025).** Argmax değil; oransal + azınlık taban kotası + balonu kırar.
 
 ## Sınır (bu BC'nin dokunmadığı)
 
