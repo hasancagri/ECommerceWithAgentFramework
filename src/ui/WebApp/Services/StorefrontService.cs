@@ -39,6 +39,33 @@ public class StorefrontService(
             products, content.PageNumber, content.PageCount, content.TotalItemCount));
     }
 
+    // 054: kişisel ana sayfa feed'i (yalnız kimlikli kullanıcı çağırır — anonim için WebApp hiç gelmez).
+    // Boş liste geçerli sonuçtur (sinyalsiz kullanıcı) — UI boş durumu çizer; hata da boş duruma düşer
+    // (ana sayfa feed hatasıyla kırılmaz).
+    public async Task<List<StorefrontProductViewModel>> GetPersonalFeedAsync()
+    {
+        var response = await storefrontRefitService.GetPersonalFeed();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            logger.LogProblemDetails(response.Error);
+            return [];
+        }
+
+        if (response.Content?.Data is null)
+            return [];
+
+        return response.Content.Data
+            .Select(p => new StorefrontProductViewModel(p.ProductId, p.Name, p.Description,
+                (p.Authors ?? []).Select(a => new AuthorViewModel(a.Id, a.Name)).ToList(),
+                p.Publisher, p.PublisherId,
+                p.Price, p.ImageUrl, p.StockQuantity, p.IsInStock, p.Category,
+                p.CategoryId,
+                RatingAverage: p.RatingAverage, RatingCount: p.RatingCount,
+                VariantCount: p.VariantCount))
+            .ToList();
+    }
+
     // 016: filtre seçenekleri (facet) — hata durumunda boş seçenekle devam edilir (liste yine çizilir).
     public async Task<FilterOptionsViewModel> GetFilterOptionsAsync()
     {

@@ -47,11 +47,11 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 |---|---|---|---|
 | `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi) | `specs/040-catalog-domain-extract` |
 | `basket` | basketDb | Sepet + kalem; Stock'a gRPC rezervasyon (fail-closed) | `specs/012-stock-reservation` |
-| `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Create/Confirm/Cancel; chat charge yolu; Confirm'de `OrderCompleted` fanout (Reviews tüketir) | `specs/028-checkout-saga` |
+| `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Create/Confirm/Cancel; chat charge yolu; Confirm'de `OrderCompleted` fanout (Reviews + Storefront tüketir) | `specs/028-checkout-saga` |
 | `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); CreateOrder→CommitStock→Charge→Confirm→ClearBasket; pivot=Charge, pivot-öncesi LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount; tek-faz Charge) | — |
 | `stock` | stockDb | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; gRPC rezervasyon sunucu | `specs/014-supplier-stock-authority` |
-| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama | `specs/003-storefront-read-model` |
+| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama; kişisel feed (`UserPurchase` birikimi, ana sayfa) | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |

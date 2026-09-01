@@ -20,4 +20,9 @@ public interface IStorefrontRefitService
     // 045: varyant ailesi (üyeler + eksenler); ailesiz üründe 404 → seçici çizilmez.
     [Get("/api/v1/storefront/products/{productId}/family")]
     Task<ApiResponse<FamilyDto>> GetFamily(Guid productId);
+
+    // 054: kişisel feed — bearer zorunlu (handler token'ı enjekte eder); kimlik token'dan çözülür.
+    // Kart alanları liste yanıtıyla aynı (StorefrontProductDto yeterli; feed'e özgü matchType yok sayılır).
+    [Get("/api/v1/storefront/products/personal-feed")]
+    Task<ApiResponse<ListResult<StorefrontProductDto>>> GetPersonalFeed();
 }

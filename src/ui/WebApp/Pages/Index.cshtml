@@ -4,31 +4,40 @@
     ViewData["Title"] = "Ana Sayfa";
 }
 
-@* Hero — kitapyurdu-tarzı sıcak karşılama. *@
+@* 054: hero sade — genel vitrine ("Tüm Kitaplara Göz At") çağrı yok; ana sayfa saf kişisel. *@
 <div class="kp-hero">
     <div class="container text-center py-5">
         <h1 class="kp-hero-title">📚 Binlerce Kitap, Tek Çatı Altında</h1>
         <p class="kp-hero-sub">Yazarlar, yayınevleri ve türler — aradığın kitap burada.</p>
-        <a asp-page="/Products/Index" class="btn kp-hero-btn">Tüm Kitaplara Göz At</a>
     </div>
 </div>
 
 <div class="container mt-4">
-    <div class="d-flex align-items-baseline justify-content-between mb-3">
-        <h2 class="mb-0">Öne Çıkan Kitaplar</h2>
-        <a asp-page="/Products/Index" class="text-decoration-none">Tümünü gör →</a>
-    </div>
-
-    @if (!Model.Products.Any())
+    @if (Model.Feed.Any())
     {
-        <div class="alert alert-warning">Henüz kitap yok.</div>
+        <div class="d-flex align-items-baseline justify-content-between mb-3">
+            <h2 class="mb-0">Sana Özel Kitaplar</h2>
+        </div>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var product in Model.Feed)
+            {
+                <partial name="_ProductCard" model="product"/>
+            }
+        </div>
     }
     else
     {
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-            @foreach (var product in Model.Products)
+        @* 054 FR-006: boş durum — ürün listesi de kategori kartları da YOK; gezinme navbar'dan. *@
+        <div class="text-center py-4">
+            @if (Model.IsAuthenticated)
             {
-                <partial name="_ProductCard" model="product"/>
+                <h2 class="mb-2">Henüz sana özel bir liste yok</h2>
+                <p class="text-muted">İlk siparişinden sonra burası okuduğun yazarlara ve türlere göre kişiselleşir.</p>
+            }
+            else
+            {
+                <h2 class="mb-2">Keşfe başla</h2>
+                <p class="text-muted">Giriş yapıp sipariş verdikçe burası sana göre şekillenir.</p>
             }
         </div>
     }
