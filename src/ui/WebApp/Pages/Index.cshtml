@@ -52,10 +52,17 @@
             let list;
             try { list = JSON.parse(localStorage.getItem('recentlyViewed')); } catch { list = null; }
             if (!Array.isArray(list) || list.length === 0) return;
+            const host = document.getElementById('recently-viewed');
             fetch('/?handler=RecentlyViewed&ids=' + encodeURIComponent(list.join(',')))
                 .then(r => r.ok ? r.text() : '')
-                .then(html => { if (html.trim()) document.getElementById('recently-viewed').innerHTML = html; })
+                .then(html => { if (html.trim()) host.innerHTML = html; })
                 .catch(() => { /* vitrin erişilemezse şerit sessizce çizilmez */ });
+            // FR-010: "Temizle" — enjekte HTML'deki butonu delegasyonla dinle.
+            host.addEventListener('click', e => {
+                if (!e.target.closest('[data-clear-recently-viewed]')) return;
+                localStorage.removeItem('recentlyViewed');
+                host.innerHTML = '';
+            });
         })();
     </script>
 }

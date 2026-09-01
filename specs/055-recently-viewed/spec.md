@@ -115,6 +115,9 @@ atlanır; kullanıcı hata ya da boş kart görmez.
 - **FR-008**: Satın alınmış ürün şeritten elenmez.
 - **FR-009**: Bozuk/okunamayan yerel liste sayfayı kırmaz; şerit çizilmez ve sonraki ziyaretle
   liste yeniden kurulmaya başlar.
+- **FR-010**: Şerit başlığının yanında "Temizle" eylemi bulunur (kitapyurdu emsali): tıklanınca
+  cihaz-yerel liste silinir ve şerit sayfa yenilenmeden kaybolur; sonraki gezinme listeyi sıfırdan
+  kurar. (Rev 2026-09-01: v1 "temizleme yok" varsayımı kullanıcı isteğiyle kaldırıldı.)
 
 ### Key Entities
 
@@ -140,7 +143,7 @@ atlanır; kullanıcı hata ya da boş kart görmez.
 
 - Liste boyutu 10 (kitapyurdu-benzeri kısa şerit); değişirse tek sabit.
 - "Gezme" = ürün detay sayfasının açılması; liste/arama kartına bakmak gezme sayılmaz.
-- v1'de "listeyi temizle" düğmesi yok (tarayıcı verisi temizleyince sıfırlanır).
+- ~~v1'de "listeyi temizle" düğmesi yok~~ (Rev 2026-09-01: FR-010 ile eklendi — kitapyurdu emsali).
 - Gizli pencerede kalıcılık pencere ömrüyle sınırlı — kabul edilen doğal davranış.
 - Şerit yalnız ana sayfada (v1); detay sayfası altına da koymak ileriki iş.
 - Kart verisi mevcut vitrin okumalarından gelir; yeni sunucu verisi/kontratı gerekmez (kademe
