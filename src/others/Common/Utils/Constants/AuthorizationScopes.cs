@@ -44,7 +44,10 @@ public static class AuthorizationScopes
     // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.
     public const string IdentityRolesManage = "identity.roles.manage";
 
-    // personalization.api (048): gezinme sinyali ingest ucu. WebApp (BFF) client_credentials
+    // reco.trainer (053): gezinme sinyali ingest ucu. WebApp (BFF) client_credentials
     // MAKINE kimligiyle sunar (anonim gezinme user token tasimaz); son-kullanici kimligi payload'da.
     public const string PersonalizationIngest = "personalization.ingest";
+
+    // reco.trainer (053): zevk profili okuma ucu (WebApp BFF m2m).
+    public const string PersonalizationRead = "personalization.read";
 }

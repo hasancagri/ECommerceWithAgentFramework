@@ -49,8 +49,8 @@ public class IndexModel(StorefrontService storefrontService, BasketService baske
             UserId = userId,
             AnonymousId = anonymousId,
             ProductId = product.Data.ProductId,
-            // 052: kişiselleştirme sinyali "Brand" alanı — kitapta birincil yazar adıyla beslenir.
-            Brand = product.Data.Authors.FirstOrDefault()?.Name,
+            // 053: kişiselleştirme sinyali "author" — kitapta birincil yazar adıyla beslenir.
+            Author = product.Data.Authors.FirstOrDefault()?.Name,
             Category = product.Data.Category,
             Price = product.Data.Price,
         });

@@ -3,7 +3,7 @@ namespace WebApp.Pages.Products;
 
 // 011: Tüm Ürünler ekranı — vitrinden sayfa başına 12 ürün, numaralı pager (US1).
 // 016: kategori filtresi — seçenekler facet ucundan (gerçek veri); filtre sayfalamada korunur.
-public class IndexModel(StorefrontService storefrontService) : BasePageModel
+public class IndexModel(StorefrontService storefrontService, BehaviorLogWriter behaviorLog) : BasePageModel
 {
     public List<StorefrontProductViewModel> Products { get; set; } = [];
     public FilterOptionsViewModel FilterOptions { get; set; } = FilterOptionsViewModel.Empty;
@@ -55,6 +55,35 @@ public class IndexModel(StorefrontService storefrontService) : BasePageModel
         PageNumber = productsAsResult.Data.PageNumber;
         PageCount = productsAsResult.Data.PageCount;
         TotalCount = productsAsResult.Data.TotalItemCount;
+
+        // 053 (FR-003, US1-AS4): arama = en hafif sinyal. Sorgu + üst-N sonucun baskın yazar/kategorisi
+        // reco-trainer'a gönderilir (ham sorgu izlenebilirlik; profil faz-1 ham metni kullanmaz).
+        if (SearchQuery is not null && Products.Count > 0)
+        {
+            var (anonymousId, _, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
+            var dominantAuthor = Products
+                .SelectMany(p => p.Authors)
+                .GroupBy(a => a.Name)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault();
+            var dominantCategory = Products
+                .Where(p => !string.IsNullOrWhiteSpace(p.Category))
+                .GroupBy(p => p.Category!)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault();
+
+            behaviorLog.Enqueue(new BehaviorEvent
+            {
+                EventType = "SearchPerformed",
+                UserId = userId,
+                AnonymousId = anonymousId,
+                Author = dominantAuthor,
+                Category = dominantCategory,
+                SearchTerm = SearchQuery,
+            });
+        }
 
         return Page();
     }

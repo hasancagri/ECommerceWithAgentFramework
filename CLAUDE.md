@@ -53,7 +53,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
-| `personalization-api` | personalizationApiDb | **.NET** write-only signal store; gezinme (WebApp HTTP) + satın-alma (Order `OrderCompleted` event) sinyalleri; öneri/ML sonraki faz | `specs/048-personalization-signal-store` |
+| `reco-trainer` | recoTrainerDb | **Python** kişiselleştirme beyni (Aspire `AddUvicornApp`); sinyal feature store + zevk profili türetimi (kümeleme/IDF/calibrated share); gezinme (WebApp HTTP) + satın-alma (Storefront `PurchaseEnriched` event); ranking Storefront'ta, ML eğitimi faz-2 | `specs/053-personalized-home-feed` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
 | `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC | `specs/029-openiddict-migration` |
 | `chat-agent` | — | AI asistan (MAF); MCP istemci + A2A ödeme (uzak PaymentGateway) | `specs/024-a2a-payment-agent` |

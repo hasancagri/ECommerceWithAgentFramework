@@ -42,9 +42,11 @@ public static class Config
             ["merchant.credentials.write"] = "customer.api",
             // 044: yorum yazma (Order purchase-check gRPC ucu da aynı scope'u ister — R4).
             ["reviews.write"] = "reviews.api",
-            // 048: gezinme sinyali ingest — audience personalization.api. WebApp (BFF) m2m istemcisi
-            // (webapp-signals) client_credentials ile talep eder; customer/admin kullanıcı token'ına binmez.
-            ["personalization.ingest"] = "personalization.api",
+            // 053: gezinme sinyali ingest + profil okuma — audience reco.trainer (Python beyin; 048
+            // personalization.api emekli). WebApp (BFF) m2m istemcisi (webapp-signals) client_credentials
+            // ile talep eder; customer/admin kullanıcı token'ına binmez.
+            ["personalization.ingest"] = "reco.trainer",
+            ["personalization.read"] = "reco.trainer",
         };
 
     // WebApp BFF'nin talep ettiği 12 servis scope'u (apikeys.manage HARİÇ; bugünkü Duende paritesi).
@@ -122,7 +124,8 @@ public static class Config
             ClientSecret = "webapp-signals-secret",
             DisplayName = "WebApp behavior signals (m2m)",
             AllowClientCredentials = true,
-            Scopes = ["personalization.ingest"],
+            // 053: ingest (sinyal yaz) + read (zevk profili oku) — ikisi de reco.trainer audience.
+            Scopes = ["personalization.ingest", "personalization.read"],
         },
         // 050: çok-tedarikçi feed (Procurement/Supplier + eski ingestion-agent) söküldü — first-party
         // ürün-CRUD yazım yolu, ayrı m2m istemci gerektirmez.

@@ -14,24 +14,39 @@
 </div>
 
 <div class="container mt-4">
-    @* Öne çıkanlar kuşağı. *@
-    <section class="kp-band">
-        <div class="kp-band-head">
-            <h3 class="kp-band-title">Öne Çıkan Kitaplar</h3>
-            <a asp-page="/Products/Index" class="kp-band-more">Tümünü Gör →</a>
-        </div>
-        @if (!Model.Featured.Any())
+    @* 053: çoklu-kuşak kişisel feed. Cold-start'ta tek "Öne çıkan kitaplar" kuşağı (FR-011). *@
+    @if (!Model.Feed.Shelves.Any(s => s.Products.Any()))
+    {
+        <div class="alert alert-warning">Henüz kitap yok.</div>
+    }
+    else
+    {
+        @for (var i = 0; i < Model.Feed.Shelves.Count; i++)
         {
-            <div class="alert alert-warning">Henüz kitap yok.</div>
+            <partial name="_RecommendationShelf" model="Model.Feed.Shelves[i]"
+                     view-data='new ViewDataDictionary(ViewData) { { "ShelfIndex", i }, { "IsColdStart", Model.Feed.IsColdStart } }'/>
         }
-        else
-        {
-            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
-                @foreach (var product in Model.Featured)
-                {
-                    <partial name="_ProductCard" model="product"/>
-                }
-            </div>
-        }
-    </section>
+    }
 </div>
+
+@section Scripts {
+    <script>
+        // 053: waterfall load-more — kuşağın sonraki offset kartlarını çekip ekler; boş dönerse buton gizlenir.
+        async function loadMoreShelf(btn) {
+            const shelf = btn.dataset.shelf;
+            let offset = parseInt(btn.dataset.offset, 10);
+            const grid = document.getElementById('shelf-grid-' + shelf);
+            btn.disabled = true;
+            try {
+                const res = await fetch(`?handler=More&shelf=${shelf}&offset=${offset}`);
+                if (!res.ok) { btn.remove(); return; }
+                const html = (await res.text()).trim();
+                if (!html) { btn.remove(); return; }
+                grid.insertAdjacentHTML('beforeend', html);
+                btn.dataset.offset = offset + 12;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+}
