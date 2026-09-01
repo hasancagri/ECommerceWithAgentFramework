@@ -225,3 +225,22 @@
         </div>
     </div>
 </div>
+
+@* 055: detay ziyareti cihaz-yerel "son gezdiklerim" listesine yazılır (en yeni başta, ≤10,
+   tekrar ziyaret öne taşır). Sunucuya sinyal GİTMEZ; bozuk kayıt listeyi sıfırlar (FR-009). *@
+@section Scripts {
+    @if (Model.Product is not null)
+    {
+        <script>
+            (function () {
+                const KEY = 'recentlyViewed';
+                const id = '@Model.Product.ProductId';
+                let list;
+                try { list = JSON.parse(localStorage.getItem(KEY)); } catch { list = null; }
+                if (!Array.isArray(list)) list = [];
+                list = [id, ...list.filter(x => typeof x === 'string' && x !== id)].slice(0, 10);
+                localStorage.setItem(KEY, JSON.stringify(list));
+            })();
+        </script>
+    }
+}

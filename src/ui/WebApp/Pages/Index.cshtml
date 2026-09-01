@@ -41,4 +41,21 @@
             }
         </div>
     }
+
+    @* 055: "Son Gezdiklerim" şeridi — feed'in/boş durumun ALTINDA; liste boşsa istek de yok. *@
+    <div id="recently-viewed"></div>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            let list;
+            try { list = JSON.parse(localStorage.getItem('recentlyViewed')); } catch { list = null; }
+            if (!Array.isArray(list) || list.length === 0) return;
+            fetch('/?handler=RecentlyViewed&ids=' + encodeURIComponent(list.join(',')))
+                .then(r => r.ok ? r.text() : '')
+                .then(html => { if (html.trim()) document.getElementById('recently-viewed').innerHTML = html; })
+                .catch(() => { /* vitrin erişilemezse şerit sessizce çizilmez */ });
+        })();
+    </script>
+}

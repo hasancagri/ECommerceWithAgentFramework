@@ -1,0 +1,13 @@
+@model List<WebApp.ViewModel.StorefrontProductViewModel>
+
+@* 055: cihaz-yerel "son gezdiklerim" şeridi — sıra istemcinin gönderdiği sıradır (en yeni önce).
+   Satın alınan ürün elenmez (gezilen şey hatıradır); kartlar mevcut _ProductCard ile çizilir. *@
+<div class="mt-5">
+    <h2 class="mb-3">Son Gezdiklerim</h2>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
+        @foreach (var product in Model)
+        {
+            <partial name="_ProductCard" model="product"/>
+        }
+    </div>
+</div>
