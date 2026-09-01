@@ -155,6 +155,8 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("merchant.credentials.write");
         // 044: urun yorumu yazma + uygunluk sorgusu (Order purchase-check gRPC'si de ayni scope).
         options.Scope.Add("reviews.write");
+        // 054: kisisel ana sayfa feed'i (vitrin okumalar anonim kalir; yalniz bu uc kimlik ister).
+        options.Scope.Add("storefront.read");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // 030 RBAC: MapInboundClaims (default true) gelen "role"u ClaimTypes.Role (uzun URI)'ye

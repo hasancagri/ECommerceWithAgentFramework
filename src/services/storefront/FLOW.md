@@ -1,15 +1,16 @@
 # Storefront — Domain Süreci
 
-**BC ne yapar:** Catalog+Stock+Reviews'ten akan **şişman event'leri** ürün-anahtarlı tek satırda
-(composite read-model) toplar; listeyi, facet'i, varyant ailesini ve filtre aramasını vitrine sunar.
+**BC ne yapar:** Catalog+Stock+Reviews+Order'dan akan **şişman event'leri** ürün-anahtarlı tek satırda
+(composite read-model) toplar; listeyi, facet'i, varyant ailesini, filtre aramasını ve sipariş-temelli
+kişisel feed'i vitrine sunar.
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
 
 ## Süreç
 
-1. **Üç kaynak event'i TEK sıralı kuyruğa akar.** Catalog, Stock,       `(storefront.events`
-   Reviews aynı kuyruğa bağlanır → satır yarışı yok.                     ` → Sequential)`
+1. **Dört kaynak event'i TEK sıralı kuyruğa akar.** Catalog, Stock,     `(storefront.events`
+   Reviews, Order aynı kuyruğa bağlanır → satır yarışı yok.              ` → Sequential)`
 2. **Catalog içeriği satıra yazılır.** Ad/fiyat/yazarlar/yayınevi/      `(ProductChangedEvent`
    kategori + kanonik spec'ler + varyant aile kodu, tek alan grubu.      ` → ApplyCatalog)`
 3. **Stok adedi satıra yazılır.** Yalnız `StockQuantity`; diğer         `(StockChangedEvent`
@@ -23,13 +24,18 @@
 7. **Facet seçenekleri satılabilir satırlardan türetilir** (cache'li).  `(GetStorefrontFilterOptions)`
 8. **Varyant ailesi + filtre araması sunulur.** Aile eksenleri;         `(GetProductFamily,`
    yazar/fiyat/stok filtresi (Name ASC, deterministik).                 ` SearchStorefrontProductsForAgent)`
+9. **Tamamlanan sipariş satın-alma kaydına döner.** Kalem başına        `(OrderCompleted`
+   kullanıcı+ürün satırı; tekrar teslim/alım aynı satır (idempotent).    ` → UserPurchase)`
+10. **Kişisel feed sunulur.** Satın alınan kitapların kategori+yazar    `(GetPersonalFeed`
+    sinyalinden, alınmamış (aile dahil) kitaplar; yazar > kategori.      ` → RankFeed)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Rich aggregate DEĞİL.** `StorefrontView` invariant taşımaz; Catalog+Stock+Reviews'ün ProductId-anahtarlı tek composite satırı.
 - **Kısmi satır geçerli.** Her kaynak yalnız kendi alanını yazar; `Price`/`Name` null = "Catalog raporlamadı" (dolu-satır filtresi eler).
 - **Push-only, geri-çekiş YOK.** Yalnız şişman event tüketir; hiçbir kaynağa dış çağrı yapmaz (fat-event dersi).
-- **Tek yazıcı + Sequential.** Üç exchange tek kuyruğa; eşzamanlı yazım = optimistic concurrency → Wolverine retry.
+- **Tek yazıcı + Sequential.** Dört exchange tek kuyruğa; eşzamanlı yazım = optimistic concurrency → Wolverine retry.
+- **Kişisel feed kullanıcıya bağlı tek okuma yüzeyidir.** Kimlik token'dan; sinyalsiz kullanıcı boş liste alır (fallback vitrin YOK); satın alınan ürün ve varyant ailesi asla önerilmez.
 
 ## Sınır (bu BC'nin dokunmadığı)
 

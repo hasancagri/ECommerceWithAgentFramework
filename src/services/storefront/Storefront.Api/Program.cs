@@ -15,6 +15,10 @@ builder.Services.AddMarten(opts =>
         // Optimistic concurrency: farkli kaynaklarin ayni satira eszamanli yazmasinda lost-update
         // olmaz — cakisan handler ConcurrencyException alir, Wolverine retry'da taze yukleyip uygular.
         opts.Schema.For<StorefrontView>().Identity(x => x.ProductId).UseOptimisticConcurrency(true);
+
+        // 054: kullanıcı satın-alma birikimi (kişisel feed sinyali). PK = "{userId:N}:{productId:N}"
+        // (idempotent upsert); feed sorgusunun tek erişim yolu UserId — index onun için.
+        opts.Schema.For<Storefront.Api.Domains.UserPurchase.UserPurchase>().Index(x => x.UserId);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -35,6 +39,14 @@ builder.Host.UseWolverine(opts =>
     {
         e.ExchangeType = ExchangeType.Fanout;
         e.BindQueue(RabbitMqConstants.ReviewSummaryChanged.Queues.Storefront);
+    });
+
+    // 054: OrderCompleted → UserPurchase birikimi (kişisel feed sinyali). Binding'i TUKETICI kurar;
+    // ayni tek-kuyruk deseni (4. exchange → storefront.events).
+    rabbit.DeclareExchange(RabbitMqConstants.OrderCompleted.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.OrderCompleted.Queues.Storefront);
     });
 
     // TEK kuyruk (storefront.events): üç exchange de buraya bağlı; Sequential işleme sayesinde
