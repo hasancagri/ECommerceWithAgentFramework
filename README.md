@@ -18,25 +18,32 @@
 
 ## Overview
 
-This is a full **microservices e-commerce backend** where every service is an isolated **bounded context** with its own database, and cross-context communication happens only through **integration events**, the **Model Context Protocol (MCP)**, and — for decisions that need an immediate yes/no — a single sanctioned **typed gRPC channel** (stock reservation). On top of it sit two agent applications: **ChatAgent**, an AI assistant built on the **Microsoft Agent Framework** that acts as an MCP client — it can browse the catalog, manage a basket, and review a user's orders and payments by calling each service's MCP tools with that user's token, and — via the **Agent2Agent (A2A)** protocol — delegate installment quotes to a **remote payment agent living in a separate solution**, passing only the cart total and the default card's non-sensitive **BIN** (never the PAN, CVV, or token) — and **IngestionAgent**, a **stateless** supplier-ingestion consumer built on **Agent Framework Workflows**: the **Supplier.Gateway** boundary service pulls the supplier feed and publishes only new/changed records as canonical events, and the agent processes each message with four **LLM-driven writer agents** (brand → category → catalog → stock), each scoped to its own service's MCP tools and fenced in by deterministic guardrails.
+This is a full **microservices e-commerce backend** where every service is an isolated **bounded context** with its own database, and cross-context communication happens only through **integration events**, the **Model Context Protocol (MCP)**, and — where a step needs an immediate yes/no or a hand-off between contexts — sanctioned **typed gRPC** (stock reservation) and **broker command/reply** (the checkout saga). Around the core sit two AI agent applications, both on the **Microsoft Agent Framework**:
+
+- **ChatAgent** — an AI shopping assistant that acts as an **MCP client**: it browses the catalog, manages a basket, and reviews a user's orders and payments by calling each service's MCP tools with that user's token. Via the **Agent2Agent (A2A)** protocol it delegates installment quotes to a **remote payment agent living in a separate solution**, passing only the cart total and the default card's non-sensitive **BIN** — never the PAN, CVV, or token.
+- **Reviews Moderation Agent** — a **stateless broker worker** that moderates product reviews with an LLM (structured JSON, temperature 0, no MCP). It consumes a `ReviewModerationRequested` event, classifies the text, and replies with `ReviewModerated` — the Reviews context itself holds zero agent-framework code, keeping the moderation model behind an event boundary.
+
+The catalog is **first-party**: the store owns its inventory, so product entry is plain product CRUD (an earlier multi-supplier ingestion pipeline was intentionally dismantled). New products flow `Catalog → Stock` (initial on-hand) and `Catalog → Storefront` (read-model) over integration events.
 
 It's a portfolio / learning project built to demonstrate how far you can push **DDD, CQRS, and event-driven design** in real .NET code — and how a modern LLM agent plugs into that architecture cleanly, without leaking business logic into the agent layer.
 
 ## What this project demonstrates
 
-- **Bounded-context isolation** — 9 services, each with its own PostgreSQL database and Marten schema. No shared domain model; the same concept (e.g. *Product*) is modeled differently in each context — a rich aggregate in Catalog, a plain basket-item entity in Basket, a read-model row in Storefront.
+- **Bounded-context isolation** — ten database-owning bounded contexts, each with its own PostgreSQL database and Marten schema, plus a gateway, two agent workers, and a web UI. No shared domain model; the same concept (e.g. *Product*) is modeled differently in each context — a rich aggregate in Catalog, a plain basket-item entity in Basket, a read-model row in Storefront.
 - **Rich aggregates & enforced invariants** — business rules live inside aggregates (private collections, behavior methods), not in handlers. Illegal states are unrepresentable.
 - **Vertical Slice + CQRS** — code is organized by feature, not by technical layer. Writes and reads are separate slices; no repositories — handlers use Marten's `IDocumentSession` directly.
 - **Result pattern over exceptions** — expected failures (not-found, validation, rule violations) flow through typed `Result` objects; exceptions are reserved for the truly unexpected.
 - **Scope-based authorization** — identity issued by OpenIddict + ASP.NET Identity; services authorize on OAuth **scopes** (no roles), enforced on HTTP endpoints *and* on Wolverine message handlers.
-- **Push-only read model** — the `storefront` service maintains a product-centric composite view (catalog + stock) fed purely by integration events — no outbound calls, no backfill. The web home page is served entirely from this view (fat `ProductChangedEvent` carries name, description, brand & category ids+names, price) — one anonymous read call renders every card with stock badges. The product list filters by dynamic **category & brand** (AND-combinable; facet options derive from the same view, so empty categories never appear — 016).
-- **Hybrid product search (filters + semantic, via chat)** — the storefront exposes a single `search_storefront_products` MCP tool (plus an anonymous REST twin): optional brand-OR / price-range / min-stock filters combined with a natural-language `searchText`. Embeddings (`text-embedding-3-small`) are produced on `ProductChangedEvent` only when the search text's hash actually changed, stored as a side document in **pgvector**-enabled `storefrontDb`, and queried with a raw cosine-distance SQL join — filters stay hard, ranking is semantic, and an embedding outage never blocks the view write or filter-only search (019). The slice splits into two execution paths behind one query: no `searchText` → Marten LINQ over sellable rows plus a pure, unit-testable filter core with deterministic `Name ASC` ordering; with `searchText` → hand-written SQL, because top-K + similarity-threshold must run *in the database* (limit-then-filter would silently drop results). Notable craft in the SQL path: the query vector travels as a **text parameter** with a server-side `::vector(1536)` cast (immune to Npgsql's pg_type cache race), every user value is a bound parameter (SQL string only ever concatenates constants), an `INNER JOIN` on the embedding side-table makes "no embedding → not ranked" structural rather than conditional, and the command borrows the Marten session's own connection instead of opening a new one. The similarity threshold (cosine distance ≤ 0.7) acts as a floor filter under top-K — it reliably drops unrelated matches, not a precision dial.
-- **Saved cards & addresses with PCI-safe tokenization** — a `customer` bounded context holds each user's **Wallet** (saved cards) and **AddressBook**, two aggregates keyed by user id with a "≤1 default" invariant. Raw PAN/CVV are **never persisted, logged, evented, or exposed** — `AddCard` passes them straight to a tokenizer (a simulated gateway now, swappable for a real PSP) and stores only a token + brand + last4 + expiry. MCP exposes **read-only** tools (`list_cards` / `list_addresses`) — there is deliberately no add-card tool. Checkout then lets the user **select** a saved address and card instead of retyping them, defaulting to the marked-default of each.
-- **Cross-agent delegation over A2A (installment quotes)** — ChatAgent is also an **Agent2Agent client**: when a user asks for installments on their basket, the assistant resolves the cart total (`get_basket`) and the default card's **BIN** (a new read-only `get_default_card_bin` MCP tool over the customer context), then delegates to a **remote payment agent** published by a *separate* solution. It discovers that agent from its `/.well-known/agent-card.json`, verifies the advertised `installment_quote` skill, and wraps it as a single callable tool (`AsAIFunction`). The boundary is deliberately **PCI-clean**: only the amount and the non-sensitive BIN cross the wire — full PAN/CVV/token never touch the A2A channel or the LLM context. It is **fail-open** by construction: if the remote agent is unconfigured or unreachable, the tool simply isn't added and every other capability keeps working (the whole system boots and runs without the remote side existing). The BIN itself is captured at card-add time (first 6 digits, non-sensitive) — the tokenizer still discards the PAN.
+- **Push-only read model** — the `storefront` service maintains a product-centric composite view (catalog + stock + review summary) fed purely by integration events on a **single sequential queue** — no outbound calls, no backfill. The web home page is served from this view (a fat `ProductChangedEvent` carries name, description, authors + publisher, category ids+names, price) — one anonymous read renders every card with stock badges. The product list filters by dynamic **category & author** (AND-combinable; facet options derive from the same view, so empty categories never appear).
+- **Variant families** — the storefront groups existing products sharing a `familyCode` into one list card plus a derived-axis selector on the detail page (no combinatorial generation) — the feed field flows through the same push-only view.
+- **Hybrid product search (filters + semantic, via chat)** — the storefront exposes a single `search_storefront_products` MCP tool (plus an anonymous REST twin): optional author-OR / price-range / min-stock filters combined with a natural-language `searchText`. Embeddings (`text-embedding-3-small`) are produced on `ProductChangedEvent` only when the search text's hash actually changed, stored as a side document in **pgvector**-enabled `storefrontDb`, and queried with a raw cosine-distance SQL join — filters stay hard, ranking is semantic, and an embedding outage never blocks the view write or filter-only search. No `searchText` → Marten LINQ over sellable rows with a pure, unit-testable filter core (deterministic `Name ASC`); with `searchText` → hand-written SQL, because top-K + similarity-threshold must run *in the database*. The query vector travels as a **text parameter** with a server-side `::vector(1536)` cast (immune to Npgsql's pg_type cache race), every user value is a bound parameter, and an `INNER JOIN` on the embedding side-table makes "no embedding → not ranked" structural rather than conditional.
+- **Verified-purchase reviews with model-behind-a-boundary moderation** — the `reviews` context accepts a 1–5★ review only from a buyer who actually purchased the product; eligibility is projected locally from an `OrderCompleted` integration event (a `PurchasedProduct` read model), not a synchronous call. AI moderation runs **out-of-band** in a separate broker worker (`ReviewModerationRequested → LLM → ReviewModerated`); a rating summary event flows on to Storefront.
+- **Saved cards & addresses with PCI-safe tokenization** — a `customer` bounded context holds each user's **Wallet** (saved cards) and **AddressBook**, two aggregates keyed by user id with a "≤1 default" invariant. Raw PAN/CVV are **never persisted, logged, evented, or exposed** — `AddCard` passes them to a tokenizer and stores only a token + brand + last4 + BIN + expiry. MCP exposes **read-only** tools (`list_cards` / `list_addresses`) — there is deliberately no add-card tool. Checkout lets the user **select** a saved address and card, defaulting to the marked-default of each.
+- **Cross-agent delegation over A2A (installment quotes)** — ChatAgent is also an **Agent2Agent client**: for installment options it resolves the cart total (`get_basket`) and the default card's **BIN** (`get_default_card_bin`), then delegates to a **remote payment agent** in a *separate* solution. It discovers the agent from its `/.well-known/agent-card.json`, verifies the advertised `installment_quote` skill, and wraps it as a callable tool (`AsAIFunction`). The boundary is **PCI-clean** (only amount + non-sensitive BIN cross the wire) and **fail-open** (unconfigured/unreachable → the tool just isn't added, everything else keeps working).
+- **Durable checkout orchestration (broker-only saga)** — checkout is a **standalone `Checkout.Orchestrator` service** running a Wolverine durable saga (state in Marten, keyed by `CheckoutId`); every step is an async RabbitMQ **command/reply**, so each context stays isolated behind its own queue. The sequence is `CreateOrder → CommitStock (per item) → Charge → Confirm → ClearBasket`. A **pivot rule** splits the timeline at **Charge** (single-phase capture, the last reversible line): everything *before* is compensatable (LIFO stock revert + order cancel — no money has moved), everything *after* is forward-only. A scheduled `CheckoutTimedOut` **watchdog** compensates a run that stalls before the pivot. The same durable-scheduling primitive retires cron: basket-reservation expiry is a Wolverine **`ScheduleAsync`** message that fires `ReservationExpired`, not a polling sweep.
+- **AI agent as a first-class client** — each service exposes its Wolverine commands/queries as MCP tools; ChatAgent consumes them per-user. MCP tools are thin wrappers — zero business-logic duplication.
 - **Declarative, cross-cutting caching** — read queries are cached with a single `[Cached(...)]` attribute via an `IMessageBus` decorator over HybridCache (L1 in-memory + optional Redis L2). Handlers stay untouched.
-- **AI agent as a first-class client** — each service exposes its Wolverine commands/queries as MCP tools; ChatAgent consumes them per-user. MCP tools are thin wrappers — zero business logic duplication.
-- **LLM-driven writers with deterministic guardrails** — supplier ingestion is split at the boundary: `supplier-gateway` pulls the feed, normalizes it to a canonical `SupplierProductSnapshotReceived` event, and publishes **only new/changed records** (change gate via record value equality, transactional outbox). The stateless `ingestion-agent` consumes each message with a per-message **Agent Framework Workflow**: four writer agents (brand → category → catalog → stock), each a `ChatClientAgent` **scoped by allowlist** to its own service's MCP tools (`upsert_brand` / `upsert_category` / `upsert_product` / `set_stock`), temperature 0, returning **typed structured-output results** — no hand-written envelope parsing. Steps hand off via typed results over **conditional workflow edges**: a failed step routes straight to the terminal, so later LLMs are never even invoked. `BrandId`/`CategoryId`/`ProductId` are minted by Catalog and carried by *code*, never by the model; a "success" without a tool call is treated as failure. Each step runs under its **own 60s budget** beneath a 6-minute bus execution timeout, so a hung call (e.g. a downed service behind a proxy that queues instead of refusing) surfaces as a visible failure that triggers backoff retries (10/30/60s) and a DLQ with full record content — never a **silent false ack**. Recovery is operational by design: requeue the DLQ message from the RabbitMQ management UI and the idempotent writes converge.
-- **Durable orchestration & scheduling (no cron, no lost work)** — checkout is a **Wolverine durable saga** (state in Marten, keyed by order id): the order is created `Pending`, HTTP returns immediately, and the saga drives the rest — per-item gRPC stock commit → confirm → gRPC basket clear. A **pivot rule** splits the timeline: steps *before* confirm are compensatable (`RevertCommit` + cancel on a business failure), everything *after* is forward-only (retryable) — so a post-pivot hiccup like a failed basket-clear never cancels an already-paid order. A scheduled `CheckoutTimedOut` **watchdog** compensates any run that stalls (config'd timeout). The same durable-scheduling primitive retires cron elsewhere: basket-reservation expiry is a Wolverine **`ScheduleAsync`** message (a ~10-minute safety net) that fires `ReservationExpired` to purge the cart line — not a polling sweep. Background saga steps run under a **machine identity** (`order-saga` client-credentials, no user token), and commit/revert carry the order id as an **idempotency key** so at-least-once delivery converges instead of double-committing. Decision logic lives in pure `On*` methods — unit-tested with no mocks (026/028).
+- **Product analytics** — the web UI ships a key-gated **PostHog** browser snippet (pageviews, autocapture, session replay) — a write-only client key from user-secrets; absent key → snippet simply isn't emitted.
 - **One-command orchestration** — .NET Aspire spins up every service, gateway, Postgres, RabbitMQ, and Redis with service discovery and connection-string injection.
 - **Spec-driven development** — non-trivial features go through a GitHub spec-kit flow (spec → plan → tasks → implement) governed by a project constitution.
 
@@ -45,11 +52,12 @@ It's a portfolio / learning project built to demonstrate how far you can push **
 ```mermaid
 flowchart TB
     subgraph Client
-        Web["WebApp (Blazor UI + customer-service chat page)"]
+        Web["WebApp (Razor Pages + customer-service chat page)"]
     end
 
     Web -->|HTTP| GW["Gateway (YARP)"]
     Web -->|chat proxy| Agent["ChatAgent<br/>(Microsoft Agent Framework)"]
+    Web -.->|analytics| PostHog["PostHog (browser snippet)"]
 
     Agent -->|MCP tools, per-user token| GW
 
@@ -58,9 +66,10 @@ flowchart TB
     GW --> Order["order-api"]
     GW --> Stock["stock-api"]
     GW --> Payment["payment-api"]
-    GW --> File["file-api"]
     GW --> Storefront["storefront-api"]
     GW --> Customer["customer-api"]
+    GW --> Reviews["reviews-api"]
+    GW --> Checkout["checkout-orchestrator"]
 
     IdP["Identity.Server (OpenIddict OIDC/OAuth + ASP.NET Identity)"]
     GW -.->|JWT bearer / scopes| IdP
@@ -69,31 +78,34 @@ flowchart TB
     RemotePay["Remote PaymentAgent<br/>(separate solution,<br/>A2A server)"]
     Agent -->|A2A: installment_quote<br/>amount + card BIN only| RemotePay
 
-    Supplier["supplier-api<br/>(feed simulator)"]
-    SupplierGW["supplier-gateway<br/>(boundary: pull, normalize,<br/>change gate)"]
-    Ingestion["ingestion-agent<br/>(stateless consumer,<br/>4 LLM writer agents via MCP)"]
-    SupplierGW -->|GET /v1/feeds| Supplier
-    SupplierGW --> DB10[("supplierGatewayDb<br/>(last published snapshots)")]
-    SupplierGW -->|SupplierProductSnapshotReceived| MQ
-    MQ -->|queue + retry + DLQ| Ingestion
-    Ingestion -->|MCP tools: upsert_brand/category/product,<br/>set_stock| Catalog & Stock
-
-    Catalog & Basket & Order & Stock & Payment & File & Storefront -->|integration events| MQ["RabbitMQ (fanout exchanges)"]
+    Catalog & Basket & Order & Stock & Payment & Storefront & Customer & Reviews -->|integration events| MQ["RabbitMQ (fanout exchanges + command queues)"]
     MQ -->|single sequential queue| Storefront
+    MQ -->|command / reply| Checkout
+    Checkout -->|CreateOrder / Confirm / Cancel<br/>CommitStock / Charge / ClearBasket| MQ
+
+    Reviews -->|ReviewModerationRequested| MQ
+    MQ -->|LLM moderate| ReviewsMod["reviews-moderation-agent<br/>(stateless broker worker)"]
+    ReviewsMod -->|ReviewModerated| MQ
+
+    Basket -->|gRPC reserve| Stock
+    Order -->|gRPC basket items (chat order)| Basket
 
     Catalog --> DB1[("catalogDb")]
     Basket --> DB2[("basketDb")]
     Order --> DB3[("orderDb")]
-    Stock --> DB5[("stockDb")]
-    Payment --> DB6[("paymentDb")]
-    File --> DB7[("fileDb")]
-    Storefront --> DB8[("storefrontDb")]
-    Customer --> DB9[("customerDb")]
+    Stock --> DB4[("stockDb")]
+    Payment --> DB5[("paymentDb")]
+    Storefront --> DB6[("storefrontDb")]
+    Customer --> DB7[("customerDb")]
+    Reviews --> DB8[("reviewsDb")]
+    Checkout --> DB9[("checkoutDb")]
 
-    Catalog -.->|L2 cache| Redis[("Redis")]
+    Storefront -.->|L2 cache| Redis[("Redis")]
 ```
 
-Each service is a self-contained bounded context. Synchronous read/write traffic goes **client → YARP gateway → service**, secured by JWT bearer tokens with OAuth scopes issued by Identity.Server. State changes are published as **integration events** over RabbitMQ fanout exchanges; the `storefront` read model is built entirely by consuming those events on a **single sequential queue** (structurally eliminating concurrent writes to the same composite row). The **ChatAgent** reaches the services' MCP endpoints through the gateway, injecting the calling user's token at invocation time so the agent acts *as that user*. The **Supplier.Gateway** periodically pulls the supplier feed (persistent **Hangfire** `feed-pull` recurring job — cron from config, storage in a separate `hangfire` schema of `supplierGatewayDb`, dev-only dashboard at `/hangfire`, failed pulls retried at most twice — or `POST /v1/feeds/pull`), compares each record with the last published snapshot, and publishes only new/changed records as canonical events; the stateless **IngestionAgent** consumes them one message at a time and writes to Catalog/Stock through four **LLM-driven writer agents** calling their MCP tools — typed structured-output results, bounded retries, and a dead-letter queue. For instant-consistency decisions, **stock reservation** runs over a typed **gRPC** contract (`Shared/Protos`): basket/order call Stock synchronously (fail-closed — no reservation, no add-to-cart), TTL holds are swept by Hangfire, and the supplier feed is the **sole authority** for on-hand stock, which only order commits decrement.
+Each service is a self-contained bounded context. Synchronous read/write traffic goes **client → YARP gateway → service**, secured by JWT bearer tokens with OAuth scopes issued by Identity.Server. State changes are published as **integration events** over RabbitMQ fanout exchanges; the `storefront` read model is built entirely by consuming those events on a **single sequential queue** (structurally eliminating concurrent writes to the same composite row). The **ChatAgent** reaches the services' MCP endpoints through the gateway, injecting the calling user's token at invocation time so the agent acts *as that user*.
+
+Two cross-context channels are sanctioned beyond events. **Stock reservation** runs over a typed **gRPC** contract (`Shared/Protos`): Basket calls Stock synchronously at add-to-cart (fail-closed — no reservation, no add), on-hand stock is authoritative in Stock itself, and a reservation is only turned into a decrement when the checkout saga commits it. **Checkout** runs as a **broker command/reply saga** hosted in its own `Checkout.Orchestrator` service: the web endpoint (or the chat order path) publishes `StartCheckout`, and the orchestrator drives Order, Stock, Payment, and Basket through their command queues (stock commit, charge, confirm, basket clear), each replying to a single correlation-keyed reply queue.
 
 ## Tech Stack
 
@@ -102,15 +114,15 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 | Runtime | .NET 10, C# (nullable + implicit usings) |
 | Orchestration | .NET Aspire (AppHost + ServiceDefaults) |
 | Persistence | Marten (PostgreSQL as document / event store) |
-| In-process bus & messaging | Wolverine (CQRS bus + RabbitMQ integration messaging) |
-| Messaging transport | RabbitMQ (fanout exchanges) |
+| In-process bus & messaging | Wolverine (CQRS bus + RabbitMQ integration messaging + durable sagas) |
+| Messaging transport | RabbitMQ (fanout exchanges + command/reply queues) |
 | Caching | HybridCache (L1 in-memory + optional Redis L2), AOP decorator |
 | Identity & AuthZ | OpenIddict + ASP.NET Identity (OIDC/OAuth, scope-based) |
 | API Gateway | YARP (with Aspire service discovery) |
-| Sync RPC | gRPC (stock reservation — shared proto contract) |
+| Sync RPC | gRPC (stock reservation, basket items/clear — shared proto contracts) |
 | AI Agents | Microsoft Agent Framework + Microsoft.Extensions.AI (OpenAI), MCP |
 | Cross-agent protocol | Agent2Agent (A2A) — `Microsoft.Agents.AI.A2A` client to a remote payment agent |
-| UI | Blazor WebApp |
+| UI & analytics | ASP.NET Core Razor Pages + PostHog browser analytics |
 | DI | Scrutor (convention-based auto-registration) |
 | Testing | xUnit + Shouldly (pure domain unit tests) |
 
@@ -118,37 +130,38 @@ Each service is a self-contained bounded context. Synchronous read/write traffic
 
 | Project | Responsibility |
 |---------|----------------|
-| `catalog-api` | Products and their details (Catalog bounded context) |
-| `basket-api` | User baskets and items |
-| `order-api` | Order placement and lifecycle |
-| `stock-api` | Product stock levels |
-| `payment-api` | Payment processing |
-| `file-api` | Product image storage/serving (internal) |
-| `storefront-api` | Push-only composite read model (catalog + stock); variant families (045): feed `familyCode` groups existing products into one list card + a derived-axis selector on the detail page (no combinatorial generation) |
-| `customer-api` | Wallet (saved cards, tokenized — no PAN/CVV; stores the non-sensitive BIN for installment quotes) + AddressBook (Customer bounded context) |
-| `reviews-api` | Verified-purchase product reviews (1-5 stars) — purchase proof via sync gRPC to Order, async AI moderation (auto-hide), rating summary event to Storefront |
-| `supplier-api` | Supplier feed simulator — one typed JSON endpoint, no DB, no bus |
-| `supplier-gateway` | Supplier boundary — Hangfire-scheduled feed pull, normalizes to the canonical event, publishes only new/changed records (snapshots in `supplierGatewayDb`) |
+| `catalog-api` | Rich `Product` + `Category` + `Author` + `Publisher` + tags + specification attributes (book metadata: multi-author, single publisher). First-party product write path |
+| `basket-api` | User baskets and items; synchronous gRPC stock reservation (fail-closed) |
+| `order-api` | Order aggregate + lifecycle; broker-driven `Create/Confirm/Cancel` from the checkout orchestrator; chat order path (charge → `StartCheckout`); `OrderCompleted` on confirm |
+| `stock-api` | `ProductStock` (on-hand); initial stock from `ProductLinked`; gRPC reservation server |
+| `payment-api` | Payment (mock, single-phase charge; amount only — no card fields) |
+| `storefront-api` | Push-only composite read model (catalog + stock + review summary); facets, variant families, hybrid filter+semantic search |
+| `customer-api` | Wallet (tokenized cards — no PAN/CVV; stores non-sensitive BIN) + AddressBook + `MerchantInformation` (gateway key) |
+| `reviews-api` | Verified-purchase reviews (1–5★); purchase proof via `OrderCompleted` event; AI moderation delegated to a separate worker; rating summary event to Storefront |
+| `checkout-orchestrator` | Standalone broker-only checkout saga (`checkoutDb`): `CreateOrder → CommitStock → Charge → Confirm → ClearBasket`, pivot = Charge, LIFO compensation + watchdog |
 | `gateway` | YARP reverse proxy / single entry point |
-| `identity-server` | OpenIddict + ASP.NET Identity — OIDC/OAuth authority |
-| `chat-agent` | AI shopping assistant — MCP client over the gateway + A2A client to the remote payment agent (installment quotes) |
-| `ingestion-agent` | Stateless supplier-ingestion consumer (per-message Agent Framework Workflow, four LLM writer agents over MCP, no database) |
-| `ecommerce-web` | Blazor storefront UI with a full-page customer-service chat (`/musteri-hizmetleri`) |
+| `identity-server` | OpenIddict + ASP.NET Identity — OIDC/OAuth authority + RBAC (roles map to scopes) |
+| `chat-agent` | AI shopping assistant — MCP client over the gateway + A2A client to the remote payment agent |
+| `reviews-moderation-agent` | Stateless broker worker — `ReviewModerationRequested → LLM (structured JSON) → ReviewModerated`; no database, no MCP |
+| `ecommerce-web` | Razor Pages storefront UI with a full-page customer-service chat + PostHog analytics |
 
-Shared foundations live under `src/others`: `Common` (domain building blocks, results, caching), `Shared` (integration-event contracts), and `Identity.Server`.
+Shared foundations live under `src/others`: `Common` (domain building blocks, results, caching), `Shared` (integration-event contracts + gRPC protos), and `Identity.Server`.
 
 ## Key Design Decisions
 
 - **A microservice = a bounded context.** The boundary is physical and hard: separate database, separate schema, separate domain model. Services never share a database or leak one context's model into another.
 - **Aggregates own their invariants.** New rules go on the aggregate method, never in a handler. Collections are private and exposed read-only; mutation only flows through behavior methods.
 - **Result over exceptions.** All handlers, aggregate methods, and endpoints return a `Result`; endpoints translate `IsSuccess` into `Ok`/`BadRequest`.
-- **Caching is a decorator, not middleware.** Wolverine's `Before/After` hooks can't return a value on short-circuit, so caching is implemented as a transparent `IMessageBus` decorator (Scrutor `Decorate`) — endpoints and handlers stay unaware.
+- **Caching is a decorator, not middleware.** Wolverine's `Before/After` hooks can't return a value on short-circuit, so caching is a transparent `IMessageBus` decorator (Scrutor `Decorate`) — endpoints and handlers stay unaware.
 - **The agent adds no business logic.** MCP tools re-invoke the same Wolverine command/query via `IMessageBus`; they only add an LLM-friendly name and description.
-- **A2A is a consumed contract, not a merge.** The remote payment agent lives in its own solution with its own database; this system *consumes* it over A2A exactly the way it consumes integration events, MCP, and gRPC — a deliberate contract, never a shared model or DB. The quote/charge boundary is drawn on purpose: installment **quote** needs only the bank (BIN + amount), so that is all that is sent; **charge** (which needs card identity / a token) is a separate future feature — keeping the token off the A2A/LLM path entirely for this one.
-- **LLM writers, deterministic guardrails.** The ingestion write path is deliberately LLM-driven — otherwise MCP is an empty ritual (a plain HTTP client with extra steps); here a model actually reads the tool schemas and calls them. The non-determinism is fenced in: per-writer tool allowlists, temperature 0, typed structured-output results, `ProductId` minted by Catalog and carried by code, success-without-a-tool-call treated as failure, and per-step time budgets.
-- **Sync RPC only where a yes/no must be immediate.** Stock reservation (basket/order → stock) is the one sanctioned synchronous channel: a typed gRPC contract, scope-protected, fail-closed. DB isolation still holds — callers hit Stock's API, never its database.
-- **Idempotency over transactions across services.** Cross-context writes can't share a transaction. The ingestion flow converges instead: SKU-keyed upsert, absolute `set_stock`, a transactional outbox at the gateway (Wolverine + Marten — event and snapshot commit atomically), at-least-once delivery with bounded retries + DLQ.
-- **No roles — scopes only.** Role-based authorization was intentionally removed; authorization is purely scope-based. Reads (stock, storefront) are anonymous; tokens matter on the shopping write path.
+- **A2A is a consumed contract, not a merge.** The remote payment agent lives in its own solution with its own database; this system *consumes* it over A2A the way it consumes integration events, MCP, and gRPC — a deliberate contract, never a shared model or DB.
+- **The saga is a service, not a god-object.** Checkout orchestration owns a process across four contexts, so it lives in its **own** BC (`Checkout.Orchestrator`) and talks only over broker command/reply — never another service's database. A saga's process owner is a bounded context, not a shared orchestration layer.
+- **Pivot over two-phase payment.** Payment is a single-phase `Charge` placed as the saga's last reversible step, so everything before it is compensatable (stock revert + order cancel) and nothing after needs a void/refund — the pivot line replaces authorize/capture/void machinery entirely.
+- **Sync RPC only where a yes/no must be immediate.** Stock reservation (basket/order → stock) is the sanctioned synchronous channel: a typed gRPC contract, scope-protected, fail-closed. DB isolation still holds — callers hit Stock's API, never its database.
+- **Idempotency over transactions across services.** Cross-context writes can't share a transaction. The checkout saga converges instead: deterministic `CheckoutId`/`PaymentId` keys, per-step idempotency keys, at-least-once delivery, and business failures routed to compensation rather than retried forever.
+- **Eventual-consistency flows use events, not gRPC.** A review written *after* purchase doesn't need an instant answer, so purchase proof is an `OrderCompleted` projection — gRPC is reserved strictly for instant-consistency (stock).
+- **The moderation model sits behind an event boundary.** Reviews holds no agent-framework code; moderation is a separate broker worker, so the LLM dependency never leaks into the review-writing context.
+- **No roles leak downstream — scopes only.** Identity issues roles (a role is a bundle of scopes); services authorize purely on scopes. Reads (stock, storefront) are anonymous; tokens matter on the shopping write path.
 
 ## Getting Started
 
@@ -166,16 +179,22 @@ Always start the distributed system through the **Aspire AppHost** — services 
 dotnet run --project src/aspire/AppHost/AppHost.csproj
 ```
 
-This brings up every service, the YARP gateway, Identity.Server, the Blazor UI, the ChatAgent, plus PostgreSQL (with pgAdmin), RabbitMQ (with the management plugin), and Redis. The **Aspire dashboard** opens with a live view of every resource, its logs, and its endpoints.
+This brings up every service, the YARP gateway, Identity.Server, the Razor Pages UI, both agents, plus PostgreSQL, RabbitMQ (with the management plugin), and Redis. The **Aspire dashboard** opens with a live view of every resource, its logs, and its endpoints.
 
 > Identity.Server must run over **HTTPS** (its `SameSite=None; Secure` cookies loop forever on plain HTTP).
 
-Both agents need OpenAI credentials in user-secrets — **IngestionAgent fails fast at startup without them**:
+The OpenAI-backed services (**ChatAgent** and the **Reviews Moderation Agent**) fail fast at startup without credentials in user-secrets:
 
 ```bash
 dotnet user-secrets set "OpenAI:ApiKey" "<key>"   --project src/agents/ChatAgent/ChatAgent.csproj
-dotnet user-secrets set "OpenAI:ApiKey" "<key>"   --project src/agents/IngestionAgent/IngestionAgent.csproj
-dotnet user-secrets set "OpenAI:Model"  "<model>" --project src/agents/IngestionAgent/IngestionAgent.csproj
+dotnet user-secrets set "OpenAI:ApiKey" "<key>"   --project src/agents/Reviews.Moderation/Reviews.Moderation.csproj
+dotnet user-secrets set "OpenAI:Model"  "gpt-4o-mini" --project src/agents/Reviews.Moderation/Reviews.Moderation.csproj
+```
+
+Optional — enable PostHog product analytics in the web UI (absent key → snippet not emitted):
+
+```bash
+dotnet user-secrets set "PostHog:ApiKey" "<phc_...>" --project src/ui/WebApp/WebApp.csproj
 ```
 
 ### Build & test
@@ -196,11 +215,11 @@ dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj
 ```
 src/
   aspire/        AppHost (orchestration) + ServiceDefaults
-  services/      basket, catalog, customer, file, gateway, order,
-                 payment, procurement, reviews, stock, storefront, supplier
-  others/        Common, Shared, Identity.Server
-  agents/        ChatAgent (MCP client, LLM) + IngestionAgent (Workflows, LLM writers)
-  ui/            WebApp (Blazor)
+  services/      basket, catalog, checkout, customer, gateway, order,
+                 payment, reviews, stock, storefront
+  others/        Common, Shared (contracts + protos), Identity.Server
+  agents/        ChatAgent (MCP client, LLM) + Reviews.Moderation (broker worker, LLM)
+  ui/            WebApp (Razor Pages)
 tests/           Per-service domain unit tests (xUnit + Shouldly)
 .specify/        Spec-driven development setup (spec-kit)
 specs/           Feature specs / plans / tasks
@@ -216,63 +235,54 @@ Domains/<Aggregate>/
   Features/
     Commands/                     # write slices  (IDocumentSession, [Transactional])
     Queries/                      # read slices   (read-only)
-    Agent/                        # agent-facing slices (exposed via MCP)
+    Agents/                       # agent-facing slices (exposed via MCP)
 ```
 
-## DropShop payment-gateway integration (032/033 + vault)
+Each bounded context also carries a `FLOW.md` — a domain-process document (EventStorming altitude) describing the business steps, invariants, and boundary of that context, guarded by `scripts/check-flow-links.sh`.
+
+## DropShop payment-gateway integration (032/033)
 
 This storefront registers itself as a merchant with the external **DropShop** payment gateway
 (a separate solution, consumed as a contract — never a shared DB/model) and then uses the
-gateway's **card vault** for PCI-safe card storage. The earlier `GatewayOnboarding/` module
-(descriptor + HTTP-01 challenge + in-memory stores) was **removed** — the gateway switched to
-push-inline registration and human admin review, so the flow is now chat-driven:
+gateway's **card vault** for PCI-safe card storage:
 
 - **Admin onboarding via chat (032)** — an admin-only Razor page (`Pages/Admin/Onboarding`) talks
   to the ChatAgent **`admin` persona** through the BFF SSE proxy (`/chat/admin/stream`, role-gated).
-  The persona's tool set is a WebApp-hosted onboarding MCP surface that wraps the gateway calls:
-  `submit_registration` (pushes domain/legalName/taxId/contactEmail/webhookUrl straight to the
-  gateway's Merchant.Api `/mcp`) and `registration_status`. Gateway calls run with the machine
-  identity (`ecommerce-onboarding` client_credentials) — the admin's user token never leaves this
-  system.
-- **MerchantKey handling (033)** — after gateway-side approval, the gateway's activation page shows
-  the **MerchantKey** once; the admin pastes `{merchantId, merchantKey}` into the same Onboarding
-  page, which persists it in **Customer.Api** (`MerchantInformation` aggregate — no more in-memory
-  store). The key is the gateway OAuth `client_secret` (`client_id = merchantId`) and only ever
+  The persona wraps the gateway calls (`submit_registration` / `registration_status`) as a
+  WebApp-hosted onboarding MCP surface. Gateway calls run with the machine identity
+  (`ecommerce-onboarding` client_credentials) — the admin's user token never leaves this system.
+- **MerchantKey handling (033)** — after gateway-side approval, the admin pastes
+  `{merchantId, merchantKey}` into the Onboarding page, persisted in **Customer.Api**
+  (`MerchantInformation` aggregate). The key is the gateway OAuth `client_secret` and only ever
   goes to the gateway's `connect/token`.
-- **Card vault client (017 consumer)** — Customer.Api's Wallet tokenizer now calls the gateway's
-  vault (`merchants/{merchantId}/vault/cards`, scope `cards.write`, merchant-scoped token acquired
-  with the stored MerchantKey): raw PAN goes straight to the gateway, only `card_…` token + brand +
-  last4 + BIN are kept locally. Config via `DropShopVaultOption` (Options pattern).
-- **Commission negotiation counterpart** — merchant-side commission decisions stay on the gateway's
-  anonymous decision links (mailed accept/reject pages); this system does not call the gateway's
-  commission API.
+- **Card vault client (017 consumer)** — Customer.Api's Wallet tokenizer calls the gateway's
+  vault (`merchants/{merchantId}/vault/cards`, scope `cards.write`, merchant-scoped token): raw PAN
+  goes straight to the gateway, only `card_…` token + brand + last4 + BIN are kept locally.
 
-## Chat payment + order completion (038/039)
+## Chat payment + order completion (038/039/049)
 
 A shopper can pay and place an order **end-to-end from chat**, never touching a screen — but payment
 trust is never handed to the LLM. Two complementary paths:
 
 - **Installment quote (038, A2A)** — "list my installments" goes ChatAgent → **A2A** → the gateway's
-  remote `Payment.Agent` → gateway `/mcp`. Read-only; the LLM shows returned options verbatim, never
-  invents amounts. The buyer/vault-token come from Customer.Api `get_payment_context` and are passed
-  **verbatim** into the A2A request (the cart line is synthesized gateway-side).
-- **Order completion (039, server orchestration)** — on user confirmation the LLM only picks the tool
-  and passes `cardId?` + `installment`; **everything else is server-side**. The `place_order` MCP tool
-  (Order.Api) reads the cart (Basket `GetBasketItems` gRPC, server-authoritative), the payment context
-  (Customer `/internal/payment-context` REST), derives a **correlation-key** (HMAC of
-  userId+cart+installment — ownership + idempotency), then charges PaymentGateway over **structural
-  REST** (Principle I: non-agent code cannot drive A2A/MCP) and starts the Order + CheckoutSaga.
+  remote `Payment.Agent`. Read-only; the LLM shows returned options verbatim. The buyer/vault-token
+  come from Customer.Api and are passed **verbatim** into the A2A request.
+- **Order completion (039 + 049, server orchestration)** — on user confirmation the LLM only picks the
+  `place_order` tool and passes `cardId?` + `installment`; **everything else is server-side**. The tool
+  (Order.Api) reads the cart (Basket gRPC, server-authoritative), the payment context (Customer REST),
+  derives a **correlation-key** (HMAC of userId+cart+installment — ownership + idempotency), charges
+  PaymentGateway over **structural REST** (Principle I: non-agent code cannot drive A2A/MCP), creates the
+  order, then hands off to the **Checkout.Orchestrator** via `StartCheckout` in `AlreadyCaptured` mode
+  (the saga skips its own charge step and runs commit → confirm → clear).
 
-Why the charge moved off the LLM-A2A step: `paymentId` is not proof of success, and a hallucinated
-"success" would mean a free order. So the charge + verify are **structural server-to-server**; the LLM
-only triggers. The flow is a durable `PaymentAttempt` (Marten doc, sync charge outcome +
-`ScheduleAsync` bounded reconcile) so a lost response is recovered by re-deriving the same
-correlation-key and retrieving from the gateway — never a double charge. Card add/remove is **refused
-in chat** (FR-013, security); only card *selection* is allowed and the PAN never reaches the LLM.
+Why the charge is structural, not LLM-A2A: `paymentId` is not proof of success, and a hallucinated
+"success" would mean a free order. So the charge + verify are **server-to-server**; the LLM only
+triggers. An ambiguous charge is recovered by a durable `PaymentAttempt` (re-derive the same
+correlation-key and retrieve from the gateway — never a double charge). Card add/remove is **refused
+in chat** (security); only card *selection* is allowed and the PAN never reaches the LLM.
 
-The gateway side of this (idempotent structural charge + retrieve, X-Api-Key auth) lives in the
-separate **PaymentGateway** repo (feature `039-structural-charge-retrieve`) and is consumed here as a
-contract via `PaymentGatewayClient` (`PaymentGatewayOption`: base url + merchant API key).
+The gateway side (idempotent structural charge + retrieve, X-Api-Key auth) lives in the separate
+**PaymentGateway** repo and is consumed here as a contract via `PaymentGatewayClient`.
 
 ## Notes
 
