@@ -115,16 +115,32 @@ builder.Services.AddRefitClient<IReviewsRefitService>().ConfigureHttpClient(conf
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
-// 048: Personalization.Api gezinme sinyali ingest — m2m token (webapp-signals; personalization.ingest).
+// 053: reco-trainer (Python beyin) gezinme sinyali ingest — m2m token (webapp-signals; personalization.ingest).
 // Kullanici token'i DEGIL (anonim gezinme de gonderir); PersonalizationSignalsTokenHandler ekler.
 builder.Services.AddTransient<PersonalizationSignalsTokenHandler>();
 builder.Services.AddRefitClient<IPersonalizationRefitService>().ConfigureHttpClient(configure =>
     {
-        configure.BaseAddress = new Uri("http://personalization-api");
-        // US3: telemetri yan-etki; Personalization yavaş/kapalı olsa arka plan drain kısa sürede
+        configure.BaseAddress = new Uri("http://reco-trainer");
+        // US3: telemetri yan-etki; reco-trainer yavaş/kapalı olsa arka plan drain kısa sürede
         // vazgeçer (batch atlanır), asılmaz. Sayfa akışı zaten Enqueue ile bağımsız.
         configure.Timeout = TimeSpan.FromSeconds(5);
     }).AddHttpMessageHandler<PersonalizationSignalsTokenHandler>();
+
+// 053: zevk profili okuma → reco-trainer (personalization.read m2m). Ana sayfa feed orkestrasyonu (BFF) okur.
+builder.Services.AddRefitClient<IRecoProfileRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://reco-trainer");
+        configure.Timeout = TimeSpan.FromSeconds(5);
+    }).AddHttpMessageHandler<PersonalizationSignalsTokenHandler>();
+
+// 053: kişiselleştirilmiş ranking → Storefront (anonim vitrin okuması; token gerekmez).
+builder.Services.AddRefitClient<IStorefrontRecommendRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://storefront-api");
+    });
+
+// 053: ana sayfa çoklu-kuşak feed orkestrasyonu (profil oku → her kuşağı ranking'e ver → kuşaklar).
+builder.Services.AddScoped<HomeFeedComposer>();
 
 
 builder.Services.AddAuthentication(configureOption =>

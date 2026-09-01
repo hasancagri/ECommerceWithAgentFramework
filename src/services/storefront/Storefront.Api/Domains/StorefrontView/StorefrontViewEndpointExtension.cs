@@ -12,5 +12,11 @@ public static class StorefrontViewEndpointExtension
             .GetStorefrontProductListGroupItemEndpoint()
             .GetStorefrontFilterOptionsGroupItemEndpoint()
             .SearchStorefrontProductsGroupItemEndpoint();
+
+        // 053: kişiselleştirilmiş ranking — kuşak öznitelik ağırlıklarını gövdede alan POST uç (ayrı grup).
+        app.MapGroup("api/v{version:apiVersion}/storefront/recommend")
+            .WithTags("storefront")
+            .WithApiVersionSet(apiVersionSet)
+            .GetRecommendedProductsGroupItemEndpoint();
     }
 }

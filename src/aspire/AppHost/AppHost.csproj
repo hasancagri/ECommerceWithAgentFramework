@@ -24,7 +24,6 @@
       <ProjectReference Include="..\..\agents\ChatAgent\ChatAgent.csproj" />
       <ProjectReference Include="..\..\agents\Reviews.Moderation\Reviews.Moderation.csproj" />
       <ProjectReference Include="..\..\services\reviews\Reviews.Api\Reviews.Api.csproj" />
-      <ProjectReference Include="..\..\services\Personalization.Api\Personalization.Api.csproj" />
     </ItemGroup>
 
     <ItemGroup>

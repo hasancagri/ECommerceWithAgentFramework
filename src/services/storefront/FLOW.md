@@ -23,14 +23,20 @@
 7. **Facet seçenekleri satılabilir satırlardan türetilir** (cache'li).  `(GetStorefrontFilterOptions)`
 8. **Varyant ailesi + filtre araması sunulur.** Aile eksenleri;         `(GetProductFamily,`
    yazar/fiyat/stok filtresi (Name ASC, deterministik).                 ` SearchStorefrontProductsForAgent)`
+9. **Kişisel kuşak sıralanır (053).** Bir kuşağın öznitelik            `(GetRecommendedProducts →`
+   ağırlıkları gövdede → ağırlıklı-örtüşme skor + MMR + hidrat.          ` RecommendationScoring)`
+10. **Satın-alma zenginleştirilip yayılır (053).** OrderCompleted       `(EnrichPurchase`
+    ayrı kuyrukta durable-inbox → +yazar/kategori + DedupKey.            ` → PurchaseEnriched)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Rich aggregate DEĞİL.** `StorefrontView` invariant taşımaz; Catalog+Stock+Reviews'ün ProductId-anahtarlı tek composite satırı.
 - **Kısmi satır geçerli.** Her kaynak yalnız kendi alanını yazar; `Price`/`Name` null = "Catalog raporlamadı" (dolu-satır filtresi eler).
 - **Push-only, geri-çekiş YOK.** Yalnız şişman event tüketir; hiçbir kaynağa dış çağrı yapmaz (fat-event dersi).
+- **Tek türev-event istisnası (053).** Push-only karaktere tek istisna: OrderCompleted'ı durable-inbox ile tüketip `PurchaseEnriched` yayar (öznitelikler zaten burada; Order→Catalog kuplajından kaçınır). Yayılan bir event'tir, senkron çağrı değil — izolasyon korunur.
 - **Tek yazıcı + Sequential.** Üç exchange tek kuyruğa; eşzamanlı yazım = optimistic concurrency → Wolverine retry.
 
 ## Sınır (bu BC'nin dokunmadığı)
 
 Ürün yazımı/CRUD, fiyatlandırma, sepet, sipariş yok. `IsAvailableForSale` ayrı süreç sahipli (ingestion asla yazmaz).
+Zevk profili türetimi (kullanıcı neyi sever) burada DEĞİL — Python `reco_trainer` beynidir; Storefront yalnız o profili ürüne sıralar (053 sorumluluk sınırı).

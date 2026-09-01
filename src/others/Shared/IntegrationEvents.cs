@@ -71,4 +71,23 @@ public static class IntegrationEvents
         decimal UnitPrice,
         string? Category = null,
         string? Brand = null);
+
+    // 053: Storefront → RecoTrainer (Python). OrderCompleted'ı Storefront durable-inbox ile exactly-once
+    // tüketir, her item'ı StorefrontView'den yazar/kategori ile zenginleştirir + item başına kalıcı
+    // DedupKey üretir; bunu yayar. Python satın-alma sinyalini (en güçlü niyet) öznitelik boyutuyla alır.
+    // AnonymousId nullable (dikiş; login yoksa userId). Author/Category katalogda yoksa null (akış bozulmaz).
+    public record PurchaseEnriched(
+        Guid OrderId,
+        Guid UserId,
+        Guid? AnonymousId,
+        DateTimeOffset OccurredAt,
+        IReadOnlyList<PurchaseEnrichedItem> Items);
+
+    public record PurchaseEnrichedItem(
+        Guid ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        string? Author,
+        string? Category,
+        Guid DedupKey);
 }

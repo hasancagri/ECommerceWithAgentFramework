@@ -27,6 +27,7 @@ public static class KnownScopes
             ["apikeys.manage"] = "API anahtarı yönetimi",
             ["identity.roles.manage"] = "Rol/scope/kullanıcı yönetimi",
             ["personalization.ingest"] = "Kişiselleştirme gezinme sinyali gönderimi (m2m)",
+            ["personalization.read"] = "Kişiselleştirme zevk profili okuma (m2m)",
         };
 
     // Atanabilir tüm scope'lar (Config.AllApiScopes tek kaynak) + açıklama.

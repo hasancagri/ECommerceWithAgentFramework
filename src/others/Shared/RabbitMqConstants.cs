@@ -89,16 +89,31 @@ public static class RabbitMqConstants
         }
     }
 
-    // 048: Order yayınlar (checkout başarı), Personalization tüketir (kendi kuyruğunu bağlar, 007).
-    // 049: Reviews da tüketir — satın-alma kanıtı read-model'i (gRPC yerine event-fed projeksiyon).
+    // 048/053: Order yayınlar (checkout başarı). 049: Reviews tüketir (satın-alma kanıtı projeksiyonu).
+    // 053: Storefront AYRI kuyrukta .UseDurableInbox() ile tüketir (exactly-once; view'a yazmaz, Sequential
+    // storefront.events kuyruğuna GİRMEZ) → PurchaseEnriched'i zenginleştirip yayar. Personalization
+    // kuyruğu emekli (048 Personalization.Api silindi; sinyal artık PurchaseEnriched'ten Python'a akar).
     public static class OrderCompleted
     {
         public const string Exchange = "order.completed";
 
         public static class Queues
         {
-            public const string Personalization = "personalization.order-completed";
             public const string Reviews = "reviews.order-completed";
+            public const string Storefront = "storefront.order-completed";
+        }
+    }
+
+    // 053: Storefront yayınlar (OrderCompleted'ı yazar/kategori + dedupKey ile zenginleştirir),
+    // Python reco-trainer tüketir (kendi kuyruğunu bağlar — soğuk-açılış binding'i tüketici kurar, 007).
+    // Storefront "push-only read-model"e tek türev-event istisnası (plan Constitution Check'te gerekçeli).
+    public static class PurchaseEnriched
+    {
+        public const string Exchange = "purchase.enriched";
+
+        public static class Queues
+        {
+            public const string RecoTrainer = "reco-trainer.purchase-enriched";
         }
     }
 

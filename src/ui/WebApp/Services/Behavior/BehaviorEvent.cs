@@ -17,10 +17,14 @@ public record BehaviorEvent
     public Guid? UserId { get; init; }
     public required Guid AnonymousId { get; init; }
     public Guid? ProductId { get; init; }
-    public string? Brand { get; init; }
+    // 053: reco-trainer ingest sözleşmesi "author" bekler (kitapta birincil yazar). SearchPerformed'da
+    // üst-N sonucun baskın yazarı. camelCase JSON = "author".
+    public string? Author { get; init; }
     public string? Category { get; init; }
     public decimal? Price { get; init; }
-    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    // 053: SearchPerformed ham sorgu (izlenebilirlik; faz-1 profilde kullanılmaz). Null = arama değil.
+    public string? SearchTerm { get; init; }
+    public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
 
     public string ToJsonLine() => JsonSerializer.Serialize(this, JsonOptions);
 }

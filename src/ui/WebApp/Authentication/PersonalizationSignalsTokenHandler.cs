@@ -40,7 +40,8 @@ public sealed class PersonalizationSignalsTokenHandler(
                 Address = identity.TokenEndpoint,
                 ClientId = signalsAuth.ClientId,
                 ClientSecret = signalsAuth.ClientSecret,
-                Scope = "personalization.ingest",
+                // 053: ingest (sinyal yaz) + read (zevk profili oku) — ikisi de reco.trainer audience.
+                Scope = "personalization.ingest personalization.read",
             }, ct);
 
             if (response.IsError)

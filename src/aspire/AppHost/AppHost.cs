@@ -173,21 +173,21 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
 
-// 048: Personalization.Api — write-only signal store (.NET). (042 Python/FastAPI servisi silindi;
-// yeni .NET BC sinyalleri toplar, ileride model egitimi ayrica ele alinir.) Kendi DB'si.
-// Gezinme = WebApp HTTP POST; satin-alma = Order 'OrderCompleted' event. Tuketici binding
-// yayincidan (order-api) once ayakta olsun (007 dersi).
-var personalizationApiDb = postgres.AddDatabase("personalizationApiDb");
-var personalizationApi = builder.AddProject<Projects.Personalization_Api>("personalization-api")
-    .WithReference(personalizationApiDb)
+// 053: RecoTrainer — Python kişiselleştirme beyni (048 Personalization.Api emekli). Aspire 13
+// AddUvicornApp (resmi Aspire.Hosting.Python) uvicorn ile host eder; kendi Postgres feature store'u.
+// Gezinme sinyali = WebApp HTTP POST (m2m); satın-alma = Storefront 'PurchaseEnriched' broker event
+// (Python tüketir, binding'i tüketici kurar). Tüketici PurchaseEnriched yayıncısından (storefront)
+// sonra ayakta olması sorun değil — binding'i Python kurar (007 dersi tersi: tüketici-kurar).
+var recoTrainerDb = postgres.AddDatabase("recoTrainerDb");
+var recoTrainer = builder.AddUvicornApp("reco-trainer", "../../services/RecoTrainer", "reco_trainer.app:app")
+    .WithUv()
+    .WithReference(recoTrainerDb)
     .WithReference(rabbit)
-    .WithReference(orderApi)
-    .WaitFor(personalizationApiDb)
-    .WaitFor(rabbit)
-    .WaitFor(orderApi);
+    .WaitFor(recoTrainerDb)
+    .WaitFor(rabbit);
 
-// WebApp gezinme sinyallerini personalization-api'ye POST eder → adres cozumu icin referans.
-web.WithReference(personalizationApi);
+// WebApp gezinme sinyallerini + profil okumasını reco-trainer'a gönderir → adres çözümü için referans.
+web.WithReference(recoTrainer);
 
 // 049: WebApp checkout girişi Checkout.Orchestrator'a POST eder → adres çözümü için referans.
 web.WithReference(checkoutOrchestrator);
