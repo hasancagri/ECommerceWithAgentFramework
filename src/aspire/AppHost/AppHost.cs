@@ -27,6 +27,7 @@ var storefrontDb = postgres.AddDatabase("storefrontDb");
 var customerDb = postgres.AddDatabase("customerDb");
 var checkoutDb = postgres.AddDatabase("checkoutDb");
 
+
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
     .WithReference(identityDb)
     .WaitFor(identityDb);

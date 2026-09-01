@@ -1,7 +1,0 @@
-@model List<WebApp.ViewModel.StorefrontProductViewModel>
-
-@* 053: yalnız kart kolonları — hem ilk render hem waterfall load-more (AJAX) aynı parçayı kullanır. *@
-@foreach (var product in Model)
-{
-    <partial name="_ProductCard" model="product"/>
-}

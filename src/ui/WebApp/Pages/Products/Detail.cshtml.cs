@@ -8,8 +8,7 @@ namespace WebApp.Pages.Products;
 [AllowAnonymous]
 public class DetailModel(
     StorefrontService storefrontService,
-    ReviewsService reviewsService,
-    BehaviorLogWriter behaviorLog) : BasePageModel
+    ReviewsService reviewsService) : BasePageModel
 {
     public StorefrontProductViewModel? Product { get; set; }
 
@@ -43,20 +42,6 @@ public class DetailModel(
 
         // 045: varyant ailesi (ailesizde null).
         Family = await storefrontService.GetFamilyAsync(id);
-
-        // 042: ProductViewed — alanlar render verisinden denormalize (FR-001).
-        var (anonymousId, _, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
-        behaviorLog.Enqueue(new BehaviorEvent
-        {
-            EventType = "ProductViewed",
-            UserId = userId,
-            AnonymousId = anonymousId,
-            ProductId = Product.ProductId,
-            // 053: kişiselleştirme sinyali "author" — kitapta birincil yazar adıyla beslenir.
-            Author = Product.Authors.FirstOrDefault()?.Name,
-            Category = Product.Category,
-            Price = Product.Price,
-        });
 
         return Page();
     }

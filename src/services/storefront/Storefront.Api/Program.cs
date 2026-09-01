@@ -41,20 +41,6 @@ builder.Host.UseWolverine(opts =>
     // aynı view satırına eşzamanlı yazım olmaz — ConcurrencyException kaynağında çözülür.
     opts.ListenToRabbitQueue(RabbitMqConstants.StorefrontEvents.Queue).Sequential();
 
-    // 053 US3: OrderCompleted'ı AYRI kuyrukta .UseDurableInbox() ile exactly-once tüket (view'a yazmaz →
-    // Sequential kuyruğa GİRMEZ). Binding'i tüketici kurar (007). EnrichPurchase → PurchaseEnriched yayar.
-    rabbit.DeclareExchange(RabbitMqConstants.OrderCompleted.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.OrderCompleted.Queues.Storefront);
-    });
-    opts.ListenToRabbitQueue(RabbitMqConstants.OrderCompleted.Queues.Storefront).UseDurableInbox();
-
-    // 053: PurchaseEnriched yayıncısı — fanout exchange (binding'i tüketici=Python kurar). Cascade + outbox.
-    rabbit.DeclareExchange(RabbitMqConstants.PurchaseEnriched.Exchange, e => e.ExchangeType = ExchangeType.Fanout);
-    opts.PublishMessage<Shared.IntegrationEvents.PurchaseEnriched>()
-        .ToRabbitExchange(RabbitMqConstants.PurchaseEnriched.Exchange);
-
     // Composite satirda kaynaklar-arasi eszamanli yazim cakismasi (optimistic concurrency) → retry.
     opts.OnException<JasperFx.ConcurrencyException>().RetryTimes(5);
     opts.Policies.UseDurableLocalQueues();
@@ -66,8 +52,6 @@ builder.Host.UseWolverine(opts =>
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
     // Konvansiyonel keşif bu sınıfı atlıyor (nedeni araştırılacak); açık kayıt garantili yol.
     opts.Discovery.IncludeType(typeof(Storefront.Api.StorefrontEventHandlers));
-    // 053: PurchaseEnriched yayıncı handler'ı da açık kayıt (aynı keşif tuzağı — 'No known handler' önle).
-    opts.Discovery.IncludeType(typeof(Storefront.Api.Domains.StorefrontView.Features.EventHandlers.EnrichPurchase));
 });
 
 builder.Services.AddApiVersioning(options =>

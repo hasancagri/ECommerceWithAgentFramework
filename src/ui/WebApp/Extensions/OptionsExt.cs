@@ -16,10 +16,11 @@ public static class OptionsExt
 
         services.AddSingleton<GatewayOption>(sp => sp.GetRequiredService<IOptions<GatewayOption>>().Value);
 
-        // 042: davranış log yazıcısı ayarları — Directory'yi AppHost enjekte eder (BehaviorLog__Directory).
-        services.AddOptions<BehaviorLogOptions>().BindConfiguration("BehaviorLog");
+        // PostHog analytics (JS snippet layout'ta); key user-secrets'ten. ValidateOnStart YOK —
+        // key olmasa da uygulama açılır, snippet basılmaz.
+        services.AddOptions<PostHogOption>().BindConfiguration("PostHog");
 
-        services.AddSingleton<BehaviorLogOptions>(sp => sp.GetRequiredService<IOptions<BehaviorLogOptions>>().Value);
+        services.AddSingleton<PostHogOption>(sp => sp.GetRequiredService<IOptions<PostHogOption>>().Value);
 
         return services;
     }

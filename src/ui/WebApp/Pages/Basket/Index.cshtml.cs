@@ -7,8 +7,7 @@ using WebApp.Pages.Basket.Dto;
 namespace WebApp.Pages.Basket;
 
 [Authorize]
-public class IndexModel(StorefrontService storefrontService, BasketService basketService,
-    BehaviorLogWriter behaviorLog) : BasePageModel
+public class IndexModel(StorefrontService storefrontService, BasketService basketService) : BasePageModel
 {
     public BasketPageViewModel Basket { get; set; } = new();
 
@@ -40,20 +39,6 @@ public class IndexModel(StorefrontService storefrontService, BasketService baske
         var result = await basketService.CreateOrUpdateBasketAsync(createOrUpdateBasket);
 
         if (result.IsFail) return ErrorPage(result, "Index");
-
-        // 042: BasketItemAdded — yalnız başarılı eklemede; alanlar vitrin satırından denormalize (FR-004).
-        var (anonymousId, _, userId) = AnonymousIdMiddleware.GetIds(HttpContext);
-        behaviorLog.Enqueue(new BehaviorEvent
-        {
-            EventType = "BasketItemAdded",
-            UserId = userId,
-            AnonymousId = anonymousId,
-            ProductId = product.Data.ProductId,
-            // 053: kişiselleştirme sinyali "author" — kitapta birincil yazar adıyla beslenir.
-            Author = product.Data.Authors.FirstOrDefault()?.Name,
-            Category = product.Data.Category,
-            Price = product.Data.Price,
-        });
 
         return SuccessPage("Ürün sepete eklendi", "Index");
     }

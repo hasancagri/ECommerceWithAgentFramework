@@ -29,11 +29,6 @@ var identitySettings = builder.Configuration.GetSection("IdentityServer").Get<Id
                        ?? throw new InvalidOperationException("'IdentityServer' configuration section is missing.");
 builder.Services.AddSingleton(identitySettings);
 
-// 048: davranış sinyali m2m istemci kimligi (webapp-signals client_credentials).
-var signalsAuth = builder.Configuration.GetSection("SignalsAuth").Get<SignalsAuth>()
-                  ?? throw new InvalidOperationException("'SignalsAuth' configuration section is missing.");
-builder.Services.AddSingleton(signalsAuth);
-
 // TokenService'in M2M/refresh icin kullandigi adsiz-degil "identity" client'i.
 builder.Services.AddHttpClient("identity");
 
@@ -47,10 +42,6 @@ builder.Services.AddHttpClient("orchestrator", client =>
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
-
-// 042: davranış JSONL yazıcısı — tek instance hem Enqueue yüzeyi hem arka plan tüketici.
-builder.Services.AddSingleton<BehaviorLogWriter>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<BehaviorLogWriter>());
 
 builder.Services.AddScoped<BasketService>();
 builder.Services.AddScoped<OrderService>();
@@ -113,34 +104,6 @@ builder.Services.AddRefitClient<IReviewsRefitService>().ConfigureHttpClient(conf
     {
         configure.BaseAddress = new Uri("http://reviews-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
-
-
-// 053: reco-trainer (Python beyin) gezinme sinyali ingest — m2m token (webapp-signals; personalization.ingest).
-// Kullanici token'i DEGIL (anonim gezinme de gonderir); PersonalizationSignalsTokenHandler ekler.
-builder.Services.AddTransient<PersonalizationSignalsTokenHandler>();
-builder.Services.AddRefitClient<IPersonalizationRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://reco-trainer");
-        // US3: telemetri yan-etki; reco-trainer yavaş/kapalı olsa arka plan drain kısa sürede
-        // vazgeçer (batch atlanır), asılmaz. Sayfa akışı zaten Enqueue ile bağımsız.
-        configure.Timeout = TimeSpan.FromSeconds(5);
-    }).AddHttpMessageHandler<PersonalizationSignalsTokenHandler>();
-
-// 053: zevk profili okuma → reco-trainer (personalization.read m2m). Ana sayfa feed orkestrasyonu (BFF) okur.
-builder.Services.AddRefitClient<IRecoProfileRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://reco-trainer");
-        configure.Timeout = TimeSpan.FromSeconds(5);
-    }).AddHttpMessageHandler<PersonalizationSignalsTokenHandler>();
-
-// 053: kişiselleştirilmiş ranking → Storefront (anonim vitrin okuması; token gerekmez).
-builder.Services.AddRefitClient<IStorefrontRecommendRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://storefront-api");
-    });
-
-// 053: ana sayfa çoklu-kuşak feed orkestrasyonu (profil oku → her kuşağı ranking'e ver → kuşaklar).
-builder.Services.AddScoped<HomeFeedComposer>();
 
 
 builder.Services.AddAuthentication(configureOption =>
@@ -238,9 +201,6 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 app.UseExceptionHandler("/Error");
 
 app.UseRouting();
-
-// 042: davranış kimlik çerezleri (pz_aid kalıcı, pz_sid oturumluk) — her istekte garanti edilir.
-app.UseMiddleware<AnonymousIdMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

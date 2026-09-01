@@ -9,8 +9,6 @@ global using Refit;
 global using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 global using WebApp.Services;
 global using WebApp.Services.Refit;
-global using WebApp.Services.Behavior;
-global using WebApp.Services.Home;
 global using WebApp.Extensions;
 global using WebApp.PageModels;
 global using WebApp.ViewModel;
