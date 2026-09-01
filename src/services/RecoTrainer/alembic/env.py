@@ -8,8 +8,9 @@ from alembic import context
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy.pool import NullPool
 
-from reco_trainer.adapters.models import Base
 from reco_trainer.config import settings
+from reco_trainer.domains.profiles import signal  # noqa: F401  # metadata'ya tablo kaydı
+from reco_trainer.shared.db import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.db_url)

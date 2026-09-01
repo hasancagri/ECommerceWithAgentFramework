@@ -1,7 +1,7 @@
-"""Composition root: FastAPI + FastStream broker + feature router'ları. Sistem hep Aspire'dan başlar.
+"""Composition root: FastAPI + FastStream broker + domain router'ları. Sistem hep Aspire'dan başlar.
 
-Şema otomatik kurulur (lifespan `create_all`, projedeki Marten `ApplyAllDatabaseChangesOnStartup` emsali).
-Alembic dosyaları (`alembic/`) resmi migration kaydı; dev açılışı idempotent create_all kullanır.
+Şema otomatik kurulur (lifespan `create_all`, Marten `ApplyAllDatabaseChangesOnStartup` emsali).
+Alembic (`alembic/`) resmi migration kaydı; dev açılışı idempotent create_all kullanır.
 """
 
 from __future__ import annotations
@@ -11,16 +11,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from reco_trainer.adapters.broker import broker
-from reco_trainer.adapters.db import engine
-from reco_trainer.adapters.models import Base
-from reco_trainer.features.build_profile.endpoint import router as profile_router
-
-# Consumer modülü import edilince FastStream handler'ları broker'a kayıt olur (dekoratör yan etkisi).
-from reco_trainer.features.ingest_signals import (
-    purchase_consumer,  # noqa: F401  # pyright: ignore[reportUnusedImport]
-)
-from reco_trainer.features.ingest_signals.http_ingest import router as ingest_router
+# event_handlers import edilince (a) FastStream handler broker'a kayıt olur, (b) Signal tablosu
+# transitif import zinciriyle Base.metadata'ya kaydolur (dekoratör + metadata yan etkisi).
+from reco_trainer.domains.profiles import event_handlers  # noqa: F401  # pyright: ignore[reportUnusedImport]
+from reco_trainer.domains.profiles.endpoints import router as profiles_router
+from reco_trainer.jobs.scheduler import start_scheduler, stop_scheduler
+from reco_trainer.shared.broker import broker
+from reco_trainer.shared.db import Base, engine
 
 
 @asynccontextmanager
@@ -28,15 +25,16 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await broker.start()
+    start_scheduler()  # precompute: periyodik + açılışta bir kez
     try:
         yield
     finally:
+        stop_scheduler()
         await broker.stop()
 
 
 app = FastAPI(title="RecoTrainer — 053 kişiselleştirme beyni", lifespan=lifespan)
-app.include_router(ingest_router)
-app.include_router(profile_router)
+app.include_router(profiles_router)
 
 
 @app.get("/health")

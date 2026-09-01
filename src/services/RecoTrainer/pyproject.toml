@@ -51,6 +51,12 @@ pythonVersion = "3.12"
 typeCheckingMode = "strict"
 venvPath = "."
 venv = ".venv"
+# Tip-stub'suz ML kütüphaneleri (scikit-learn / apscheduler / joblib) "Unknown*" üretir; kendi kodumuz
+# tam strict kalır, yalnız 3. parti untyped yüzeyi susturulur (ML-Python gerçeği). reportArgumentType AÇIK.
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportUnknownArgumentType = false
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

@@ -1,4 +1,4 @@
-"""FastStream RabbitBroker (tek örnek). Consumer'lar (ingest + purchase) buna subscribe eder; app başlatır.
+"""Ortak altyapı (shared_kernel): FastStream RabbitBroker (tek örnek). Handler'lar buna subscribe eder.
 
 Binding'i TÜKETİCİ kurar (soğuk-açılış kayıp dersi, 007): Python kendi kuyruk+exchange bağını deklare eder.
 """

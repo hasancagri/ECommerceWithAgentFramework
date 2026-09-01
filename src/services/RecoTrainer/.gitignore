@@ -8,3 +8,6 @@ __pycache__/
 .mypy_cache/
 .coverage
 htmlcov/
+
+# 053: fitted model dosyaları (joblib) — commit edilmez
+models/

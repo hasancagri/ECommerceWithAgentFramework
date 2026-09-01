@@ -1,4 +1,4 @@
-"""Zevk profili değer nesneleri (I/O yok, saf). TasteProfile = beyin çıktısı (SABİT sözleşme FR-017)."""
+"""profiles domain — zevk profili değer nesneleri (saf, I/O yok). TasteProfile = beyin çıktısı (FR-017)."""
 
 from __future__ import annotations
 

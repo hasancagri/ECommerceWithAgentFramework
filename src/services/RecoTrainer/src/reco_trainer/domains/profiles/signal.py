@@ -1,4 +1,8 @@
-"""SQLAlchemy tablo modelleri (feature store). Signal = TEK birleşik sinyal tablosu (telemetri)."""
+"""profiles domain — `Signal` girdi entity'si (feature store). Gezinme+arama+satın-alma tek tabloda.
+
+Rich aggregate DEĞİL: telemetri satırı (invariant yok — bilinçle anemik). Profil bu tablo üstünde `GROUP BY`
+ile türetilir. `dedup_key` yalnız Purchased'ta dolu; `unique` → son-hat idempotency (çift teslim no-op).
+"""
 
 from __future__ import annotations
 
@@ -8,20 +12,12 @@ from decimal import Decimal
 
 from sqlalchemy import DateTime, Index, Numeric, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-class Base(DeclarativeBase):
-    pass
+from reco_trainer.shared.db import Base
 
 
 class Signal(Base):
-    """Tüm sinyaller (gezinme + arama + satın-alma) tek tabloda. Profil = bu tablo üstünde GROUP BY.
-
-    data-model.md 053: satın-alma ayrı aggregate DEĞİL — yüksek öncelikli satır. `dedup_key` yalnız
-    Purchased'ta dolu (Storefront `Guid.NewGuid()`); `unique` → son-hat idempotency (çift teslimde no-op).
-    """
-
     __tablename__ = "signal"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

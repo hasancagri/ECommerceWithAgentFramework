@@ -44,11 +44,12 @@ class Settings(BaseSettings):
     )
 
     # --- Profil politikası (tunable; canlı gözlemle ayarlanır) ---
-    # event_type -> öncelik ağırlığı (FR-004): satın-alma > sepet > tıklama > arama.
-    type_weight_purchased: float = 5.0
-    type_weight_basket_item_added: float = 3.0
-    type_weight_product_viewed: float = 2.0
-    type_weight_search_performed: float = 1.0
+    # event_type -> öncelik ağırlığı (FR-004). GENİŞ makas: satın-alma domine, tıklama ≈ gürültü.
+    # NOT: sqrt (sublinear) makası ezer → final oran ~sqrt(w). 50 tıklama ≈ 1 satın-alma ağırlığı.
+    type_weight_purchased: float = 50.0
+    type_weight_basket_item_added: float = 15.0
+    type_weight_product_viewed: float = 1.0
+    type_weight_search_performed: float = 0.5
 
     # Tazelik (FR-005): üstel yarı-ömür (gün). recencyDecay = 0.5 ** (yaş_gün / half_life).
     recency_half_life_days: float = 30.0
@@ -63,6 +64,12 @@ class Settings(BaseSettings):
 
     # Kümeleme: bir kategorinin küme tohumu olması için minimum normalize ağırlık.
     cluster_seed_threshold: float = 0.15
+
+    # Precompute (jobs/): recompute job aralığı (dk). BackgroundService periyodu. Bayatlık = bu pencere.
+    recompute_interval_minutes: int = 15
+
+    # Fitted model dosya dizini (saf dosya registry; versiyonlu joblib; gitignore'lı).
+    model_dir: str = "models"
 
     @property
     def db_url(self) -> str:
