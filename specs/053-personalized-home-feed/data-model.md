@@ -26,31 +26,46 @@ satır. Profil = bu tek tablo üstünde `GROUP BY`. SQLAlchemy tablo (telemetri;
 | search_term | str? | SearchPerformed ham sorgu (izlenebilirlik; faz-1 profilde kullanılmaz) |
 | occurred_at | datetime | tazelik |
 
-- **type_weight DATA DEĞİL, politika:** `event_type → ağırlık` eşlemesi config'te (pydantic-settings:
-  satın-alma>sepet>tıklama>arama). Profil sorgusu uygular; tabloda donmaz (tunable, FR-004).
+- **type_weight DATA DEĞİL, politika:** `event_type → ağırlık` config'te (pydantic-settings). GENİŞ makas:
+  Purchased 50 / Basket 15 / View 1 / Search 0.5 — satın-alma domine, tıklama ≈ gürültü (FR-004). Recompute
+  `sample_weight = typeWeight × recency` olarak KMeans'e verir. sqrt sublinear → efektif ~7:1. Tunable.
 - **Kural:** `event_type` bilinen kümede + en az bir kimlik (`user_id` ya da `anonymous_id`) dolu. Geçersiz öge
   atlanır (kayıp-toleranslı), diğerleri yazılır. Satın-alma `PurchaseEnriched`'ten `unique(dedup_key)` ile idempotent (çift teslimde no-op).
-- **Index:** (`user_id`), (`anonymous_id`), (`author`), (`category`), (`occurred_at`) + `unique(dedup_key)` — profil + IDF `GROUP BY` + tazelik + Purchased idempotency.
+- **Index:** (`user_id`), (`anonymous_id`), (`author`), (`category`), (`occurred_at`) + `unique(dedup_key)`.
+- **Window YOK:** tüm kayıt recompute'a girer; recency decay eskiyi (2yr ≈ 5e-8) söndürür.
 
-### TasteProfile (türetilmiş çıktı — beyin sonucu, SABİT sözleşme FR-017)
+### taste_profile (PRECOMPUTE çıktısı — kalıcı tablo, serving OKUR)
 
-**Faz-1: anlık hesap, TABLO YOK** — her istekte `Signal`'dan türetilir (tek domain tablo). Precompute = faz-2 opsiyonu.
+**Faz-1: precompute** — zamanlanmış iş (APScheduler) profilleri üretip bu tabloya yazar; serving hesaplamaz,
+buradan okur (on-demand DEĞİL; kararı plan Complexity'de). `payload` = SABİT `TasteProfile` sözleşmesi (JSON).
+
+| Alan | Tip | Not |
+|---|---|---|
+| id | UUID (PK) | |
+| user_id | UUID? | subject (login) — index |
+| anonymous_id | UUID? | subject (anon) — index; tam dikiş-merge faz-2 |
+| payload | JSONB | `TasteProfile` (subject + clusters + discovery), camelCase |
+| model_version | int | üreten fitted model versiyonu (registry izlenebilirlik) |
+| computed_at | datetime | |
 
 ```
-TasteProfile
-├── subject: { user_id?, anonymous_id? }          # dikiş: userId OR anonymousId
+TasteProfile (payload şeması — SABİT FR-017)
+├── subject: { userId?, anonymousId? }
 ├── clusters: [ InterestCluster ]
-└── discovery: InterestCluster                     # keşif kuşağı (komşu/farklı, ε)
+└── discovery: InterestCluster | null              # faz-1 null (KMeans keşif üretmez; NearestNeighbors faz-2)
 
 InterestCluster
-├── label: str                                     # "Tarih için"
-├── reason: str                                    # "X yazarına baktığın için" (FR-018)
-├── share: float                                   # oransal pay (calibrated FR-025); Σ share ≈ 1
-└── attributes: [ { type: "author"|"category"|"period", value: str, weight: float } ]  # ağırlık azalan
+├── label / reason (FR-018) · share (calibrated FR-025, Σ≈1) · attributes[{type,value,weight}] ağırlık azalan
 ```
 
-- **Kural:** `attributes` ağırlık azalan; `share` normalize (oransal); azınlık küme taban kotayla korunur.
-- **Beyin bookId ÜRETMEZ** (FR-023) — yalnız öznitelik + ağırlık + oran + gerekçe.
+- **Türetim = sklearn (jobs/, wrapper yok):** `TfidfVectorizer` (fit=vocab/IDF) + `KMeans(k=3)` (subject başına
+  ilgi segmenti). `share` = küme kütle oranı + taban kota. **bookId ÜRETMEZ** (FR-023).
+
+### Fitted model (SAF-DOSYA registry — DB tablosu YOK)
+
+Korpusta fit edilen `TfidfVectorizer` **joblib** ile versiyonlu dosyaya yazılır: `models/vectorizer-v{N}.joblib`
+(gitignore). DB'de değil (Aspire dev = host process, dosya restart'ta yaşar; prod = blob/volume, faz-2 portu).
+Latest = en yüksek N. Fit/transform ayrımı = faz-2 train/infer seam (embedding/torch bunun yerine geçer).
 
 ## .NET Storefront (mevcut read-model + YENİ enrichment yayıncısı)
 
@@ -82,8 +97,8 @@ ProductCard { ProductId, Name, Authors[], Publisher, Price, RatingAverage, Ratin
 ```
 WebApp gezinme/arama ──HTTP──> Python Signal tablosu (event_type + author/category dolu)
 Order ─OrderCompleted─> Storefront (durable inbox exactly-once; enrich +author/category; +dedupKey) ─PurchaseEnriched─> Python Signal (Purchased, unique dedupKey)
-Python profil (tek tablo GROUP BY × type_weight × recency + IDF + kümeleme + oran) ──> serving
-serving: WebApp BFF → Storefront GetRecommendedProducts (ranking) → çoklu-kuşak feed
+Python PRECOMPUTE job (APScheduler): tüm Signal → sample_weight → TfidfVectorizer fit (→dosya) → KMeans transform → taste_profile tablosu
+serving: WebApp BFF → reco-trainer taste-profile (precompute OKU) → Storefront GetRecommendedProducts (ranking) → çoklu-kuşak feed
 ```
 
 ## Silinen (048 emekli)
