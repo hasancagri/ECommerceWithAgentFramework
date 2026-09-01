@@ -174,22 +174,6 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
 
-// 053: RecoTrainer — Python kişiselleştirme beyni (048 Personalization.Api emekli). Aspire 13
-// AddUvicornApp (resmi Aspire.Hosting.Python) uvicorn ile host eder; kendi Postgres feature store'u.
-// Gezinme sinyali = WebApp HTTP POST (m2m); satın-alma = Storefront 'PurchaseEnriched' broker event
-// (Python tüketir, binding'i tüketici kurar). Tüketici PurchaseEnriched yayıncısından (storefront)
-// sonra ayakta olması sorun değil — binding'i Python kurar (007 dersi tersi: tüketici-kurar).
-var recoTrainerDb = postgres.AddDatabase("recoTrainerDb");
-var recoTrainer = builder.AddUvicornApp("reco-trainer", "../../services/RecoTrainer", "reco_trainer.app:app")
-    .WithUv()
-    .WithReference(recoTrainerDb)
-    .WithReference(rabbit)
-    .WaitFor(recoTrainerDb)
-    .WaitFor(rabbit);
-
-// WebApp gezinme sinyallerini + profil okumasını reco-trainer'a gönderir → adres çözümü için referans.
-web.WithReference(recoTrainer);
-
 // 049: WebApp checkout girişi Checkout.Orchestrator'a POST eder → adres çözümü için referans.
 web.WithReference(checkoutOrchestrator);
 

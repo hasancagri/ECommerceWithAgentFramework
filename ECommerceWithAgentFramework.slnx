@@ -39,6 +39,5 @@
     <Project Path="tests/Reviews.Api.Tests/Reviews.Api.Tests.csproj" />
     <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />
     <Project Path="tests/Storefront.Api.Tests/Storefront.Api.Tests.csproj" />
-    <Project Path="tests/WebApp.Tests/WebApp.Tests.csproj" />
   </Folder>
 </Solution>

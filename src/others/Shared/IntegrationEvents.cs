@@ -55,9 +55,9 @@ public static class IntegrationEvents
     // (profanity/insult/personal_attack/none). Reviews ApplyModeration ile uygular.
     public record ReviewModerated(Guid ReviewId, bool Violation, string Category, string Reason);
 
-    // 048: Order → Personalization. YALNIZ odeme onayli tamamlanan siparis (CheckoutSaga basari)
-    // icin yayilir; olusturulan/odenmemis DEGIL. Kisisellestirme satin-alma sinyalini besler.
-    // Category/Brand nullable: Order bunlari tutmuyorsa null (BC izolasyonu; enrichment sonraki faz).
+    // Order → Reviews. YALNIZ odeme onayli tamamlanan siparis (Confirm pivotu) icin yayilir;
+    // olusturulan/odenmemis DEGIL. Reviews satin-alma kanitini (yorum hakki) bu event'ten projeksiyonlar.
+    // Category/Brand nullable: Order bunlari tutmuyorsa null (BC izolasyonu).
     // Additive: yeni alan default'lu eklenir, eski tuketici kirilmaz.
     public record OrderCompleted(
         Guid OrderId,
@@ -71,23 +71,4 @@ public static class IntegrationEvents
         decimal UnitPrice,
         string? Category = null,
         string? Brand = null);
-
-    // 053: Storefront → RecoTrainer (Python). OrderCompleted'ı Storefront durable-inbox ile exactly-once
-    // tüketir, her item'ı StorefrontView'den yazar/kategori ile zenginleştirir + item başına kalıcı
-    // DedupKey üretir; bunu yayar. Python satın-alma sinyalini (en güçlü niyet) öznitelik boyutuyla alır.
-    // AnonymousId nullable (dikiş; login yoksa userId). Author/Category katalogda yoksa null (akış bozulmaz).
-    public record PurchaseEnriched(
-        Guid OrderId,
-        Guid UserId,
-        Guid? AnonymousId,
-        DateTimeOffset OccurredAt,
-        IReadOnlyList<PurchaseEnrichedItem> Items);
-
-    public record PurchaseEnrichedItem(
-        Guid ProductId,
-        int Quantity,
-        decimal UnitPrice,
-        string? Author,
-        string? Category,
-        Guid DedupKey);
 }
