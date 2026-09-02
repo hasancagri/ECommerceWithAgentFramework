@@ -69,7 +69,7 @@
 - [X] T015 [P] Basket FLOW.md güncelle: anonim sahiplik + login'de birleşme adımı (İLKE VII, aynı PR) — `src/services/basket/FLOW.md`
 - [X] T016 [P] CLAUDE.md BC haritası basket satırına anonim sepet notu — `CLAUDE.md`
 - [X] T017 `dotnet build` + `dotnet test` yeşil; `scripts/check-flow-links.sh` PASS
-- [ ] T018 Canlı doğrulama (Aspire): S1 anonim ekle/yönet, S2 satın-al login kapısı + returnUrl, S3 merge (ortak ürün adet toplamı), S4 girişli kullanıcı regresyonu (sepet+checkout değişmedi)
+- [X] T018 Canlı doğrulama (Aspire): S1 anonim ekle/yönet, S2 satın-al login kapısı + returnUrl, S3 merge (ortak ürün adet toplamı), S4 girişli kullanıcı regresyonu (sepet+checkout değişmedi)
 
 ---
 
