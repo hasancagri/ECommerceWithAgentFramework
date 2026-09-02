@@ -10,17 +10,11 @@ public static class GetBasketForAgent
         public List<GetBasketItemResponse> Items { get; set; } = new();
         public decimal TotalPrice { get; set; }
 
-        // 017 (R9): sepet capasi + dolma durumu — REST GetBasket ile ayni sepet duzeyi alanlar.
-        public DateTimeOffset? ReservationExpiresAt { get; set; }
-        public bool IsReservationExpired { get; set; }
-
         public static GetBasketResponse From(Basket basket) => new()
         {
             UserId = basket.UserId,
             Items = basket.Items.Select(GetBasketItemResponse.From).ToList(),
-            TotalPrice = basket.GetTotalPrice(),
-            ReservationExpiresAt = basket.ReservationExpiresAt,
-            IsReservationExpired = basket.IsExpiredAt(DateTimeOffset.UtcNow)
+            TotalPrice = basket.GetTotalPrice()
         };
     }
 

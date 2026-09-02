@@ -2,14 +2,11 @@
 
 public record BasketViewModel(
     decimal TotalPrice,
-    List<BasketItemViewModel> Items,
-    // 017: sepet capasi + dolma durumu (tek banner icin).
-    DateTimeOffset? ReservationExpiresAt,
-    bool IsReservationExpired
+    List<BasketItemViewModel> Items
 )
 {
     public static BasketViewModel Empty()
     {
-        return new BasketViewModel(0, [], null, false);
+        return new BasketViewModel(0, []);
     }
 }

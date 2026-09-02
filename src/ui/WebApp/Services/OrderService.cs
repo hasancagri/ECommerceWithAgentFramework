@@ -93,7 +93,6 @@ public class OrderService(
         null or "" => null,
         "ORDER_TIMEOUT" => "Zaman aşımı — stok işlemi tamamlanamadı",
         "STOCK_INSUFFICIENT" => "Yetersiz stok",
-        "STOCK_NO_ACTIVE_RESERVATION" => "Rezervasyon süresi dolmuş",
         "STOCK_COMMIT_UNAVAILABLE" => "Stok servisine ulaşılamadı",
         "ORDER_STOCK_STEP_FAILED" => "Stok işlemi başarısız",
         _ => code

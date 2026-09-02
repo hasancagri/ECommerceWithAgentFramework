@@ -1,7 +1,7 @@
 namespace Basket.Api.Domains.Baskets.Features.Commands;
 
-// 012 (US3): sepetteki bir urunun adedini MUTLAK degere getirir. Rezervasyon aynalanir
-// (Stock'a SetReservedQuantity). quantity<=0 -> urun cikarilir + rezervasyon birakilir.
+// 012 (US3): sepetteki bir urunun adedini MUTLAK degere getirir. 056: stok tutulmaz —
+// quantity<=0 -> urun cikarilir; stok gercegi checkout aninda (CommitStock).
 public static class SetBasketItemQuantity
 {
     public record SetBasketItemQuantityCommand(Guid UserId, Guid ProductId, int Quantity);
@@ -10,7 +10,6 @@ public static class SetBasketItemQuantity
     {
         public Guid Id { get; set; }
         public int Quantity { get; set; }
-        public int Available { get; set; }
     }
 
     [Transactional]
@@ -19,7 +18,6 @@ public static class SetBasketItemQuantity
         public async Task<FeatureObjectResultModel<SetBasketItemQuantityResponse>> Handle(
             SetBasketItemQuantityCommand cmd,
             IDocumentSession session,
-            StockReservationClientProxy reservation,
             CancellationToken ct)
         {
             var basket = await session.Query<Basket>()
@@ -35,10 +33,9 @@ public static class SetBasketItemQuantity
             if (cmd.Quantity <= 0)
             {
                 basket.RemoveItem(cmd.ProductId);
-                await reservation.ReleaseAsync(cmd.ProductId, cmd.UserId, ct);
                 session.Store(basket);
                 return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Ok(
-                    new SetBasketItemQuantityResponse { Id = basket.Id, Quantity = 0, Available = 0 });
+                    new SetBasketItemQuantityResponse { Id = basket.Id, Quantity = 0 });
             }
 
             // 021 (FR-005): sabit ust sinir otoriter — 5 ustune cikilamaz.
@@ -46,21 +43,13 @@ public static class SetBasketItemQuantity
                 return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(
                     new MessageItem { Property = nameof(cmd.Quantity), Code = BasketResourceConstants.INVALID_RANGE });
 
-            // 017 (FR-003): mevcut capa gecirilir — rezervasyon capayla hizalanir, capa DEGISMEZ.
-            var reserve = await reservation.SetReservedQuantityAsync(
-                cmd.ProductId, cmd.UserId, cmd.Quantity, basket.ReservationExpiresAt, ct);
-            if (!reserve.Success)
-                return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(
-                    new MessageItem { Property = nameof(cmd.Quantity), Code = reserve.Code });
-
-            // 021: kalan serbest stok saklanir (efektif max = min(5, adet+available)).
-            var setItem = basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity, reserve.Available);
+            var setItem = basket.SetItem(cmd.ProductId, item.Name, item.ImageUrl, item.Price, cmd.Quantity);
             if (!setItem.IsSuccess)
                 return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Error(setItem.Messages);
             session.Store(basket);
 
             return FeatureObjectResultModel<SetBasketItemQuantityResponse>.Ok(new SetBasketItemQuantityResponse
-                { Id = basket.Id, Quantity = cmd.Quantity, Available = reserve.Available });
+                { Id = basket.Id, Quantity = cmd.Quantity });
         }
     }
 }

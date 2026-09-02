@@ -27,7 +27,7 @@ public class IndexModel(StorefrontService storefrontService, BasketService baske
     public async Task<IActionResult> OnGetAddBasketAsync(Guid productId)
     {
         // Ürün bilgisi vitrinden (read model) — Catalog REST uçları silindi. Fiyat snapshot'ı
-        // event-beslemeli satırdan gelir; nihai stok koruması gRPC rezervasyonda.
+        // event-beslemeli satırdan gelir; stok gerçeği checkout anında (056).
         var product = await storefrontService.GetProductAsync(productId);
 
         if (product.IsFail) return ErrorPage(product, "Index");
@@ -57,14 +57,5 @@ public class IndexModel(StorefrontService storefrontService, BasketService baske
         var result = await basketService.SetQuantityAsync(productId, quantity);
 
         return result.IsFail ? ErrorPage(result, "Index") : SuccessPage("Sepet güncellendi", "Index");
-    }
-
-    // 020: sayac sifira ulasinca istemci buraya gelir; sepeti sunucuda bosaltir (idempotent),
-    // sonra temiz reload ile bos sepeti gosterir. Basarisiz olsa bile sayfa yenilenir.
-    public async Task<IActionResult> OnGetPurgeExpiredAsync()
-    {
-        await basketService.PurgeExpiredBasketAsync();
-
-        return RedirectToPage("Index");
     }
 }

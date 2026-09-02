@@ -10,7 +10,6 @@ public static class BasketEndpointExtension
             .AddBasketItemGroupItemEndpoint()
             .SetBasketItemQuantityGroupItemEndpoint()
             .DeleteBasketItemGroupItemEndpoint()
-            .ClearExpiredBasketGroupItemEndpoint()
             .GetBasketGroupItemEndpoint()
             .RequireAuthorization();
     }

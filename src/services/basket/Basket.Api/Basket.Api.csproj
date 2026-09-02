@@ -31,7 +31,6 @@
 
     <!-- 012: Stock rezervasyon gRPC istemcisi; 028: ClearBasket sunucusu (paylaşılan protolar). -->
     <ItemGroup>
-        <Protobuf Include="..\..\..\others\Shared\Protos\stock_reservation.proto" GrpcServices="Client" />
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_clear.proto" GrpcServices="Server" />
         <!-- 039: sepet kalemleri okuma (Order.Api chat siparis tamamlama). -->
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_items.proto" GrpcServices="Server" />
