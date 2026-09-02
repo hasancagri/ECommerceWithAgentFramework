@@ -16,9 +16,11 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 
 ## Süreç
 
-1. **Ürün komutla oluşturulur/güncellenir** (051 kitap import veya       `(ImportBook, Product.Create,`
-   gelecek ürün-CRUD; ISBN/ad/fiyat girdi). Deterministik id ile        ` Product.Rename, Product.SetPrice)`
+1. **Ürün komutla oluşturulur/güncellenir** (051 kitap import veya       `(ImportBook, UpdateProduct,`
+   058 admin düzenleme; ISBN/ad/fiyat girdi). Deterministik id ile      ` Product.Create, Product.Rename)`
    bulun-veya-kur (idempotent upsert).
+1a. **Fiyat her gerçek değişimde geçmişe yazılır (058).** İlk fiyat      `(Product.SetPrice,`
+   ilk satırdır; aynı fiyatla kayıt satır düşürmez (append-only).       ` ProductPriceChange)`
 2. **Yazar(lar) + yayınevi bulun-veya-doğur.** Her yazar adı           `(Author.Create, Product.SetAuthors,`
    normalize+aranır (çok-çok, Id listesi); yayınevi tek (çok-bir).      ` Publisher.Create, Product.SetPublisher)`
    Yoksa girdiden doğar, Id ile referanslanır.
@@ -30,11 +32,13 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
    ad/açıklamadan türetilir.                                            ` Product.SetSeo)`
 6. **Özellikler registry'den Id'ye çözülüp TAM yazılır.**              `(Product.SetSpecifications)`
    Bilinmeyen ad opsiyoneldir — yok sayılır, satır spec'siz ilerler.
-7. **Ürün satışa/vitrine açılır — yayın kapısı fiyat>0.** Fiyatsız       `(Product.Publish)`
-   reddedilir, taslak kalır; sonra fiyat gelince yeniden denenir.
+7. **Yayın anahtarı admin'dedir (058) — kapı fiyat>0.** Fiyatsız         `(SetProductPublished,`
+   yayına alma reddedilir; yayından kaldırma vitrini gizler (silmez).   ` Product.Publish, Product.Unpublish)`
+   Düzenleme yayın durumunu DEĞİŞTİRMEZ (koruma).
 8. **Değişim Storefront'a KANONİK yayınlanır.** Fiyat decimal,          `(ProductChangedEvent)`
    kategori = primary; yazarlar (Id+ad çifti) + yayınevi + özellikler
-   ADLA taşınır (fat event; tüketici lookup yapmaz).
+   ADLA taşınır (fat event; tüketici lookup yapmaz). Yalnız YAYINDAKİ
+   ürün yayar; yayından kaldırma `IsDeleted:true` ile gizletir (058).
 9. **Yalnız YAYINLANAN üründe Stock'a bağ kurulur.** Barkod→ürün         `(ProductAdded)`
    eşlemesi + ilk OnHand yazılır (taslak = event yok).
 
@@ -43,7 +47,8 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 - **Barkod = kimlik.** Ürün GTIN'iyle bulunur; aynı barkod tek ürüne düşer.
 - **Kategori zorunlu, spec opsiyonel.** Kategori çözülemezse reddedilir; bilinmeyen spec sessiz düşer.
 - **Yayın kapısı = fiyat>0 (051).** Fiyatsız ürün yayınlanamaz (satılamaz kart); taslak kalır, event yayılmaz.
-- **Silme yok.** Ürün silinmez; `ProductChangedEvent` `IsDeleted` hep false yayınlanır (016 kararı sürer).
+- **Fiyat geçmişi append-only (058).** Her gerçek fiyat değişimi (ve ilk fiyat) fiyatla aynı transaction'da satıra döner; satır silinmez/değişmez `(ProductPriceChange)`.
+- **Silme yok (016 sürer).** Ürün silinmez; `IsDeleted:true` yalnız yayından-kaldırmanın vitrin-gizleme bayrağıdır (058) — kayıt Catalog'da yaşamaya devam eder.
 - **Dış dünyaya iki yol = event.** Storefront'a `ProductChangedEvent` (her değişim), Stock'a `ProductAdded` (yayınlanan).
 
 ## Sınır (bu BC'nin dokunmadığı)

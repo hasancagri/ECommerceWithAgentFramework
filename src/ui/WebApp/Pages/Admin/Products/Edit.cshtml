@@ -1,0 +1,213 @@
+@page "{id:guid}"
+@model WebApp.Pages.Admin.Products.EditModel
+@{
+    ViewData["Title"] = Model.Detail?.Name ?? "Kitap Düzenle";
+    var detail = Model.Detail!;
+    // Kategori etiketi: üst kategori adıyla birlikte (kitapyurdu künye sözlüğü — ağaç görünür kalsın).
+    var categoryNames = Model.Categories.ToDictionary(c => c.Id, c => c.Name);
+    string CategoryLabel(WebApp.Dto.CategoryLookupDto c) =>
+        c.ParentCategoryId is { } pid && categoryNames.TryGetValue(pid, out var parent)
+            ? $"{parent} › {c.Name}"
+            : c.Name;
+}
+
+<nav aria-label="breadcrumb" class="mt-3">
+    <ol class="breadcrumb small mb-2">
+        <li class="breadcrumb-item"><a asp-page="/Admin/Products/Index">Ürün Yönetimi</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@detail.Name</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="kp-band-title h4 mb-0">Kitap Düzenle</h1>
+    @if (detail.Published)
+    {
+        <span class="badge text-bg-success">Yayında</span>
+    }
+    else
+    {
+        <span class="badge text-bg-secondary">Yayında değil</span>
+    }
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        @* Künye formu — alan sırası vitrin detay künyesiyle aynı sözlük (FR-012):
+           kapak, ad, yazar, yayınevi, kategori, açıklama, fiyat. *@
+        <form method="post" asp-page-handler="Save" asp-route-id="@detail.Id" class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3 text-center">
+                        <img src="@(string.IsNullOrEmpty(detail.ImageUrl) ? "/images/NoImage.jpeg" : detail.ImageUrl)"
+                             onerror="this.onerror=null;this.src='/images/NoImage.jpeg';"
+                             alt="@detail.Name" class="img-fluid rounded border mb-2" style="max-height:180px"/>
+                        <label class="form-label small text-muted w-100 text-start" for="imageUrl">Kapak görseli (URL)</label>
+                        <input id="imageUrl" class="form-control form-control-sm" asp-for="Form.ImageUrl"/>
+                    </div>
+
+                    <div class="col-md-9">
+                        <div class="mb-3">
+                            <label class="form-label" for="name">Kitap adı</label>
+                            <input id="name" class="form-control" asp-for="Form.Name" required/>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="authors">Yazarlar</label>
+                                <select id="authors" class="form-select" asp-for="Form.AuthorIds" multiple size="5">
+                                    @foreach (var author in Model.Authors)
+                                    {
+                                        <option value="@author.Id">@author.Name</option>
+                                    }
+                                </select>
+                                <input class="form-control form-control-sm mt-1" asp-for="Form.NewAuthorNames"
+                                       placeholder="Listede yoksa: yeni yazar(lar), virgülle"/>
+                                <div class="form-text">Çoklu seçim: Ctrl/⌘ ile.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="publisher">Yayınevi</label>
+                                <select id="publisher" class="form-select" asp-for="Form.PublisherId">
+                                    @foreach (var publisher in Model.Publishers)
+                                    {
+                                        <option value="@publisher.Id">@publisher.Name</option>
+                                    }
+                                </select>
+                                <input class="form-control form-control-sm mt-1" asp-for="Form.NewPublisherName"
+                                       placeholder="Listede yoksa: yeni yayınevi adı"/>
+
+                                <label class="form-label mt-3" for="category">Kategori</label>
+                                <select id="category" class="form-select" asp-for="Form.CategoryId">
+                                    @foreach (var category in Model.Categories.OrderBy(CategoryLabel))
+                                    {
+                                        <option value="@category.Id">@CategoryLabel(category)</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="shortDesc">Kısa açıklama</label>
+                            <input id="shortDesc" class="form-control" asp-for="Form.ShortDescription"/>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="fullDesc">Tam açıklama</label>
+                            <textarea id="fullDesc" class="form-control" rows="5" asp-for="Form.FullDescription"></textarea>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label" for="price">Fiyat (₺)</label>
+                                <input id="price" class="form-control" asp-for="Form.Price" type="number" step="0.01" min="0"/>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="sku">SKU</label>
+                                <input id="sku" class="form-control" asp-for="Form.Sku"/>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ISBN</label>
+                                <input class="form-control" value="@detail.Isbn" disabled/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                <a asp-page="/Admin/Products/Index" class="btn btn-outline-secondary">Vazgeç</a>
+                <button type="submit" class="kp-btn-orange border-0">Kaydet</button>
+            </div>
+        </form>
+
+        @* FR-014: fiyat geçmişi — baştan sona kronolojik (ilk satır import fiyatı). *@
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Fiyat Geçmişi</h2>
+                @if (detail.PriceHistory.Count == 0)
+                {
+                    <p class="text-muted small mb-0">Henüz fiyat kaydı yok (kitap fiyat aldığında ilk satır düşer).</p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th class="text-end">Eski</th>
+                            <th class="text-end">Yeni</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var change in detail.PriceHistory)
+                        {
+                            <tr>
+                                <td class="text-muted">@change.ChangedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                                <td class="text-end">@(change.OldPrice is { } old ? old.ToString("N2") + " ₺" : "—")</td>
+                                <td class="text-end fw-semibold">@change.NewPrice.ToString("N2") ₺</td>
+                                <td class="small">
+                                    @if (change.OldPrice is null)
+                                    {
+                                        <span class="badge text-bg-light border">İlk fiyat</span>
+                                    }
+                                    else if (change.NewPrice < change.OldPrice)
+                                    {
+                                        <span class="text-success">▼ indirim</span>
+                                    }
+                                    else if (change.NewPrice > change.OldPrice)
+                                    {
+                                        <span class="text-danger">▲ zam</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        @* Stok bölümü — mutlak set: "stok N olsun" (FR-007). *@
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Stok</h2>
+                @if (Model.OnHand is { } onHand)
+                {
+                    <p class="mb-2">Eldeki adet: <strong>@onHand</strong></p>
+                    <form method="post" asp-page-handler="Stock" asp-route-id="@detail.Id" class="d-flex gap-2">
+                        <input type="number" name="quantity" class="form-control" min="0" value="@onHand"
+                               aria-label="Yeni stok adedi" required/>
+                        <button type="submit" class="btn btn-outline-secondary text-nowrap">Stok bu olsun</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted small mb-0">
+                        Stok kaydı yok — kayıt, kitap ilk yayınlandığında açılır.
+                    </p>
+                }
+            </div>
+        </div>
+
+        @* Yayın anahtarı (FR-008): fiyatsız publish API'de reddedilir, mesaj toast'la döner. *@
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Yayın</h2>
+                @if (detail.Published)
+                {
+                    <p class="text-muted small">Kitap vitrinde görünüyor.</p>
+                    <form method="post" asp-page-handler="Publish" asp-route-id="@detail.Id" asp-route-published="false">
+                        <button type="submit" class="btn btn-outline-danger w-100">Yayından Kaldır</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted small">Kitap vitrinde görünmüyor; yalnız bu listede yaşar.</p>
+                    <form method="post" asp-page-handler="Publish" asp-route-id="@detail.Id" asp-route-published="true">
+                        <button type="submit" class="kp-btn-orange border-0 w-100">Yayına Al</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

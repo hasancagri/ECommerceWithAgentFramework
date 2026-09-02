@@ -1,15 +1,23 @@
 namespace Catalog.Api.Domains.Products.Features.Commands;
 
+// 058: admin düzenleme formunun yazma ucu. Yazar/yayınevi Id İLE seçilir; listede olmayan ad
+// NewAuthorNames/NewPublisherName ile gelir ve get-or-create edilir (ImportBook deseni — bilinçli tekrar).
+// Fiyat gerçekten değişirse ProductPriceChange satırı AYNI session'da yazılır (058 fiyat geçmişi).
+// Yayın durumu KORUNUR (eski K8 "her kayıt publish eder" davranışı 058'de kalktı — yayın anahtarı
+// SetProductPublished'ta); ProductChangedEvent yalnız yayındaki ürün için yayılır (draft vitrinde yok).
 public static class UpdateProduct
 {
     public record UpdateProductCommand(
         Guid Id,
         string Name,
-        string Description,
+        string ShortDescription,
+        string FullDescription,
         decimal Price,
         string Sku,
         List<Guid> AuthorIds,
-        Guid PublisherId,
+        List<string>? NewAuthorNames,
+        Guid? PublisherId,
+        string? NewPublisherName,
         Guid CategoryId,
         string? ImageUrl);
 
@@ -41,7 +49,40 @@ public static class UpdateProduct
                 authors.Add(author);
             }
 
-            var publisher = await session.LoadAsync<Publisher>(cmd.PublisherId, ct);
+            // 058: listede olmayan yazar adları get-or-create (NormalizedName teklik — ImportBook deseni).
+            foreach (var name in (cmd.NewAuthorNames ?? []).Where(n => !string.IsNullOrWhiteSpace(n)))
+            {
+                var normalized = NameNormalization.Normalize(name);
+                var existing = authors.FirstOrDefault(a => a.NormalizedName == normalized)
+                               ?? await session.Query<Author>()
+                                   .FirstOrDefaultAsync(a => a.NormalizedName == normalized, ct);
+                if (existing is null)
+                {
+                    existing = Author.Create(name).Data!;
+                    session.Store(existing);
+                }
+
+                if (authors.All(a => a.Id != existing.Id))
+                    authors.Add(existing);
+            }
+
+            Publisher? publisher = null;
+            if (!string.IsNullOrWhiteSpace(cmd.NewPublisherName))
+            {
+                var normalized = NameNormalization.Normalize(cmd.NewPublisherName);
+                publisher = await session.Query<Publisher>()
+                    .FirstOrDefaultAsync(p => p.NormalizedName == normalized, ct);
+                if (publisher is null)
+                {
+                    publisher = Publisher.Create(cmd.NewPublisherName).Data!;
+                    session.Store(publisher);
+                }
+            }
+            else if (cmd.PublisherId is { } publisherId)
+            {
+                publisher = await session.LoadAsync<Publisher>(publisherId, ct);
+            }
+
             if (publisher is null || publisher.IsDeleted)
                 return FeatureObjectResultModel<UpdateProductResponse>.Error(new MessageItem
                 {
@@ -74,12 +115,18 @@ public static class UpdateProduct
             if (!identifiers.IsSuccess)
                 return FeatureObjectResultModel<UpdateProductResponse>.Error(identifiers.Messages);
 
-            product.UpdateDescriptions(cmd.Description, cmd.Description);
+            product.UpdateDescriptions(cmd.ShortDescription, cmd.FullDescription);
+
+            // 058 FR-013: yalnız GERÇEK fiyat değişimi geçmişe satır düşürür (aynı fiyatla kayıt düşmez).
+            var oldPrice = product.Price.Amount;
             product.SetPrice(price);
+            if (oldPrice != price.Amount)
+                session.Store(ProductPriceChange.Create(product.Id, oldPrice, price.Amount, DateTime.UtcNow));
+
             var setAuthors = product.SetAuthors(authors.Select(a => a.Id));
             if (!setAuthors.IsSuccess)
                 return FeatureObjectResultModel<UpdateProductResponse>.Error(setAuthors.Messages);
-            var setPublisher = product.SetPublisher(cmd.PublisherId);
+            var setPublisher = product.SetPublisher(publisher.Id);
             if (!setPublisher.IsSuccess)
                 return FeatureObjectResultModel<UpdateProductResponse>.Error(setPublisher.Messages);
             product.SetImage(cmd.ImageUrl);
@@ -95,17 +142,18 @@ public static class UpdateProduct
                     return FeatureObjectResultModel<UpdateProductResponse>.Error(assign.Messages);
             }
 
-            product.Publish(); // K8: yazım yolu publish eder (parity: yazılan ürün vitrindedir)
             session.Store(product);
 
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.
-            // 016: fat event kimlik + adı birlikte taşır (R7).
-            // 040 K2/K4: kontrat SABİT — decimal fiyat = Price.Amount, kategori = primary atama.
-            await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
-                product.Id, product.Name, product.FullDescription, product.Price.Amount,
-                authors.Select(a => new IntegrationEvents.AuthorRef(a.Id, a.Name)).ToList(),
-                publisher.Id, publisher.Name, category.Id, category.Name,
-                product.ImageUrl, IsDeleted: false));
+            // 058: yalnız yayındaki ürün event yayar; draft düzenlemesi vitrine sızmaz.
+            if (product.Published)
+            {
+                await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
+                    product.Id, product.Name, product.FullDescription, product.Price.Amount,
+                    authors.Select(a => new IntegrationEvents.AuthorRef(a.Id, a.Name)).ToList(),
+                    publisher.Id, publisher.Name, category.Id, category.Name,
+                    product.ImageUrl, IsDeleted: false));
+            }
 
             return FeatureObjectResultModel<UpdateProductResponse>.Ok(new UpdateProductResponse { Id = product.Id });
         }
@@ -119,7 +167,7 @@ public static class UpdateProductCommandEndpoint
         group.MapPut("/", async ([FromBody] UpdateProduct.UpdateProductCommand cmd, IMessageBus bus) =>
             {
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<UpdateProduct.UpdateProductResponse>>(cmd);
-                return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
+                return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
             })
             .WithName("UpdateProduct");
         return group;

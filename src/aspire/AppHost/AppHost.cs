@@ -152,6 +152,8 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
 
 var web = builder.AddProject<Projects.WebApp>("ecommerce-web");
 web.WithReference(basketApi)
+    // 058: admin ürün düzenleme ekranları Catalog'un yönetim penceresini çağırır.
+    .WithReference(catalogApi)
     .WithReference(stockApi)
     .WithReference(orderApi)
     .WithReference(paymentApi)

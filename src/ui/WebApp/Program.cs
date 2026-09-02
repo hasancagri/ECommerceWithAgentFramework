@@ -52,6 +52,7 @@ builder.Services.AddScoped<StorefrontService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<MerchantInformationService>();
 builder.Services.AddScoped<ReviewsService>();
+builder.Services.AddScoped<CatalogAdminService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<AnonymousBasketIdHandler>();
@@ -117,6 +118,13 @@ builder.Services.AddRefitClient<IReviewsRefitService>().ConfigureHttpClient(conf
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
+// 058: Catalog yönetim penceresi — admin ürün düzenleme ekranları (catalog.write admin token'ıyla).
+builder.Services.AddRefitClient<ICatalogRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://catalog-api");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+
+
 builder.Services.AddAuthentication(configureOption =>
     {
         configureOption.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -166,6 +174,10 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("reviews.write");
         // 054: kisisel ana sayfa feed'i (vitrin okumalar anonim kalir; yalniz bu uc kimlik ister).
         options.Scope.Add("storefront.read");
+        // 058: admin urun duzenleme ekranlari. Talep herkese, verilme role bagli (030 deseni:
+        // granted = requested ∩ rol demeti) — ikisi de yalniz admin token'ina biner.
+        options.Scope.Add("catalog.write");
+        options.Scope.Add("stock.write");
 
         // Token'daki "name"/"role" claim'lerini standart tiplere esle (policy'ler icin).
         // 030 RBAC: MapInboundClaims (default true) gelen "role"u ClaimTypes.Role (uzun URI)'ye

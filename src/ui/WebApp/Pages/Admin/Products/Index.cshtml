@@ -1,0 +1,123 @@
+@page
+@model WebApp.Pages.Admin.Products.IndexModel
+@{
+    ViewData["Title"] = "Ürün Yönetimi";
+}
+
+@* 058: kitapyurdu-hizalı yönetim listesi — kapak + ad + yazar + fiyat + yayın durumu (FR-001). *@
+<div class="d-flex align-items-center justify-content-between mt-4 mb-3">
+    <h1 class="kp-band-title h4 mb-0">Ürün Yönetimi</h1>
+    <span class="text-muted small">@Model.TotalItemCount kitap</span>
+</div>
+
+<form method="get" class="kp-search mb-3" role="search">
+    <input type="search" name="q" value="@Model.Q" class="form-control"
+           placeholder="Kitap adı veya ISBN ara..." aria-label="Ürün ara"/>
+    <button type="submit" class="kp-search-btn" aria-label="Ara">🔍</button>
+</form>
+
+@if (Model.LoadFailed)
+{
+    <div class="alert alert-danger">Ürün listesi alınamadı; lütfen sayfayı yenileyin.</div>
+}
+else if (Model.Items.Count == 0)
+{
+    <div class="alert alert-light border text-center py-5">
+        Aramanızla eşleşen kitap bulunamadı.
+        @if (!string.IsNullOrWhiteSpace(Model.Q))
+        {
+            <a asp-page="/Admin/Products/Index">Tüm kitapları göster</a>
+        }
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+            <tr>
+                <th style="width:56px"></th>
+                <th>Kitap</th>
+                <th>Yazar</th>
+                <th class="text-end">Fiyat</th>
+                <th>Durum</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/NoImage.jpeg" : item.ImageUrl)"
+                             onerror="this.onerror=null;this.src='/images/NoImage.jpeg';"
+                             alt="@item.Name" style="width:44px;height:60px;object-fit:cover"
+                             class="rounded border"/>
+                    </td>
+                    <td>
+                        <a asp-page="/Admin/Products/Edit" asp-route-id="@item.Id" class="fw-semibold text-decoration-none">
+                            @item.Name
+                        </a>
+                        @if (!string.IsNullOrEmpty(item.Isbn))
+                        {
+                            <div class="text-muted small">ISBN: @item.Isbn</div>
+                        }
+                    </td>
+                    <td class="text-muted">@string.Join(", ", item.AuthorNames)</td>
+                    <td class="text-end fw-semibold">@item.Price.ToString("N2") ₺</td>
+                    <td>
+                        @if (item.Published)
+                        {
+                            <span class="badge text-bg-success">Yayında</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-secondary">Yayında değil</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-page="/Admin/Products/Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">
+                            Düzenle
+                        </a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @* Pencereli sayfalama (_Pager /Products'a sabitli olduğundan admin kendi çizer). *@
+    @if (Model.PageCount > 1)
+    {
+        var qs = string.IsNullOrWhiteSpace(Model.Q) ? "" : $"&q={Uri.EscapeDataString(Model.Q)}";
+        var pages = new SortedSet<int> { 1, Model.PageCount };
+        for (var i = Model.PageNumber - 2; i <= Model.PageNumber + 2; i++)
+        {
+            if (i >= 1 && i <= Model.PageCount) pages.Add(i);
+        }
+
+        <nav class="mt-3" aria-label="Ürün sayfaları">
+            <ul class="kp-pager">
+                <li class="@(Model.PageNumber > 1 ? "" : "disabled")">
+                    <a class="kp-pager-nav" href="/Admin/Products?page=@(Model.PageNumber - 1)@qs" aria-label="Önceki">‹</a>
+                </li>
+                @{ var prev = 0; }
+                @foreach (var p in pages)
+                {
+                    @if (prev > 0 && p - prev > 1)
+                    {
+                        <li class="kp-pager-gap">…</li>
+                    }
+                    <li>
+                        <a class="kp-pager-num @(p == Model.PageNumber ? "active" : "")"
+                           href="/Admin/Products?page=@p@qs">@p</a>
+                    </li>
+                    prev = p;
+                }
+                <li class="@(Model.PageNumber < Model.PageCount ? "" : "disabled")">
+                    <a class="kp-pager-nav" href="/Admin/Products?page=@(Model.PageNumber + 1)@qs" aria-label="Sonraki">›</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
