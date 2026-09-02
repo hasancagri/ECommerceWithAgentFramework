@@ -133,6 +133,11 @@
     </main>
 </div>
 
+@* 055: "Son Gezdiklerim" şeridi her sayfada, footer'ın üstünde (layout'a taşındı). *@
+<div class="container">
+    <div id="recently-viewed"></div>
+</div>
+
 <footer class="kp-footer mt-5">
     <div class="container py-4 text-center">
         <div class="kp-footer-brand mb-1"><span>📚</span> Kitap Dünyası</div>
@@ -147,5 +152,26 @@
 <script src="~/js/site.js" asp-append-version="true"></script>
 
 @await RenderSectionAsync("Scripts", false)
+
+@* 055: şerit doldurma — sayfa script'lerinden SONRA koşar ki Detail'in localStorage yazımı
+   (o an gezilen ürün) şeride yansısın. Handler ana sayfa modelinde; kök URL her sayfadan çalışır. *@
+<script>
+    (function () {
+        let list;
+        try { list = JSON.parse(localStorage.getItem('recentlyViewed')); } catch { list = null; }
+        if (!Array.isArray(list) || list.length === 0) return;
+        const host = document.getElementById('recently-viewed');
+        fetch('/?handler=RecentlyViewed&ids=' + encodeURIComponent(list.join(',')))
+            .then(r => r.ok ? r.text() : '')
+            .then(html => { if (html.trim()) host.innerHTML = html; })
+            .catch(() => { /* vitrin erişilemezse şerit sessizce çizilmez */ });
+        // FR-010: "Temizle" — enjekte HTML'deki butonu delegasyonla dinle.
+        host.addEventListener('click', e => {
+            if (!e.target.closest('[data-clear-recently-viewed]')) return;
+            localStorage.removeItem('recentlyViewed');
+            host.innerHTML = '';
+        });
+    })();
+</script>
 </body>
 </html>

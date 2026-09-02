@@ -63,13 +63,15 @@ public static class SetBasketItemQuantityEndpoint
         group.MapPut("/item/{productId:guid}/quantity", async (
                 Guid productId, [FromBody] SetQuantityBody body, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = currentUser.Load(httpContext.User).Id;
+                // 057: anonim erisim — sahip token'dan ya da anonim header'dan.
+                var ownerId = BasketEndpointExtension.ResolveOwnerId(httpContext, currentUser);
+                if (ownerId == Guid.Empty) return Results.BadRequest();
+
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<SetBasketItemQuantity.SetBasketItemQuantityResponse>>(
-                    new SetBasketItemQuantity.SetBasketItemQuantityCommand(userId, productId, body.Quantity));
+                    new SetBasketItemQuantity.SetBasketItemQuantityCommand(ownerId, productId, body.Quantity));
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })
-            .WithName("SetBasketItemQuantity")
-            .RequireAuthorization(AuthorizationScopes.BasketWrite);
+            .WithName("SetBasketItemQuantity");
         return group;
     }
 }

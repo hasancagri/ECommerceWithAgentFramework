@@ -446,3 +446,45 @@ body {
   padding-bottom: .4rem;
   margin-bottom: 1rem;
 }
+/* --- Sepet sayfası (kitapyurdu checkout/cart düzeni) --- */
+.kp-cart-title { font-size: 1.6rem; font-weight: 700; }
+.kp-cart-badge {
+  background: #eee;
+  color: #666;
+  font-size: .8rem;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+}
+.kp-cart-login-band {
+  background: #fdf6e3;
+  border: 1px solid #f0e0b0;
+  border-radius: .4rem;
+  padding: 1rem 1.25rem;
+}
+.kp-cart-card { border: 1px solid #e5e5e5; }
+.kp-cart-row + .kp-cart-row { border-top: 1px solid #eee; }
+.kp-cart-thumb { width: 72px; height: auto; border: 1px solid #eee; border-radius: .25rem; }
+.kp-cart-name { color: var(--kp-ink); font-weight: 600; text-decoration: none; }
+.kp-cart-name:hover { color: var(--kp-accent); }
+.kp-cart-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: var(--kp-ink);
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1;
+}
+.kp-cart-step:hover { border-color: var(--kp-orange); color: var(--kp-orange); }
+.kp-cart-step:disabled { opacity: .4; }
+.kp-cart-qty { min-width: 2ch; text-align: center; font-weight: 700; }
+.kp-cart-remove { color: #b3122a; font-size: .85rem; text-decoration: none; }
+.kp-cart-remove:hover { text-decoration: underline; }
+.kp-cart-summary { border: 1px solid #e5e5e5; position: sticky; top: 1rem; }
+.kp-cart-total { color: var(--kp-price); font-size: 1.5rem; font-weight: 800; }
+.kp-cart-buy { font-size: 1.05rem; padding: .65rem 1rem; border-radius: .4rem; }

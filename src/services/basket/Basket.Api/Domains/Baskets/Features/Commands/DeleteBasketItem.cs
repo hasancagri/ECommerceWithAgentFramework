@@ -2,7 +2,7 @@ namespace Basket.Api.Domains.Baskets.Features.Commands;
 
 public static class DeleteBasketItem
 {
-    [RequiredScope(AuthorizationScopes.BasketWrite)]
+    // 057: [RequiredScope] kalkti — anonim yol scope tasiyamaz; sahiplik Guid gizliligiyle korunur.
     public record DeleteBasketItemCommand(Guid UserId, Guid Id);
 
     public class DeleteBasketItemResponse
@@ -40,13 +40,15 @@ public static class DeleteBasketItemCommandEndpoint
     {
         group.MapDelete("/item/{id:guid}", async (Guid id, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = currentUser.Load(httpContext.User).Id;
+                // 057: anonim erisim — sahip token'dan ya da anonim header'dan.
+                var ownerId = BasketEndpointExtension.ResolveOwnerId(httpContext, currentUser);
+                if (ownerId == Guid.Empty) return Results.BadRequest();
+
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<DeleteBasketItem.DeleteBasketItemResponse>>(
-                    new DeleteBasketItem.DeleteBasketItemCommand(userId, id));
+                    new DeleteBasketItem.DeleteBasketItemCommand(ownerId, id));
                 return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
             })
-            .WithName("DeleteBasketItem")
-            .RequireAuthorization(AuthorizationScopes.BasketWrite);
+            .WithName("DeleteBasketItem");
         return group;
     }
 }

@@ -46,7 +46,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | Servis | DB | Ne yapar | Origin spec |
 |---|---|---|---|
 | `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi) | `specs/040-catalog-domain-extract` |
-| `basket` | basketDb | Kalıcı sepet + kalem; stok tutmaz/süre yok (056), stok gerçeği checkout'ta | `specs/012-stock-reservation` |
+| `basket` | basketDb | Kalıcı sepet + kalem; anonim sahiplik + login'de merge (057); stok tutmaz/süre yok (056), stok gerçeği checkout'ta | `specs/012-stock-reservation` |
 | `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Create/Confirm/Cancel; chat charge yolu; Confirm'de `OrderCompleted` fanout (Reviews + Storefront tüketir) | `specs/028-checkout-saga` |
 | `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); CreateOrder→CommitStock→Charge→Confirm→ClearBasket; pivot=Charge, pivot-öncesi LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount; tek-faz Charge) | — |
