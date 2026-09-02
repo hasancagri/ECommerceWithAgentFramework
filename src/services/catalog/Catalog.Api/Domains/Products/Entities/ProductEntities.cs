@@ -5,7 +5,7 @@ namespace Catalog.Api.Domains.Products.Entities;
 /// 058: fiyat geçmişi satırı — aggregate DEĞİL, append-only audit kaydı (davranışsız; konvansiyon
 /// istisnası: read-model/kayıt sınıfı BC içinde ayrı yaşayabilir). İlk satır import/oluşturma fiyatı
 /// (OldPrice=null), sonraki satırlar gerçek fiyat değişimleri. Fiyatla AYNI session'da yazılır — kayıp yok.
-/// Müşteri-yüzü fiyat grafiği bu feature'ın dışıdır (G2); kaynak veri burada birikir.
+/// Müşteri-yüzü gösterim: 059 detay sayfası fiyat geçmişi (anonim GetProductPriceHistory query'si).
 /// </summary>
 public class ProductPriceChange
 {

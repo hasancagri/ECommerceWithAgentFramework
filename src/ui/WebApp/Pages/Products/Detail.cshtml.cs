@@ -8,7 +8,8 @@ namespace WebApp.Pages.Products;
 [AllowAnonymous]
 public class DetailModel(
     StorefrontService storefrontService,
-    ReviewsService reviewsService) : BasePageModel
+    ReviewsService reviewsService,
+    CatalogService catalogService) : BasePageModel
 {
     public StorefrontProductViewModel? Product { get; set; }
 
@@ -20,6 +21,10 @@ public class DetailModel(
 
     // 045: varyant ailesi (null = ailesiz/tek uye → secici cizilmez).
     public VariantFamilyViewModel? Family { get; set; }
+
+    // 059: fiyat geçmişi kronolojik (eski→yeni); null = servis hatası (kutu gizli),
+    // 0-1 kayıt = "henüz fiyat değişmedi" (grafik çizilmez), 2+ = grafik + liste.
+    public List<AdminPriceChangeDto>? PriceHistory { get; set; }
 
     [TempData] public string? ReviewError { get; set; }
     [TempData] public string? ReviewSuccess { get; set; }
@@ -42,6 +47,9 @@ public class DetailModel(
 
         // 045: varyant ailesi (ailesizde null).
         Family = await storefrontService.GetFamilyAsync(id);
+
+        // 059: hata/boşta boş liste döner — kutu hiç çizilmez, sayfa düşmez.
+        PriceHistory = await catalogService.GetPriceHistoryAsync(id);
 
         return Page();
     }
