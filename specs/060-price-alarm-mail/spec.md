@@ -23,24 +23,24 @@ Ayşe bir kitabı beğenir ama fiyatını yüksek bulur. Detay sayfasında "Fiya
 1. **Given** giriş yapmış kullanıcı, **When** detayda "Fiyat Alarmı Ekle"ye basar, **Then** alarm kaydedilir ve düğme "Alarm Kurulu" durumuna geçer.
 2. **Given** anonim ziyaretçi, **When** düğmeye basar, **Then** giriş sayfasına yönlenir; girişten sonra detaya döner.
 3. **Given** alarmı kurulu kullanıcı, **When** aynı ürüne tekrar alarm kurmayı dener, **Then** ikinci kayıt oluşmaz (aynı ürüne tek alarm).
-4. **Given** alarmı kurulu kullanıcı, **When** "Alarmı Kaldır" der, **Then** alarm silinir ve fiyat düşse bile mail gelmez.
+4. **Given** alarmı kurulu kullanıcı, **When** "Alarmı Kaldır" der, **Then** alarm silinir ve fiyat değişse bile mail gelmez.
 
 ---
 
-### User Story 2 - Fiyat düşünce mail gelir (Priority: P1)
+### User Story 2 - Fiyat değişince mail gelir (Priority: P1)
 
-Yönetici kitabın fiyatını düşürür. Kısa süre içinde Ayşe'ye kişisel bir e-posta gelir: kitabın adı, eski ve yeni fiyat, kitaba giden bağlantı. Alarm görevini tamamladığı için kapanır (tek atımlık); detay sayfasında düğme ilk hâline döner.
+Yönetici kitabın fiyatını değiştirir. Kısa süre içinde Ayşe'ye kişisel bir e-posta gelir: kitabın adı, eski ve yeni fiyat, kitaba giden bağlantı. Alarm açık kalır (abonelik gibi): sonraki her fiyat değişiminde yine mail gelir; rahatsız olan kullanıcı alarmı kendisi kaldırır.
 
 **Why this priority**: Feature'ın var oluş nedeni; US1 ile birlikte uçtan uca değer bu ikisinde tamamlanır.
 
-**Independent Test**: Alarm kur → admin'den fiyatı düşür → mail kutusunda (test posta arayüzü) kişisel mail görünür; alarm kapanmıştır.
+**Independent Test**: Alarm kur → admin'den fiyatı değiştir → mail kutusunda (test posta arayüzü) kişisel mail görünür; alarm hâlâ kurulu. Fiyatı bir daha değiştir → ikinci mail gelir.
 
 **Acceptance Scenarios**:
 
-1. **Given** ürüne alarmı olan kullanıcı, **When** ürünün fiyatı düşer, **Then** kullanıcının kayıt e-postasına ürün adı + eski/yeni fiyat + ürün bağlantısı içeren mail gider.
-2. **Given** aynı ürüne alarmı olan birden çok kullanıcı, **When** fiyat düşer, **Then** her birine kendi maili gider.
-3. **Given** mail gönderilmiş alarm, **When** fiyat tekrar düşer, **Then** ikinci mail GİTMEZ (alarm ilk tetikte kapandı).
-4. **Given** alarmı olan kullanıcı, **When** ürünün fiyatı ARTAR, **Then** mail gitmez ve alarm açık kalır (ileride düşüşü bekler).
+1. **Given** ürüne alarmı olan kullanıcı, **When** ürünün fiyatı değişir (artış ya da düşüş), **Then** kullanıcının kayıt e-postasına ürün adı + eski/yeni fiyat + ürün bağlantısı içeren mail gider.
+2. **Given** aynı ürüne alarmı olan birden çok kullanıcı, **When** fiyat değişir, **Then** her birine kendi maili gider.
+3. **Given** mail gönderilmiş alarm, **When** fiyat TEKRAR değişir, **Then** yeni bir mail daha gider (alarm kaldırılana dek yaşar).
+4. **Given** alarmı kaldırılmış kullanıcı, **When** fiyat değişir, **Then** mail gitmez.
 
 ---
 
@@ -60,9 +60,9 @@ Sistem her gönderilen maili bir "bildirim gönderildi" kaydı olarak duyurur. v
 
 ### Edge Cases
 
-- Fiyat düşer ama üründe hiç alarm yok: hiçbir şey olmaz (boş tetik yayınlanmaz).
-- Fiyat değişmeden başka künye alanı değişir: tetik yok (yalnız fiyat düşüşü tetikler).
-- Mail altyapısı geçici çalışmaz: gönderim yeniden denenir; kalıcı hatada hata kuyruğuna düşer (moderasyon worker'ı deseni). Alarm tetiklendiği anda kapanmıştır; aynı düşüş için mükerrer mail üretilmez.
+- Fiyat değişir ama üründe hiç alarm yok: hiçbir şey olmaz (boş tetik yayınlanmaz).
+- Fiyat değişmeden başka künye alanı değişir: tetik yok (yalnız fiyat değişimi tetikler).
+- Mail altyapısı geçici çalışmaz: gönderim yeniden denenir; kalıcı hatada hata kuyruğuna düşer (moderasyon worker'ı deseni). Aynı fiyat değişimi için bilinçli mükerrer mail üretilmez (yeniden-deneme nadir durumda çift maile yol açabilir, kabul).
 - Ürün yayından kalkar: alarm sessizce durur (fiyat düşüş tetiği gelmez); kayıt silinmez.
 - Kullanıcının e-postası sistemde yoksa/boşsa: gönderim atlanır, iz "gönderilemedi" olarak düşer.
 
@@ -72,8 +72,8 @@ Sistem her gönderilen maili bir "bildirim gönderildi" kaydı olarak duyurur. v
 
 - **FR-001**: Giriş yapmış kullanıcı, ürün detayından o ürüne fiyat alarmı kurabilmeli ve kaldırabilmelidir; anonim kullanıcı düğmede giriş akışına yönlenir (girişten sonra detaya dönülür).
 - **FR-002**: Bir kullanıcının aynı ürüne en çok BİR açık alarmı olabilir; tekrar kurma denemesi ikinci kayıt üretmez.
-- **FR-003**: Sistem, bir ürünün fiyatı DÜŞTÜĞÜNDE o ürüne açık alarmı olan her kullanıcı için bildirim sürecini tetiklemelidir; fiyat artışı ve fiyat-dışı değişiklikler tetiklemez.
-- **FR-004**: Tetiklenen alarm TEK ATIMLIKTIR: süreç başladığı anda kapanır; aynı alarmdan ikinci mail üretilmez. Kullanıcı isterse yeniden alarm kurabilir.
+- **FR-003**: Sistem, bir ürünün fiyatı DEĞİŞTİĞİNDE (artış ya da düşüş) o ürüne alarmı olan her kullanıcı için bildirim sürecini tetiklemelidir; fiyat-dışı değişiklikler tetiklemez.
+- **FR-004**: Alarm YAŞAYAN bir aboneliktir: kullanıcı kaldırana dek açık kalır ve her fiyat değişiminde yeni mail üretir. Gürültü kontrolü kullanıcıdadır (rahatsız olan alarmı kaldırır); throttle v1 kapsam dışı.
 - **FR-005**: Gönderilen mail kişiselleştirilmiş olmalıdır: kullanıcıya hitap, ürün adı, eski ve yeni fiyat, ürün detayına bağlantı içerir; dili Türkçedir.
 - **FR-006**: Mail, kullanıcının kayıtlı e-posta adresine gider; adres yoksa gönderim atlanır ve iz "gönderilemedi" olarak kaydedilir.
 - **FR-007**: Her gönderim denemesinin sonucu (gönderildi/gönderilemedi; kullanıcı + ürün) sistemde iz bırakmalıdır.
@@ -82,8 +82,8 @@ Sistem her gönderilen maili bir "bildirim gönderildi" kaydı olarak duyurur. v
 
 ### Key Entities
 
-- **Fiyat Alarmı**: Kullanıcının bir ürünün fiyat düşüşünü bekleme kaydı — kullanıcı, ürün, kuruluş anındaki fiyat, durum (açık/kapalı). Yeni "kitaplık" alanının ilk kavramı; favori/listeler ileride aynı alana gelir.
-- **Fiyat Düşüşü Tetiği**: "Bu kullanıcının alarmı düştü" duyurusu — kullanıcı, ürün adı, eski/yeni fiyat; mail üretimine yetecek bilgiyi kendisi taşır.
+- **Fiyat Alarmı**: Kullanıcının bir ürünün fiyat değişimini izleme kaydı — kullanıcı, ürün, kuruluş anındaki fiyat; kaldırılana dek yaşar. Yeni "kitaplık" alanının ilk kavramı; favori/listeler ileride aynı alana gelir.
+- **Fiyat Değişim Tetiği**: "Bu kullanıcının izlediği ürünün fiyatı değişti" duyurusu — kullanıcı, ürün adı, eski/yeni fiyat; mail üretimine yetecek bilgiyi kendisi taşır.
 - **Bildirim İzi**: Gönderim sonucunun kaydı — kullanıcı, ürün, sonuç, zaman.
 
 ## Success Criteria *(mandatory)*
@@ -91,16 +91,16 @@ Sistem her gönderilen maili bir "bildirim gönderildi" kaydı olarak duyurur. v
 ### Measurable Outcomes
 
 - **SC-001**: Alarm kurma tek tıktır (login'liyken); kurulum sonrası durum sayfada anında görünür.
-- **SC-002**: Fiyat düşüşünden sonra mail, olağan koşullarda 1 dakika içinde kullanıcının kutusunda görünür.
-- **SC-003**: Bir alarm en çok BİR mail üretir; aynı düşüş için mükerrer mail sıfırdır.
-- **SC-004**: Fiyat artışları ve fiyat-dışı değişiklikler hiçbir mail üretmez.
+- **SC-002**: Fiyat değişiminden sonra mail, olağan koşullarda 1 dakika içinde kullanıcının kutusunda görünür.
+- **SC-003**: Her fiyat değişimi alarm başına EN ÇOK bir mail üretir; aynı değişim için bilinçli mükerrer mail sıfırdır.
+- **SC-004**: Fiyat-dışı değişiklikler ve alarmı kaldırılmış kullanıcılar hiçbir mail üretmez.
 - **SC-005**: Gönderilen her mailin izi sistemde bulunur; canlı doğrulamada mail içeriği (ad, iki fiyat, bağlantı) birebir kontrol edilir.
 
 ## Assumptions
 
 - Kullanıcının mail adresi = üyelik kayıt e-postası; ayrı "bildirim adresi" yönetimi kapsam dışı.
 - Mail içeriğini üreten akıl kişiselleştirme için yapay zekâ kullanır; içerik üretilemezse sade bir yedek şablonla gönderim yine yapılır (mail hiç gitmemesinden iyidir).
-- Alarm v1 tek atımlık; "yaşayan alarm + gürültü kesici (throttle) + başka bildirim türleri + haftalık özet" bilinçli olarak SONRAKİ feature'a bırakıldı.
+- Alarm v1 yaşayan abonelik, kural filtresi yok (2026-09-02 kullanıcı kararı; tek-atımlık tasarım terk edildi). "Gürültü kesici (throttle) + başka bildirim türleri + haftalık özet" bilinçli olarak SONRAKİ feature'a bırakıldı.
 - "Bildirimlerim" ekranı v1'de yok; yalnız iz bırakılır.
 - Kullanıcı bazlı mail izni/abonelikten çıkma (unsubscribe) v1 kapsam dışı — alarm zaten kullanıcının açık talebidir; kaldırmak = alarmı silmek.
 - Geliştirmede mailler yerel görüntüleyicide kalır; gerçek dünyaya mail çıkışı yok.
