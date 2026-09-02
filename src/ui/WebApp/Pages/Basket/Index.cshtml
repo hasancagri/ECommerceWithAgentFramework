@@ -1,8 +1,5 @@
-﻿@page
+@page
 @model IndexModel
-@{
-    var index = 1;
-}
 
 @if (!Model.Basket.HasItem)
 {
@@ -13,77 +10,82 @@
     return;
 }
 
-<table class="table table-striped">
-    <thead class="table-dark">
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Ürün Görseli</th>
-        <th scope="col">Ürün Adı</th>
-        <th scope="col">Ürün Fiyatı</th>
-        <th scope="col">Adet</th>
-        <th>İşlem</th>
-    </tr>
-    </thead>
-    <tbody>
+@* Kitapyurdu sepet düzeni: başlık + ürün rozeti, anonim giriş bandı, sol kalem kartı + sağ özet. *@
+<div class="d-flex align-items-baseline gap-2 mb-3">
+    <h1 class="kp-cart-title mb-0">Sepetim</h1>
+    <span class="kp-cart-badge">@Model.Basket.Items.Count Ürün</span>
+</div>
 
-    @foreach (var basketItem in Model.Basket.Items)
-    {
-        <tr>
-            <td>@index</td>
-            <td>
-                <img class="img-fluid img-thumbnail" width="100px" alt="@basketItem.Name"
-                     src="@(string.IsNullOrEmpty(basketItem.PictureUrl) ? "/images/blank_course_thumbnail.jpg" : basketItem.PictureUrl)">
+@if (User.Identity?.IsAuthenticated != true)
+{
+    @* 057: anonim sepet meşru; satın alma login ister — kitapyurdu'daki sarı bilgi bandı. *@
+    <div class="kp-cart-login-band mb-4">
+        <p class="mb-2">Sepetinizdeki ürün veya ürünleri satın alabilmeniz için üye girişi yapmanız gerekmektedir.</p>
+        <a asp-page="/Auth/SignIn" class="btn kp-btn-orange fw-bold">Giriş Yap / Üye Ol</a>
+    </div>
+}
 
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card kp-cart-card">
+            @foreach (var basketItem in Model.Basket.Items)
+            {
+                <div class="kp-cart-row d-flex align-items-center gap-3 p-3">
+                    <a asp-page="/Products/Detail" asp-route-id="@basketItem.Id" class="flex-shrink-0">
+                        <img class="kp-cart-thumb" alt="@basketItem.Name"
+                             src="@(string.IsNullOrEmpty(basketItem.PictureUrl) ? "/images/blank_course_thumbnail.jpg" : basketItem.PictureUrl)">
+                    </a>
 
-            </td>
+                    <div class="flex-grow-1">
+                        <a asp-page="/Products/Detail" asp-route-id="@basketItem.Id"
+                           class="kp-cart-name d-block mb-1">@basketItem.Name</a>
+                        <div class="kp-price fw-bold">@basketItem.Price.ToString("C")</div>
+                    </div>
 
-            <td>
-                @basketItem.Name
-            </td>
-            <td>
-                @basketItem.Price.ToString("C")
-            </td>
-
-            <td>
-                @* 021: adet stepper — hedef adet (mevcut ± 1) view'dan tasinir; min 1'de − devre disi. *@
-                <div class="d-flex align-items-center gap-2">
-                    @if (basketItem.Quantity <= 1)
-                    {
-                        <button class="btn btn-outline-secondary btn-sm" disabled>&minus;</button>
-                    }
-                    else
-                    {
-                        <a class="btn btn-outline-secondary btn-sm" asp-page-handler="SetQuantity"
-                           asp-route-productId="@basketItem.Id" asp-route-quantity="@(basketItem.Quantity - 1)">&minus;</a>
-                    }
-                    <span class="fw-bold" style="min-width:2ch;text-align:center">@basketItem.Quantity</span>
-                    @if (basketItem.Quantity >= basketItem.MaxQuantity)
-                    {
-                        <button class="btn btn-outline-secondary btn-sm" disabled title="En fazla @basketItem.MaxQuantity adet">+</button>
-                    }
-                    else
-                    {
-                        <a class="btn btn-outline-secondary btn-sm" asp-page-handler="SetQuantity"
-                           asp-route-productId="@basketItem.Id" asp-route-quantity="@(basketItem.Quantity + 1)">+</a>
-                    }
+                    <div class="text-end">
+                        @* 021: adet stepper — hedef adet (mevcut ± 1) view'dan tasinir; min 1'de − devre disi. *@
+                        <div class="d-flex align-items-center justify-content-end gap-2 mb-3">
+                            @if (basketItem.Quantity <= 1)
+                            {
+                                <button class="kp-cart-step" disabled>&minus;</button>
+                            }
+                            else
+                            {
+                                <a class="kp-cart-step" asp-page-handler="SetQuantity"
+                                   asp-route-productId="@basketItem.Id" asp-route-quantity="@(basketItem.Quantity - 1)">&minus;</a>
+                            }
+                            <span class="kp-cart-qty">@basketItem.Quantity</span>
+                            @if (basketItem.Quantity >= basketItem.MaxQuantity)
+                            {
+                                <button class="kp-cart-step" disabled title="En fazla @basketItem.MaxQuantity adet">+</button>
+                            }
+                            else
+                            {
+                                <a class="kp-cart-step" asp-page-handler="SetQuantity"
+                                   asp-route-productId="@basketItem.Id" asp-route-quantity="@(basketItem.Quantity + 1)">+</a>
+                            }
+                        </div>
+                        <a asp-page-handler="Delete" asp-route-productId="@basketItem.Id"
+                           class="kp-cart-remove">Sil</a>
+                    </div>
                 </div>
-            </td>
+            }
+        </div>
+    </div>
 
-            <td>
-
-                <a asp-page-handler="Delete" asp-route-productId="@basketItem.Id" class="btn btn-danger">Kaldır</a>
-            </td>
-        </tr>
-        index++;
-    }
-    <tr class="table-active">
-        <td colspan="5" class="text-end fw-bold">Toplam Tutar:</td>
-        <td>@Model.Basket.GetTotalPrice().ToString("C")</td>
-    </tr>
-
-    </tbody>
-</table>
-
-<a asp-page="/order/Create" class="btn btn-success w-100 mt-3 text-center">
-    <i class="fa-solid fa-credit-card"></i> Ödeme Adımına Geç
-</a>
+    <div class="col-lg-4">
+        <div class="card kp-cart-summary p-3">
+            <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                <span class="fw-bold">Sepet Toplamı:</span>
+                <span>@Model.Basket.GetTotalPrice().ToString("C")</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-baseline mb-3">
+                <span class="fw-bold">Toplam:</span>
+                <span class="kp-cart-total">@Model.Basket.GetTotalPrice().ToString("C")</span>
+            </div>
+            <a asp-page="/order/Create" class="btn kp-btn-orange kp-cart-buy w-100 fw-bold">
+                Satın Al &rarr;
+            </a>
+        </div>
+    </div>
+</div>
