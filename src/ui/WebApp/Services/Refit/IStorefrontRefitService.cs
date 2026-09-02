@@ -14,6 +14,17 @@ public interface IStorefrontRefitService
     [Get("/api/v1/storefront/products/filters")]
     Task<ApiResponse<StorefrontFilterOptionsDto>> GetFilterOptions();
 
+    // Dizin sayfaları harf dilimi (ilk açılışta veri çekilmez; harf tıklanınca yalnız o harf gelir).
+    // letter = "A".."Z" veya "#" (Refit '#'ı %23 kodlar); boş harf API'de NotFound(400) döner.
+    [Get("/api/v1/storefront/products/publishers")]
+    Task<ApiResponse<ListResult<FilterOptionDto>>> GetPublishersByLetter(string letter);
+
+    [Get("/api/v1/storefront/products/authors")]
+    Task<ApiResponse<ListResult<FilterOptionDto>>> GetAuthorsByLetter(string letter);
+
+    [Get("/api/v1/storefront/products/categories")]
+    Task<ApiResponse<ListResult<FilterOptionDto>>> GetCategoriesByLetter(string letter);
+
     [Get("/api/v1/storefront/products/{productId}")]
     Task<ApiResponse<StorefrontProductDetailDto>> GetProduct(Guid productId);
 

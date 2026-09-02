@@ -5,37 +5,31 @@
 }
 
 <div class="container mt-4">
-    <div class="d-flex align-items-baseline justify-content-between flex-wrap mb-3">
-        <h2 class="mb-0">Yazarlar</h2>
-        <span class="text-muted small">@Model.TotalAuthors yazar</span>
-    </div>
+    <h2 class="mb-3">Yazarlar</h2>
 
-    @* Sayfa-içi arama — görüntülenen harfin listesini istemci-tarafı süzer. *@
-    <input type="search" id="authorSearch" class="form-control kp-index-search mb-3"
-           placeholder="Bu harfteki yazarlarda ara..." aria-label="Yazar ara"/>
-
-    @* A-Z harf indeksi. *@
+    @* A-Z harf indeksi — ilk açılışta yalnız bu şerit; liste harf tıklanınca (?letter=X) gelir. *@
     <div class="kp-letters mb-4">
         @foreach (var l in "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".Select(c => c.ToString()))
         {
-            @if (Model.Letters.Contains(l))
-            {
-                <a class="kp-letter @(l == Model.SelectedLetter ? "active" : "")"
-                   asp-page="/Authors/Index" asp-route-letter="@l">@l</a>
-            }
-            else
-            {
-                <span class="kp-letter disabled">@l</span>
-            }
+            <a class="kp-letter @(l == Model.SelectedLetter ? "active" : "")"
+               asp-page="/Authors/Index" asp-route-letter="@l">@l</a>
         }
     </div>
 
-    @if (Model.AuthorsForLetter.Count == 0)
+    @if (Model.SelectedLetter is null)
+    {
+        <div class="alert alert-light border">Yazarları görmek için yukarıdan bir harf seçin.</div>
+    }
+    else if (Model.AuthorsForLetter.Count == 0)
     {
         <div class="alert alert-warning">Bu harfte yazar yok.</div>
     }
     else
     {
+        @* Sayfa-içi arama — görüntülenen harfin listesini istemci-tarafı süzer. *@
+        <input type="search" id="authorSearch" class="form-control kp-index-search mb-3"
+               placeholder="Bu harfteki yazarlarda ara..." aria-label="Yazar ara"/>
+
         <div class="kp-index-grid" id="authorList">
             @foreach (var author in Model.AuthorsForLetter)
             {

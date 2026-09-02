@@ -11,6 +11,9 @@ public static class StorefrontViewEndpointExtension
             .GetProductFamilyGroupItemEndpoint()
             .GetStorefrontProductListGroupItemEndpoint()
             .GetStorefrontFilterOptionsGroupItemEndpoint()
+            .GetPublishersByLetterGroupItemEndpoint()
+            .GetAuthorsByLetterGroupItemEndpoint()
+            .GetCategoriesByLetterGroupItemEndpoint()
             .SearchStorefrontProductsGroupItemEndpoint()
             .GetPersonalFeedGroupItemEndpoint();
     }

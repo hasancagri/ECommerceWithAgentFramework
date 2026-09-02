@@ -87,6 +87,38 @@ public class StorefrontService(
                     .ToList())).ToList());
     }
 
+    // Dizin sayfaları harf dilimi: NotFound(400) = o harfte kayıt yok → boş liste (UI "yok" mesajı çizer);
+    // diğer hatalar da boş listeye düşer (dizin sayfası kırılmaz), loglanır.
+    public async Task<List<FilterOptionViewModel>> GetPublishersByLetterAsync(string letter)
+    {
+        var response = await storefrontRefitService.GetPublishersByLetter(letter);
+        return MapLetterIndex(response);
+    }
+
+    public async Task<List<FilterOptionViewModel>> GetAuthorsByLetterAsync(string letter)
+    {
+        var response = await storefrontRefitService.GetAuthorsByLetter(letter);
+        return MapLetterIndex(response);
+    }
+
+    public async Task<List<FilterOptionViewModel>> GetCategoriesByLetterAsync(string letter)
+    {
+        var response = await storefrontRefitService.GetCategoriesByLetter(letter);
+        return MapLetterIndex(response);
+    }
+
+    private List<FilterOptionViewModel> MapLetterIndex(ApiResponse<ListResult<FilterOptionDto>> response)
+    {
+        if (!response.IsSuccessStatusCode || response.Content?.Data is null)
+        {
+            if (response.StatusCode != HttpStatusCode.BadRequest)
+                logger.LogProblemDetails(response.Error);
+            return [];
+        }
+
+        return response.Content.Data.Select(x => new FilterOptionViewModel(x.Id, x.Name)).ToList();
+    }
+
     // Ürün detayı vitrinden (read model) okunur — Catalog'a gidilmez. Kısmi satır (Name/Price
     // henüz raporlanmadı) veya silinmiş ürün alıcıya "bulunamadı" davranır.
     public async Task<ServiceResult<StorefrontProductViewModel>> GetProductAsync(Guid productId)

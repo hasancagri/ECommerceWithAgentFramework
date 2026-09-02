@@ -5,16 +5,29 @@
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4">Tüm Kategoriler</h2>
+    <h2 class="mb-3">Tüm Kategoriler</h2>
 
-    @if (Model.Categories.Count == 0)
+    @* A-Z harf indeksi — ilk açılışta yalnız bu şerit; liste harf tıklanınca (?letter=X) gelir. *@
+    <div class="kp-letters mb-4">
+        @foreach (var l in "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".Select(c => c.ToString()))
+        {
+            <a class="kp-letter @(l == Model.SelectedLetter ? "active" : "")"
+               asp-page="/Categories/Index" asp-route-letter="@l">@l</a>
+        }
+    </div>
+
+    @if (Model.SelectedLetter is null)
     {
-        <div class="alert alert-warning">Henüz kategori yok.</div>
+        <div class="alert alert-light border">Kategorileri görmek için yukarıdan bir harf seçin.</div>
+    }
+    else if (Model.CategoriesForLetter.Count == 0)
+    {
+        <div class="alert alert-warning">Bu harfte kategori yok.</div>
     }
     else
     {
         <div class="kp-index-grid">
-            @foreach (var category in Model.Categories)
+            @foreach (var category in Model.CategoriesForLetter)
             {
                 <a class="kp-index-item" asp-page="/Products/Index" asp-route-categoryId="@category.Id">@category.Name</a>
             }
