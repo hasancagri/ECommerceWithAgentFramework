@@ -1,4 +1,5 @@
-namespace Catalog.Api.Domains.Products;
+namespace Catalog.Api.Domains.Products.Entities;
+
 
 /// <summary>
 /// 058: fiyat geçmişi satırı — aggregate DEĞİL, append-only audit kaydı (davranışsız; konvansiyon

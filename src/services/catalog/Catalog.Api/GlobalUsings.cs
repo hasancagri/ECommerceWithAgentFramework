@@ -14,16 +14,13 @@ global using Weasel.Core;
 global using Wolverine.Marten;
 global using Wolverine.RabbitMQ;
 global using Wolverine;
-global using Catalog.Api.Domains;
 global using Catalog.Api.Domains.Products;
 global using Catalog.Api.Domains.Categories;
 global using Catalog.Api.Domains.Authors;
 global using Catalog.Api.Domains.Publishers;
 global using Catalog.Api.Domains.SpecificationAttributes;
 global using Common.Results;
-global using Wolverine.Marten.Publishing;
 global using Common.Utils.Authorization;
-global using Common.Utils.Caching;
 global using Common.Utils.Constants;
 global using Shared.Utils.Constants;
 global using Common;
@@ -42,11 +39,8 @@ global using Catalog.Api.Domains.Publishers.Features.Queries;
 global using PagedList.Core;
 global using ModelContextProtocol.Server;
 global using Catalog.Api.Domains.Products.Features.Agents;
-
-// --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Common.Dependencies;
-
-// 040: zengin model — VO'lar + ProductTag aggregate'i.
 global using Catalog.Api.Domains.Products.ValueObjects;
 global using Catalog.Api.Domains.ProductTags;
 global using Marten.Linq.MatchesSql;
+global using Catalog.Api.Domains.Products.Entities;
