@@ -53,6 +53,7 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<MerchantInformationService>();
 builder.Services.AddScoped<ReviewsService>();
 builder.Services.AddScoped<CatalogAdminService>();
+builder.Services.AddScoped<CatalogService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<AnonymousBasketIdHandler>();

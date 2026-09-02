@@ -24,4 +24,8 @@ public interface ICatalogRefitService
 
     [Get("/api/v1/categories")]
     Task<ApiResponse<ListResult<CategoryLookupDto>>> GetCategories();
+
+    // 059: müşteri-yüzü fiyat geçmişi — anonim uç (Ok'ta düz liste döner).
+    [Get("/api/v1/products/{id}/price-history")]
+    Task<ApiResponse<List<AdminPriceChangeDto>>> GetProductPriceHistory(Guid id);
 }

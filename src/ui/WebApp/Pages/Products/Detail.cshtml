@@ -152,6 +152,65 @@
         </div>
     </div>
 
+    @* --- 059: Fiyat Geçmişi — null=servis hatası (kutu yok); 0-1 kayıt=metin; 2+=grafik+liste. --- *@
+    @if (Model.PriceHistory is not null)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm kp-price-history">
+                    <div class="card-body">
+                        <h5 class="kp-section-title">Fiyat Geçmişi</h5>
+                        @if (Model.PriceHistory.Count < 2)
+                        {
+                            <p class="text-muted mb-0">Bu kitabın fiyatı henüz değişmedi.</p>
+                        }
+                        else
+                        {
+                            var inv = System.Globalization.CultureInfo.InvariantCulture;
+                            var prices = Model.PriceHistory.Select(x => x.NewPrice).ToList();
+                            var min = prices.Min();
+                            var max = prices.Max();
+                            var range = max == min ? 1m : max - min;
+                            const int w = 640, h = 180, pad = 28;
+                            var stepX = (w - 2m * pad) / (prices.Count - 1);
+                            string X(int i) => (pad + i * stepX).ToString("0.#", inv);
+                            string Y(decimal p) => (h - pad - (p - min) / range * (h - 2 * pad)).ToString("0.#", inv);
+                            var points = string.Join(" ", prices.Select((p, i) => $"{X(i)},{Y(p)}"));
+
+                            <svg viewBox="0 0 @w @h" role="img" aria-label="Fiyat geçmişi grafiği" preserveAspectRatio="xMidYMid meet">
+                                <text x="4" y="@Y(max)" class="kp-ph-axis" dominant-baseline="middle">@max.ToString("C0")</text>
+                                <text x="4" y="@Y(min)" class="kp-ph-axis" dominant-baseline="middle">@min.ToString("C0")</text>
+                                <polyline fill="none" class="kp-ph-line" points="@points"/>
+                                @for (var i = 0; i < prices.Count; i++)
+                                {
+                                    <circle cx="@X(i)" cy="@Y(prices[i])" r="4" class="kp-ph-dot">
+                                        <title>@Model.PriceHistory[i].ChangedAtUtc.ToString("d") — @prices[i].ToString("C")</title>
+                                    </circle>
+                                }
+                            </svg>
+                            <ul class="kp-ph-list">
+                                @foreach (var change in Model.PriceHistory.AsEnumerable().Reverse())
+                                {
+                                    <li>
+                                        <span class="kp-ph-date">@change.ChangedAtUtc.ToString("d")</span>
+                                        @if (change.OldPrice is null)
+                                        {
+                                            <span>İlk fiyat: <strong>@change.NewPrice.ToString("C")</strong></span>
+                                        }
+                                        else
+                                        {
+                                            <span>@change.OldPrice.Value.ToString("C") → <strong>@change.NewPrice.ToString("C")</strong></span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     @* --- Açıklama + özellikler --- *@
     <div class="row mt-4">
         <div class="col-12">

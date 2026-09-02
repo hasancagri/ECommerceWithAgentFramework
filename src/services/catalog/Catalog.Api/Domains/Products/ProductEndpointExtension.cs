@@ -18,5 +18,9 @@ public static class ProductEndpointExtension
             .AdminListProductsGroupItemEndpoint()
             .AdminGetProductGroupItemEndpoint()
             .RequireAuthorization(AuthorizationScopes.CatalogWrite);
+
+        // 059: fiyat geçmişi müşteri-yüzü okuma — korumalı grubun DIŞINDA, anonim (detay sayfası login'siz).
+        app.MapGroup("api/v{version:apiVersion}/products").WithTags("Products").WithApiVersionSet(apiVersionSet)
+            .GetProductPriceHistoryGroupItemEndpoint();
     }
 }
