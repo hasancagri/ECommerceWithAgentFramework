@@ -38,15 +38,6 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.StockChangedEvent>()
         .ToRabbitExchange(RabbitMqConstants.StockChanged.Exchange);
 
-    // 012 (US4): TTL dolunca sweep job'i yayinlar; Basket tuketip sepet satirini siler.
-    rabbit.DeclareExchange(RabbitMqConstants.ReservationExpired.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-    });
-
-    opts.PublishMessage<Shared.IntegrationEvents.ReservationExpired>()
-        .ToRabbitExchange(RabbitMqConstants.ReservationExpired.Exchange);
-
     // 050/051: Catalog ProductAdded tüketicisi — barkod↔ProductId eşlemesi + ilk OnHand (binding'i tüketici kurar).
     // Sıralı kuyruk (aynı barkod sıralı işlenir). İlk yayıncı = kitap import (051); feed söküldü (050).
     rabbit.DeclareExchange(RabbitMqConstants.ProductAdded.Exchange, e =>
@@ -80,17 +71,9 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-// 012: rezervasyon TTL/sweep config binding.
-builder.Services.AddOptions<ReservationOptions>()
-    .BindConfiguration(ReservationOptions.SectionName)
-    .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton<ReservationOptions>(
-    sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ReservationOptions>>().Value);
-
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
-    AuthorizationScopes.StockWrite,
-    AuthorizationScopes.StockReserve);
+    AuthorizationScopes.StockWrite);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
@@ -100,18 +83,6 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 
 // Declarative caching aspect'i: HybridCache + IMessageBus'ı şeffaf sar. UseWolverine'den sonra olmalı.
 builder.Services.AddCachingAspect("stock");
-
-// 012: Stock rezervasyon gRPC sunucusu (Basket/Order senkron cagirir).
-builder.Services.AddGrpc();
-
-// 012 (US4): TTL sweep icin Hangfire (008 deseni; Postgres 'hangfire' semasi, Marten'a dokunmaz).
-builder.Services.AddHangfire(cfg => cfg
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(pg => pg.UseNpgsqlConnection(stockDb),
-        new PostgreSqlStorageOptions { SchemaName = "hangfire" }));
-builder.Services.AddHangfireServer();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services
@@ -137,19 +108,5 @@ app.UseAuthorization();
 app.AddStockGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
-
-// 012: gRPC rezervasyon servisi; yetki endpoint seviyesinde (userId cagri govdesinde).
-app.MapGrpcService<StockReservationGrpcService>()
-    .RequireAuthorization(AuthorizationScopes.StockReserve);
-
-// 012 (US4) + 026: birincil temizlik durable sure-sonu tetigidir (SweepReservation). Bu cron
-// yalniz GUVENLIK-AGI: DLQ'ya dusen/kacan tetiklerin biraktigi bayatlari seyrek (~10dk) toplar.
-// Ayni idempotent PurgeExpired'i kullanir; durable tetikle cakismaz.
-var sweepCron = builder.Configuration.GetValue("Reservations:SweepCron", "*/10 * * * *")!;
-using (var scope = app.Services.CreateScope())
-{
-    scope.ServiceProvider.GetRequiredService<IRecurringJobManager>()
-        .AddOrUpdate<ReservationSweepJob>("reservation-sweep", job => job.RunAsync(CancellationToken.None), sweepCron);
-}
 
 await app.RunAsync();

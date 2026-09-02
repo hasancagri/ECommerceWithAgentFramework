@@ -14,6 +14,7 @@ public static class StockResourceConstants
     public static readonly string AMOUNT_MUST_BE_POSITIVE = "AMOUNT_MUST_BE_POSITIVE";
 
     // 028-checkout-saga
+    public static readonly string STOCK_COMMIT_INVALID = "STOCK_COMMIT_INVALID";
     public static readonly string STOCK_REVERT_INVALID = "STOCK_REVERT_INVALID";
     public static readonly string STOCK_REVERT_WITHOUT_COMMIT = "STOCK_REVERT_WITHOUT_COMMIT";
 }

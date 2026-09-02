@@ -38,12 +38,11 @@ public static class RevertCommitStock
             // 003: writer-publishes — Storefront'un StockInfo'su geri eklenen stogu gorur.
             await bus.PublishAsync(new IntegrationEvents.StockChangedEvent(stock.ProductId, stock.Quantity));
 
-            var now = DateTimeOffset.UtcNow;
             return FeatureObjectResultModel<RevertCommitStockResponse>.Ok(new RevertCommitStockResponse
             {
                 ProductId = stock.ProductId,
                 OnHand = stock.Quantity,
-                Available = stock.AvailableAt(now)
+                Available = stock.Quantity
             });
         }
     }
