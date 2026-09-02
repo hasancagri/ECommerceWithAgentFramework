@@ -41,6 +41,9 @@ public static class Config
             ["merchant.credentials.write"] = "customer.api",
             // 044: yorum yazma (Order purchase-check gRPC ucu da aynı scope'u ister — R4).
             ["reviews.write"] = "reviews.api",
+            // 060: fiyat alarmı (Library BC) — durum okuma + kurma/kaldırma.
+            ["library.read"] = "library.api",
+            ["library.write"] = "library.api",
             // 053: gezinme sinyali ingest + profil okuma — audience reco.trainer (Python beyin; 048
             // personalization.api emekli). WebApp (BFF) m2m istemcisi (webapp-signals) client_credentials
             // ile talep eder; customer/admin kullanıcı token'ına binmez.
@@ -62,6 +65,8 @@ public static class Config
         "merchant.credentials.write",
         // 044: yorum yazma (form + submit; Order purchase-check gRPC'si de bunu ister).
         "reviews.write",
+        // 060: fiyat alarmı düğmesi (durum + kur/kaldır).
+        "library.read", "library.write",
     ];
 
     // Tüm API scope'ları (12 servis scope'u + apikeys.manage + identity.roles.manage) — seed edilir.
@@ -79,6 +84,8 @@ public static class Config
         "storefront.read",
         "customer.read", "customer.write",
         "reviews.write",
+        // 060: fiyat alarmı müşteri akışının parçası.
+        "library.read", "library.write",
     ];
 
     // admin: tüm atanabilir scope'lar (customer + catalog.write + stock.write + apikeys.manage + identity.roles.manage).

@@ -19,6 +19,9 @@ public static class RabbitMqConstants
         public static class Queues
         {
             public const string Storefront = StorefrontEvents.Queue;
+
+            // 060: Library fiyat değişimini dinler (alarm tetiği); binding'i tüketici kurar (007).
+            public const string Library = "library.events";
         }
     }
 
@@ -89,6 +92,29 @@ public static class RabbitMqConstants
         {
             public const string Reviews = "reviews.order-completed";
             public const string Storefront = StorefrontEvents.Queue;
+        }
+    }
+
+    // 060: Library yayınlar (üründeki her alarm için bir event), NotificationAgent tüketir
+    // (worker kendi kuyruğunu bağlar).
+    public static class PriceAlarmTriggered
+    {
+        public const string Exchange = "library.price-alarm-triggered";
+
+        public static class Queues
+        {
+            public const string Worker = "notifications.price-alarm-triggered";
+        }
+    }
+
+    // 060: NotificationAgent yayınlar (gönderim sonucu), Library tüketir → NotificationRecord izi.
+    public static class NotificationSent
+    {
+        public const string Exchange = "notifications.sent";
+
+        public static class Queues
+        {
+            public const string Library = "library.notifications-sent";
         }
     }
 

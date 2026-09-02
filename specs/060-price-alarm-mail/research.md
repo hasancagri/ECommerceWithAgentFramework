@@ -25,7 +25,13 @@ Tüm kararlar kod keşfiyle doğrulandı; NEEDS CLARIFICATION kalmadı.
 - **Rationale**: Alarm = kullanıcının ürünle kalıcı ilgi beyanı; Customer bilinçli izole/event'siz ödeme-kimliği dilimi (cüzdan+adres), Catalog ürün gerçeği — ikisi de yanlış ev. Kullanıcı oturumunda netleşti (2026-09-02): Customer=ödeme destek verisi, Library=ilgi/ilişki kayıtları, telemetri ayrı.
 - **Alternatives**: Customer'a gömme (event'siz karakteri bozar), Catalog'a gömme (kullanıcı verisi sızar), worker'da tutma (DB'siz worker BC'leşir). Red.
 
-## R5 — Worker: MAF Workflows (`NotificationAgent`)
+## R5 — Worker: MAF Workflows (`NotificationAgent`) — **REVİZE (implement, 2026-09-02)**
+
+> **Kullanıcı kararı implement sırasında değişti (2 revizyon):** (1) MAF Workflows KULLANILMADI —
+> ChatAgent/ModerationAgent deseni. (2) Compose+Send ayrı agent'ları da BİRLEŞTİRİLDİ (2026-09-03):
+> tek `MailAgent`, tek LLM çağrısı maili yazar + `send_mail` çağırır. R6'daki "yedek şablon" yolu
+> kalktı — Send de LLM olduğundan değeri dardı; her LLM/MCP/SMTP hatası retry→error queue.
+> Aşağıdaki orijinal kararlar tarihsel kayıt; hata politikası (retry/error queue) aynen geçerli.
 
 - **Decision**: `src/agents/NotificationAgent` (ad kullanıcı kararı, ChatAgent'la tutarlı; Aspire adı `notification-agent`) — DB'siz, Reviews.Moderation şablonu (Wolverine handler + `RetryWithCooldown(10s,30s,60s).Then.MoveToErrorQueue()`). İçeride MAF **Workflows** boru hattı: Enrich → Decide → Compose → Send → Outcome; handler `NotificationSent` cascade-return eder.
 - **Rationale**: Kullanıcı öğrenme hedefi = WorkflowContext/Executor. `Microsoft.Agents.AI.Workflows` 1.13.0 props'ta tanımlı, repo'da İLK kullanım. 1.13.0'da `ReflectingExecutor` obsolete → `Executor` + `ConfigureProtocol` (memory: agent-framework-workflows-executor-api).

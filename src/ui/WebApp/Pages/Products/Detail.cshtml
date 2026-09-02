@@ -148,6 +148,24 @@
                 {
                     <button class="btn kp-detail-add btn-lg w-100" disabled>Sepete Ekle</button>
                 }
+
+                @* 060: fiyat alarmı — login'liyse kur/kaldır; anonimde POST login'e yönlendirir. *@
+                @if (Model.AlarmError is not null)
+                {
+                    <div class="alert alert-warning py-2 px-3 mt-2 mb-0 small">@Model.AlarmError</div>
+                }
+                @if (Model.HasPriceAlarm)
+                {
+                    <form method="post" asp-page-handler="RemoveAlarm" asp-route-id="@Model.Product.ProductId" class="mt-2">
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100">🔔 Alarm Kurulu — Kaldır</button>
+                    </form>
+                }
+                else
+                {
+                    <form method="post" asp-page-handler="Alarm" asp-route-id="@Model.Product.ProductId" class="mt-2">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm w-100">🔔 Fiyat Alarmı Ekle</button>
+                    </form>
+                }
             </div>
         </div>
     </div>

@@ -138,6 +138,42 @@ builder.AddProject<Projects.Reviews_Moderation>("reviews-moderation-agent")
     .WithReference(rabbit)
     .WaitFor(rabbit);
 
+// 060: Library BC — fiyat alarmı (yaşayan abonelik) + bildirim izi. Catalog'un product.changed
+// fanout'unu dinler, alarm başına PriceAlarmTriggered yayınlar, NotificationSent izini yazar.
+var libraryDb = postgres.AddDatabase("libraryDb");
+var libraryApi = builder.AddProject<Projects.Library_Api>("library-api")
+    .WithReference(libraryDb)
+    .WithReference(rabbit)
+    .WithReference(identityServer)
+    .WaitFor(libraryDb)
+    .WaitFor(rabbit)
+    .WaitFor(identityServer);
+
+// 060: Mailpit — dev posta kutusu (ham container; SMTP 1025 + web UI 8025).
+var mailpit = builder.AddContainer("mailpit", "axllent/mailpit")
+    .WithHttpEndpoint(targetPort: 8025, name: "http")
+    .WithEndpoint(targetPort: 1025, name: "smtp")
+    .WithLifetime(ContainerLifetime.Persistent);
+var mailpitSmtp = mailpit.GetEndpoint("smtp");
+
+// 060: Mail.Mcp — ilk standalone MCP server (send_mail). SMTP hedefi Mailpit endpoint'inden
+// env ile (Options pattern SmtpOptions; IConfiguration'dan doğrudan okuma yok).
+var mailMcp = builder.AddProject<Projects.Mail_Mcp>("mail-mcp")
+    .WithEnvironment(ctx =>
+    {
+        ctx.EnvironmentVariables["Smtp__Host"] = mailpitSmtp.Property(EndpointProperty.Host);
+        ctx.EnvironmentVariables["Smtp__Port"] = mailpitSmtp.Property(EndpointProperty.Port);
+    })
+    .WaitFor(mailpit);
+
+// 060: NotificationAgent — DB'siz worker (Reviews.Moderation emsali); PriceAlarmTriggered tüketir,
+// maili kişiselleştirip Mail.Mcp üzerinden gönderir. WebApp base-url env'i aşağıda (web tanımlanınca).
+var notificationAgent = builder.AddProject<Projects.NotificationAgent>("notification-agent")
+    .WithReference(rabbit)
+    .WithReference(mailMcp)
+    .WaitFor(rabbit)
+    .WaitFor(mailMcp);
+
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)
@@ -160,6 +196,8 @@ web.WithReference(basketApi)
     .WithReference(storefrontApi)
     .WithReference(customerApi)
     .WithReference(reviewsApi)
+    // 060: detay sayfası fiyat alarmı düğmesi Library.Api'ye Refit ile gider (gateway route yok).
+    .WithReference(libraryApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
@@ -175,6 +213,9 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
 
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);
+
+// 060: mail'deki urun linki MUTLAK WebApp adresiyle kurulur (relatif link Mailpit UI'da 404).
+notificationAgent.WithEnvironment("WebApp__BaseUrl", web.GetEndpoint("https"));
 
 // 049: WebApp checkout girişi Checkout.Orchestrator'a POST eder → adres çözümü için referans.
 web.WithReference(checkoutOrchestrator);

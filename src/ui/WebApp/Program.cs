@@ -53,6 +53,7 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<MerchantInformationService>();
 builder.Services.AddScoped<ReviewsService>();
 builder.Services.AddScoped<CatalogAdminService>();
+builder.Services.AddScoped<LibraryService>();
 builder.Services.AddScoped<CatalogService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
@@ -126,6 +127,13 @@ builder.Services.AddRefitClient<ICatalogRefitService>().ConfigureHttpClient(conf
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
+// 060: Library — fiyat alarmı durumu + kur/kaldır (library.read/write kullanıcı token'ıyla).
+builder.Services.AddRefitClient<ILibraryRefitService>().ConfigureHttpClient(configure =>
+    {
+        configure.BaseAddress = new Uri("http://library-api");
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+
+
 builder.Services.AddAuthentication(configureOption =>
     {
         configureOption.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -173,6 +181,9 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("merchant.credentials.write");
         // 044: urun yorumu yazma + uygunluk sorgusu (Order purchase-check gRPC'si de ayni scope).
         options.Scope.Add("reviews.write");
+        // 060: fiyat alarmi (durum + kur/kaldir).
+        options.Scope.Add("library.read");
+        options.Scope.Add("library.write");
         // 054: kisisel ana sayfa feed'i (vitrin okumalar anonim kalir; yalniz bu uc kimlik ister).
         options.Scope.Add("storefront.read");
         // 058: admin urun duzenleme ekranlari. Talep herkese, verilme role bagli (030 deseni:
