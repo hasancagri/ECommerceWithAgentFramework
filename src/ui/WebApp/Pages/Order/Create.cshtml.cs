@@ -73,7 +73,7 @@ public class CreateModel(BasketService basketService, OrderService orderService,
             return;
         }
 
-        _basketUnavailable = basketAsResult.Data!.Items.Count == 0 || basketAsResult.Data!.IsReservationExpired;
+        _basketUnavailable = basketAsResult.Data!.Items.Count == 0;
 
         CreateOrderViewModel.TotalPrice = basketAsResult.Data!.TotalPrice;
         foreach (var basketItem in basketAsResult.Data!.Items) CreateOrderViewModel.AddOrderItem(basketItem);

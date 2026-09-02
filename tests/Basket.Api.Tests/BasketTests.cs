@@ -101,18 +101,6 @@ public class BasketTests
         basket.Items[0].Quantity.ShouldBe(4);
     }
 
-    // 021: SetItem kalan serbest stogu satirda saklar (efektif max hesabi icin).
-    [Fact]
-    public void SetItem_StoresAvailableStock()
-    {
-        var basket = BasketAggregate.Create(Guid.NewGuid());
-        var id = Guid.NewGuid();
-
-        basket.SetItem(id, "product", null, 100m, 2, availableStock: 3);
-
-        basket.Items[0].AvailableStock.ShouldBe(3);
-    }
-
     // 021: sabit ust sinir 5'tir (tek otorite; hem yazma reddi hem UI-siniri buradan turer).
     [Fact]
     public void MaxItemQuantity_Is5()
@@ -141,118 +129,31 @@ public class BasketTests
         basket.GetTotalPrice().ShouldBe(100m * 2 + 50m * 3);
     }
 
-    // --- 017-basket-reservation-anchor: capa yasam dongusu ---
+    // --- 056: kalici sepet — sure/rezervasyon kavrami yok ---
 
-    private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
-    private static readonly DateTimeOffset Anchor = Now.AddMinutes(5);
-
+    // Sepet zamana bagli hicbir uye tasimaz; yasam dongusu yalniz kullanici eylemi + checkout temizligi.
     [Fact]
-    public void StartReservation_SetsAnchor()
+    public void Basket_HasNoTimeBasedMembers()
     {
-        var basket = BasketAggregate.Create(Guid.NewGuid());
-        basket.SetItem(Guid.NewGuid(), "product", null, 100m, 1);
+        var members = typeof(BasketAggregate).GetMembers()
+            .Select(m => m.Name)
+            .Where(n => n.Contains("Reservation", StringComparison.OrdinalIgnoreCase)
+                     || n.Contains("Expire", StringComparison.OrdinalIgnoreCase)
+                     || n.Contains("Purge", StringComparison.OrdinalIgnoreCase));
 
-        basket.StartReservation(Anchor);
-
-        basket.ReservationExpiresAt.ShouldBe(Anchor);
+        members.ShouldBeEmpty();
     }
 
     [Fact]
-    public void IsExpiredAt_FalseWhenNotYetExpired_TrueWhenPast()
-    {
-        var basket = BasketAggregate.Create(Guid.NewGuid());
-        basket.SetItem(Guid.NewGuid(), "product", null, 100m, 1);
-        basket.StartReservation(Anchor);
-
-        basket.IsExpiredAt(Anchor.AddSeconds(-1)).ShouldBeFalse();
-        basket.IsExpiredAt(Anchor).ShouldBeTrue();
-        basket.IsExpiredAt(Anchor.AddSeconds(1)).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void IsExpiredAt_FalseOnEmptyBasket_AndWithoutAnchor()
-    {
-        var empty = BasketAggregate.Create(Guid.NewGuid());
-        empty.IsExpiredAt(Now).ShouldBeFalse(); // capa yok
-
-        var noAnchor = BasketAggregate.Create(Guid.NewGuid());
-        noAnchor.SetItem(Guid.NewGuid(), "product", null, 100m, 1);
-        noAnchor.IsExpiredAt(Now).ShouldBeFalse(); // eski (capasiz) sepet
-    }
-
-    [Fact]
-    public void PurgeExpiredItems_WhenExpired_ClearsItemsAndResetsAnchor()
-    {
-        var basket = BasketAggregate.Create(Guid.NewGuid());
-        basket.SetItem(Guid.NewGuid(), "a", null, 100m, 1);
-        basket.SetItem(Guid.NewGuid(), "b", null, 50m, 2);
-        basket.StartReservation(Anchor);
-
-        basket.PurgeExpiredItems(Anchor.AddSeconds(1));
-
-        basket.Items.ShouldBeEmpty();
-        basket.ReservationExpiresAt.ShouldBeNull();
-    }
-
-    [Fact]
-    public void PurgeExpiredItems_WhenNotExpired_IsNoOp()
-    {
-        var basket = BasketAggregate.Create(Guid.NewGuid());
-        basket.SetItem(Guid.NewGuid(), "a", null, 100m, 1);
-        basket.StartReservation(Anchor);
-
-        basket.PurgeExpiredItems(Anchor.AddSeconds(-1));
-
-        basket.Items.Count.ShouldBe(1);
-        basket.ReservationExpiresAt.ShouldBe(Anchor);
-    }
-
-    [Fact]
-    public void AnchorIsStable_AcrossAddQuantityAndSingleRemove()
-    {
-        var basket = BasketAggregate.Create(Guid.NewGuid());
-        var first = Guid.NewGuid();
-        basket.SetItem(first, "first", null, 100m, 1);
-        basket.StartReservation(Anchor);
-
-        var second = Guid.NewGuid();
-        basket.SetItem(second, "second", null, 50m, 1); // ekleme
-        basket.ReservationExpiresAt.ShouldBe(Anchor);
-
-        basket.SetItem(first, "first", null, 100m, 3); // adet degisikligi
-        basket.ReservationExpiresAt.ShouldBe(Anchor);
-
-        basket.RemoveItem(first); // baslatan urun silinse de capa surer (sepet bos degil)
-        basket.ReservationExpiresAt.ShouldBe(Anchor);
-    }
-
-    [Fact]
-    public void RemoveItem_LastItem_ResetsAnchor()
+    public void RemoveItem_LastItem_LeavesEmptyPersistentBasket()
     {
         var basket = BasketAggregate.Create(Guid.NewGuid());
         var id = Guid.NewGuid();
         basket.SetItem(id, "product", null, 100m, 1);
-        basket.StartReservation(Anchor);
 
         basket.RemoveItem(id);
 
         basket.Items.ShouldBeEmpty();
-        basket.ReservationExpiresAt.ShouldBeNull();
-    }
-
-    [Fact]
-    public void EmptiedBasket_NextStartReservation_SetsFreshAnchor()
-    {
-        var basket = BasketAggregate.Create(Guid.NewGuid());
-        var id = Guid.NewGuid();
-        basket.SetItem(id, "product", null, 100m, 1);
-        basket.StartReservation(Anchor);
-        basket.RemoveItem(id);
-
-        var freshAnchor = Now.AddMinutes(30);
-        basket.SetItem(Guid.NewGuid(), "new", null, 50m, 1);
-        basket.StartReservation(freshAnchor);
-
-        basket.ReservationExpiresAt.ShouldBe(freshAnchor);
+        basket.GetTotalPrice().ShouldBe(0m);
     }
 }

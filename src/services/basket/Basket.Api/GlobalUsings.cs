@@ -28,7 +28,6 @@ global using Common.Utils.Constants;
 global using Common.Auths;
 global using Common.Utils.Authorization;
 global using Shared.Utils.Constants;
-global using Shared.Grpc.Stock;
 global using Grpc.Core;
 global using Basket.Api.Grpc;
 global using System.ComponentModel;

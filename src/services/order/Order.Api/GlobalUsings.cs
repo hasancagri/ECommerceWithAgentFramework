@@ -25,7 +25,6 @@ global using Common.Utils.Constants;
 global using Shared;
 global using Shared.Utils.Constants;
 global using Common.Auths;
-global using Shared.Grpc.Stock;
 global using Order.Api.Grpc;
 global using System.Net.Http.Headers;
 global using System.Text.Json;

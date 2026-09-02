@@ -33,7 +33,6 @@ public static class Config
             ["payment.read"] = "payment.api",
             ["payment.write"] = "payment.api",
             ["stock.write"] = "stock.api",
-            ["stock.reserve"] = "stock.api",
             ["storefront.read"] = "storefront.api",
             ["customer.read"] = "customer.api",
             ["customer.write"] = "customer.api",
@@ -56,7 +55,7 @@ public static class Config
         "basket.read", "basket.write",
         "order.read", "order.write",
         "payment.read", "payment.write",
-        "stock.write", "stock.reserve",
+        "stock.write",
         "storefront.read",
         "customer.read", "customer.write",
         // Admin kullanıcı token'ı bunu taşısın diye BFF ister; yalnız admin role demeti verir (customer'da yok).
@@ -77,7 +76,6 @@ public static class Config
         "basket.read", "basket.write",
         "order.read", "order.write",
         "payment.read", "payment.write",
-        "stock.reserve",
         "storefront.read",
         "customer.read", "customer.write",
         "reviews.write",
@@ -113,8 +111,8 @@ public static class Config
             ClientSecret = "order-saga-secret",
             DisplayName = "Checkout saga (m2m)",
             AllowClientCredentials = true,
-            // 028: stock.reserve + basket.write; 039: basket.read (kalem okuma) + customer.read (odeme baglami).
-            Scopes = ["stock.reserve", "basket.write", "basket.read", "customer.read"],
+            // 028/056: basket.write; 039: basket.read (kalem okuma) + customer.read (odeme baglami).
+            Scopes = ["basket.write", "basket.read", "customer.read"],
         },
         // 048: WebApp davranış-sinyali gönderimi m2m — anonim gezinme user token taşımaz,
         // WebApp client_credentials ile personalization.ingest talep eder (BFF telemetri iletici).

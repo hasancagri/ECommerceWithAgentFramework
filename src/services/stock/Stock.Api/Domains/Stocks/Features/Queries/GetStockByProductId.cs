@@ -8,19 +8,17 @@ public static class GetStockByProductId
     {
         public Guid ProductId { get; set; }
         public int OnHand { get; set; }     // fiziksel stok
-        public int Reserved { get; set; }   // aktif rezervasyon
-        public int Available { get; set; }  // OnHand - Reserved (>=0); UI "son N adet"
+        public int Available { get; set; }  // 056: rezervasyon yok — Available = OnHand; UI "son N adet"
 
-        public static GetStockResponse From(ProductStock stock, DateTimeOffset now) => new()
+        public static GetStockResponse From(ProductStock stock) => new()
         {
             ProductId = stock.ProductId,
             OnHand = stock.OnHand,
-            Reserved = stock.ReservedAt(now),
-            Available = stock.AvailableAt(now)
+            Available = stock.OnHand
         };
     }
 
-    public class GetStockByProductIdQueryHandler(ILogger<GetStockByProductIdQueryHandler> logger)
+    public class GetStockByProductIdQueryHandler
     {
         public async Task<FeatureObjectResultModel<GetStockResponse>> Handle(
             GetStockByProductIdQuery query,
@@ -33,16 +31,7 @@ public static class GetStockByProductId
             if (stock is null)
                 return FeatureObjectResultModel<GetStockResponse>.NotFound();
 
-            var now = DateTimeOffset.UtcNow;
-
-            // G1/FR-017: tedarikci OnHand'i aktif rezervasyonlarin altina dusurmus olabilir (oversell).
-            // Otomatik iptal yok; yalniz log. Available zaten 0'a kirpili.
-            if (stock.IsOversoldAt(now))
-                logger.LogWarning(
-                    "Oversell: ProductId={ProductId} OnHand={OnHand} Reserved={Reserved}",
-                    stock.ProductId, stock.OnHand, stock.ReservedAt(now));
-
-            return FeatureObjectResultModel<GetStockResponse>.Ok(GetStockResponse.From(stock, now));
+            return FeatureObjectResultModel<GetStockResponse>.Ok(GetStockResponse.From(stock));
         }
     }
 }

@@ -2,7 +2,7 @@
 namespace Basket.Api.Grpc;
 
 // 028: checkout saga ClearBasket ucu. Ince sarici — is mantigi yok, Wolverine command'ini
-// IMessageBus ile cagirir (StockReservationGrpcService deseninin Basket muadili).
+// IMessageBus ile cagirir (ince gRPC sarmalayici; is mantigi slice'ta).
 public class BasketClearGrpcService(IMessageBus bus) : BasketClear.BasketClearBase
 {
     public override async Task<ClearBasketReply> ClearBasket(

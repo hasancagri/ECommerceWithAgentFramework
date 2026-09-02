@@ -20,8 +20,6 @@ public static class AddBasketItem
         public async Task<FeatureObjectResultModel<AddBasketItemResponse>> Handle(
             AddBasketItemCommand cmd,
             IDocumentSession session,
-            StockReservationClientProxy reservation,
-            BasketReservationOptions options,
             CancellationToken ct)
         {
             var basket = await session.Query<Basket>()
@@ -29,19 +27,7 @@ public static class AddBasketItem
 
             basket ??= Basket.Create(cmd.UserId);
 
-            // 017 (FR-008, R6): sure dolmus sepette once tembel temizlik — satirlar duser, capa sifirlanir.
-            // Stock'a Release CAGRILMAZ: rezervasyonlar ayni mutlak anda dolmustur, sweep supurur.
-            var now = DateTimeOffset.UtcNow;
-            var purge = basket.PurgeExpiredItems(now);
-            if (!purge.IsSuccess)
-                return FeatureObjectResultModel<AddBasketItemResponse>.Error(purge.Messages);
-
-            // 017 (FR-002/003): capa adayi = mevcut capa ?? now + Duration. Rezervasyon capayla yaratilir;
-            // basarida (yalniz capa yokken) kurulur — sonraki eklemeler capaya dokunmaz.
-            var anchor = basket.ReservationExpiresAt ?? now.Add(options.ReservationDuration);
-
-            // 012: adet 1 artar; yeni toplam adet Stock'ta rezerve edilir (ayna). Yetersiz/erisilemez
-            // ise sepete YAZILMAZ (fail-closed, FR-018/US1).
+            // 056: sepet stok tutmaz — Stock'a cagri yok; stok gercegi checkout aninda (CommitStock).
             var desiredQuantity = basket.GetItemQuantity(cmd.ProductId) + 1;
 
             // 021 (FR-005): sabit ust sinir otoriter — 5 ustune cikilamaz (UI/API/agent farketmez).
@@ -49,21 +35,9 @@ public static class AddBasketItem
                 return FeatureObjectResultModel<AddBasketItemResponse>.Error(
                     new MessageItem { Property = nameof(cmd.ProductId), Code = BasketResourceConstants.INVALID_RANGE });
 
-            var reserve = await reservation.SetReservedQuantityAsync(cmd.ProductId, cmd.UserId, desiredQuantity, anchor, ct);
-            if (!reserve.Success)
-                return FeatureObjectResultModel<AddBasketItemResponse>.Error(
-                    new MessageItem { Property = nameof(cmd.ProductId), Code = reserve.Code });
-
-            // 021: kalan serbest stok saklanir (efektif max = min(5, adet+available)).
-            var setItem = basket.SetItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price, desiredQuantity, reserve.Available);
+            var setItem = basket.SetItem(cmd.ProductId, cmd.ProductName, cmd.ImageUrl, cmd.Price, desiredQuantity);
             if (!setItem.IsSuccess)
                 return FeatureObjectResultModel<AddBasketItemResponse>.Error(setItem.Messages);
-            if (basket.ReservationExpiresAt is null)
-            {
-                var start = basket.StartReservation(anchor);
-                if (!start.IsSuccess)
-                    return FeatureObjectResultModel<AddBasketItemResponse>.Error(start.Messages);
-            }
 
             session.Store(basket);
             return FeatureObjectResultModel<AddBasketItemResponse>.Ok(new AddBasketItemResponse { Id = basket.Id });

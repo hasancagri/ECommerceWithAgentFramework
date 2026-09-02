@@ -11,17 +11,11 @@ public static class GetBasket
         public List<GetBasketItemResponse> Items { get; set; } = new();
         public decimal TotalPrice { get; set; }
 
-        // 017: sepet capasi + turetilmis dolma durumu (FR-009/010). Null capa => UI banner gostermez.
-        public DateTimeOffset? ReservationExpiresAt { get; set; }
-        public bool IsReservationExpired { get; set; }
-
         public static GetBasketResponse From(Basket basket) => new()
         {
             UserId = basket.UserId,
             Items = basket.Items.Select(GetBasketItemResponse.From).ToList(),
-            TotalPrice = basket.GetTotalPrice(),
-            ReservationExpiresAt = basket.ReservationExpiresAt,
-            IsReservationExpired = basket.IsExpiredAt(DateTimeOffset.UtcNow)
+            TotalPrice = basket.GetTotalPrice()
         };
     }
 
@@ -32,10 +26,10 @@ public static class GetBasket
         public string? ImageUrl { get; set; }
         public decimal Price { get; set; }
 
-        // 012: adet. Rezervasyon bitisi artik sepet duzeyinde (017).
+        // 012: adet.
         public int Quantity { get; set; }
 
-        // 021 (FR-007): satirin efektif ust siniri = min(5, adet + son bilinen kalan stok).
+        // 021 (FR-007) / 056: satirin ust siniri sabit 5 (stok bileseni yok; stok gercegi checkout'ta).
         // UI + butonunu bu deger'e ulasinca devre disi birakir.
         public int MaxQuantity { get; set; }
 
@@ -46,7 +40,7 @@ public static class GetBasket
             ImageUrl = item.ImageUrl,
             Price = item.Price,
             Quantity = item.Quantity,
-            MaxQuantity = Math.Min(Basket.MaxItemQuantity, item.Quantity + item.AvailableStock)
+            MaxQuantity = Basket.MaxItemQuantity
         };
     }
 

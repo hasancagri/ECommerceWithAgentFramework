@@ -21,14 +21,6 @@
         <PackageReference Include="Scrutor" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="ModelContextProtocol.AspNetCore" />
-        <PackageReference Include="Grpc.AspNetCore" />
-        <PackageReference Include="Hangfire.AspNetCore" />
-        <PackageReference Include="Hangfire.PostgreSql" />
-    </ItemGroup>
-
-    <!-- 012: stok rezervasyonu gRPC sunucusu (paylaşılan proto). -->
-    <ItemGroup>
-        <Protobuf Include="..\..\..\others\Shared\Protos\stock_reservation.proto" GrpcServices="Server" />
     </ItemGroup>
 
     <ItemGroup>

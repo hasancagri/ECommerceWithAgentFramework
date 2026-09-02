@@ -5,15 +5,14 @@ public static class StockResourceConstants
 {
     public static readonly string STOCK_QUANTITY_CANNOT_BE_NEGATIVE = "STOCK_QUANTITY_CANNOT_BE_NEGATIVE";
 
-    // 012-stock-reservation
+    // 056: checkout dususu (rezervasyonsuz)
     public static readonly string STOCK_INSUFFICIENT = "STOCK_INSUFFICIENT";
-    public static readonly string STOCK_NO_ACTIVE_RESERVATION = "STOCK_NO_ACTIVE_RESERVATION";
-    public static readonly string STOCK_RESERVE_QUANTITY_INVALID = "STOCK_RESERVE_QUANTITY_INVALID";
 
     public static readonly string RECORD_NOT_FOUND = "COMMON_MESSAGE_RECORD_NOT_FOUND";
     public static readonly string AMOUNT_MUST_BE_POSITIVE = "AMOUNT_MUST_BE_POSITIVE";
 
     // 028-checkout-saga
+    public static readonly string STOCK_COMMIT_INVALID = "STOCK_COMMIT_INVALID";
     public static readonly string STOCK_REVERT_INVALID = "STOCK_REVERT_INVALID";
     public static readonly string STOCK_REVERT_WITHOUT_COMMIT = "STOCK_REVERT_WITHOUT_COMMIT";
 }

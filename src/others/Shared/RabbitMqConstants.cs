@@ -32,16 +32,6 @@ public static class RabbitMqConstants
         }
     }
 
-    // 012: TTL dolunca Stock yayınlar, Basket tüketip sepet satırını siler (fanout).
-    public static class ReservationExpired
-    {
-        public const string Exchange = "stock.reservation-expired";
-
-        public static class Queues
-        {
-            public const string Basket = "basket.reservation-expired";
-        }
-    }
 
     // 050/051: Catalog yeni ürün YAYINLANINCA yayınlar, Stock barkod↔ProductId eşlemesini kurar + ilk OnHand.
     // Tüketici başına TEK sıralı kuyruk (aynı barkod sıralı işlenir); binding'i tüketici kurar (007).

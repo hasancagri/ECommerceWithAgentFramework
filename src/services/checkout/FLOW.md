@@ -17,6 +17,8 @@ telafi eder. Broker-only sağa (kendi DB'si yok yerine state Marten belgesi); hi
    var, doğrudan stok commit'e geçer.
 3. **Sipariş oluştu → kalemler tek tek commit edilir (döngü).**        `(OrderCreated`
    Her başarı sonraki kalemi tetikler; oluşmadıysa telafi yok, biter.     ` → CommitStockCommand)`
+   056: commit = doğrudan OnHand düşümü (rezervasyon yok) — stok
+   yetersizliği İLK KEZ burada yakalanır, telafi siparişi iptal eder.
 4. **Tüm kalemler commit olunca ödeme çekilir (Charge=pivot) /**       `(StockCommitted →`
    **doğrudan onay (AlreadyCaptured, pivot geçildi).**                    ` ChargePaymentCommand)`
 5. **PİVOT: ödeme tek-faz çekilir → sipariş onaylanır.** Başarısız      `(PaymentCharged`

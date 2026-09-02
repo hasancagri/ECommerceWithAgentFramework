@@ -1,7 +1,7 @@
 namespace Order.Api.Grpc;
 
 // 028: saga arka planda kosar (HttpContext yok) — kullanici bearer'i tasinamaz. gRPC adimlarina
-// Duende client-credentials makine token'i (order-saga; stock.reserve + basket.write) ekler.
+// Duende client-credentials makine token'i (order-saga; basket.write + basket.read) ekler.
 // Token static cache'lenir; suresine 30 sn kala yenilenir (restart sonrasi da sorunsuz).
 public sealed class SagaTokenHandler(IdentityOption identity, SagaAuth sagaAuth) : DelegatingHandler
 {
@@ -36,9 +36,9 @@ public sealed class SagaTokenHandler(IdentityOption identity, SagaAuth sagaAuth)
                     ["grant_type"] = "client_credentials",
                     ["client_id"] = sagaAuth.ClientId,
                     ["client_secret"] = sagaAuth.ClientSecret,
-                    // 028: stock.reserve + basket.write (checkout saga); 039: basket.read (kalem okuma)
+                    // 028/056: basket.write (checkout saga); 039: basket.read (kalem okuma)
                     // + customer.read (odeme baglami) — tek makine token'i, superset scope.
-                    ["scope"] = $"{AuthorizationScopes.StockReserve} {AuthorizationScopes.BasketWrite} " +
+                    ["scope"] = $"{AuthorizationScopes.BasketWrite} " +
                                 $"{AuthorizationScopes.BasketRead} {AuthorizationScopes.CustomerRead}"
                 }), ct);
             response.EnsureSuccessStatusCode();

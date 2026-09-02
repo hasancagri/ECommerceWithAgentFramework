@@ -145,8 +145,6 @@ builder.Services.AddAuthentication(configureOption =>
         // payment
         options.Scope.Add("payment.read");
         options.Scope.Add("payment.write");
-        // 012: sepete ekleme/siparis Basket/Order -> Stock gRPC rezervasyonu icin.
-        options.Scope.Add("stock.reserve");
         // 022: kayitli kart + adres defteri.
         options.Scope.Add("customer.read");
         options.Scope.Add("customer.write");
@@ -212,17 +210,5 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.MapChatProxy();
-
-// 025: header geri sayimi sifira inince sepeti bosaltir. Her sayfadan cagrilabilen
-// same-origin POST; idempotent (mevcut PurgeExpired). Kullaniciya bagli. API ucu oldugu
-// icin anonim istekte OIDC login-redirect DEGIL, temiz 401 doner (JS fetch redirect'i izleyemez).
-app.MapPost("/basket/purge-expired", async (HttpContext http, BasketService basketService) =>
-{
-    if (http.User.Identity?.IsAuthenticated != true)
-        return Results.Unauthorized();
-
-    await basketService.PurgeExpiredBasketAsync();
-    return Results.Ok();
-});
 
 app.Run();

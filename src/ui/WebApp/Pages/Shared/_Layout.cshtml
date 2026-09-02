@@ -60,7 +60,6 @@
             <ul class="navbar-nav flex-row align-items-center gap-3 kp-account">
                 @if (User.Identity!.IsAuthenticated)
                 {
-                    @await Component.InvokeAsync("BasketCountdown")
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
@@ -146,7 +145,6 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
-<script src="~/js/basket-countdown.js" asp-append-version="true"></script>
 
 @await RenderSectionAsync("Scripts", false)
 </body>

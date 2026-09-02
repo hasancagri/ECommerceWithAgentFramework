@@ -1,11 +1,11 @@
 namespace Stock.Api.Domains.Stocks.Features.Commands;
 
-// 012 (US2): siparis -> gecerli rezervasyonu kalici stok dususune cevir (OnHand duser, hold kapanir).
-// Order.Api gRPC Commit ile cagirir. StockChangedEvent yayinlanir (Storefront guncel kalir).
+// 056: checkout dususu — OnHand'den dogrudan duser (rezervasyon yok; stok gercegi checkout anidir).
+// Checkout saga broker komutuyla cagirir. StockChangedEvent yayinlanir (Storefront guncel kalir).
 public static class CommitStock
 {
-    // 028: OrderId idempotency anahtari (bos Guid => anahtarsiz eski davranis).
-    public record CommitStockCommand(Guid ProductId, Guid UserId, int Quantity, Guid OrderId = default);
+    // 028: OrderId idempotency anahtari (zorunlu). UserId broker kontratindan gelir; dusumde kullanilmaz.
+    public record CommitStockCommand(Guid ProductId, Guid UserId, int Quantity, Guid OrderId);
 
     public class CommitStockResponse
     {
@@ -30,8 +30,7 @@ public static class CommitStock
                 return FeatureObjectResultModel<CommitStockResponse>.Error(
                     new MessageItem { Code = StockResourceConstants.RECORD_NOT_FOUND });
 
-            var now = DateTimeOffset.UtcNow;
-            var result = stock.Commit(cmd.UserId, cmd.Quantity, now, cmd.OrderId);
+            var result = stock.Commit(cmd.Quantity, cmd.OrderId);
             if (!result.IsSuccess)
                 return FeatureObjectResultModel<CommitStockResponse>.Error(result.Messages);
 
@@ -44,7 +43,7 @@ public static class CommitStock
             {
                 ProductId = stock.ProductId,
                 OnHand = stock.Quantity,
-                Available = stock.AvailableAt(now)
+                Available = stock.Quantity
             });
         }
     }
