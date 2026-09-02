@@ -381,10 +381,9 @@ body {
   text-align: center;
 }
 .kp-detail-cover img {
-  /* kitapyurdu oranı: kapak dar sütunda küçük durur (~190-220px genişlik hissi) */
-  max-height: 340px;
-  max-width: 100%;
-  object-fit: contain;
+  /* kitapyurdu oranı: kapak geniş sütunu doldurur (wi:500 kaynak, büyük görünüm) */
+  width: 100%;
+  height: auto;
 }
 .kp-detail-quicklinks { margin-top: .8rem; font-size: .9rem; }
 .kp-detail-quicklinks a { color: var(--kp-ink); text-decoration: none; }
