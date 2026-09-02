@@ -31,7 +31,10 @@ public static class IntegrationEvents
         bool IsDeleted,
         List<ProductSpec>? Specs = null,
         // 045: varyant ailesi kodu (opsiyonel; null = ailesiz).
-        string? FamilyCode = null);
+        string? FamilyCode = null,
+        // 060: YALNIZ fiyat değişiminde dolu (eski fiyat); null = fiyat-dışı değişiklik.
+        // Additive default'lu — eski tüketici (Storefront) kırılmaz. Library tetik kararını bundan verir.
+        decimal? OldPrice = null);
     public record StockChangedEvent(Guid ProductId, int Quantity);
 
 
@@ -69,4 +72,24 @@ public static class IntegrationEvents
         decimal UnitPrice,
         string? Category = null,
         string? Brand = null);
+
+    // 060: Library → NotificationAgent. Üründeki HER alarm için bir event (alarm açık kalır — yaşayan
+    // abonelik, FR-004). Mail'e yetecek her alan event'te; worker başka servise SORMAZ (email snapshot).
+    public record PriceAlarmTriggered(
+        Guid AlarmId,
+        Guid UserId,
+        string Email,
+        Guid ProductId,
+        string ProductName,
+        decimal OldPrice,
+        decimal NewPrice);
+
+    // 060: NotificationAgent → Library. Gönderim denemesinin sonucu; Library NotificationRecord izi yazar.
+    // Detail: "sent" | "no-email" | kısa hata özeti.
+    public record NotificationSent(
+        Guid UserId,
+        Guid ProductId,
+        string Email,
+        bool Success,
+        string Detail);
 }

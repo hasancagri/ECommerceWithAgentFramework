@@ -23,6 +23,8 @@ public static class KnownScopes
             ["customer.read"] = "Müşteri (cüzdan/adres) okuma",
             ["customer.write"] = "Müşteri (cüzdan/adres) yazma",
             ["reviews.write"] = "Ürün yorumu yazma",
+            ["library.read"] = "Kitaplık (fiyat alarmı) okuma",
+            ["library.write"] = "Kitaplık (fiyat alarmı) yazma",
             ["apikeys.manage"] = "API anahtarı yönetimi",
             ["identity.roles.manage"] = "Rol/scope/kullanıcı yönetimi",
             ["personalization.ingest"] = "Kişiselleştirme gezinme sinyali gönderimi (m2m)",

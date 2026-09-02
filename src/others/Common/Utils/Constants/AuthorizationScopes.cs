@@ -38,6 +38,10 @@ public static class AuthorizationScopes
     // bu scope'u ister (R4: ayri scope acilmaz, sub==user_id guard'i sunucuda).
     public const string ReviewsWrite = "reviews.write";
 
+    // library.api (060): fiyat alarmı durumu okuma + kurma/kaldırma.
+    public const string LibraryRead = "library.read";
+    public const string LibraryWrite = "library.write";
+
     // identity (030 RBAC): IdP rol/scope/kullanici yonetim yuzeyi. Downstream servis zorlamaz;
     // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.
     public const string IdentityRolesManage = "identity.roles.manage";

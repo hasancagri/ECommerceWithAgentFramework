@@ -152,7 +152,9 @@ public static class UpdateProduct
                     product.Id, product.Name, product.FullDescription, product.Price.Amount,
                     authors.Select(a => new IntegrationEvents.AuthorRef(a.Id, a.Name)).ToList(),
                     publisher.Id, publisher.Name, category.Id, category.Name,
-                    product.ImageUrl, IsDeleted: false));
+                    product.ImageUrl, IsDeleted: false,
+                    // 060: yalnız GERÇEK fiyat değişiminde dolu — Library alarm tetiğini bundan verir.
+                    OldPrice: oldPrice != price.Amount ? oldPrice : null));
             }
 
             return FeatureObjectResultModel<UpdateProductResponse>.Ok(new UpdateProductResponse { Id = product.Id });
