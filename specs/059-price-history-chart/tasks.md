@@ -48,7 +48,7 @@
 
 - [X] T006 [P] `ProductPriceChange` sınıf yorumundaki "müşteri-yüzü fiyat grafiği bu feature'ın dışıdır (G2)" notunu güncelle (059 ile geldi) — `src/services/catalog/Catalog.Api/Domains/Products/Entities/ProductEntities.cs`. FLOW.md GEREKMEZ: domain süreci değişmiyor (salt okuma).
 - [X] T007 `dotnet build` + `dotnet test` yeşil; `scripts/check-flow-links.sh` + `scripts/check-claude-spec-links.sh` PASS
-- [ ] T008 Canlı doğrulama: S1 admin fiyat değişikliği → anonim detayda grafik + satır (değer eşleşmesi DB'den); S2 kayıtsız seed ürün → "henüz fiyat değişmedi"; S3 tek kayıtlı ürün → aynı metin; S4 Catalog kapalıyken detay sayfası hatasız, kutu gizli
+- [X] T008 Canlı doğrulama (2026-09-02): S1 PASS anonim curl — 3 kayıtlı üründe basamak grafik + en-yeni-üstte liste, DB ile birebir; S3 PASS tek kayıtlı ürün → "fiyatı henüz değişmedi"; S2 koşulamadı (DB 058 sonrası reseed — TÜM ürünlerde İlk fiyat kaydı var, kayıtsız ürün yok); S4 bilinçli atlandı (hata dalı kodda, canlıda Catalog öldürme riskli)
 
 ---
 
