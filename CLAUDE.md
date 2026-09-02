@@ -45,12 +45,12 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 
 | Servis | DB | Ne yapar | Origin spec |
 |---|---|---|---|
-| `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi) | `specs/040-catalog-domain-extract` |
+| `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi); admin düzenleme + yayın anahtarı + fiyat geçmişi (058, append-only `ProductPriceChange`) | `specs/040-catalog-domain-extract` |
 | `basket` | basketDb | Kalıcı sepet + kalem; anonim sahiplik + login'de merge (057); stok tutmaz/süre yok (056), stok gerçeği checkout'ta | `specs/012-stock-reservation` |
 | `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Create/Confirm/Cancel; chat charge yolu; Confirm'de `OrderCompleted` fanout (Reviews + Storefront tüketir) | `specs/028-checkout-saga` |
 | `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); CreateOrder→CommitStock→Charge→Confirm→ClearBasket; pivot=Charge, pivot-öncesi LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount; tek-faz Charge) | — |
-| `stock` | stockDb | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; checkout düşümü broker'dan (056) | `specs/014-supplier-stock-authority` |
+| `stock` | stockDb | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; checkout düşümü broker'dan (056); admin artır/azalt + mutlak set (058) | `specs/014-supplier-stock-authority` |
 | `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama; kişisel feed (`UserPurchase` birikimi, ana sayfa) | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
@@ -60,8 +60,9 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 
 - **Ürün yazım yolu (050 pivot — first-party):** Çok-tedarikçi feed (Procurement + Supplier) SÖKÜLDÜ;
-  mallar mağazanın. Ürün girişi = ürün-CRUD (SONRAKİ feature). Catalog yeni üründe `ProductLinked` → Stock
-  (ilk OnHand) + `ProductChangedEvent` → Storefront. Silme yok (016 sürer).
+  mallar mağazanın. Düzenleme = 058 admin ekranları (künye/fiyat/stok/yayın); elle ürün OLUŞTURMA hâlâ yok
+  (giriş 051 import). Catalog yeni üründe `ProductLinked` → Stock + `ProductChangedEvent` → Storefront.
+  Silme yok (016); yayından kaldırma `IsDeleted:true` ile vitrini gizler (058).
 - **ModerationAgent (ayrı `reviews-moderation-agent` worker'ı):** Singleton ChatClientAgent (Temp=0,
   structured JSON, MCP'siz), retry→error queue. Moderasyon 046'da BC'den broker'lı worker'a taşındı
   (Reviews'te agent-framework yok; iletişim `ReviewModerationRequested`/`ReviewModerated` event'leriyle).

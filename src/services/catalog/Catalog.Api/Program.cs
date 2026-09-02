@@ -20,6 +20,9 @@ builder.Services.AddMarten(opts =>
         // 040 K9: ProductTag yeni aggregate — dış yüzeyi yok, şemada yaşar (besleyen akış 041+).
         opts.Schema.For<ProductTag>();
 
+        // 058: fiyat geçmişi append-only kaydı — ürün bazlı okuma için lookup index'i.
+        opts.Schema.For<ProductPriceChange>().Index(x => x.ProductId);
+
         // 016: NormalizedName teklik anahtarıdır (R4) — computed unique index son güvence.
         // Legacy Brand migrasyonu YOK (kullanıcı kararı): DB sıfırlanarak başlatılır, katalog feed'den dolar.
         opts.Schema.For<Category>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
@@ -123,6 +126,7 @@ app.AddProductGroupEndpointExtension(apiVersionSet);
 app.AddProductTagGroupEndpointExtension(apiVersionSet);
 app.AddCategoryGroupEndpointExtension(apiVersionSet);
 app.AddAuthorGroupEndpointExtension(apiVersionSet);
+app.AddPublisherGroupEndpointExtension(apiVersionSet);
 app.AddSpecificationAttributeGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");

@@ -10,6 +10,7 @@ public static class StockEndpointExtension
             .GetStockByProductIdGroupItemEndpoint()
             .IncreaseStockGroupItemEndpoint()
             .DecreaseStockGroupItemEndpoint()
+            .SetStockQuantityGroupItemEndpoint()
             .GetAllStockGroupItemEndpoint();
     }
 }

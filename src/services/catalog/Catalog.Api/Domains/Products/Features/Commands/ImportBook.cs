@@ -53,11 +53,19 @@ public static class ImportBook
             if (product is null)
             {
                 product = Product.Create(cmd.Title, cmd.Isbn, ProductType.Simple, price, "", "");
+                // 058 FR-013: import fiyatı geçmişin İLK satırıdır (OldPrice=null); fiyatsız taslak satır düşürmez.
+                if (price.Amount > 0)
+                    session.Store(ProductPriceChange.Create(product.Id, oldPrice: null, price.Amount, DateTime.UtcNow));
             }
             else
             {
                 product.Rename(cmd.Title);
+                // 058 FR-013: re-run'da gerçek fiyat değişimi geçmişe yazılır (0 = "fiyat yoktu" → OldPrice=null).
+                var oldPrice = product.Price.Amount;
                 product.SetPrice(price);
+                if (oldPrice != price.Amount && price.Amount > 0)
+                    session.Store(ProductPriceChange.Create(
+                        product.Id, oldPrice == 0 ? null : oldPrice, price.Amount, DateTime.UtcNow));
             }
 
             product.SetIdentifiers(cmd.Isbn, gtin: cmd.Isbn, manufacturerPartNumber: null);

@@ -94,6 +94,10 @@ public static class CreateProduct
             product.Publish();
             session.Store(product);
 
+            // 058 FR-013: ilk fiyat geçmişin ilk satırıdır (OldPrice=null; fiyatsız üründe satır yok).
+            if (price.Amount > 0)
+                session.Store(ProductPriceChange.Create(product.Id, oldPrice: null, price.Amount, DateTime.UtcNow));
+
             // 014 (feed = stoğun tek otoritesi): stok tohumlama kaldırıldı; stok yalnız ingestion
             // StockWrite'tan yazılır. Catalog artık stok adedi taşımaz (ProductCreatedEvent öldü).
             // 003-storefront-read-model: writer-publishes — Storefront'un CatalogInfo'sunu besler.

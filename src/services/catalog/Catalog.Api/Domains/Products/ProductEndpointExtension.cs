@@ -5,6 +5,7 @@ public static class ProductEndpointExtension
     public static void AddProductGroupEndpointExtension(this WebApplication app, ApiVersionSet apiVersionSet)
     {
         // Vitrin okuması Storefront'tadır; buradaki GET, aggregate'in yönetim penceresidir (2026-08-19 kuralı).
+        // 058 FR-010: tüm pencere catalog.write scope'uyla korunur (admin yönetim yüzeyi; anonim tüketici yok).
         app.MapGroup("api/v{version:apiVersion}/products").WithTags("Products").WithApiVersionSet(apiVersionSet)
             .CreateProductGroupItemEndpoint()
             .UpdateProductGroupItemEndpoint()
@@ -13,6 +14,9 @@ public static class ProductEndpointExtension
             .SetProductPublishedGroupItemEndpoint()
             .AssignTagToProductGroupItemEndpoint()
             .RemoveTagFromProductGroupItemEndpoint()
-            .GetProductByIdGroupItemEndpoint();
+            .GetProductByIdGroupItemEndpoint()
+            .AdminListProductsGroupItemEndpoint()
+            .AdminGetProductGroupItemEndpoint()
+            .RequireAuthorization(AuthorizationScopes.CatalogWrite);
     }
 }

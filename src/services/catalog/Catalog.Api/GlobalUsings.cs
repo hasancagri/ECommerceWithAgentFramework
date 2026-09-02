@@ -38,6 +38,8 @@ global using Catalog.Api.Domains.Categories.Features.Commands;
 global using Catalog.Api.Domains.Categories.Features.Queries;
 global using Catalog.Api.Domains.Authors.Features.Commands;
 global using Catalog.Api.Domains.Authors.Features.Queries;
+global using Catalog.Api.Domains.Publishers.Features.Queries;
+global using PagedList.Core;
 global using ModelContextProtocol.Server;
 global using Catalog.Api.Domains.Products.Features.Agents;
 
