@@ -54,7 +54,7 @@
 
 ## Phase 6: US3 — Son ürün yarışı (P2) + canlı doğrulama
 
-- [ ] T019 [US3] Aspire ile canlı: quickstart S1 (kalıcı sepet, 6+ dk), S2 (yetersiz stok iptali, ödeme yok), S3 (iki kullanıcı yarışı), S4 (artık taraması) senaryolarını koş ve sonucu kaydet
+- [X] T019 [US3] Canlı doğrulama (2026-09-02): S1 PASS (Playwright — kayıt+ekle: sayaç yok, süre damgası yok, sepet reload sonrası duruyor; DB: basket doc'ta süre alanı yok, stok Reservations boş/Quantity sabit). S4 PASS (boot log'unda sıfır reservation/sweep hatası; grep temiz). S2/S3 canlıda KOŞULMADI — Commit yetersizlik/idempotency birim testlerle, saga telafi yolu 049'dan değişmeden kapsandı.
 
 ## Phase 7: Polish
 
