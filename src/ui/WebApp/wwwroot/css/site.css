@@ -385,10 +385,12 @@ body {
   width: 100%;
   height: auto;
 }
-/* 059: fiyat geçmişi kutusu */
-.kp-price-history svg { width: 100%; max-height: 220px; display: block; }
+/* 059: fiyat geçmişi kutusu — kompakt (kitapyurdu alt-bölüm hissi, sayfayı domine etmesin) */
+.kp-price-history { max-width: 720px; }
+.kp-price-history svg { width: 100%; max-height: 150px; display: block; }
 .kp-ph-line { stroke: var(--kp-accent); stroke-width: 2; }
 .kp-ph-dot { fill: var(--kp-accent); }
+.kp-ph-grid { stroke: #eee; stroke-width: 1; }
 .kp-ph-axis { font-size: 11px; fill: #6c757d; }
 .kp-ph-list { list-style: none; margin: .8rem 0 0; padding: 0; font-size: .9rem; }
 .kp-ph-list li { padding: .35rem 0; border-top: 1px solid #f0f0f0; display: flex; gap: 1rem; }

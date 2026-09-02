@@ -167,26 +167,43 @@
                         else
                         {
                             var inv = System.Globalization.CultureInfo.InvariantCulture;
-                            var prices = Model.PriceHistory.Select(x => x.NewPrice).ToList();
+                            var history = Model.PriceHistory;
+                            var prices = history.Select(x => x.NewPrice).ToList();
                             var min = prices.Min();
                             var max = prices.Max();
                             var range = max == min ? 1m : max - min;
-                            const int w = 640, h = 180, pad = 28;
-                            var stepX = (w - 2m * pad) / (prices.Count - 1);
-                            string X(int i) => (pad + i * stepX).ToString("0.#", inv);
-                            string Y(decimal p) => (h - pad - (p - min) / range * (h - 2 * pad)).ToString("0.#", inv);
-                            var points = string.Join(" ", prices.Select((p, i) => $"{X(i)},{Y(p)}"));
+                            const int w = 640, h = 170, padL = 56, padR = 16, padT = 12, padB = 26;
+                            // Kitapyurdu hissi: x ekseni zaman-oranlı (eşit aralık değil); aynı-an span'inde eşit dağıt.
+                            var t0 = history[0].ChangedAtUtc;
+                            var span = (decimal)(history[^1].ChangedAtUtc - t0).TotalMinutes;
+                            decimal Xv(int i) => span == 0
+                                ? padL + i * (w - padL - padR) / (decimal)(history.Count - 1)
+                                : padL + (decimal)(history[i].ChangedAtUtc - t0).TotalMinutes / span * (w - padL - padR);
+                            string X(int i) => Xv(i).ToString("0.#", inv);
+                            string Y(decimal p) => (h - padB - (p - min) / range * (h - padT - padB)).ToString("0.#", inv);
+                            // Basamaklı yol: fiyat bir sonraki değişikliğe dek sabit — yatay çiz, değişimde dikey sıçra.
+                            var path = new System.Text.StringBuilder($"M {X(0)},{Y(prices[0])}");
+                            for (var i = 1; i < prices.Count; i++)
+                                path.Append($" H {X(i)} V {Y(prices[i])}");
+                            path.Append($" H {w - padR}");
+                            var mid = min + range / 2;
 
                             <svg viewBox="0 0 @w @h" role="img" aria-label="Fiyat geçmişi grafiği" preserveAspectRatio="xMidYMid meet">
-                                <text x="4" y="@Y(max)" class="kp-ph-axis" dominant-baseline="middle">@max.ToString("C0")</text>
-                                <text x="4" y="@Y(min)" class="kp-ph-axis" dominant-baseline="middle">@min.ToString("C0")</text>
-                                <polyline fill="none" class="kp-ph-line" points="@points"/>
+                                @foreach (var gv in new[] { max, mid, min })
+                                {
+                                    <line x1="@padL" y1="@Y(gv)" x2="@(w - padR)" y2="@Y(gv)" class="kp-ph-grid"/>
+                                    @* Razor RZ1023: <text> etiketi Razor'a ayrılmış — SVG text Html.Raw ile basılır. *@
+                                    @Html.Raw($"<text x=\"{padL - 6}\" y=\"{Y(gv)}\" class=\"kp-ph-axis\" text-anchor=\"end\" dominant-baseline=\"middle\">{gv:C0}</text>")
+                                }
+                                <path fill="none" class="kp-ph-line" d="@path"/>
                                 @for (var i = 0; i < prices.Count; i++)
                                 {
-                                    <circle cx="@X(i)" cy="@Y(prices[i])" r="4" class="kp-ph-dot">
-                                        <title>@Model.PriceHistory[i].ChangedAtUtc.ToString("d") — @prices[i].ToString("C")</title>
+                                    <circle cx="@X(i)" cy="@Y(prices[i])" r="3.5" class="kp-ph-dot">
+                                        <title>@history[i].ChangedAtUtc.ToString("d") — @prices[i].ToString("C")</title>
                                     </circle>
                                 }
+                                @Html.Raw($"<text x=\"{padL}\" y=\"{h - 8}\" class=\"kp-ph-axis\">{t0:d}</text>")
+                                @Html.Raw($"<text x=\"{w - padR}\" y=\"{h - 8}\" class=\"kp-ph-axis\" text-anchor=\"end\">{history[^1].ChangedAtUtc:d}</text>")
                             </svg>
                             <ul class="kp-ph-list">
                                 @foreach (var change in Model.PriceHistory.AsEnumerable().Reverse())
