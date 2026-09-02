@@ -6,6 +6,9 @@
 namespace WebApp.Pages.Order;
 
 // 023: Checkout kayitli adres + kayitli karttan SECIM ile; manuel giris yok.
+// 057: checkout login KAPISI — anonim "Satin Al" burada OIDC challenge'a duser, donuste sepet
+// merge edilmis olur (OnTicketReceived). Onceden attribute yoktu; bos-sepet savunmasi acikti.
+[Authorize]
 public class CreateModel(BasketService basketService, OrderService orderService, CustomerService customerService)
     : BasePageModel
 {

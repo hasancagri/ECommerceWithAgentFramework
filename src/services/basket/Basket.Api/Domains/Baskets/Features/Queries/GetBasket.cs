@@ -2,7 +2,7 @@ namespace Basket.Api.Domains.Baskets.Features.Queries;
 
 public static class GetBasket
 {
-    [RequiredScope(AuthorizationScopes.BasketRead)]
+    // 057: [RequiredScope] kalkti — anonim yol scope tasiyamaz; sahiplik Guid gizliligiyle korunur.
     public record GetBasketQuery(Guid UserId);
 
     public class GetBasketResponse
@@ -68,12 +68,14 @@ public static class GetBasketQueryEndpoint
     {
         group.MapGet("/user", async (HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
         {
-            var userId = currentUser.Load(httpContext.User).Id;
+            // 057: anonim erisim — sahip token'dan ya da anonim header'dan.
+            var ownerId = BasketEndpointExtension.ResolveOwnerId(httpContext, currentUser);
+            if (ownerId == Guid.Empty) return Results.BadRequest();
+
             var result = await bus.InvokeAsync<FeatureObjectResultModel<GetBasket.GetBasketResponse>>(
-                new GetBasket.GetBasketQuery(userId));
+                new GetBasket.GetBasketQuery(ownerId));
             return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
-        }).WithName("GetBasket")
-            .RequireAuthorization(AuthorizationScopes.BasketRead);
+        }).WithName("GetBasket");
         return group;
     }
 }

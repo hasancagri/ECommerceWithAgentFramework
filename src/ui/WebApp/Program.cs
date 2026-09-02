@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
 using System.Globalization;
@@ -53,12 +54,22 @@ builder.Services.AddScoped<MerchantInformationService>();
 builder.Services.AddScoped<ReviewsService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
+builder.Services.AddScoped<AnonymousBasketIdHandler>();
 builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
 
+// 057: girissiz kullanicida X-Anonymous-Id header'i eklenir (anonim sepet); login'de token gider.
 builder.Services.AddRefitClient<IBasketRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://basket-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
+    .AddHttpMessageHandler<AnonymousBasketIdHandler>();
+
+// 057: login callback'inde anonim sepeti hesaba tasiyan merge cagrisi icin ciplak client
+// (Refit zinciri kullanilamaz: callback aninda cookie user'i henuz olusmadi).
+builder.Services.AddHttpClient("basket-merge", client =>
+{
+    client.BaseAddress = new Uri("http://basket-api");
+});
 
 
 builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(configure =>
@@ -173,6 +184,38 @@ builder.Services.AddAuthentication(configureOption =>
             if (context.Properties.Items.TryGetValue("prompt", out var prompt) && !string.IsNullOrEmpty(prompt))
                 context.ProtocolMessage.Prompt = prompt;
             return Task.CompletedTask;
+        };
+
+        // 057: login tamamlaninca anonim sepet hesaba tasinir (merge) ve anonim cookie silinir.
+        // Merge hatasi login'i BOZMAZ: cookie kalir, sepet anonim kimlikte durmaya devam eder.
+        options.Events.OnTicketReceived = async context =>
+        {
+            var anonymousId = AnonymousBasketId.Get(context.HttpContext);
+            if (anonymousId is null) return;
+
+            var accessToken = context.Properties?.GetTokenValue(OpenIdConnectParameterNames.AccessToken);
+            if (string.IsNullOrEmpty(accessToken)) return;
+
+            var client = context.HttpContext.RequestServices
+                .GetRequiredService<IHttpClientFactory>().CreateClient("basket-merge");
+
+            using var mergeRequest = new HttpRequestMessage(HttpMethod.Post, "api/v1/baskets/merge")
+            {
+                Content = JsonContent.Create(new { AnonymousId = anonymousId })
+            };
+            mergeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            try
+            {
+                var response = await client.SendAsync(mergeRequest);
+                if (response.IsSuccessStatusCode)
+                    AnonymousBasketId.Clear(context.HttpContext);
+            }
+            catch (Exception ex)
+            {
+                context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>()
+                    .LogError(ex, "Anonim sepet birlesmesi basarisiz; login surduruluyor.");
+            }
         };
     });
 

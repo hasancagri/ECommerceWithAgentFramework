@@ -6,7 +6,8 @@ using WebApp.Pages.Basket.Dto;
 
 namespace WebApp.Pages.Basket;
 
-[Authorize]
+// 057: sepet anonim erisilebilir — [Authorize] kalkti. Kimlik: login ise token (BFF handler),
+// degilse AnonymousBasketId cookie'sinin Guid'i (AnonymousBasketIdHandler header'la tasir).
 public class IndexModel(StorefrontService storefrontService, BasketService basketService) : BasePageModel
 {
     public BasketPageViewModel Basket { get; set; } = new();

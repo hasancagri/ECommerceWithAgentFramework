@@ -51,12 +51,14 @@ public static class AddBasketItemCommandEndpoint
     {
         group.MapPost("/item", async ([FromBody] AddBasketItem.AddBasketItemCommand cmd, HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
             {
-                var userId = currentUser.Load(httpContext.User).Id;
-                var result = await bus.InvokeAsync<FeatureObjectResultModel<AddBasketItem.AddBasketItemResponse>>(cmd with { UserId = userId });
+                // 057: anonim erisim — sahip token'dan ya da anonim header'dan.
+                var ownerId = BasketEndpointExtension.ResolveOwnerId(httpContext, currentUser);
+                if (ownerId == Guid.Empty) return Results.BadRequest();
+
+                var result = await bus.InvokeAsync<FeatureObjectResultModel<AddBasketItem.AddBasketItemResponse>>(cmd with { UserId = ownerId });
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })
-            .WithName("AddBasketItem")
-            .RequireAuthorization(AuthorizationScopes.BasketWrite);
+            .WithName("AddBasketItem");
         return group;
     }
 }
