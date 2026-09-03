@@ -183,6 +183,8 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(storefrontApi)
     .WithReference(customerApi)
     .WithReference(reviewsApi)
+    // 065: Library MCP gateway üzerinden (dış agent fiyat alarmı); service discovery için referans.
+    .WithReference(libraryApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
