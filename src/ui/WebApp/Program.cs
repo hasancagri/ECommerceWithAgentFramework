@@ -44,79 +44,19 @@ builder.Services.AddHttpClient("orchestrator", client =>
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<BasketService>();
-builder.Services.AddScoped<OrderService>();
-builder.Services.AddScoped<PaymentService>();
+// 066: müşteri BFF servisleri söküldü (agent-only); yalnız admin yönetim servisleri kalır.
 builder.Services.AddScoped<StockService>();
-builder.Services.AddScoped<StorefrontService>();
-builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<MerchantInformationService>();
-builder.Services.AddScoped<ReviewsService>();
 builder.Services.AddScoped<CatalogAdminService>();
-builder.Services.AddScoped<LibraryService>();
-builder.Services.AddScoped<CatalogService>();
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
-builder.Services.AddScoped<AnonymousBasketIdHandler>();
 builder.Services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
 
-// 057: girissiz kullanicida X-Anonymous-Id header'i eklenir (anonim sepet); login'de token gider.
-builder.Services.AddRefitClient<IBasketRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://basket-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
-    .AddHttpMessageHandler<AnonymousBasketIdHandler>();
 
-// 057: login callback'inde anonim sepeti hesaba tasiyan merge cagrisi icin ciplak client
-// (Refit zinciri kullanilamaz: callback aninda cookie user'i henuz olusmadi).
-builder.Services.AddHttpClient("basket-merge", client =>
-{
-    client.BaseAddress = new Uri("http://basket-api");
-});
-
-
-builder.Services.AddRefitClient<IOrderRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://order-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
-
-// 049: checkout girişi ayrı Checkout.Orchestrator'a (kullanıcı token'i BFF handler ile taşınır).
-builder.Services.AddRefitClient<ICheckoutRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://checkout-orchestrator");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
-
-
-builder.Services.AddRefitClient<IPaymentRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://payment-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
-
-
+// 058: admin ürün düzenleme ekranları stok penceresi (stock.write admin token'ıyla).
 builder.Services.AddRefitClient<IStockRefitService>().ConfigureHttpClient(configure =>
     {
         configure.BaseAddress = new Uri("http://stock-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
-
-
-// 006: ana sayfa vitrin listesi; okuma anonim, handler zinciri diğer istemcilerle tutarlılık için.
-builder.Services.AddRefitClient<IStorefrontRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://storefront-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
-
-
-// 022: Customer API (kayitli kart + adres defteri); kullanici token'iyla korunur.
-builder.Services.AddRefitClient<ICustomerRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://customer-api");
-    }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
-
-
-// 044: Reviews API — liste anonim, form/submit kullanici token'iyla (reviews.write).
-builder.Services.AddRefitClient<IReviewsRefitService>().ConfigureHttpClient(configure =>
-    {
-        configure.BaseAddress = new Uri("http://reviews-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
@@ -127,10 +67,11 @@ builder.Services.AddRefitClient<ICatalogRefitService>().ConfigureHttpClient(conf
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
-// 060: Library — fiyat alarmı durumu + kur/kaldır (library.read/write kullanıcı token'ıyla).
-builder.Services.AddRefitClient<ILibraryRefitService>().ConfigureHttpClient(configure =>
+// 066: Customer API artık yalnız admin merchant onboarding için (merchant.credentials.write);
+// adres/cüzdan müşteri yüzeyi söküldü. MerchantInformationService bu istemciyi kullanır.
+builder.Services.AddRefitClient<ICustomerRefitService>().ConfigureHttpClient(configure =>
     {
-        configure.BaseAddress = new Uri("http://library-api");
+        configure.BaseAddress = new Uri("http://customer-api");
     }).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
@@ -164,28 +105,11 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("email");
         options.Scope.Add("roles");
         options.Scope.Add("offline_access"); // refresh token
-        // basket
-        options.Scope.Add("basket.read");
-        options.Scope.Add("basket.write");
-        // order
-        options.Scope.Add("order.read");
-        options.Scope.Add("order.write");
-        // payment
-        options.Scope.Add("payment.read");
-        options.Scope.Add("payment.write");
-        // 022: kayitli kart + adres defteri.
-        options.Scope.Add("customer.read");
-        options.Scope.Add("customer.write");
+        // 066: müşteri alışveriş scope'ları söküldü (basket/order/payment/customer/reviews/library/
+        // storefront) — o BFF istemcileri kaldırıldı; müşteri işlemleri artık yalnız agent/MCP yolunda.
         // 033: merchant kimligi ekrani. Talep herkese, verilme role bagli (030): granted =
         // requested ∩ rol demeti — customer demetinde yok, yalniz admin token'ina biner.
         options.Scope.Add("merchant.credentials.write");
-        // 044: urun yorumu yazma + uygunluk sorgusu (Order purchase-check gRPC'si de ayni scope).
-        options.Scope.Add("reviews.write");
-        // 060: fiyat alarmi (durum + kur/kaldir).
-        options.Scope.Add("library.read");
-        options.Scope.Add("library.write");
-        // 054: kisisel ana sayfa feed'i (vitrin okumalar anonim kalir; yalniz bu uc kimlik ister).
-        options.Scope.Add("storefront.read");
         // 058: admin urun duzenleme ekranlari. Talep herkese, verilme role bagli (030 deseni:
         // granted = requested ∩ rol demeti) — ikisi de yalniz admin token'ina biner.
         options.Scope.Add("catalog.write");
@@ -209,38 +133,8 @@ builder.Services.AddAuthentication(configureOption =>
                 context.ProtocolMessage.Prompt = prompt;
             return Task.CompletedTask;
         };
-
-        // 057: login tamamlaninca anonim sepet hesaba tasinir (merge) ve anonim cookie silinir.
-        // Merge hatasi login'i BOZMAZ: cookie kalir, sepet anonim kimlikte durmaya devam eder.
-        options.Events.OnTicketReceived = async context =>
-        {
-            var anonymousId = AnonymousBasketId.Get(context.HttpContext);
-            if (anonymousId is null) return;
-
-            var accessToken = context.Properties?.GetTokenValue(OpenIdConnectParameterNames.AccessToken);
-            if (string.IsNullOrEmpty(accessToken)) return;
-
-            var client = context.HttpContext.RequestServices
-                .GetRequiredService<IHttpClientFactory>().CreateClient("basket-merge");
-
-            using var mergeRequest = new HttpRequestMessage(HttpMethod.Post, "api/v1/baskets/merge")
-            {
-                Content = JsonContent.Create(new { AnonymousId = anonymousId })
-            };
-            mergeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            try
-            {
-                var response = await client.SendAsync(mergeRequest);
-                if (response.IsSuccessStatusCode)
-                    AnonymousBasketId.Clear(context.HttpContext);
-            }
-            catch (Exception ex)
-            {
-                context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>()
-                    .LogError(ex, "Anonim sepet birlesmesi basarisiz; login surduruluyor.");
-            }
-        };
+        // 066: anonim-sepet merge (OnTicketReceived) söküldü — sepet UI'ı yok; sepet artık agent/MCP
+        // yolunda. Anonim→login merge o yolda ilgisiz.
     });
 
 builder.Services.AddAuthorization();
@@ -277,5 +171,14 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.MapChatProxy();
+
+// 066: kaldırılan müşteri ekranlarına eski derin bağlantılar ham 500 değil temiz sonuç versin —
+// eşleşmeyen route köke (mağaza asistanı) yönlendirilir; gerçek endpoint'ler (/chat/*, /Admin/*,
+// /Auth/*, static) zaten map'li olduğundan fallback yalnız eşleşmeyende çalışır.
+app.MapFallback(context =>
+{
+    context.Response.Redirect("/");
+    return Task.CompletedTask;
+});
 
 app.Run();

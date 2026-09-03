@@ -1,16 +1,17 @@
-@page "/musteri-hizmetleri"
+@page "/"
 @model MusteriHizmetleriModel
 @{
-    ViewData["Title"] = "Müşteri Hizmetleri";
+    ViewData["Title"] = "Mağaza Asistanı";
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
 }
 <link rel="stylesheet" href="~/css/chat-page.css" asp-append-version="true"/>
 
-@* 034: tam-sayfa chat; akış mevcut /chat/stream BFF'i üzerinden (login → assistant, anonim → public). *@
+@* 066: kök = mağaza asistanı (agent-only); tüm alışveriş yazışarak /chat/stream BFF üzerinden
+   (login → assistant, anonim → public). Klasik vitrin/müşteri ekranları söküldü. *@
 <div id="chat-page" data-authenticated="@(isAuthenticated ? "true" : "false")">
     <div id="chat-page-header">
-        <h1 class="h4 mb-0">Müşteri Hizmetleri</h1>
-        <span class="text-muted small">Ürün arayın, sepetinizi yönetin, sipariş verin — hepsi yazışarak.</span>
+        <h1 class="h4 mb-0">Mağaza Asistanı</h1>
+        <span class="text-muted small">Kitap arayın, sepetinizi yönetin, sipariş verin — hepsi yazışarak.</span>
     </div>
 
     @if (!isAuthenticated)

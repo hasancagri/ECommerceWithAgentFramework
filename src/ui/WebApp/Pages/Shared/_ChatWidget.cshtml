@@ -1,8 +1,0 @@
-@* 034: acilir panel kaldirildi; icon Müşteri Hizmetleri sayfasina yonlendirir (FR-002/FR-003).
-   Sayfanin kendisinde gizlenir — sayfa kendini isaret etmesin (US2 senaryo 2). *@
-@if (!Context.Request.Path.StartsWithSegments("/musteri-hizmetleri"))
-{
-    <div id="chat-widget">
-        <a id="chat-toggle" href="/musteri-hizmetleri" aria-label="Müşteri Hizmetleri">💬</a>
-    </div>
-}
