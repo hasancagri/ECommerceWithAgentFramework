@@ -56,7 +56,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `library` | libraryDb | Kullanıcı-ürün ilgi kayıtları; ilk dilim fiyat alarmı (yaşayan abonelik, email snapshot) + `NotificationRecord` izi; `ProductChangedEvent.OldPrice` tetiği → alarm başına `PriceAlarmTriggered` | `specs/060-price-alarm-mail` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
-| `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC | `specs/029-openiddict-migration` |
+| `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC; dış agent için RFC 7591 DCR (`/connect/register`) + tek consent sayfası (Explicit) + revocation (061) | `specs/029-openiddict-migration` |
 | `chat-agent` | — | AI asistan (MAF); MCP istemci + A2A ödeme (uzak PaymentGateway) | `specs/024-a2a-payment-agent` |
 | `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 | `notification-agent` | — | Fiyat alarmı maili (DB'siz worker); `PriceAlarmTriggered`→LLM compose→Mail.Mcp `send_mail`→`NotificationSent` | `specs/060-price-alarm-mail` |
@@ -81,6 +81,12 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
   `[RequiredScope]` Wolverine mesaj handler'larına da uygulanır. Identity.Server **HTTPS zorunlu**.
 - **TUZAK (`ScopeClaimArrayHandler`):** `context.TokenType` URN'dir (`TokenTypeIdentifiers.AccessToken`),
   hint DEĞİL — hint'le kıyaslarsan handler no-op → 403 → WebApp sepet redirect döngüsü.
+- **Dış agent MCP OAuth (061):** basket/order/customer/payment MCP'leri `RequireAuthorization` + RFC 9728
+  keşif (`Common/Extensions/McpResourceMetadataExtension`); storefront/catalog/stock MCP anonim KALIR.
+  UserKey (X-User-Key) yan yol — Bearer'la çakışmaz.
+- **DCR istemcileri (061):** public+PKCE, `ConsentType=Explicit`, kapalı scope demeti
+  `ExternalAgentDefaults` (yönetim scope'ları giremez, client_credentials verilmez); seed istemciler
+  Implicit kalır (consent görmez). Redirect yalnız loopback + Claude callback (`DcrRequestValidator`).
 
 ## Yapma listesi
 

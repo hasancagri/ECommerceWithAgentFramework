@@ -1,0 +1,26 @@
+@page
+@model Identity.Server.Pages.Consent.Index
+
+<div class="consent-page">
+    <div class="lead">
+        <h1>İzin Onayı</h1>
+        <p><strong>@Model.ClientName</strong> hesabınıza aşağıdaki izinlerle erişmek istiyor:</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <ul class="list-group mb-3">
+                @foreach (var scope in Model.Scopes)
+                {
+                    <li class="list-group-item">@scope</li>
+                }
+            </ul>
+
+            <form method="post">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <button class="btn btn-primary" name="Button" value="accept">Onayla</button>
+                <button class="btn btn-secondary" name="Button" value="deny">Reddet</button>
+            </form>
+        </div>
+    </div>
+</div>

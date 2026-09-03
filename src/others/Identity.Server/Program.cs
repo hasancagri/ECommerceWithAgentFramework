@@ -62,7 +62,9 @@ builder.Services.AddOpenIddict()
         options.SetAuthorizationEndpointUris("connect/authorize")
                .SetTokenEndpointUris("connect/token")
                .SetUserInfoEndpointUris("connect/userinfo")
-               .SetEndSessionEndpointUris("connect/logout");
+               .SetEndSessionEndpointUris("connect/logout")
+               // 061: dış agent bağlantı koparma (FR-009) — OpenIddict kendi işler, passthrough yok.
+               .SetRevocationEndpointUris("connect/revocation");
 
         options.AllowAuthorizationCodeFlow()
                .AllowClientCredentialsFlow()
@@ -81,6 +83,9 @@ builder.Services.AddOpenIddict()
 
         // R3: access token scope claim'ini çoklu değere çevir (Duende paritesi).
         options.AddEventHandler(ScopeClaimArrayHandler.Descriptor);
+
+        // 061: discovery'ye registration_endpoint ekle (Claude Code DCR keşfi — R2).
+        options.AddEventHandler(RegistrationEndpointMetadataHandler.Descriptor);
 
         options.UseAspNetCore()
                .EnableAuthorizationEndpointPassthrough()
@@ -141,6 +146,8 @@ app.MapAuthorizeEndpoint();
 app.MapTokenEndpoint();
 app.MapUserInfoEndpoint();
 app.MapLogoutEndpoint();
+// 061: RFC 7591 DCR — dış agent (Claude Code) istemci kaydı (anonim uç).
+app.MapRegisterEndpoint();
 
 app.MapRazorPages().RequireAuthorization();
 app.MapApiKeyEndpoints();

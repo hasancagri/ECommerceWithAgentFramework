@@ -16,6 +16,8 @@ public static class AuthorizeEndpoint
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IOpenIddictScopeManager scopeManager,
+        IOpenIddictApplicationManager applicationManager,
+        IOpenIddictAuthorizationManager authorizationManager,
         RoleScopeQuery roleScopeQuery)
     {
         var request = context.GetOpenIddictServerRequest()
@@ -79,6 +81,45 @@ public static class AuthorizeEndpoint
         await foreach (var resource in scopeManager.ListResourcesAsync(identity.GetScopes()))
             resources.Add(resource);
         identity.SetResources(resources);
+
+        // 061: Explicit consent'li istemciler (DCR dış agent'ları) kullanıcı onayı ister (FR-005).
+        // Seed istemciler Implicit — bu blok onlara hiç dokunmaz.
+        var application = await applicationManager.FindByClientIdAsync(request.ClientId!, context.RequestAborted)
+            ?? throw new InvalidOperationException("İstemci kaydı bulunamadı.");
+
+        if (await applicationManager.GetConsentTypeAsync(application, context.RequestAborted) == ConsentTypes.Explicit)
+        {
+            // Consent sayfasından Reddet dönüşü → standart access_denied (yan etkisiz, SC-005).
+            if (context.Request.Query["consent"] == "denied")
+                return Results.Forbid(
+                    new AuthenticationProperties(new Dictionary<string, string?>
+                    {
+                        [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.AccessDenied,
+                        [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
+                            "Kullanıcı erişim isteğini reddetti.",
+                    }),
+                    [OpenIddictServerAspNetCoreDefaults.AuthenticationScheme]);
+
+            var subject = identity.GetClaim(Claims.Subject)!;
+            var applicationId = (await applicationManager.GetIdAsync(application, context.RequestAborted))!;
+
+            // Aynı scope'lara verilmiş kalıcı onay varsa ekran atlanır (SC-003).
+            object? authorization = null;
+            await foreach (var candidate in authorizationManager.FindAsync(
+                subject, applicationId, Statuses.Valid, AuthorizationTypes.Permanent,
+                identity.GetScopes(), context.RequestAborted))
+                authorization = candidate;
+
+            if (authorization is null)
+            {
+                // Onay yok → consent sayfası; Onayla kalıcı authorization'ı orada üretir.
+                var consentReturnUrl = context.Request.PathBase + context.Request.Path + context.Request.QueryString;
+                return Results.Redirect(
+                    $"/Account/Consent/Index?returnUrl={Uri.EscapeDataString(consentReturnUrl)}");
+            }
+
+            identity.SetAuthorizationId(await authorizationManager.GetIdAsync(authorization, context.RequestAborted));
+        }
 
         identity.SetDestinations(OidcClaimDestinations.GetDestinations);
 
