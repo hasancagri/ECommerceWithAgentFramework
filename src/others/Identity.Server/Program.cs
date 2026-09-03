@@ -87,6 +87,10 @@ builder.Services.AddOpenIddict()
         // 061: discovery'ye registration_endpoint ekle (Claude Code DCR keşfi — R2).
         options.AddEventHandler(RegistrationEndpointMetadataHandler.Descriptor);
 
+        // 061 (R5): RFC 8707 resource parametresi yok sayılır — audience scope eşlemesinden.
+        options.AddEventHandler(IgnoreResourceParameterHandler.ForAuthorization.Descriptor);
+        options.AddEventHandler(IgnoreResourceParameterHandler.ForToken.Descriptor);
+
         options.UseAspNetCore()
                .EnableAuthorizationEndpointPassthrough()
                .EnableTokenEndpointPassthrough()
