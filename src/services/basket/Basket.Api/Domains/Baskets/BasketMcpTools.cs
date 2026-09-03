@@ -2,6 +2,28 @@ namespace Basket.Api.Domains.Baskets;
 
 
 [McpServerToolType]
+public static class UpdateBasketQuantityMcpTool
+{
+    [McpServerTool(Name = "update_basket_quantity")]
+    [Description(
+        "Giris yapmis kullanicinin sepetindeki bir urunun adedini belirtilen mutlak degere gunceller. " +
+        "productId = get_basket'ten donen urun kimligi; quantity 0 veya altiysa urun sepetten cikarilir " +
+        "(ust sinir 5). Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]
+    public static Task<FeatureObjectResultModel<SetBasketItemQuantityForAgent.SetBasketItemQuantityResponse>> UpdateBasketQuantityAsync(
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        Guid productId,
+        int quantity,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<SetBasketItemQuantityForAgent.SetBasketItemQuantityResponse>>(
+            new SetBasketItemQuantityForAgent.SetBasketItemQuantityCommand(userId, productId, quantity), ct);
+    }
+}
+
+[McpServerToolType]
 public static class AddToCartMcpTool
 {
     [McpServerTool(Name = "add_to_cart")]

@@ -47,6 +47,33 @@ public static class AddAddressMcpTool
 }
 
 [McpServerToolType]
+public static class UpdateAddressMcpTool
+{
+    [McpServerTool(Name = "update_address")]
+    [Description(
+        "Giris yapmis kullanicinin mevcut bir adresini gunceller. addressId = list_addresses'ten donen " +
+        "adres kimligi; tum adres alanlari (province/district/street/zipCode/line) yeni degerleriyle verilir. " +
+        "Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]
+    public static Task<FeatureObjectResultModel<UpdateAddressForAgent.UpdateAddressResponse>> UpdateAddressAsync(
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        Guid addressId,
+        string province,
+        string district,
+        string street,
+        string zipCode,
+        string line,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<UpdateAddressForAgent.UpdateAddressResponse>>(
+            new UpdateAddressForAgent.UpdateAddressCommand(
+                userId, addressId, province, district, street, zipCode, line), ct);
+    }
+}
+
+[McpServerToolType]
 public static class RemoveAddressMcpTool
 {
     [McpServerTool(Name = "remove_address")]

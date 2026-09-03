@@ -1,7 +1,26 @@
+using Catalog.Api.Domains.Products.Features.Agents;
+
 namespace Catalog.Api.Domains.Products;
 
 // MCP tool'lari ince sarmalayicidir ve yalnizca Features/Agent slice'larini cagirir:
 // agent'a acik her islem Agent klasorunde gorunur (kullanici karari, 005).
+
+// 063: ürünün fiyat geçmişi (append-only ProductPriceChange, 058). Anonim (catalog MCP korumasız).
+[McpServerToolType]
+public static class GetPriceHistoryMcpTool
+{
+    [McpServerTool(Name = "get_price_history")]
+    [Description(
+        "Bir urunun gecmis fiyat degisikliklerini (eski fiyat, yeni fiyat, tarih) kronolojik listeler. " +
+        "productId = search_products/get_product'tan donen urun kimligi.")]
+    public static Task<FeatureListResultModel<GetPriceHistoryForAgent.PriceHistoryEntry>> GetPriceHistoryAsync(
+        [Description("Urun kimligi (search_products/get_product'tan)")] Guid productId,
+        IMessageBus bus,
+        CancellationToken ct)
+        => bus.InvokeAsync<FeatureListResultModel<GetPriceHistoryForAgent.PriceHistoryEntry>>(
+            new GetPriceHistoryForAgent.GetPriceHistoryQuery(productId), ct);
+}
+
 [McpServerToolType]
 public static class GetProductMcpTool
 {
