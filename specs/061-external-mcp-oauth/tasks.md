@@ -64,7 +64,7 @@ görülebilir (quickstart §1) — Claude'suz zincir ayakta.
       mi); gerekirse demeti güncelle — `src/services/order/Order.Api` + `ExternalAgentDefaults.cs`
 - [X] T012 [US1] CANLI: quickstart §1 curl zinciri PASS (401 challenge, metadata, discovery,
       storefront anonim kaldı)
-- [ ] T013 [US1] CANLI: Claude Code bağlan (`claude mcp add` ×4) → tarayıcı login + consent →
+- [X] T013 [US1] CANLI: Claude Code bağlan (`claude mcp add` ×4) → tarayıcı login + consent →
       authenticated; ardından E2E alışveriş: ara→sepete at→sipariş ver→siparişleri gör
       (quickstart §2–3, FR-010)
 
@@ -81,7 +81,7 @@ görülebilir (quickstart §1) — Claude'suz zincir ayakta.
 - [X] T014 [US2] OAuth authorize akışından gelen kullanıcı için login sayfasındaki Register
       yolunun returnUrl'ü koruduğunu doğrula; kopukluk varsa düzelt —
       `src/others/Identity.Server/` (login/register sayfaları)
-- [ ] T015 [US2] CANLI: temiz kullanıcıyla bağlan → register → consent → ilk alışveriş
+- [X] T015 [US2] CANLI: temiz kullanıcıyla bağlan → register → consent → ilk alışveriş
       (customer rolü otomatik; US1 zinciri yeni hesapla PASS)
 
 **Checkpoint**: Yeni kullanıcı kanala tek seremoniyle giriyor.
@@ -94,10 +94,10 @@ görülebilir (quickstart §1) — Claude'suz zincir ayakta.
 
 **Independent Test**: quickstart §4–5.
 
-- [ ] T016 [US3] CANLI: kısa access-token ömrüyle sessiz refresh doğrula (süre dolumu →
+- [X] T016 [US3] CANLI: kısa access-token ömrüyle sessiz refresh doğrula (süre dolumu →
       ekransız yeni token → tool çağrısı PASS); revocation ucuyla iptal → 401 → yeniden bağlanma
       (quickstart §4)
-- [ ] T017 [US3] CANLI REGRESYON: WebApp login→sepet→checkout; ChatAgent PUBLIC arama +
+- [X] T017 [US3] CANLI REGRESYON: WebApp login→sepet→checkout; ChatAgent PUBLIC arama +
       ASSISTANT sipariş; UserKey'li MCP curl; `dotnet test` yeşil (quickstart §5, SC-004)
 
 **Checkpoint**: Tüm hikâyeler bağımsız doğrulandı.
@@ -111,7 +111,7 @@ görülebilir (quickstart §1) — Claude'suz zincir ayakta.
 - [X] T019 [P] Guard'lar + tam derleme: `scripts/check-claude-spec-links.sh`,
       `scripts/check-flow-links.sh`, `dotnet build`, `dotnet test` (FLOW.md tetiklenmedi — İlke VII
       dar tetik, domain süreci değişmedi)
-- [ ] T020 Commit + PR: quickstart çıktı özetiyle (canlı PASS kanıtları PR gövdesine)
+- [X] T020 Commit + PR: quickstart çıktı özetiyle (canlı PASS kanıtları PR gövdesine)
 
 ---
 

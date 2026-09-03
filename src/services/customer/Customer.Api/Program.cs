@@ -50,6 +50,8 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 // Dış-agent demeti yalnız customer.read (yazma/merchant yüzeyi demet dışı — data-model).
 builder.Services.AddMcpResourceMetadata(builder.Configuration, "customer",
     AuthorizationScopes.CustomerRead);
+// 061 logout: `logout` MCP tool'unun Identity.Server agent-logout ucuna forward client'ı.
+builder.Services.AddAgentLogoutClient(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
