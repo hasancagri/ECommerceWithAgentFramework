@@ -8,6 +8,7 @@ global using Common.Exceptions;
 global using Common.Extensions;
 global using Common.Results;
 global using Common.Utils.Constants;
+global using Common.Utils.Authorization;
 global using Grpc.Core;
 global using Marten;
 global using Marten.Newtonsoft;
