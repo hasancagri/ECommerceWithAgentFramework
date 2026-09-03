@@ -14,6 +14,8 @@ public static class ExternalAgentDefaults
         // UYARI: kart-yazma MCP tool'u bu scope ile AÇILMAMALI (kart mağazanın işi değil — ACP/PSP).
         "customer.read", "customer.write",
         "payment.read",
+        // 064: reviews.write — dış agent yorum gönderme + yorum-hakkı kontrolü (get_reviews login yeter).
+        "reviews.write",
     ];
 
     // Kimlik scope'ları (offline_access = sessiz yenileme, SC-003).
