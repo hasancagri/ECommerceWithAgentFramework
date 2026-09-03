@@ -12,10 +12,4 @@ global using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAt
 global using WebApp.Services;
 global using WebApp.Services.Refit;
 global using WebApp.Extensions;
-global using WebApp.PageModels;
-global using WebApp.ViewModel;
 global using WebApp.Dto;
-global using WebApp.Pages.Order.ViewModel;
-global using WebApp.Pages.Order.Dto;
-global using WebApp.Pages.Basket.ViewModel;
-global using WebApp.Pages.Account.Dto;
