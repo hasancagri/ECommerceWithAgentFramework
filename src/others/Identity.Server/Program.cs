@@ -62,7 +62,9 @@ builder.Services.AddOpenIddict()
         options.SetAuthorizationEndpointUris("connect/authorize")
                .SetTokenEndpointUris("connect/token")
                .SetUserInfoEndpointUris("connect/userinfo")
-               .SetEndSessionEndpointUris("connect/logout");
+               .SetEndSessionEndpointUris("connect/logout")
+               // 061: dış agent bağlantı koparma (FR-009) — OpenIddict kendi işler, passthrough yok.
+               .SetRevocationEndpointUris("connect/revocation");
 
         options.AllowAuthorizationCodeFlow()
                .AllowClientCredentialsFlow()
@@ -81,6 +83,13 @@ builder.Services.AddOpenIddict()
 
         // R3: access token scope claim'ini çoklu değere çevir (Duende paritesi).
         options.AddEventHandler(ScopeClaimArrayHandler.Descriptor);
+
+        // 061: discovery'ye registration_endpoint ekle (Claude Code DCR keşfi — R2).
+        options.AddEventHandler(RegistrationEndpointMetadataHandler.Descriptor);
+
+        // 061 (R5): RFC 8707 resource parametresi yok sayılır — audience scope eşlemesinden.
+        options.AddEventHandler(IgnoreResourceParameterHandler.ForAuthorization.Descriptor);
+        options.AddEventHandler(IgnoreResourceParameterHandler.ForToken.Descriptor);
 
         options.UseAspNetCore()
                .EnableAuthorizationEndpointPassthrough()
@@ -121,6 +130,14 @@ builder.Services.AddAuthorization(options =>
     // İlke V istisnası: IdP kendi iç yüzeyini rolle korur; downstream yalnız scope.
     options.AddPolicy("AdminRole", policy =>
         policy.RequireRole(Identity.Server.Rbac.RoleAssignmentService.AdminRole));
+
+    // 061 logout: agent'ın kendi access token'ıyla (Bearer) korunur — scope aranmaz, kimlik yeter;
+    // sub/client_id token'dan okunur, başka kullanıcı/client adına logout edilemez.
+    options.AddPolicy("agent-authenticated", policy =>
+    {
+        policy.AddAuthenticationSchemes("Bearer");
+        policy.RequireAuthenticatedUser();
+    });
 });
 
 var app = builder.Build();
@@ -141,6 +158,10 @@ app.MapAuthorizeEndpoint();
 app.MapTokenEndpoint();
 app.MapUserInfoEndpoint();
 app.MapLogoutEndpoint();
+// 061: RFC 7591 DCR — dış agent (Claude Code) istemci kaydı (anonim uç).
+app.MapRegisterEndpoint();
+// 061 logout: agent chat'ten çıkış — kullanıcı+client authorization/token iptali (Bearer korumalı).
+app.MapAgentLogoutEndpoint();
 
 app.MapRazorPages().RequireAuthorization();
 app.MapApiKeyEndpoints();

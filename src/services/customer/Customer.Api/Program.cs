@@ -46,6 +46,12 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     AuthorizationScopes.CustomerWrite,
     // Vault merchant kimliği yönetimi (admin-only capability).
     AuthorizationScopes.MerchantCredentialsWrite);
+// 061: RFC 9728 keşif (metadata dokümanı + 401 challenge parametreleri) — dış agent OAuth zinciri.
+// Dış-agent demeti yalnız customer.read (yazma/merchant yüzeyi demet dışı — data-model).
+builder.Services.AddMcpResourceMetadata(builder.Configuration, "customer",
+    AuthorizationScopes.CustomerRead);
+// 061 logout: `logout` MCP tool'unun Identity.Server agent-logout ucuna forward client'ı.
+builder.Services.AddAgentLogoutClient(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
@@ -90,6 +96,8 @@ app.AddPaymentContextInternalEndpoint(apiVersionSet);
 // 049: Order.Api charge/reconcile merchant API key ucu (customer.read); MerchantKey agent'a cikmaz.
 app.AddMerchantKeyInternalEndpoint(apiVersionSet);
 
-app.MapMcp("/mcp");
+// 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
+app.MapMcp("/mcp").RequireAuthorization();
+app.MapMcpResourceMetadata();
 
 await app.RunAsync();
