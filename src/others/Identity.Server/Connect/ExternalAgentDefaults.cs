@@ -10,7 +10,9 @@ public static class ExternalAgentDefaults
         "storefront.read",
         "basket.read", "basket.write",
         "order.read", "order.write",
-        "customer.read",
+        // 062: customer.write dış agent'a adres yazma (ekle/sil/varsayılan) için açıldı.
+        // UYARI: kart-yazma MCP tool'u bu scope ile AÇILMAMALI (kart mağazanın işi değil — ACP/PSP).
+        "customer.read", "customer.write",
         "payment.read",
     ];
 

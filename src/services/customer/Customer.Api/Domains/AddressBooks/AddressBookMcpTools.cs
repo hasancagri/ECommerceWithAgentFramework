@@ -1,11 +1,14 @@
+using Customer.Api.Domains.AddressBooks.Features.Agents;
+
 namespace Customer.Api.Domains.AddressBooks;
 
-// MCP okuma-yalniz: yazma (ekle/sil/varsayilan) yalniz REST/WebApp'te (FR-019).
+// 062: adres okuma + yazma MCP'de (ekransız adres yönetimi). Yazma customer.write scope ister
+// (agent slice'ta [RequiredScope]); MCP tool ince sarmalayıcı, userId sunucudan (token), gövdeden DEĞİL.
 [McpServerToolType]
 public static class ListAddressesMcpTool
 {
     [McpServerTool(Name = "list_addresses")]
-    [Description("Giris yapmis kullanicinin kayitli adreslerini (adres alanlari + varsayilan) listeler.")]
+    [Description("Giris yapmis kullanicinin kayitli adreslerini (adres alanlari + varsayilan + adres kimligi) listeler.")]
     public static Task<FeatureListResultModel<GetAddressesForAgent.AddressView>> ListAddressesAsync(
         IMessageBus bus,
         IHttpContextAccessor http,
@@ -15,5 +18,70 @@ public static class ListAddressesMcpTool
         var userId = currentUser.Load(http.HttpContext!.User).Id;
         return bus.InvokeAsync<FeatureListResultModel<GetAddressesForAgent.AddressView>>(
             new GetAddressesForAgent.GetAddressesQuery(userId), ct);
+    }
+}
+
+[McpServerToolType]
+public static class AddAddressMcpTool
+{
+    [McpServerTool(Name = "add_address")]
+    [Description(
+        "Giris yapmis kullaniciya yeni bir teslimat adresi ekler. Tum alanlar zorunlu: province (il), " +
+        "district (ilce), street (cadde/sokak), zipCode (posta kodu), line (acik adres). Yanittaki " +
+        "'message' alanini kullaniciya oldugu gibi ilet.")]
+    public static Task<FeatureObjectResultModel<AddAddressForAgent.AddAddressResponse>> AddAddressAsync(
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        string province,
+        string district,
+        string street,
+        string zipCode,
+        string line,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<AddAddressForAgent.AddAddressResponse>>(
+            new AddAddressForAgent.AddAddressCommand(userId, province, district, street, zipCode, line), ct);
+    }
+}
+
+[McpServerToolType]
+public static class RemoveAddressMcpTool
+{
+    [McpServerTool(Name = "remove_address")]
+    [Description(
+        "Giris yapmis kullanicinin bir kayitli adresini siler. addressId = list_addresses'ten donen adres " +
+        "kimligi. Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]
+    public static Task<FeatureObjectResultModel<RemoveAddressForAgent.RemoveAddressResponse>> RemoveAddressAsync(
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        Guid addressId,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<RemoveAddressForAgent.RemoveAddressResponse>>(
+            new RemoveAddressForAgent.RemoveAddressCommand(userId, addressId), ct);
+    }
+}
+
+[McpServerToolType]
+public static class SetDefaultAddressMcpTool
+{
+    [McpServerTool(Name = "set_default_address")]
+    [Description(
+        "Giris yapmis kullanicinin varsayilan teslimat adresini belirler. addressId = list_addresses'ten " +
+        "donen adres kimligi. Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]
+    public static Task<FeatureObjectResultModel<SetDefaultAddressForAgent.SetDefaultAddressResponse>> SetDefaultAddressAsync(
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        Guid addressId,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<SetDefaultAddressForAgent.SetDefaultAddressResponse>>(
+            new SetDefaultAddressForAgent.SetDefaultAddressCommand(userId, addressId), ct);
     }
 }
