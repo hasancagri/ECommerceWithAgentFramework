@@ -16,6 +16,8 @@ public static class ExternalAgentDefaults
         "payment.read",
         // 064: reviews.write — dış agent yorum gönderme + yorum-hakkı kontrolü (get_reviews login yeter).
         "reviews.write",
+        // 065: library fiyat alarmı — durum okuma + kurma/kaldırma.
+        "library.read", "library.write",
     ];
 
     // Kimlik scope'ları (offline_access = sessiz yenileme, SC-003).
