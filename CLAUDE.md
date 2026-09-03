@@ -66,6 +66,13 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
   mallar mağazanın. Düzenleme = 058 admin ekranları (künye/fiyat/stok/yayın); elle ürün OLUŞTURMA hâlâ yok
   (giriş 051 import). Catalog yeni üründe `ProductLinked` → Stock + `ProductChangedEvent` → Storefront.
   Silme yok (016); yayından kaldırma `IsDeleted:true` ile vitrini gizler (058).
+- **WebApp agent-only (066):** Müşteri görsel ekranları (vitrin/ürün-liste/detay/kategori/sepet/checkout/
+  hesap) SÖKÜLDÜ; kök (`/`) = mağaza asistanı chat (`Pages/MusteriHizmetleri.cshtml` route `"/"`). WebApp
+  yalnız **admin** (ürün düzenleme + onboarding) + **login/OIDC** + **chat** + BFF proxy tutar. Talep edilen
+  scope yalnız kimlik + yönetim (`catalog.write`/`stock.write`/`merchant.credentials.write`); müşteri
+  alışveriş scope'ları kalktı. Eşleşmeyen route `MapFallback`→köke. Müşteri işlemleri agent/MCP yolunda
+  (062–065 parite). TUZAK: `ICustomerRefitService` merchant-only KALDI (admin onboarding kullanır); adres/
+  cüzdan yüzeyi silindi. AÇIK BULGU: anonim chat-sepet 4 katmanda bloke (bkz memory).
 - **ModerationAgent (ayrı `reviews-moderation-agent` worker'ı):** Singleton ChatClientAgent (Temp=0,
   structured JSON, MCP'siz), retry→error queue. Moderasyon 046'da BC'den broker'lı worker'a taşındı
   (Reviews'te agent-framework yok; iletişim `ReviewModerationRequested`/`ReviewModerated` event'leriyle).
@@ -80,7 +87,8 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
   kapalı registry, rol→scope map DB'de, admin `/Admin/*`'ten yönetir. Register → `customer` rolü.
   `[RequiredScope]` Wolverine mesaj handler'larına da uygulanır. Identity.Server **HTTPS zorunlu**.
 - **TUZAK (`ScopeClaimArrayHandler`):** `context.TokenType` URN'dir (`TokenTypeIdentifiers.AccessToken`),
-  hint DEĞİL — hint'le kıyaslarsan handler no-op → 403 → WebApp sepet redirect döngüsü.
+  hint DEĞİL — hint'le kıyaslarsan handler no-op → 403 → korumalı yüzeyde redirect döngüsü (tarihsel
+  belirti: WebApp sepet ekranı; ekran 066'da söküldü ama tuzak scope-korumalı her uçta geçerli).
 - **Dış agent MCP OAuth (061):** basket/order/customer/payment MCP'leri `RequireAuthorization` + RFC 9728
   keşif (`Common/Extensions/McpResourceMetadataExtension`); storefront/catalog/stock MCP anonim KALIR.
   UserKey (X-User-Key) yan yol — Bearer'la çakışmaz.
