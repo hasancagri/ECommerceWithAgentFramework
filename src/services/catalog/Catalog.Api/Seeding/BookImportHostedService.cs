@@ -12,7 +12,7 @@ public sealed class BookImportHostedService(
 {
     private sealed record BookRecord(
         string Isbn, string Title, string[] Authors, string Publisher, decimal? PriceTry,
-        string? ImageUrl, string CategoryMid, string CategoryLeaf);
+        string? ImageUrl, string CategoryMid, string CategoryLeaf, string? Description);
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -50,7 +50,7 @@ public sealed class BookImportHostedService(
         {
             var result = await bus.InvokeAsync<FeatureObjectResultModel<ImportBook.ImportBookResponse>>(
                 new ImportBook.ImportBookCommand(
-                    b.Isbn, b.Title, b.Authors, b.Publisher, b.PriceTry, b.ImageUrl, b.CategoryMid, b.CategoryLeaf),
+                    b.Isbn, b.Title, b.Authors, b.Publisher, b.PriceTry, b.ImageUrl, b.CategoryMid, b.CategoryLeaf, b.Description),
                 cancellationToken);
 
             if (result.IsSuccess && result.Data!.Published) published++;
