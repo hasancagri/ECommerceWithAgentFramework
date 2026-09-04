@@ -14,7 +14,8 @@ public static class ImportBook
         decimal? PriceTry,    // null = fiyatsız → taslak kalır
         string? ImageUrl,
         string CategoryMid,
-        string CategoryLeaf);
+        string CategoryLeaf,
+        string? Description);  // grounded LLM blurb (<=300 char, EN); Product.FullDescription'a düşer
 
     public class ImportBookResponse
     {
@@ -52,7 +53,7 @@ public static class ImportBook
             var product = await session.Query<Product>().FirstOrDefaultAsync(p => p.Gtin == cmd.Isbn, ct);
             if (product is null)
             {
-                product = Product.Create(cmd.Title, cmd.Isbn, ProductType.Simple, price, "", "");
+                product = Product.Create(cmd.Title, cmd.Isbn, ProductType.Simple, price, "", cmd.Description ?? "");
                 // 058 FR-013: import fiyatı geçmişin İLK satırıdır (OldPrice=null); fiyatsız taslak satır düşürmez.
                 if (price.Amount > 0)
                     session.Store(ProductPriceChange.Create(product.Id, oldPrice: null, price.Amount, DateTime.UtcNow));
@@ -60,6 +61,9 @@ public static class ImportBook
             else
             {
                 product.Rename(cmd.Title);
+                // Re-run (kısmi seed): açıklama geldiyse tazele; boşsa admin/mevcut metni ezme.
+                if (!string.IsNullOrWhiteSpace(cmd.Description))
+                    product.UpdateDescriptions(product.ShortDescription, cmd.Description);
                 // 058 FR-013: re-run'da gerçek fiyat değişimi geçmişe yazılır (0 = "fiyat yoktu" → OldPrice=null).
                 var oldPrice = product.Price.Amount;
                 product.SetPrice(price);
