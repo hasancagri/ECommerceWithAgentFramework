@@ -1,5 +1,3 @@
-using Basket.Api.Domains.Baskets.Features.Queries;
-
 namespace Basket.Api.Grpc;
 
 // 039: chat siparis tamamlama — Order.Api sepet kalemlerini sunucu tarafinda okur (kalem

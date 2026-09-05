@@ -1,5 +1,3 @@
-using System.Net.Http.Json;
-
 namespace Order.Api.Http;
 
 // 039: PG cekim/retrieve sonucu. Ambiguous = pending VEYA erisilemez/timeout -> kesin degil, reconcile

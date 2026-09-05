@@ -1,6 +1,3 @@
-using System.Net.Http.Headers;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-
 namespace WebApp.Chat;
 
 // Tarayicidaki chat sayfasi ile ChatAgent arasindaki BFF proxy.

@@ -1,5 +1,3 @@
-using Customer.Api.Domains.AddressBooks.Features.Agents;
-
 namespace Customer.Api.Domains.AddressBooks;
 
 // 062: adres okuma + yazma MCP'de (ekransız adres yönetimi). Yazma customer.write scope ister

@@ -37,7 +37,6 @@ global using Newtonsoft.Json;
 global using Order.Api.Domains.Orders.Features.Agents;
 global using Shared.Grpc.Basket;
 global using System.ComponentModel;
-global using Wolverine.Persistence.Sagas;
 global using Common.Options;
 global using Order.Api.Options;
 global using Microsoft.Extensions.Options;
@@ -47,3 +46,8 @@ global using Order.Api.Http;
 global using Order.Api.Domains.PaymentAttempts;
 global using Order.Api.Domains.PaymentAttempts.ValueObjects;
 global using Common.Utils.Authorization;
+
+// --- hoisted (2+ dosyada tekrar; using consolidation) ---
+global using System.ComponentModel.DataAnnotations;
+global using System.Security.Cryptography;
+global using System.Text;

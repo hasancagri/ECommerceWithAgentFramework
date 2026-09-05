@@ -1,5 +1,3 @@
-using WebApp.Pages.Admin.Dto;
-
 namespace WebApp.Pages.Admin;
 
 // 032: admin metinle merchant onboarding ekrani. Yalniz admin rolu (cookie) — anonim/normal reddedilir

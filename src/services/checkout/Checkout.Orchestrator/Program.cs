@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Options;
-using Wolverine.RabbitMQ;
-using static Shared.CheckoutMessages;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddOpenApiDocumentation();

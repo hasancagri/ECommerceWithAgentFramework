@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Order.Api.Grpc;
 
 // 039: sepet-snapshot sonucu — kalemler + toplam + deterministik contentHash (correlation-key girdisi).

@@ -1,7 +1,6 @@
 using Identity.Server;
 using Identity.Server.ApiKeys;
 using Identity.Server.Connect;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 

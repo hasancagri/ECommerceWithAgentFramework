@@ -1,9 +1,3 @@
-using Common.Options;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-
 namespace Common.Extensions;
 
 // 061: RFC 9728 protected-resource keşfi — MCP ucu korumalı servisler için tek yerde (FR-002).

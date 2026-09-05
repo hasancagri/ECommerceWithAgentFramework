@@ -1,5 +1,3 @@
-using OpenIddict.Server;
-
 namespace Identity.Server.Connect;
 
 // R3 (EN KRİTİK): Duende paritesi. OpenIddict access token'a scope'u RFC 9068 gereği tek

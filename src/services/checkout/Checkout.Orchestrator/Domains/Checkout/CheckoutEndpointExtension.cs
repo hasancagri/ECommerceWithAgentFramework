@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using static Shared.CheckoutMessages;
 
 namespace Checkout.Orchestrator.Domains.Checkout;
 

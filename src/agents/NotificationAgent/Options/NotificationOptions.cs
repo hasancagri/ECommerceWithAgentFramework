@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace NotificationAgent.Options;
 
 // Bildirim agent model config'i — ZORUNLU, acilista fail-fast (ValidateOnStart).

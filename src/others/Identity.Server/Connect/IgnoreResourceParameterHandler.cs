@@ -1,5 +1,3 @@
-using OpenIddict.Server;
-
 namespace Identity.Server.Connect;
 
 // 061 (R5): MCP istemcileri (Claude Code / mcp-remote) RFC 8707 `resource` parametresiyle

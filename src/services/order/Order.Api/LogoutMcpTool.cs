@@ -1,9 +1,3 @@
-using System.ComponentModel;
-using System.Net.Http.Headers;
-using Common;
-using Common.Extensions;
-using ModelContextProtocol.Server;
-
 namespace Order.Api;
 
 // 061 logout: kullanıcı chat'ten "çıkış yap" dediğinde bu agent'ın (client) mağaza erişim yetkisini

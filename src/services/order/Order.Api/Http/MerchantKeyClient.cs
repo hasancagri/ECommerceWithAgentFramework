@@ -1,5 +1,3 @@
-using System.Net.Http.Json;
-
 namespace Order.Api.Http;
 
 // 049: Order -> Customer merchant API key istemcisi (PG charge/retrieve X-Api-Key kaynagi). Customer.Api

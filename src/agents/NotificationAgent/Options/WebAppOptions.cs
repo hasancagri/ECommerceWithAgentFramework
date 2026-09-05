@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace NotificationAgent.Options;
 
 // Mail'deki urun linkinin MUTLAK tabani — relatif link mail istemcisinde (Mailpit UI) yanlis

@@ -1,6 +1,4 @@
-using Common.Utils.Constants;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Extensions.Logging;
 
 namespace Common.Exceptions;
 

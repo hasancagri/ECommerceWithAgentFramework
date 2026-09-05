@@ -9,3 +9,6 @@ global using Microsoft.Extensions.AI;
 global using ModelContextProtocol.Client;
 global using NotificationAgent.Options;
 global using OpenAI;
+
+// --- hoisted (2+ dosyada tekrar; using consolidation) ---
+global using System.ComponentModel.DataAnnotations;

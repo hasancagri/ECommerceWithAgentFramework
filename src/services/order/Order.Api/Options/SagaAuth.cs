@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Order.Api.Options;
 
 // 028: saga arka plan makine token'i (order-saga client_credentials) — section "SagaAuth".

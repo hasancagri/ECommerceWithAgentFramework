@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Order.Api.Options;
 
 // 039: correlation-key HMAC sunucu secret'i — section "CorrelationKeyOption". CorrelationKey.Create

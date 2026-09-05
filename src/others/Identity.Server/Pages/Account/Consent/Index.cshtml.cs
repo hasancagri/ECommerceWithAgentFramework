@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.WebUtilities;
-
 namespace Identity.Server.Pages.Consent;
 
 // 061: Dış agent (Explicit consent) istemcileri için tek onay sayfası (R6/FR-005).

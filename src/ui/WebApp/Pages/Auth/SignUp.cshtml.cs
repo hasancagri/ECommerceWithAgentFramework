@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-
 namespace WebApp.Pages.Auth;
 
 // Kayit OIDC flow'u icinde baslar (prompt=create). Identity.Server kayit sayfasini

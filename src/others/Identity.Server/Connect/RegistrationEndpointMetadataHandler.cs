@@ -1,5 +1,3 @@
-using OpenIddict.Server;
-
 namespace Identity.Server.Connect;
 
 // 061: OpenIddict 7.6'da DCR built-in değil — discovery dokümanına registration_endpoint

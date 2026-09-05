@@ -1,5 +1,3 @@
-using PagedList.Core;
-
 namespace Common.Results.BaseClasses;
 
 public abstract class BaseResultObjectPagedListModel<TData> : BaseResultModel, IResultObjectPagedListModel<TData>

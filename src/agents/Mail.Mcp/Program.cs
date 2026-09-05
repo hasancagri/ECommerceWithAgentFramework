@@ -1,5 +1,3 @@
-using Mail.Mcp.Options;
-
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
