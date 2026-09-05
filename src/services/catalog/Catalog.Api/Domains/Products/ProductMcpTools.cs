@@ -1,5 +1,3 @@
-using Catalog.Api.Domains.Products.Features.Agents;
-
 namespace Catalog.Api.Domains.Products;
 
 // MCP tool'lari ince sarmalayicidir ve yalnizca Features/Agent slice'larini cagirir:

@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace WebApp.Extensions;
+﻿namespace WebApp.Extensions;
 
 public static class ProblemDetailsExtensions
 {

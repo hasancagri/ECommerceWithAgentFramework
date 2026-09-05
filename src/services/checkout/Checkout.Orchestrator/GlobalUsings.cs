@@ -1,30 +1,26 @@
 global using Asp.Versioning;
 global using Asp.Versioning.Builder;
-global using Common;
 global using Common.Auths;
 global using Common.Dependencies;
-global using Common.Domains;
 global using Common.Exceptions;
 global using Common.Extensions;
-global using Common.Results;
-global using Common.Utils.Authorization;
 global using Common.Utils.Constants;
 global using Marten;
 global using Marten.Newtonsoft;
 global using Microsoft.AspNetCore.Mvc;
-global using Newtonsoft.Json;
 global using Shared;
 global using Shared.Utils.Constants;
 global using System.Reflection;
 global using Weasel.Core;
 global using Wolverine;
-global using Wolverine.Attributes;
 global using Wolverine.ErrorHandling;
 global using Wolverine.Marten;
 global using Wolverine.Persistence.Sagas;
 global using Wolverine.RabbitMQ;
-global using Checkout.Orchestrator.Sagas;
 global using Checkout.Orchestrator.Options;
 global using Checkout.Orchestrator.Constants;
 global using Checkout.Orchestrator.Dependencies;
 global using Checkout.Orchestrator.Domains.Checkout;
+
+// --- hoisted (2+ dosyada tekrar; using consolidation) ---
+global using static Shared.CheckoutMessages;

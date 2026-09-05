@@ -1,6 +1,3 @@
-using Customer.Api.Domains.AddressBooks;
-using Customer.Api.Domains.MerchantInformations;
-
 namespace Customer.Api.Domains.Wallets.Features.Agents;
 
 // 038: MCP (okuma-yalniz) — cekim/taksit icin odeme baglami: secilen (veya varsayilan) kartin

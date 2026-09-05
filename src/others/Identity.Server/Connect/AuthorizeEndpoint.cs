@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Identity.Server.Connect;
 

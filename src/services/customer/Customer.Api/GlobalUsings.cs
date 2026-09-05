@@ -42,3 +42,7 @@ global using Customer.Api.Domains.Wallets.Features.Queries;
 global using Customer.Api.Domains.MerchantInformations;
 global using Customer.Api.Domains.MerchantInformations.Features.Commands;
 global using Customer.Api.Extensions;
+
+// --- hoisted (2+ dosyada tekrar; using consolidation) ---
+global using Customer.Api.Options;
+global using System.Text.Json;

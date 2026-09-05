@@ -1,8 +1,4 @@
-using System.ComponentModel;
 using System.Net.Http.Headers;
-using Common;
-using Common.Extensions;
-using ModelContextProtocol.Server;
 
 namespace Basket.Api;
 

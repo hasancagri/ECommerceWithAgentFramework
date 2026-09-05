@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Order.Api.Options;
 
 // 039: PaymentGateway (dis repo) yapisal cekim/verify REST istemcisi config'i — section "PaymentGatewayOption".

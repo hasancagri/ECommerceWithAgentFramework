@@ -2,8 +2,6 @@ using Order.Api.Domains.Orders.Features.Commands;
 using Order.Api.Domains.PaymentAttempts;
 using Order.Api.Http;
 using Order.Api.Options;
-using Shouldly;
-using Xunit;
 
 namespace Order.Api.Tests;
 

@@ -1,6 +1,4 @@
 using Order.Api.Domains.PaymentAttempts.ValueObjects;
-using Shouldly;
-using Xunit;
 
 namespace Order.Api.Tests;
 

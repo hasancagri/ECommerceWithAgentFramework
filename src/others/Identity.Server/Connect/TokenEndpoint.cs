@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore;
-using Microsoft.IdentityModel.Tokens;
-
 namespace Identity.Server.Connect;
 
 // /connect/token — client_credentials + authorization_code(+PKCE) + refresh_token exchange.

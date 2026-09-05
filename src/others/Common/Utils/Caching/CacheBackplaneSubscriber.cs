@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Hosting;
-using StackExchange.Redis;
 
 namespace Common.Utils.Caching;
 

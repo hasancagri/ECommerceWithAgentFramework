@@ -1,5 +1,4 @@
 using NotificationAgent;
-using NotificationAgent.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();

@@ -1,4 +1,3 @@
-using Customer.Api.Domains.MerchantInformations.Features.Commands;
 using Customer.Api.Domains.MerchantInformations.Features.Queries;
 
 namespace Customer.Api.Domains.MerchantInformations;

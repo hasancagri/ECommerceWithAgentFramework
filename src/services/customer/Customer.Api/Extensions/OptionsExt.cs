@@ -1,4 +1,3 @@
-using Customer.Api.Options;
 using Microsoft.Extensions.Options;
 
 namespace Customer.Api.Extensions;

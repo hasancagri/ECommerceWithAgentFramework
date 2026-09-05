@@ -1,6 +1,3 @@
-using Common.Options;
-using Microsoft.Extensions.Configuration;
-
 namespace Common.Extensions;
 
 // 061 logout: korumalı servislerin `logout` MCP tool'u, kullanıcının Bearer'ını Identity.Server'ın

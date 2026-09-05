@@ -1,5 +1,3 @@
-using StackExchange.Redis;
-
 namespace Common.Utils.Caching;
 
 /// <summary>

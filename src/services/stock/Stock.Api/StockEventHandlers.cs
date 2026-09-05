@@ -1,4 +1,3 @@
-using Stock.Api.Domains.Stocks.Features.Commands;
 using static Shared.CheckoutMessages;
 
 namespace Stock.Api;

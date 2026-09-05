@@ -1,6 +1,4 @@
 using System.Net.Http.Headers;
-using System.Text.Json;
-using Customer.Api.Options;
 
 namespace Customer.Api.Infrastructure.Tokenization;
 

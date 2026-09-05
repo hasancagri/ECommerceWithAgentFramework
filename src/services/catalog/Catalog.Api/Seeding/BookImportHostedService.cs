@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Catalog.Api.Domains.Products.Features.Commands;
 
 namespace Catalog.Api.Seeding;
 

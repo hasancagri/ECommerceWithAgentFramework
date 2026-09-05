@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Identity.Server.ApiKeys;
 
 // Anahtar üretimi (umk_ + 32 rastgele bayt), SHA-256 hash, hash ile çözümleme + UserScopes okuma.

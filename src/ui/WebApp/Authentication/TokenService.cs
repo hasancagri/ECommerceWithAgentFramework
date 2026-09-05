@@ -1,5 +1,3 @@
-using Duende.IdentityModel.Client;
-
 namespace WebApp.Authentication;
 
 // Token EDINME sorumlulugu burada toplanir: M2M (client_credentials) ve refresh exchange.

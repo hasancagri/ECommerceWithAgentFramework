@@ -8,7 +8,6 @@ global using Catalog.Api.Domains.Products.ValueObjects;
 global using Catalog.Api.Domains.ProductTags;
 global using Catalog.Api.Domains;
 global using Common.Utils.Caching;
-global using Common.Utils.Constants;
 global using Common;
 global using Shouldly;
 global using System.Text.Json;

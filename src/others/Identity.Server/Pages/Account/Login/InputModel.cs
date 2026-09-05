@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Identity.Server.Pages.Login;
 
 public class InputModel

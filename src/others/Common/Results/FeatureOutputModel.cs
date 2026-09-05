@@ -1,6 +1,3 @@
-using PagedList.Core;
-using Common.Utils.Constants;
-
 namespace Common;
 
 public class FeatureResultModel : BaseResultModel

@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-
 namespace WebApp.Pages.Auth;
 
 // Login artik Identity.Server'da (OIDC). Bu sayfa sadece challenge/sign-out tetikler.
