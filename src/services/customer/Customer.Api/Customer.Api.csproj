@@ -28,4 +28,8 @@
         <ProjectReference Include="..\..\..\others\Shared\Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="..\FLOW.md" Link="FLOW.md" />
+    </ItemGroup>
+
 </Project>

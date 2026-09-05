@@ -31,4 +31,8 @@
       <ProjectReference Include="..\..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="..\FLOW.md" Link="FLOW.md" />
+    </ItemGroup>
+
 </Project>

@@ -40,4 +40,8 @@
       <Content Update="Seeding\Data\books.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="..\FLOW.md" Link="FLOW.md" />
+    </ItemGroup>
+
 </Project>
