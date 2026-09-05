@@ -89,7 +89,7 @@ flowchart TB
     ReviewsMod -->|ReviewModerated| MQ
 
     Basket -->|gRPC reserve| Stock
-    Order -->|gRPC basket items (chat order)| Basket
+    Order -->|"gRPC basket items (chat order)"| Basket
 
     Catalog --> DB1[("catalogDb")]
     Basket --> DB2[("basketDb")]
