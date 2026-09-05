@@ -22,11 +22,15 @@ Proje-özel bilgi (komutlar, servis listesi, feature'lar) `CLAUDE.md`'dedir. **�
 Anayasa "her BC'nin domain süreci belgelenir" der; **nasıl**'ı budur:
 
 - **Dosya:** her BC kökünde tek `FLOW.md` (ör. `src/services/<bc>/FLOW.md`). Kod-yakını → az bayatlar.
+
+- **IDE görünürlüğü:** FLOW.md BC kökünde, `.csproj` bir alt `<Bc>.Api/`'de → Solution Explorer'da varsayılan
+  gizli. Her servis `.csproj`'una linked-file ekle: `<None Include="..\FLOW.md" Link="FLOW.md" />` (build'e
+  etkisiz). **Yeni servis kurarken de ekle.**
 - **Altitude:** domain-önce, ubiquitous dille — "hangi iş adımı, hangi sırayla, hangi olayı doğurur".
   Teknoloji/class **dökümü değil**; class adı yalnız satır sonunda `(Aggregate.Metot → Event)` **kenar-
   anchor** (koda atlama). Satır numarası YOK (bayatlar).
 - **İçerik:** (1) BC ne yapar tek cümle, (2) sıralı **Süreç** adımları, (3) **Domain kuralları**
-  (süreci yöneten değişmezler), (4) **Sınır** (BC'nin dokunmadığı). ~1 ekran. Örnek: `procurement/FLOW.md`.
+  (süreci yöneten değişmezler), (4) **Sınır** (BC'nin dokunmadığı). ~1 ekran. Örnek: `checkout/FLOW.md`.
 - **Güncelleme tetiği (dar):** yalnız domain süreci değişince (yeni/silinen command-event-policy, adım
   sırası). Mekanik rename/refactor tetiklemez. Feature süreci değiştiriyorsa FLOW.md **aynı PR'da** güncellenir.
 - **Guard:** `scripts/check-flow-links.sh` — FLOW.md'deki kenar-anchor tip adlarının kod tabanında hâlâ
