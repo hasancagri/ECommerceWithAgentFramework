@@ -5,9 +5,12 @@ public static class SearchProductsForAgent
     // 016/052: opsiyonel kategori/yazar daraltması — ad normalize edilip Id'ye çözülür, filtre Id ile.
     public record SearchProductsQuery(string Name, string? Category = null, string? Author = null);
 
+    // 067: DetailUrl KALDIRILDI (066 sonrası ölü route — mağaza ekransız). Kimlik + ad döner;
+    // agent productId'yi get_stock/add_to_cart zincirinde kullanır.
     public class SearchProductResponse
     {
-        public string DetailUrl { get; set; } = null!;
+        public Guid ProductId { get; set; }
+        public string Name { get; set; } = null!;
     }
 
     public class SearchProductsQueryHandler
@@ -52,12 +55,12 @@ public static class SearchProductsForAgent
 
             var row = await products
                 .OrderBy(x => x.Name)
-                .Select(x => new { x.Id })
+                .Select(x => new { x.Id, x.Name })
                 .FirstOrDefaultAsync(ct);
 
             var response = row is null
                 ? null
-                : new SearchProductResponse { DetailUrl = $"/Products/Detail/{row.Id}" };
+                : new SearchProductResponse { ProductId = row.Id, Name = row.Name };
 
             return FeatureObjectResultModel<SearchProductResponse>.Ok(response);
         }
