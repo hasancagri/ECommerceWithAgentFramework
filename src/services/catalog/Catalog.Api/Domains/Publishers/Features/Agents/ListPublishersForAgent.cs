@@ -1,13 +1,13 @@
-namespace Storefront.Api.Domains.StorefrontView.Features.Agents;
+namespace Catalog.Api.Domains.Publishers.Features.Agents;
 
-// 067 US3: agent'a yayınevi envanteri — satılabilir ürünlerde fiilen kullanılan yayınevleri (FR-006).
-// search + maxResults + TotalCount; ProductCount DESC. İzole agent slice'ı (bilinçli tekrar).
+// 067 taşıma (kullanıcı kararı): yayınevi envanteri Publisher aggregate'inin evinde. Yalnız YAYINDAKİ
+// en az bir üründe geçen yayınevleri (FR-006 ruhu). search + maxResults + TotalCount; çok kitaplı önce.
 public static class ListPublishersForAgent
 {
     public const int DefaultMaxResults = 100;
     public const int MaxResultsLimit = 200;
 
-    [Cached("filters", 60)]
+    [Cached("agent-lists", 60)]
     public record ListPublishersQuery(string? Search = null, int? MaxResults = null);
 
     public class PublisherItem
@@ -23,19 +23,17 @@ public static class ListPublishersForAgent
         public int TotalCount { get; set; }
     }
 
-    // Saf çekirdek: distinct yayınevi + ürün sayısı, ada arama (case-insensitive alt-dizge),
-    // ProductCount DESC + Name ASC, kırpma. TotalCount = kırpma ÖNCESİ.
-    public static ListPublishersResponse Build(IEnumerable<StorefrontView> sellableRows, ListPublishersQuery query)
+    // Saf çekirdek: yayındaki ürünlerin PublisherId'sinden sayım, ada arama, ProductCount DESC + Name ASC.
+    public static ListPublishersResponse Build(
+        IEnumerable<Products.Product> publishedProducts, IReadOnlyList<Publisher> allPublishers,
+        ListPublishersQuery query)
     {
-        var publishers = sellableRows
-            .Where(x => x.PublisherId is not null && !string.IsNullOrWhiteSpace(x.Publisher))
-            .GroupBy(x => x.PublisherId!.Value)
-            .Select(g => new PublisherItem
-            {
-                PublisherId = g.Key,
-                Name = g.First().Publisher!,
-                ProductCount = g.Count()
-            });
+        var byId = allPublishers.ToDictionary(p => p.Id);
+
+        var publishers = publishedProducts
+            .GroupBy(p => p.PublisherId)
+            .Where(g => byId.ContainsKey(g.Key))
+            .Select(g => new PublisherItem { PublisherId = g.Key, Name = byId[g.Key].Name, ProductCount = g.Count() });
 
         if (!string.IsNullOrWhiteSpace(query.Search))
             publishers = publishers.Where(p =>
@@ -61,11 +59,11 @@ public static class ListPublishersForAgent
         public async Task<FeatureObjectResultModel<ListPublishersResponse>> Handle(
             ListPublishersQuery query, IQuerySession session, CancellationToken ct)
         {
-            var sellable = await session.Query<StorefrontView>()
-                .Where(x => !x.IsDeleted && x.Name != null && x.Price != null)
-                .ToListAsync(ct);
+            var products = await session.Query<Products.Product>()
+                .Where(x => x.Published).ToListAsync(ct);
+            var publishers = await session.Query<Publisher>().ToListAsync(ct);
 
-            return FeatureObjectResultModel<ListPublishersResponse>.Ok(Build(sellable, query));
+            return FeatureObjectResultModel<ListPublishersResponse>.Ok(Build(products, publishers, query));
         }
     }
 }

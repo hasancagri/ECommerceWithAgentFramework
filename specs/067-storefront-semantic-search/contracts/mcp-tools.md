@@ -1,7 +1,8 @@
 # MCP Tool Kontratları: Storefront Semantic Search
 
-**Feature**: 067 | Yüzey: Storefront `/mcp` (anonim KALIR — 061). Tüketici: ChatAgent (public +
-assistant allowlist'lerine beşi de eklenir) + dış agent'lar.
+**Feature**: 067 | Yüzey: Storefront `/mcp` (arama+benzerlik) + **Catalog `/mcp` (keşif listeleri —
+taşıma, kullanıcı kararı 2026-09-07: envanter otoritesi Catalog)**; ikisi de anonim. Tüketici:
+ChatAgent (public: storefront 2 tool + catalog 3 list; assistant: +search_products/get_product) + dış agent'lar.
 
 **TUZAK (geçerli her tool'a):** Her opsiyonel parametreye DEFAULT değer zorunlu (nullable yetmez) —
 LLM parametreyi atlarsa `ArgumentException` (memory `mcp-tool-optional-param-default`).
@@ -51,14 +52,15 @@ Slice: `Features/Agents/FindSimilarBooks.cs`
 
 ## 3. `list_categories` (YENİ)
 
-Slice: `Features/Agents/ListCategoriesForAgent.cs`
+Slice: `catalog/.../Categories/Features/Agents/ListCategoriesForAgent.cs` (TAŞINDI)
 
-Parametre yok. Response: `Items[]` (CategoryId, Name, ProductCount) — yalnız en az bir satılabilir
-üründe kullanılan kategoriler (FR-006). `[Cached("filters", 60)]` uygundur.
+Parametre yok. Response: `Items[]` (CategoryId, Name, **ParentCategory** (ağaç — yalnız Catalog bilir),
+ProductCount) — yalnız YAYINDA (Published) en az bir üründe kullanılan kategoriler (FR-006 ruhu;
+fark: vitrin-satırı yerine yayın bayrağı, saniyelik event-lag penceresi kabul). `[Cached("agent-lists", 60)]`.
 
 ## 4. `list_authors` (YENİ)
 
-Slice: `Features/Agents/ListAuthorsForAgent.cs`
+Slice: `catalog/.../Authors/Features/Agents/ListAuthorsForAgent.cs` (TAŞINDI; filtre=Published ürün)
 
 | Parametre | Tip | Default | Anlam |
 |---|---|---|---|
@@ -70,7 +72,7 @@ Sıralama: ProductCount DESC (çok kitaplı yazar önce — keşif değeri).
 
 ## 5. `list_publishers` (YENİ)
 
-Slice: `Features/Agents/ListPublishersForAgent.cs`
+Slice: `catalog/.../Publishers/Features/Agents/ListPublishersForAgent.cs` (TAŞINDI; filtre=Published ürün)
 
 | Parametre | Tip | Default | Anlam |
 |---|---|---|---|

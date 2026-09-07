@@ -47,47 +47,5 @@ public static class FindSimilarBooksMcpTool
             new FindSimilarBooksForAgent.FindSimilarBooksQuery(productId, maxResults), ct);
 }
 
-// 067 US3: keşif envanteri tool'ları — yalnız satılabilir/yayında ürünlerde fiilen kullanılan değerler.
-// TUZAK: her opsiyonel parametrenin DEFAULT'u var (LLM parametre atlarsa ArgumentException olmasın).
-[McpServerToolType]
-public static class ListCategoriesMcpTool
-{
-    [McpServerTool(Name = "list_categories")]
-    [Description("Magazadaki kategorileri listeler (yalniz satista urunu olan kategoriler). Her kategori " +
-                 "ad ve urun sayisi (productCount) tasir. 'Hangi kategoriler var' tarzi kesif sorulari icin.")]
-    public static Task<FeatureListResultModel<ListCategoriesForAgent.CategoryItem>> ListCategoriesAsync(
-        IMessageBus bus, CancellationToken ct)
-        => bus.InvokeAsync<FeatureListResultModel<ListCategoriesForAgent.CategoryItem>>(
-            new ListCategoriesForAgent.ListCategoriesQuery(), ct);
-}
-
-[McpServerToolType]
-public static class ListAuthorsMcpTool
-{
-    [McpServerTool(Name = "list_authors")]
-    [Description("Magazadaki yazarlari listeler (yalniz satista kitabi olanlar), kitap sayisi cok olan " +
-                 "once. totalCount toplam yazar sayisidir; liste kirpilmis olabilir — daraltmak icin " +
-                 "search ile ada gore filtrele.")]
-    public static Task<FeatureObjectResultModel<ListAuthorsForAgent.ListAuthorsResponse>> ListAuthorsAsync(
-        IMessageBus bus,
-        CancellationToken ct,
-        [Description("Yazar adinda gecen metin (bos = tumu)")] string? search = null,
-        [Description("Sonuc sayisi; varsayilan 50, en fazla 200")] int? maxResults = null)
-        => bus.InvokeAsync<FeatureObjectResultModel<ListAuthorsForAgent.ListAuthorsResponse>>(
-            new ListAuthorsForAgent.ListAuthorsQuery(search, maxResults), ct);
-}
-
-[McpServerToolType]
-public static class ListPublishersMcpTool
-{
-    [McpServerTool(Name = "list_publishers")]
-    [Description("Magazadaki yayinevlerini listeler (yalniz satista kitabi olanlar), kitap sayisi cok " +
-                 "olan once. totalCount toplam yayinevi sayisidir; daraltmak icin search kullan.")]
-    public static Task<FeatureObjectResultModel<ListPublishersForAgent.ListPublishersResponse>> ListPublishersAsync(
-        IMessageBus bus,
-        CancellationToken ct,
-        [Description("Yayinevi adinda gecen metin (bos = tumu)")] string? search = null,
-        [Description("Sonuc sayisi; varsayilan 100, en fazla 200")] int? maxResults = null)
-        => bus.InvokeAsync<FeatureObjectResultModel<ListPublishersForAgent.ListPublishersResponse>>(
-            new ListPublishersForAgent.ListPublishersQuery(search, maxResults), ct);
-}
+// 067 NOT: kesif envanteri tool'lari (list_categories/authors/publishers) Catalog'a TASINDI
+// (kullanici karari: envanter otoritesi = Catalog; Storefront = kitap listesi/arama/benzerlik yuzeyi).

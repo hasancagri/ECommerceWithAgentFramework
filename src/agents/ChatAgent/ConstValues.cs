@@ -42,6 +42,10 @@ public static class CatalogTools
 {
     public const string GetProduct = "get_product";
     public const string SearchProducts = "search_products";
+    // 067: keşif envanteri Catalog'da (envanter otoritesi; Storefront kitap-arama yüzeyi).
+    public const string ListCategories = "list_categories";
+    public const string ListAuthors = "list_authors";
+    public const string ListPublishers = "list_publishers";
 }
 
 public static class BasketTools
@@ -71,11 +75,8 @@ public static class StockTools
 public static class StorefrontTools
 {
     public const string SearchStorefrontProducts = "search_storefront_products";
-    // 067: keşif envanteri + semantik benzerlik yüzeyi.
+    // 067: semantik benzerlik yüzeyi (keşif envanteri Catalog'a taşındı).
     public const string FindSimilarBooks = "find_similar_books";
-    public const string ListCategories = "list_categories";
-    public const string ListAuthors = "list_authors";
-    public const string ListPublishers = "list_publishers";
 }
 
 public static class CustomerTools

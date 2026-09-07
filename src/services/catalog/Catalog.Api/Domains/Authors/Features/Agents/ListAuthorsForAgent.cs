@@ -1,14 +1,13 @@
-namespace Storefront.Api.Domains.StorefrontView.Features.Agents;
+namespace Catalog.Api.Domains.Authors.Features.Agents;
 
-// 067 US3: agent'a yazar envanteri — satılabilir ürünlerde fiilen kullanılan yazarlar (FR-006).
-// Binlerce yazar olabilir: search + maxResults + TotalCount ("hepsi bu değil" diyebilsin).
-// ProductCount DESC: çok kitaplı yazar önce (keşif değeri). İzole agent slice'ı (bilinçli tekrar).
+// 067 taşıma (kullanıcı kararı): yazar envanteri Author aggregate'inin evinde. Yalnız YAYINDAKİ en az
+// bir üründe geçen yazarlar (FR-006 ruhu). search + maxResults + TotalCount; kitap sayısı çok olan önce.
 public static class ListAuthorsForAgent
 {
     public const int DefaultMaxResults = 50;
     public const int MaxResultsLimit = 200;
 
-    [Cached("filters", 60)]
+    [Cached("agent-lists", 60)]
     public record ListAuthorsQuery(string? Search = null, int? MaxResults = null);
 
     public class AuthorItem
@@ -24,14 +23,19 @@ public static class ListAuthorsForAgent
         public int TotalCount { get; set; }
     }
 
-    // Saf çekirdek: Authors düzleştirilir (çok-yazarlı kitap her yazarına sayılır), ada arama filtresi
-    // (case-insensitive alt-dizge), ProductCount DESC + Name ASC, kırpma. TotalCount = kırpma ÖNCESİ.
-    public static ListAuthorsResponse Build(IEnumerable<StorefrontView> sellableRows, ListAuthorsQuery query)
+    // Saf çekirdek: yayındaki ürünlerin AuthorIds'i düzleştirilir (çok-yazarlı kitap her yazarına
+    // sayılır), ada arama (case-insensitive alt-dizge), ProductCount DESC + Name ASC, kırpma.
+    // TotalCount = kırpma ÖNCESİ.
+    public static ListAuthorsResponse Build(
+        IEnumerable<Products.Product> publishedProducts, IReadOnlyList<Author> allAuthors, ListAuthorsQuery query)
     {
-        var authors = sellableRows
-            .SelectMany(x => x.Authors)
-            .GroupBy(a => a.Id)
-            .Select(g => new AuthorItem { AuthorId = g.Key, Name = g.First().Name, ProductCount = g.Count() });
+        var byId = allAuthors.ToDictionary(a => a.Id);
+
+        var authors = publishedProducts
+            .SelectMany(p => p.AuthorIds.Distinct())
+            .GroupBy(id => id)
+            .Where(g => byId.ContainsKey(g.Key))
+            .Select(g => new AuthorItem { AuthorId = g.Key, Name = byId[g.Key].Name, ProductCount = g.Count() });
 
         if (!string.IsNullOrWhiteSpace(query.Search))
             authors = authors.Where(a =>
@@ -57,11 +61,11 @@ public static class ListAuthorsForAgent
         public async Task<FeatureObjectResultModel<ListAuthorsResponse>> Handle(
             ListAuthorsQuery query, IQuerySession session, CancellationToken ct)
         {
-            var sellable = await session.Query<StorefrontView>()
-                .Where(x => !x.IsDeleted && x.Name != null && x.Price != null)
-                .ToListAsync(ct);
+            var products = await session.Query<Products.Product>()
+                .Where(x => x.Published).ToListAsync(ct);
+            var authors = await session.Query<Author>().ToListAsync(ct);
 
-            return FeatureObjectResultModel<ListAuthorsResponse>.Ok(Build(sellable, query));
+            return FeatureObjectResultModel<ListAuthorsResponse>.Ok(Build(products, authors, query));
         }
     }
 }

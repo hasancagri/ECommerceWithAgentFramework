@@ -54,17 +54,20 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
 (string Name, string Url, string ClientName, string[] allowedTools)[] publicAgentTools =
 [
     (McpServers.Storefront, storefrontUrl, McpClients.WithToken,
-        // 067: keşif (list_*) + benzerlik anonim de açık — storefront MCP anonim yüzeydir.
-        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks,
-            StorefrontTools.ListCategories, StorefrontTools.ListAuthors, StorefrontTools.ListPublishers])
+        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks]),
+    // 067: keşif envanteri Catalog'da (anonim MCP; DAR allowlist — 019'un "anonim'e search_products yok"
+    // kararına dokunmaz, yalnız list_* girer).
+    (McpServers.Catalog, catalogUrl, McpClients.WithToken,
+        [CatalogTools.ListCategories, CatalogTools.ListAuthors, CatalogTools.ListPublishers])
 ];
 // assistant: vitrin aramasi + catalog okuma (sepet akisi icin) + basket + servis-basi okuma tool'lari.
 (string Name, string Url, string ClientName, string[] allowedTools)[] assistantAgentTools =
 [
     (McpServers.Storefront, storefrontUrl, McpClients.WithToken,
-        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks,
-            StorefrontTools.ListCategories, StorefrontTools.ListAuthors, StorefrontTools.ListPublishers]),
-    (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
+        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks]),
+    (McpServers.Catalog, catalogUrl, McpClients.WithToken,
+        [CatalogTools.SearchProducts, CatalogTools.GetProduct,
+            CatalogTools.ListCategories, CatalogTools.ListAuthors, CatalogTools.ListPublishers]),
     (McpServers.Basket, basketUrl, McpClients.WithToken,
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem]),
     (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders, OrderTools.PlaceOrder]),

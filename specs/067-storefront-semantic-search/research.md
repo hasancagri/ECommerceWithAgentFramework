@@ -100,7 +100,12 @@ mevcut kod keşfi (Storefront.Api, ChatAgent). Spec'teki tüm belirsizlikler bur
 - **Alternatives**: Elle DDL migration (Marten `ApplyAllDatabaseChangesOnStartup` düzenini kırar,
   ancak VectorOn çalışmazsa `Storage.ExtendedSchemaObjects` yedek yol olarak not edilir).
 
-## R8 — Keşif listeleri: 3 izole agent slice, satılabilir kümeden
+## R8 — Keşif listeleri: 3 izole agent slice — REVİZE (2026-09-07, kullanıcı kararı): CATALOG'da
+
+> İlk karar Storefront'tu (satılabilirlik gerçeği + liste↔arama tutarlılığı). Kullanıcı SRP/BC
+> argümanıyla Catalog'a taşıttı: Author/Publisher/Category otoritesi orası, kategori AĞACI yalnız
+> orada (ParentCategoryId), gelecek yazar özellikleri de oraya gidecek. FR-006 `Published` ürün
+> filtresiyle korunur (saniyelik event-lag penceresi bilinçli kabul). Aşağıdaki orijinal karar tarihçe:
 
 - **Decision**: `list_categories` / `list_authors` / `list_publishers` — her biri kendi
   `Features/Agents/*ForAgent.cs` slice'ı (agent-slice izolasyon konvansiyonu; facet query'si
