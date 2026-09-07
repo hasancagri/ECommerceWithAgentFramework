@@ -124,9 +124,16 @@ public static class Prompts
         BENZER: "buna benzer ne var" isteğinde find_similar_books'u o kitabın productId'siyle çağır
         (productId önceki arama sonucundan; bilinmiyorsa önce ada göre ara).
 
-        DÜRÜSTLÜK: araç found=false dönerse sonuç YOKTUR — açıkça "bulunamadı" de; asla alakasız ya
-        da uydurma öneri sunma, hata gibi de gösterme. find_similar_books reasonCode dönerse kitabın
-        açıklama temsili henüz hazır değildir; benzer aramanın bu kitap için şu an yapılamadığını söyle.
+        KURTARMA: category kısıtlı arama found=false dönerse aynı aramayı BİR KEZ daha dene —
+        category parametresini çıkar, kategori niyetini semanticQuery'ye taşı (örn. category
+        "Science fiction" yerine semanticQuery "bilim kurgu"). Sonuç bulursan kullanıcıya kategori
+        sınıflamasının birebir tutmadığını, anlamca aradığını KISACA söyle. İkinci deneme de boşsa
+        "bulunamadı" de.
+
+        DÜRÜSTLÜK: araç found=false dönerse (kurtarma denemesi dahil) sonuç YOKTUR — açıkça
+        "bulunamadı" de; asla alakasız ya da uydurma öneri sunma, hata gibi de gösterme.
+        find_similar_books reasonCode dönerse kitabın açıklama temsili henüz hazır değildir; benzer
+        aramanın bu kitap için şu an yapılamadığını söyle.
 
         Sonuçları ad, yazarlar, yayınevi, kategori, fiyat ve stokla listele; her ürünün detailUrl
         alanının DEĞERİNİ düz metin, kopyalanabilir bir URL olarak ver; örn. detailUrl
@@ -160,8 +167,11 @@ public static class Prompts
         1b) BENZER KİTAP ("buna benzer ne var"): find_similar_books'u kitabın productId'siyle çağır
         (önceki arama sonucundan; bilinmiyorsa önce ada göre ara).
 
-        1c) DÜRÜSTLÜK: araç found=false dönerse sonuç YOKTUR — "bulunamadı" de; alakasız/uydurma
-        öneri sunma. find_similar_books reasonCode dönerse açıklama temsili henüz hazır değildir.
+        1c) KURTARMA + DÜRÜSTLÜK: category kısıtlı arama found=false dönerse BİR KEZ daha dene —
+        category'yi çıkar, kategori niyetini semanticQuery'ye taşı; sonuç bulursan kategori
+        sınıflamasının birebir tutmadığını kısaca söyle. Yine found=false ise sonuç YOKTUR —
+        "bulunamadı" de; alakasız/uydurma öneri sunma. find_similar_books reasonCode dönerse
+        açıklama temsili henüz hazır değildir.
         Sonuçları ad, yazarlar, yayınevi, kategori, fiyat ve stokla listele; dönen detailUrl
         alanının DEĞERİNİ düz metin, kopyalanabilir bir URL olarak ver ("detailUrl" kelimesini
         yazma, gerçek değeri kullan, uydurma). Bu durumlarda SEPETE EKLEME; get_product ve

@@ -90,9 +90,14 @@ public static class SearchStorefrontProductsForAgent
         return $"[{string.Join(',', parts)}]";
     }
 
+    // Ad eşleşmesi noktalama/boşluk DUYARSIZ: yalnız harf+rakam, lowercase — "H.G. Wells" = "H. G. Wells"
+    // (canlı bulgu: tam-ad eşleşmesi kullanıcı yazımını ıskalıyordu). Yazar/yayınevi/kategori aynı kuralı kullanır.
+    public static string NormalizeName(string value) =>
+        new string(value.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+
     private static HashSet<string> NormalizeNames(string[] values) =>
         values.Where(v => !string.IsNullOrWhiteSpace(v))
-            .Select(v => v.Trim().ToLowerInvariant())
+            .Select(NormalizeName)
             .ToHashSet();
 
     // Saf, test edilebilir YAPISAL filtre cekirdegi (067: sira/kirpmasiz — semantik yol ham kumeyi ister).
@@ -105,32 +110,35 @@ public static class SearchStorefrontProductsForAgent
 
         if (query.Authors is { Length: > 0 })
         {
-            // 052: yazar adı OR (case-insensitive tam ad). Çok-yazarlı kitap herhangi bir yazarı uyarsa eşleşir.
+            // 052: yazar adı OR. Çok-yazarlı kitap herhangi bir yazarı uyarsa eşleşir (normalize eşleşme).
             var authors = NormalizeNames(query.Authors);
-            rows = rows.Where(x => x.Authors.Any(a => authors.Contains(a.Name.Trim().ToLowerInvariant())));
+            rows = rows.Where(x => x.Authors.Any(a => authors.Contains(NormalizeName(a.Name))));
         }
 
         // 067 FR-003: dışlama — herhangi bir yazarı listede olan kitap elenir.
         if (query.ExcludeAuthors is { Length: > 0 })
         {
             var excluded = NormalizeNames(query.ExcludeAuthors);
-            rows = rows.Where(x => !x.Authors.Any(a => excluded.Contains(a.Name.Trim().ToLowerInvariant())));
+            rows = rows.Where(x => !x.Authors.Any(a => excluded.Contains(NormalizeName(a.Name))));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Publisher))
-            rows = rows.Where(x => string.Equals(
-                x.Publisher?.Trim(), query.Publisher.Trim(), StringComparison.OrdinalIgnoreCase));
+        {
+            var publisher = NormalizeName(query.Publisher);
+            rows = rows.Where(x => x.Publisher is not null && NormalizeName(x.Publisher) == publisher);
+        }
 
         if (query.ExcludePublishers is { Length: > 0 })
         {
             var excluded = NormalizeNames(query.ExcludePublishers);
-            rows = rows.Where(x => x.Publisher is null
-                                   || !excluded.Contains(x.Publisher.Trim().ToLowerInvariant()));
+            rows = rows.Where(x => x.Publisher is null || !excluded.Contains(NormalizeName(x.Publisher)));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Category))
-            rows = rows.Where(x => string.Equals(
-                x.Category?.Trim(), query.Category.Trim(), StringComparison.OrdinalIgnoreCase));
+        {
+            var category = NormalizeName(query.Category);
+            rows = rows.Where(x => x.Category is not null && NormalizeName(x.Category) == category);
+        }
 
         if (query.MinPrice is not null)
             rows = rows.Where(x => x.Price >= query.MinPrice);

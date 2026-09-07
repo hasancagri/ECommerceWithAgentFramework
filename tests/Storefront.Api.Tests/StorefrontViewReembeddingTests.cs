@@ -1,5 +1,6 @@
 using Shouldly;
 using Storefront.Api.Domains.StorefrontView;
+using Storefront.Api.Domains.StorefrontView.Features.Agents;
 using Xunit;
 
 namespace Storefront.Api.Tests;
@@ -60,6 +61,17 @@ public class StorefrontViewReembeddingTests
         // Ordinal karşılaştırma: metin gerçekten değiştiyse (case dahil) yeniden üretilir.
         StorefrontView.DecideEmbedding("Metin", "metin", hasEmbedding: true)
             .ShouldBe(EmbeddingDecision.Generate);
+    }
+
+    [Theory]
+    [InlineData("H.G. Wells", "H. G. Wells")]
+    [InlineData("h g wells", "H.G. Wells")]
+    [InlineData("Harlequin  Mills & Boon", "harlequin mills-boon")]
+    public void Ad_normalizasyonu_noktalama_ve_bosluk_duyarsizdir(string a, string b)
+    {
+        // Canlı bulgu: "H.G. Wells" tam-ad eşleşmesi DB'deki "H. G. Wells"i ıskalıyordu.
+        SearchStorefrontProductsForAgent.NormalizeName(a)
+            .ShouldBe(SearchStorefrontProductsForAgent.NormalizeName(b));
     }
 
     [Fact]
