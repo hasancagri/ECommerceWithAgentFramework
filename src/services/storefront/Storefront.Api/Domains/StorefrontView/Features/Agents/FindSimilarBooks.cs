@@ -52,17 +52,9 @@ public static class FindSimilarBooksForAgent
                 return FeatureObjectResultModel<FindSimilarBooksResponse>.Ok(
                     new FindSimilarBooksResponse { Found = false });
 
-            // Vektör parametresi METİN literal + CAST (Weasel Pgvector.Vector bind edemiyor — canlı bulgu).
-            var vectorLiteral = SearchStorefrontProductsForAgent.ToVectorLiteral(source.Vector);
-            var ordered = await session.QueryAsync<ProductDescriptionEmbedding>(
-                "where id = ANY(?) and (data ->> 'Vector')::vector <=> CAST(? as vector) < ? " +
-                "order by (data ->> 'Vector')::vector <=> CAST(? as vector) limit ?",
-                ct,
-                candidateIds,
-                vectorLiteral,
-                semanticOptions.MaxCosineDistance,
-                vectorLiteral,
-                maxResults);
+            // kNN + eşik tek tip-güvenli sorgu yardımcısında (ham SQL'in tek evi: ProductEmbeddingKnnQuery).
+            var ordered = await ProductEmbeddingKnnQuery.NearestAsync(
+                session, candidateIds, source.Vector, semanticOptions.MaxCosineDistance, maxResults, ct);
 
             if (ordered.Count == 0)
                 return FeatureObjectResultModel<FindSimilarBooksResponse>.Ok(

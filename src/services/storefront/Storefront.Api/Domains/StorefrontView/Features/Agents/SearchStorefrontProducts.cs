@@ -81,15 +81,6 @@ public static class SearchStorefrontProductsForAgent
         return messages;
     }
 
-    // pgvector metin formu: "[0.1,0.2,...]" (InvariantCulture şart — virgül/nokta karışmasın).
-    public static string ToVectorLiteral(ReadOnlySpan<float> vector)
-    {
-        var parts = new string[vector.Length];
-        for (var i = 0; i < vector.Length; i++)
-            parts[i] = vector[i].ToString(System.Globalization.CultureInfo.InvariantCulture);
-        return $"[{string.Join(',', parts)}]";
-    }
-
     // Ad eşleşmesi noktalama/boşluk DUYARSIZ: yalnız harf+rakam, lowercase — "H.G. Wells" = "H. G. Wells"
     // (canlı bulgu: tam-ad eşleşmesi kullanıcı yazımını ıskalıyordu). Yazar/yayınevi/kategori aynı kuralı kullanır.
     public static string NormalizeName(string value) =>
@@ -241,19 +232,15 @@ public static class SearchStorefrontProductsForAgent
                 }
 
                 // Temsil AYRI dokümanda; kNN yalnız temsili olan adaylar üzerinde koşar (açıklamasız
-                // ürün semantik aday değildir — edge case). Eşik SQL WHERE'de (SC-005).
-                // Vektör parametresi METİN literal + CAST — Weasel, Pgvector.Vector tipini bind edemiyor
-                // (canlı bulgu: "Can't infer NpgsqlDbType for type Pgvector.Vector").
-                var vectorLiteral = ToVectorLiteral(queryVector.Span);
-                var ordered = await session.QueryAsync<ProductDescriptionEmbedding>(
-                    "where id = ANY(?) and (data ->> 'Vector')::vector <=> CAST(? as vector) < ? " +
-                    "order by (data ->> 'Vector')::vector <=> CAST(? as vector) limit ?",
-                    ct,
+                // ürün semantik aday değildir — edge case). Eşik + sıralama tek tip-güvenli sorgu
+                // yardımcısında (ham SQL'in tek evi: ProductEmbeddingKnnQuery).
+                var ordered = await ProductEmbeddingKnnQuery.NearestAsync(
+                    session,
                     candidates.Keys.ToArray(),
-                    vectorLiteral,
+                    queryVector.Span,
                     semanticOptions.MaxCosineDistance,
-                    vectorLiteral,
-                    NormalizeMaxResults(query.MaxResults));
+                    NormalizeMaxResults(query.MaxResults),
+                    ct);
 
                 resultRows = ordered.Select(e => candidates[e.ProductId]).ToList();
             }
