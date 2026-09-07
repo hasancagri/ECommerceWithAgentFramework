@@ -28,10 +28,9 @@ Slice: `Features/Agents/SearchStorefrontProducts.cs`
 - LLM sözleşmesi (prompt'ta): kullanıcı cümlesinin yapısal kısmı yapısal parametrelere, anlamca
   kısmı `semanticQuery`'ye ayrıştırılır; Storefront ham cümle GÖRMEZ.
 - `semanticQuery` dolu + eşik altında sonuç yok → `Found=false` (LLM "bulunamadı" der, SC-005).
-- Response (mevcut şekil korunur + `Found`): `Found`, `Items[]` (ProductId, Name, Authors,
-  Publisher, Category, Price, StockQuantity, DetailUrl).
-- NOT (bilinen bayatlık, bu feature kapsamı DIŞI): `DetailUrl` 066 söküm sonrası ölü route'a işaret
-  eder; mevcut davranış korunur, temizlik ayrı iş.
+- Response: `Found`, `Items[]` (ProductId, Name, Authors, Publisher, Category, Price,
+  StockQuantity, ImageUrl). `DetailUrl` KALDIRILDI (066 sonrası ölü route — kullanıcı isteği);
+  kapak görseli `ImageUrl` ile döner, LLM markdown görsel olarak gösterebilir.
 
 ## 2. `find_similar_books` (YENİ)
 
@@ -48,7 +47,7 @@ Slice: `Features/Agents/FindSimilarBooks.cs`
 - Referans ürün yok / embedding'i null → `Found=false` + açıklayıcı mesaj kodu (Result pattern,
   exception yok — SC-002 "hata vermez").
 - Response: `Found` + `Items[]` — kontrat #1 ile AYNI şekil (ProductId, Name, Authors, Publisher,
-  Category, Price, StockQuantity, DetailUrl).
+  Category, Price, StockQuantity, ImageUrl).
 
 ## 3. `list_categories` (YENİ)
 

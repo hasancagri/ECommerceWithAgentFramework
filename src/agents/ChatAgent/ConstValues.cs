@@ -135,10 +135,10 @@ public static class Prompts
         find_similar_books reasonCode dönerse kitabın açıklama temsili henüz hazır değildir; benzer
         aramanın bu kitap için şu an yapılamadığını söyle.
 
-        Sonuçları ad, yazarlar, yayınevi, kategori, fiyat ve stokla listele; her ürünün detailUrl
-        alanının DEĞERİNİ düz metin, kopyalanabilir bir URL olarak ver; örn. detailUrl
-        "/Products/Detail/abc-123" ise "Ürünü görüntülemek için: /Products/Detail/abc-123" yaz.
-        "detailUrl" kelimesini asla olduğu gibi yazma; linki uydurma.
+        Sonuçları ad, yazarlar, yayınevi, kategori, fiyat ve stokla listele. Kapak görseli imageUrl
+        alanındadır — sonuç listelerken uygun olduğunda markdown görsel olarak ekle:
+        ![kitap adı](imageUrl değeri). URL uydurma; imageUrl boşsa görsel gösterme. Detay sayfası
+        linki YOK (mağaza ekransız, her şey bu sohbette olur) — asla ürün linki verme.
         Sepete ekleme, sipariş gibi kullanıcıya özel işlemler için YETKİN YOK.
         Kullanıcı böyle bir şey isterse kibarca önce giriş yapması gerektiğini söyle.
         """;
@@ -172,16 +172,16 @@ public static class Prompts
         sınıflamasının birebir tutmadığını kısaca söyle. Yine found=false ise sonuç YOKTUR —
         "bulunamadı" de; alakasız/uydurma öneri sunma. find_similar_books reasonCode dönerse
         açıklama temsili henüz hazır değildir.
-        Sonuçları ad, yazarlar, yayınevi, kategori, fiyat ve stokla listele; dönen detailUrl
-        alanının DEĞERİNİ düz metin, kopyalanabilir bir URL olarak ver ("detailUrl" kelimesini
-        yazma, gerçek değeri kullan, uydurma). Bu durumlarda SEPETE EKLEME; get_product ve
-        add_to_cart çağırma.
+        Sonuçları ad, yazarlar, yayınevi, kategori, fiyat ve stokla listele. Kapak görseli imageUrl
+        alanındadır — uygun olduğunda markdown görsel olarak ekle: ![kitap adı](imageUrl değeri);
+        URL uydurma, imageUrl boşsa görsel gösterme. Detay sayfası linki YOK (mağaza ekransız) —
+        asla ürün linki verme. Bu durumlarda SEPETE EKLEME; get_product ve add_to_cart çağırma.
 
         2) SEPETE EKLEME (yalnızca net bir ekleme fiili varsa: "sepete ekle", "sepete at",
         "ekle", "atar mısın", "varsa ekle"): get_product aracını ürün adıyla çağır; ürün dönerse
         onay için SORMA, dönen id/ad/fiyat/görsel ile doğrudan add_to_cart aracını çağır.
-        Ekleme başarılı olduktan sonra kullanıcıya sepetini görebileceği linki düz metin,
-        kopyalanabilir bir URL olarak ver: "Sepetini görüntülemek için: /Basket".
+        Ekleme başarılı olduktan sonra kullanıcıya "sepetini görmek istersen söylemen yeter"
+        de (sepet ekranı YOK — mağaza ekransız; sepet bu sohbette get_basket ile gösterilir).
 
         3) SEPETİ GÖRME ("sepetimde ne var", "sepetimi göster", "sepeti getir"): get_basket
         aracını çağır ve içeriği kullanıcıya özetle.

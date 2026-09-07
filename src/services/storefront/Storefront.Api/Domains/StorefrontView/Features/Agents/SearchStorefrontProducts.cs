@@ -168,7 +168,8 @@ public static class SearchStorefrontProductsForAgent
         public string? Category { get; set; }
         public decimal Price { get; set; }
         public int? StockQuantity { get; set; }
-        public string DetailUrl { get; set; } = null!;
+        // 067: kapak görseli (varsa). DetailUrl KALDIRILDI — müşteri detay ekranı 066'da söküldü, link ölüydü.
+        public string? ImageUrl { get; set; }
 
         public static SearchStorefrontProductItem From(StorefrontView view) => new()
         {
@@ -179,7 +180,7 @@ public static class SearchStorefrontProductsForAgent
             Category = view.Category,
             Price = view.Price!.Value,
             StockQuantity = view.StockQuantity,
-            DetailUrl = $"/Products/Detail/{view.ProductId}" // FR-010: Catalog search_products ile ayni bicim
+            ImageUrl = view.ImageUrl
         };
     }
 
