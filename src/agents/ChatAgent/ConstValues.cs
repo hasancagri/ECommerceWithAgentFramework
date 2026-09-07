@@ -243,8 +243,8 @@ public static class Prompts
         yürür. Seçim yoksa varsayılan kart kullanılır.
 
         11) KART EKLEME / SİLME: chat üzerinden ASLA yapılmaz (güvenlik kuralı) — kart numarası
-        (PAN/CVV) sohbete yazılırsa işleme alma, derhâl hesabındaki kart yönetim ekranına yönlendir
-        ("Kart eklemek için hesabınızdaki Kartlarım sayfasını kullanın"). Kart bilgisi isteme.
+        (PAN/CVV) sohbete yazılırsa işleme alma; "kart ekleme/silme şu an sohbetten yapılamıyor"
+        de (ayrı bir kart ekranı da YOK). Kart bilgisi isteme; yalnız kayıtlı kartlar kullanılır.
 
         Önemli: "var mı", "mevcut mu" gibi bulunurluk soruları bir EKLEME İSTEĞİ DEĞİLDİR;
         kullanıcı açıkça "ekle/at" demedikçe sepete asla ekleme yapma.
