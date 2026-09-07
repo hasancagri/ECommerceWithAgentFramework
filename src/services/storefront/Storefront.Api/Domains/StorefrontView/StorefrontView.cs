@@ -80,6 +80,30 @@ public class StorefrontView
         RatingAverage = count == 0 ? null : average;
         RatingCount = count;
     }
+
+    /// <summary>
+    /// 067: yeniden-embedding karari (saf; handler + backfill AYNI karara uyar). Bos aciklama → Clear;
+    /// metin degisti (Ordinal) YA DA temsil eksik → Generate; aksi halde Keep (API cagrisi bosa gitmez).
+    /// Temsil AYRI dokumanda yasar (ProductDescriptionEmbedding) — view satiri sismez.
+    /// </summary>
+    public static EmbeddingDecision DecideEmbedding(string? newDescription, string? oldDescription, bool hasEmbedding)
+    {
+        if (string.IsNullOrWhiteSpace(newDescription))
+            return EmbeddingDecision.Clear;
+
+        if (!string.Equals(newDescription, oldDescription, StringComparison.Ordinal))
+            return EmbeddingDecision.Generate;
+
+        return hasEmbedding ? EmbeddingDecision.Keep : EmbeddingDecision.Generate;
+    }
+}
+
+// 067: yeniden-embedding karari (enum aggregate/read-model dosyasinda yasar — konvansiyon).
+public enum EmbeddingDecision
+{
+    Keep,
+    Generate,
+    Clear
 }
 
 // 052: read-model'in KENDİ yazar record'u (Id+ad). Shared.IntegrationEvents.AuthorRef'ten AYRI —

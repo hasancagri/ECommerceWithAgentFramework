@@ -6,10 +6,18 @@ public static class StorefrontEventHandlers
         IntegrationEvents.ProductChangedEvent evt,
         IDocumentSession session,
         CacheInvalidator cacheInvalidator,
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         CancellationToken ct)
     {
         var view = await session.LoadAsync<StorefrontView>(evt.ProductId, ct)
                    ?? StorefrontView.Create(evt.ProductId);
+
+        // 067: yeniden-embedding karari ApplyCatalog ONCE alinir (eski aciklama heniz ezilmemisken).
+        // hasEmbedding yalniz "aciklama degismedi" dalinda anlamli — yalniz o durumda PK lookup yapilir.
+        var hasEmbedding = string.Equals(evt.Description, view.Description, StringComparison.Ordinal)
+                           && !string.IsNullOrWhiteSpace(evt.Description)
+                           && await session.LoadAsync<ProductDescriptionEmbedding>(evt.ProductId, ct) is not null;
+        var embeddingDecision = StorefrontView.DecideEmbedding(evt.Description, view.Description, hasEmbedding);
 
         view.ApplyCatalog(evt.Name, evt.Description, evt.Price,
             // 052: event yazar çiftlerini read-model'in kendi AuthorRef'ine çevir (Shared tipini saklamaz).
@@ -19,6 +27,20 @@ public static class StorefrontEventHandlers
             (evt.Specs ?? []).Select(s => SpecPair.Create(s.Attribute, s.Option)).ToList(),
             // 045: varyant ailesi kodu (null = ailesiz).
             evt.FamilyCode);
+
+        // 067: anlamsal temsil — yalniz aciklama degisince uretilir (fiyat/stok guncellemesi API'ye gitmez);
+        // ayri dokumana, AYNI transaction'da yazilir. IsDeleted uretimi ETKILEMEZ (gorunurluk sorgu
+        // tarafinda, FR-007). Hata → exception → Wolverine retry/error queue (bilincli kabul, research R4).
+        switch (embeddingDecision)
+        {
+            case EmbeddingDecision.Clear:
+                session.Delete<ProductDescriptionEmbedding>(evt.ProductId);
+                break;
+            case EmbeddingDecision.Generate:
+                var vector = await embeddingGenerator.GenerateVectorAsync(evt.Description, cancellationToken: ct);
+                session.Store(ProductDescriptionEmbedding.Create(evt.ProductId, vector.ToArray()));
+                break;
+        }
 
         session.Store(view);
         await session.SaveChangesAsync(ct);

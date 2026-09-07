@@ -24,7 +24,8 @@ scripts/check-flow-links.sh                               # FLOW.md domain-süre
 - **Sistemi hep Aspire AppHost'tan başlat**, tek servis değil — servisler birbirini/DB/RabbitMQ'yu
   service discovery + conn-string enjeksiyonuyla bulur; tek API bağımsız açılmaz.
 - **Marten şeması otomatik kurulur** (`ApplyAllDatabaseChangesOnStartup`) — migration komutu yok.
-- **OpenAI kullanan servisler** (ChatAgent, ModerationAgent) açılışta fail-fast:
+- **OpenAI kullanan servisler** (ChatAgent, ModerationAgent, NotificationAgent, Storefront —
+  embedding, 067) açılışta fail-fast:
   `dotnet user-secrets set OpenAI:ApiKey <k> --project <proj>` (+ `OpenAI:Model`, ör. gpt-4o-mini).
 - **Paket sürümleri yalnız `Directory.Packages.props`'ta** (Central Package Management); `.csproj`
   `PackageReference`'ı sürümsüz listeler. Sürüm ekle/değiştir → yalnız props.
@@ -51,7 +52,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); CreateOrder→CommitStock→Charge→Confirm→ClearBasket; pivot=Charge, pivot-öncesi LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount; tek-faz Charge) | — |
 | `stock` | stockDb | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; checkout düşümü broker'dan (056); admin artır/azalt + mutlak set (058) | `specs/014-supplier-stock-authority` |
-| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama; kişisel feed (`UserPurchase` birikimi, ana sayfa) | `specs/003-storefront-read-model` |
+| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; filtre arama; kişisel feed (`UserPurchase` birikimi, ana sayfa); semantik arama (067: `ProductDescriptionEmbedding` ayrı doküman + pgvector kNN + mesafe eşiği) + keşif tool'ları (`list_categories/authors/publishers`, `find_similar_books`) | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `library` | libraryDb | Kullanıcı-ürün ilgi kayıtları; ilk dilim fiyat alarmı (yaşayan abonelik, email snapshot) + `NotificationRecord` izi; `ProductChangedEvent.OldPrice` tetiği → alarm başına `PriceAlarmTriggered` | `specs/060-price-alarm-mail` |

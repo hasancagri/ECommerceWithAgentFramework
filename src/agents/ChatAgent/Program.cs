@@ -53,12 +53,17 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
 // public: yalnizca vitrin aramasi (019 FR-018: Catalog search_products anonim agent'tan cikti).
 (string Name, string Url, string ClientName, string[] allowedTools)[] publicAgentTools =
 [
-    (McpServers.Storefront, storefrontUrl, McpClients.WithToken, [StorefrontTools.SearchStorefrontProducts])
+    (McpServers.Storefront, storefrontUrl, McpClients.WithToken,
+        // 067: keşif (list_*) + benzerlik anonim de açık — storefront MCP anonim yüzeydir.
+        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks,
+            StorefrontTools.ListCategories, StorefrontTools.ListAuthors, StorefrontTools.ListPublishers])
 ];
 // assistant: vitrin aramasi + catalog okuma (sepet akisi icin) + basket + servis-basi okuma tool'lari.
 (string Name, string Url, string ClientName, string[] allowedTools)[] assistantAgentTools =
 [
-    (McpServers.Storefront, storefrontUrl, McpClients.WithToken, [StorefrontTools.SearchStorefrontProducts]),
+    (McpServers.Storefront, storefrontUrl, McpClients.WithToken,
+        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks,
+            StorefrontTools.ListCategories, StorefrontTools.ListAuthors, StorefrontTools.ListPublishers]),
     (McpServers.Catalog, catalogUrl, McpClients.WithToken, [CatalogTools.SearchProducts, CatalogTools.GetProduct]),
     (McpServers.Basket, basketUrl, McpClients.WithToken,
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem]),

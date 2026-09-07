@@ -1,8 +1,9 @@
 
 namespace Storefront.Api.Domains.StorefrontView.Features.Agents;
 
-// Vitrin arama — yapısal filtre yolu: Marten LINQ + saf in-memory çekirdek (deterministik Name ASC).
-// Filtreler kesindir (yazar OR, fiyat aralığı, asgari stok). Anlamsal/embedding yolu söküldü.
+// Vitrin arama — hibrit yol (067): yapısal filtre ÖNCE eler (saf in-memory çekirdek), semanticQuery
+// varsa kalan kümede pgvector kosinüs kNN sıralar + mesafe eşiği uygular (alakasız sonuç "benzer
+// bulundu" gibi sunulmaz, SC-005). semanticQuery yoksa mevcut deterministik Name ASC davranışı sürer.
 public static class SearchStorefrontProductsForAgent
 {
     public const int DefaultMaxResults = 8;
@@ -13,7 +14,14 @@ public static class SearchStorefrontProductsForAgent
         decimal? MinPrice = null,
         decimal? MaxPrice = null,
         int? MinStock = null,
-        int? MaxResults = null);
+        int? MaxResults = null,
+        // 067: yeni yapısal parametreler + dışlama (FR-002/FR-003) + anlamsal ifade (ham cümle DEĞİL —
+        // LLM ayrıştırır: yapısal kısım yapısal parametrelere, bulanık/temalı kısım semanticQuery'ye).
+        string? Category = null,
+        string? Publisher = null,
+        string[]? ExcludeAuthors = null,
+        string[]? ExcludePublishers = null,
+        string? SemanticQuery = null);
 
     public static int NormalizeMaxResults(int? maxResults) =>
         maxResults is null ? DefaultMaxResults : Math.Clamp(maxResults.Value, 1, MaxResultsLimit);
@@ -26,7 +34,12 @@ public static class SearchStorefrontProductsForAgent
         var hasCriteria = query.Authors is { Length: > 0 }
                           || query.MinPrice is not null
                           || query.MaxPrice is not null
-                          || query.MinStock is not null;
+                          || query.MinStock is not null
+                          || !string.IsNullOrWhiteSpace(query.Category)
+                          || !string.IsNullOrWhiteSpace(query.Publisher)
+                          || query.ExcludeAuthors is { Length: > 0 }
+                          || query.ExcludePublishers is { Length: > 0 }
+                          || !string.IsNullOrWhiteSpace(query.SemanticQuery);
         if (!hasCriteria)
         {
             messages.Add(new MessageItem
@@ -68,9 +81,24 @@ public static class SearchStorefrontProductsForAgent
         return messages;
     }
 
-    // Saf, test edilebilir filtre cekirdegi: marka OR (case-insensitive tam ad), fiyat araligi dahil,
-    // MinStock "en az N" (stogu bilinmeyen satir elenir), Name ASC + kirpma.
-    public static List<StorefrontView> FilterAndOrder(
+    // pgvector metin formu: "[0.1,0.2,...]" (InvariantCulture şart — virgül/nokta karışmasın).
+    public static string ToVectorLiteral(ReadOnlySpan<float> vector)
+    {
+        var parts = new string[vector.Length];
+        for (var i = 0; i < vector.Length; i++)
+            parts[i] = vector[i].ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return $"[{string.Join(',', parts)}]";
+    }
+
+    private static HashSet<string> NormalizeNames(string[] values) =>
+        values.Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim().ToLowerInvariant())
+            .ToHashSet();
+
+    // Saf, test edilebilir YAPISAL filtre cekirdegi (067: sira/kirpmasiz — semantik yol ham kumeyi ister).
+    // Yazar OR + yazar/yayinevi DISLAMA + kategori/yayinevi esitligi (case-insensitive tam ad),
+    // fiyat araligi dahil, MinStock "en az N" (stogu bilinmeyen satir elenir).
+    public static IEnumerable<StorefrontView> Filter(
         IEnumerable<StorefrontView> sellableRows, SearchStorefrontProductsQuery query)
     {
         var rows = sellableRows;
@@ -78,12 +106,31 @@ public static class SearchStorefrontProductsForAgent
         if (query.Authors is { Length: > 0 })
         {
             // 052: yazar adı OR (case-insensitive tam ad). Çok-yazarlı kitap herhangi bir yazarı uyarsa eşleşir.
-            var authors = query.Authors
-                .Where(a => !string.IsNullOrWhiteSpace(a))
-                .Select(a => a.Trim().ToLowerInvariant())
-                .ToHashSet();
+            var authors = NormalizeNames(query.Authors);
             rows = rows.Where(x => x.Authors.Any(a => authors.Contains(a.Name.Trim().ToLowerInvariant())));
         }
+
+        // 067 FR-003: dışlama — herhangi bir yazarı listede olan kitap elenir.
+        if (query.ExcludeAuthors is { Length: > 0 })
+        {
+            var excluded = NormalizeNames(query.ExcludeAuthors);
+            rows = rows.Where(x => !x.Authors.Any(a => excluded.Contains(a.Name.Trim().ToLowerInvariant())));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Publisher))
+            rows = rows.Where(x => string.Equals(
+                x.Publisher?.Trim(), query.Publisher.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (query.ExcludePublishers is { Length: > 0 })
+        {
+            var excluded = NormalizeNames(query.ExcludePublishers);
+            rows = rows.Where(x => x.Publisher is null
+                                   || !excluded.Contains(x.Publisher.Trim().ToLowerInvariant()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Category))
+            rows = rows.Where(x => string.Equals(
+                x.Category?.Trim(), query.Category.Trim(), StringComparison.OrdinalIgnoreCase));
 
         if (query.MinPrice is not null)
             rows = rows.Where(x => x.Price >= query.MinPrice);
@@ -92,11 +139,16 @@ public static class SearchStorefrontProductsForAgent
         if (query.MinStock is not null)
             rows = rows.Where(x => x.StockQuantity >= query.MinStock);
 
-        return rows
+        return rows;
+    }
+
+    // Yapısal-yalnız yol: deterministik Name ASC + kirpma (mevcut davranış korunur).
+    public static List<StorefrontView> FilterAndOrder(
+        IEnumerable<StorefrontView> sellableRows, SearchStorefrontProductsQuery query) =>
+        Filter(sellableRows, query)
             .OrderBy(x => x.Name)
             .Take(NormalizeMaxResults(query.MaxResults))
             .ToList();
-    }
 
     public class SearchStorefrontProductItem
     {
@@ -123,26 +175,86 @@ public static class SearchStorefrontProductsForAgent
         };
     }
 
+    // 067 kontrat #1: Found=false → LLM "bulunamadı" der (boş listeyi başarı gibi sunmaz).
+    public class SearchStorefrontProductsResponse
+    {
+        public bool Found { get; set; }
+        public List<SearchStorefrontProductItem> Items { get; set; } = [];
+    }
+
     public class SearchStorefrontProductsQueryHandler
     {
-        public async Task<FeatureListResultModel<SearchStorefrontProductItem>> Handle(
+        public async Task<FeatureObjectResultModel<SearchStorefrontProductsResponse>> Handle(
             SearchStorefrontProductsQuery query,
             IQuerySession session,
+            IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+            SemanticSearchOption semanticOptions,
             CancellationToken ct)
         {
             var messages = Validate(query);
             if (messages.Count > 0)
-                return FeatureListResultModel<SearchStorefrontProductItem>.Error(messages);
+                return FeatureObjectResultModel<SearchStorefrontProductsResponse>.Error(messages);
 
             var sellable = await session.Query<StorefrontView>()
                 .Where(x => !x.IsDeleted && x.Name != null && x.Price != null)
                 .ToListAsync(ct);
 
-            var items = FilterAndOrder(sellable, query)
-                .Select(SearchStorefrontProductItem.From)
-                .ToList();
+            List<StorefrontView> resultRows;
+            if (string.IsNullOrWhiteSpace(query.SemanticQuery))
+            {
+                resultRows = FilterAndOrder(sellable, query);
+            }
+            else
+            {
+                // 067 hibrit yol (research R2): yapısal ÖNCE eler → kalan id'lerde kNN + eşik.
+                var candidates = Filter(sellable, query).ToDictionary(x => x.ProductId);
+                if (candidates.Count == 0)
+                    return FeatureObjectResultModel<SearchStorefrontProductsResponse>.Ok(
+                        new SearchStorefrontProductsResponse { Found = false });
 
-            return FeatureListResultModel<SearchStorefrontProductItem>.Ok(items);
+                ReadOnlyMemory<float> queryVector;
+                try
+                {
+                    queryVector = await embeddingGenerator.GenerateVectorAsync(
+                        query.SemanticQuery, cancellationToken: ct);
+                }
+                catch (Exception)
+                {
+                    // 019 sabiti: embedding servisi erişilemez — beklenen hata, Result ile taşınır.
+                    return FeatureObjectResultModel<SearchStorefrontProductsResponse>.Error(
+                    [
+                        new MessageItem
+                        {
+                            Property = nameof(query.SemanticQuery),
+                            Code = StorefrontResourceConstants.STOREFRONT_EMBEDDING_SERVICE_UNAVAILABLE
+                        }
+                    ]);
+                }
+
+                // Temsil AYRI dokümanda; kNN yalnız temsili olan adaylar üzerinde koşar (açıklamasız
+                // ürün semantik aday değildir — edge case). Eşik SQL WHERE'de (SC-005).
+                // Vektör parametresi METİN literal + CAST — Weasel, Pgvector.Vector tipini bind edemiyor
+                // (canlı bulgu: "Can't infer NpgsqlDbType for type Pgvector.Vector").
+                var vectorLiteral = ToVectorLiteral(queryVector.Span);
+                var ordered = await session.QueryAsync<ProductDescriptionEmbedding>(
+                    "where id = ANY(?) and (data ->> 'Vector')::vector <=> CAST(? as vector) < ? " +
+                    "order by (data ->> 'Vector')::vector <=> CAST(? as vector) limit ?",
+                    ct,
+                    candidates.Keys.ToArray(),
+                    vectorLiteral,
+                    semanticOptions.MaxCosineDistance,
+                    vectorLiteral,
+                    NormalizeMaxResults(query.MaxResults));
+
+                resultRows = ordered.Select(e => candidates[e.ProductId]).ToList();
+            }
+
+            return FeatureObjectResultModel<SearchStorefrontProductsResponse>.Ok(
+                new SearchStorefrontProductsResponse
+                {
+                    Found = resultRows.Count > 0,
+                    Items = resultRows.Select(SearchStorefrontProductItem.From).ToList()
+                });
         }
     }
 }
@@ -158,17 +270,23 @@ public static class SearchStorefrontProductsEndpoint
                 decimal? minPrice = null,
                 decimal? maxPrice = null,
                 int? minStock = null,
-                int? maxResults = null) =>
+                int? maxResults = null,
+                string? category = null,
+                string? publisher = null,
+                string[]? excludeAuthors = null,
+                string[]? excludePublishers = null,
+                string? semanticQuery = null) =>
             {
-                var result = await bus.InvokeAsync<FeatureListResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductItem>>(
+                var result = await bus.InvokeAsync<FeatureObjectResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductsResponse>>(
                     new SearchStorefrontProductsForAgent.SearchStorefrontProductsQuery(
-                        authors, minPrice, maxPrice, minStock, maxResults), ct);
+                        authors, minPrice, maxPrice, minStock, maxResults,
+                        category, publisher, excludeAuthors, excludePublishers, semanticQuery), ct);
 
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             })
             .WithName("SearchStorefrontProducts")
             .MapToApiVersion(1, 0)
-            .Produces<FeatureListResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductItem>>()
+            .Produces<FeatureObjectResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductsResponse>>()
             .AllowAnonymous();
 
         return group;

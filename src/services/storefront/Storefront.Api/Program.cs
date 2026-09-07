@@ -11,6 +11,11 @@ builder.Services.AddMarten(opts =>
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
             configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
 
+        // 067: pgvector extension'ı şemaya ekler + Npgsql vector type handler kaydeder. Embedding JSONB
+        // içinde float[] yaşar; kNN sorgusu (data->>'DescriptionEmbedding')::vector cast'iyle koşar.
+        // VectorOn/HNSW bilinçli YOK (research R7): 20k satırda exact scan ms mertebesi, index'e gerek yok.
+        opts.UsePgVector();
+
         // Rich aggregate degil (invariant tasimaz); ProductId, Marten Id'si. Tek composite satir.
         // Optimistic concurrency: farkli kaynaklarin ayni satira eszamanli yazmasinda lost-update
         // olmaz — cakisan handler ConcurrencyException alir, Wolverine retry'da taze yukleyip uygular.
@@ -19,6 +24,12 @@ builder.Services.AddMarten(opts =>
         // 054: kullanıcı satın-alma birikimi (kişisel feed sinyali). PK = "{userId:N}:{productId:N}"
         // (idempotent upsert); feed sorgusunun tek erişim yolu UserId — index onun için.
         opts.Schema.For<Storefront.Api.Domains.UserPurchase.UserPurchase>().Index(x => x.UserId);
+
+        // 067: anlamsal temsil AYRI dokümanda (view satırı şişmez; tam-satır okuma yolları etkilenmez).
+        // Optimistic concurrency bilinçli YOK: handler/backfill yarışında son yazan kazanır (aynı metnin
+        // temsili — içerik eşdeğer). Görünürlük StorefrontView satılabilirlik filtresinde (FR-007).
+        opts.Schema.For<Storefront.Api.Domains.StorefrontView.ProductDescriptionEmbedding>()
+            .Identity(x => x.ProductId);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -79,6 +90,26 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     AuthorizationScopes.StorefrontRead);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
+
+// 067: OpenAI embedding config — fail-fast (ApiKey yoksa açılmaz; ChatAgent emsali). Tüketici düz T enjekte eder.
+builder.Services.AddOptions<OpenAiOption>().BindConfiguration("OpenAI")
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<OpenAiOption>>().Value);
+builder.Services.AddOptions<SemanticSearchOption>().BindConfiguration(nameof(SemanticSearchOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<SemanticSearchOption>>().Value);
+
+// 067: embedding üretici — düz deterministik API çağrısı ("agent" davranışı değil; ayrı worker yok).
+builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+{
+    var openAi = sp.GetRequiredService<OpenAiOption>();
+    return new OpenAI.OpenAIClient(openAi.ApiKey)
+        .GetEmbeddingClient(openAi.EmbeddingModel)
+        .AsIEmbeddingGenerator();
+});
+
+// 067: geçmiş katalog backfill'i — her açılışta idempotent tarama (FR-008); iş yoksa no-op.
+builder.Services.AddHostedService<EmbeddingBackfillService>();
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
