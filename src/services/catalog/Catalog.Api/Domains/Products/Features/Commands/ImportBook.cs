@@ -87,8 +87,9 @@ public static class ImportBook
             {
                 // Yayınlanan kitap omurgayı besler: Stock ilk OnHand + Storefront vitrin satırı.
                 await bus.PublishAsync(new IntegrationEvents.ProductAdded(cmd.Isbn, product.Id, InitialStock));
+                // 067: Description event'e AKAR (eski hardcode "" bug'ı) — Storefront anlamsal temsil buradan beslenir.
                 await bus.PublishAsync(new IntegrationEvents.ProductChangedEvent(
-                    product.Id, product.Name, "", product.Price.Amount,
+                    product.Id, product.Name, product.FullDescription, product.Price.Amount,
                     authors.Select(a => new IntegrationEvents.AuthorRef(a.Id, a.Name)).ToList(),
                     publisher.Id, publisher.Name, leaf.Id, leaf.Name,
                     product.ImageUrl, IsDeleted: false));

@@ -1,15 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-    </PropertyGroup>
+      <UserSecretsId>a8c8d0c3-cbe9-4c83-9da9-3aeada9a251c</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" />
         <PackageReference Include="Marten" />
         <PackageReference Include="Marten.Newtonsoft" />
+        <PackageReference Include="Marten.PgVector" />
+        <PackageReference Include="Pgvector" />
+        <PackageReference Include="Microsoft.Extensions.AI" />
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="WolverineFx" />
         <PackageReference Include="WolverineFx.RuntimeCompilation" />

@@ -36,7 +36,12 @@ public sealed class BookImportHostedService(
         // 20k ardışık get-or-create her açılışta tekrarlanmasın (dev-döngüsü hızlanır). Eksik/ilk seed → çalışır.
         var session = scope.ServiceProvider.GetRequiredService<IQuerySession>();
         var existing = await session.Query<Product>().CountAsync(cancellationToken);
-        if (existing >= books.Count)
+        // 067: dosya açıklama taşıyor ama DB'de hiç açıklama yoksa re-run gerekir (description-wiring
+        // sonrası bir kerelik yakalama; re-run idempotent upsert, açıklamaları tazeler).
+        var fileHasDescriptions = books.Any(b => !string.IsNullOrWhiteSpace(b.Description));
+        var dbHasDescriptions = await session.Query<Product>()
+            .AnyAsync(p => p.FullDescription != string.Empty, cancellationToken);
+        if (existing >= books.Count && (!fileHasDescriptions || dbHasDescriptions))
         {
             logger.LogInformation("Kitap import atlandı: zaten seed'li ({Existing} ürün ≥ {Total} kitap)",
                 existing, books.Count);

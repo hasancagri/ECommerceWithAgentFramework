@@ -42,6 +42,10 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 9. **Yalnız YAYINLANAN üründe Stock'a bağ kurulur.** Barkod→ürün         `(ProductAdded)`
    eşlemesi + ilk OnHand yazılır (taslak = event yok).
 
+10. **Keşif envanteri agent'a sunulur.** Yayındaki ürünlerde fiilen     `(ListCategoriesForAgent,`
+   geçen kategori (üst-kategori ağacıyla), yazar ve yayınevi            ` ListAuthorsForAgent,`
+   listeleri; yayında olmayanın verisi sızmaz.                          ` ListPublishersForAgent)`
+
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Barkod = kimlik.** Ürün GTIN'iyle bulunur; aynı barkod tek ürüne düşer.
