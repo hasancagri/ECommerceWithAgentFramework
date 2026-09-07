@@ -29,10 +29,10 @@ kişisel feed'i vitrine sunar.
 9. **Facet seçenekleri satılabilir satırlardan türetilir** (cache'li).  `(GetStorefrontFilterOptions)`
 10. **Varyant ailesi + filtre araması sunulur.** Aile eksenleri;         `(GetProductFamily,`
    yazar/fiyat/stok filtresi (Name ASC, deterministik).                 ` SearchStorefrontProductsForAgent)`
-11. **Keşif envanteri + anlamsal arama sunulur.** Kategori/yazar/       `(ListCategoriesForAgent,`
-    yayınevi listeleri satılabilir kümeden; temalı sorgu yapısal        ` ListAuthorsForAgent,`
-    filtre SONRASI kNN sıralar; "buna benzer" ürünün kendi              ` ListPublishersForAgent,`
-    temsiliyle koşar; eşik altı sonuç = "bulunamadı".                   ` FindSimilarBooksForAgent)`
+11. **Anlamsal arama + benzerlik sunulur.** Temalı sorgu yapısal       `(SearchStorefrontProductsForAgent,`
+    filtre SONRASI kNN sıralar; "buna benzer" ürünün kendi              ` FindSimilarBooksForAgent)`
+    temsiliyle koşar; eşik altı sonuç = "bulunamadı". Keşif
+    envanteri (kategori/yazar/yayınevi listeleri) Catalog'dadır.
 12. **Tamamlanan sipariş satın-alma kaydına döner.** Kalem başına        `(OrderCompleted`
    kullanıcı+ürün satırı; tekrar teslim/alım aynı satır (idempotent).    ` → UserPurchase)`
 13. **Kişisel feed sunulur.** Satın alınan kitapların kategori+yazar    `(GetPersonalFeed`
