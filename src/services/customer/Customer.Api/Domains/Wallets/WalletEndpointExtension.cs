@@ -8,9 +8,6 @@ public static class WalletEndpointExtension
             .WithTags("Cards")
             .WithApiVersionSet(apiVersionSet)
             .GetCardsGroupItemEndpoint()
-            .AddCardGroupItemEndpoint()
-            .DeleteCardGroupItemEndpoint()
-            .SetDefaultCardGroupItemEndpoint()
             .RequireAuthorization();
     }
 

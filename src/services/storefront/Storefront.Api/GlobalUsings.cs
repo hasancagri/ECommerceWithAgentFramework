@@ -15,7 +15,6 @@ global using PagedList.Core;
 global using Shared;
 global using Storefront.Api.Constants;
 global using Storefront.Api.Dependencies;
-global using Storefront.Api.Domains.StorefrontView.Features.Queries;
 global using Storefront.Api.Domains.StorefrontView.Features.Agents;
 global using Storefront.Api.Domains.StorefrontView;
 global using System.Reflection;

@@ -1,8 +1,8 @@
 # Storefront — Domain Süreci
 
 **BC ne yapar:** Catalog+Stock+Reviews+Order'dan akan **şişman event'leri** ürün-anahtarlı tek satırda
-(composite read-model) toplar; listeyi, facet'i, varyant ailesini, sipariş-temelli kişisel feed'i ve
-asistana açık **tek serbest-sorgu kapısını** vitrine sunar.
+(composite read-model) toplar; vitrini asistana açık **tek serbest-sorgu kapısından** sunar. Müşteri
+REST okuma yüzeyi (liste/facet/aile/harf dizini/feed) söküldü — okuma yolu asistandır.
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
@@ -24,23 +24,18 @@ asistana açık **tek serbest-sorgu kapısını** vitrine sunar.
    temizler. Satır yoksa da kısmi satır yaratılır.                       ` → ApplyReviewSummary)`
 7. **Satır her kaynak için upsert'lenir.** Herhangi bir kaynak          `(StorefrontView.Create)`
    satırı doğurabilir; her kaynak YALNIZ kendi alanını yazar.
-8. **Ana sayfa/liste TEK okumayla dolar.** Dolu-satır filtresi +        `(GetStorefrontProductList)`
-   spec kesişimi; aile başına tek temsilci + kart-bazlı sayfalama.
-9. **Facet seçenekleri satılabilir satırlardan türetilir** (cache'li).  `(GetStorefrontFilterOptions)`
-10. **Varyant ailesi sunulur.** Aile eksenleri ve üyeler.               `(GetProductFamily)`
-11. **Asistan sorusu TEK sorgu kapısından yanıtlanır.** Asistanın        `(AgentSqlGuard`
-    kurduğu salt-okur sorgu önce bekçiden geçer (yazma/yüzey-dışı        ` → QueryStorefrontForAgent`
-    istek ÇALIŞMADAN reddedilir), anlamsal metin sistemce temsile        ` → AgentQueryLog)`
-    çevrilir, sorgu yalnız satılabilir yüzeyde koşar ve ret dahil
-    her çağrı iz bırakır. Temalı arama + benzerlik de bu kapıdandır;
-    eşik altı sonuç = "bulunamadı". Keşif envanteri Catalog'dadır.
-12. **Satılabilir yüzey tek ilişki olarak kurulur.** Açılışta           `(StorefrontSellableSchema`
-    satılabilirlik filtresi gömülü görünüm + tek-yetkili kısıtlı         ` → AgentQuerySurfaceBootstrap)`
-    rol tazelenir; yayından kalkan ürün yüzeyde HİÇ var olmaz.
-13. **Tamamlanan sipariş satın-alma kaydına döner.** Kalem başına        `(OrderCompleted`
-   kullanıcı+ürün satırı; tekrar teslim/alım aynı satır (idempotent).    ` → UserPurchase)`
-14. **Kişisel feed sunulur.** Satın alınan kitapların kategori+yazar    `(GetPersonalFeed`
-    sinyalinden, alınmamış (aile dahil) kitaplar; yazar > kategori.      ` → RankFeed)`
+8. **Asistan sorusu TEK sorgu kapısından yanıtlanır.** Asistanın        `(AgentSqlGuard`
+   kurduğu salt-okur sorgu önce bekçiden geçer (yazma/yüzey-dışı         ` → QueryStorefrontForAgent`
+   istek ÇALIŞMADAN reddedilir), anlamsal metin sistemce temsile         ` → AgentQueryLog)`
+   çevrilir, sorgu yalnız satılabilir yüzeyde koşar ve ret dahil
+   her çağrı iz bırakır. Temalı arama + benzerlik de bu kapıdandır;
+   eşik altı sonuç = "bulunamadı". Keşif envanteri Catalog'dadır.
+9. **Satılabilir yüzey tek ilişki olarak kurulur.** Açılışta            `(StorefrontSellableSchema`
+   satılabilirlik filtresi gömülü görünüm + tek-yetkili kısıtlı          ` → AgentQuerySurfaceBootstrap)`
+   rol tazelenir; yayından kalkan ürün yüzeyde HİÇ var olmaz.
+10. **Tamamlanan sipariş satın-alma kaydına döner.** Kalem başına       `(OrderCompleted`
+    kullanıcı+ürün satırı; tekrar teslim/alım aynı satır (idempotent).   ` → UserPurchase)`
+    Birikim kişisel bağlam içindir; sorgu yüzeyinin yapısal DIŞIDIR.
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
@@ -51,7 +46,6 @@ asistana açık **tek serbest-sorgu kapısını** vitrine sunar.
 - **Anlamsal temsil yaşam-döngüsü taşımaz.** Ayrı yol-arkadaşı satırda yaşar; görünürlük HER ZAMAN satılabilirlik filtresinden gelir (yayından kalkan ürün temsili dursa da görünmez).
 - **Alakasızlık eşiği dürüstlük kuralıdır.** Eşik altı benzerlik "bulunamadı"dır; en-yakın-ama-alakasız sonuç asla "benzer" diye sunulmaz.
 - **Serbest sorgu yalnız satılabilir yüzeyi görür ve iz bırakır.** Kapı salt-okurdur; satın-alma kayıtları ve yayından kalkan ürün yüzeyin yapısal DIŞIDIR; ret dahil her sorgu kayda geçer (`AgentQueryLog`).
-- **Kişisel feed kullanıcıya bağlı tek okuma yüzeyidir.** Kimlik token'dan; sinyalsiz kullanıcı boş liste alır (fallback vitrin YOK); satın alınan ürün ve varyant ailesi asla önerilmez.
 
 ## Sınır (bu BC'nin dokunmadığı)
 

@@ -3,7 +3,7 @@ namespace Basket.Api.Domains.Baskets;
 public static class BasketEndpointExtension
 {
     // 057: sepet uclari anonim erisilebilir — grup auth'u yok. Sahip kimligi token'dan (sub)
-    // ya da WebApp'in tasidigi X-Anonymous-Id header'indan cozulur. Merge ucu istisna: token ister.
+    // ya da WebApp'in tasidigi X-Anonymous-Id header'indan cozulur.
     public const string AnonymousIdHeader = "X-Anonymous-Id";
 
     public static void AddBasketGroupEndpointExtension(this WebApplication app, ApiVersionSet apiVersionSet)
@@ -14,8 +14,7 @@ public static class BasketEndpointExtension
             .AddBasketItemGroupItemEndpoint()
             .SetBasketItemQuantityGroupItemEndpoint()
             .DeleteBasketItemGroupItemEndpoint()
-            .GetBasketGroupItemEndpoint()
-            .MergeBasketGroupItemEndpoint();
+            .GetBasketGroupItemEndpoint();
     }
 
     // Sepet sahibi: login ise sub claim'i, degilse header'daki anonim Guid; ikisi de yoksa Guid.Empty.

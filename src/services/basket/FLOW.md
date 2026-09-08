@@ -15,17 +15,15 @@ TUTMAZ ve süre İŞLETMEZ (056); stok gerçeği checkout anındadır.
    aşılamaz.
 3. **Satır elle silinir.** Yalnız sepet belgesi değişir.                  `(DeleteBasketItemCommandHandler`
                                                                           ` → Basket.RemoveItem)`
-4. **Login'de anonim sepet hesaba taşınır.** Kalemler tek sepette        `(MergeBasketCommandHandler`
-   toplanır; ortak üründe adetler toplanıp tavana sabitlenir; anonim      ` → Basket.MergeFrom)`
-   sepet silinir (ikinci merge sessiz no-op).
-5. **Checkout sepeti boşaltır (hand-off).** Orchestrator pivot-sonrası   `(BasketEventHandlers`
+4. **Checkout sepeti boşaltır (hand-off).** Orchestrator pivot-sonrası   `(BasketEventHandlers`
    broker komutuyla çağırır; sepet silinir (idempotent).                  ` → ClearBasketByCheckoutCommandHandler)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Sepet kalıcıdır (056).** Zamana bağlı hiçbir üye/temizlik yok; terk edilmiş sepet süresiz durur.
 - **Anonim sahiplik meşrudur (057).** Ekleme/okuma/adet/silme kimlik doğrulama İSTEMEZ; sahip tahmin
-  edilemez Guid'dir (token `sub` ya da anonim kimlik). Yalnız merge login ister; yön tek: anonim → hesap.
+  edilemez Guid'dir (token `sub` ya da anonim kimlik). Login-merge yüzeyi 066 sonrası söküldü;
+  `Basket.MergeFrom` davranışı domain'de durur, yüzey açılırsa buradan döner.
 - **Sepet stok tutmaz (056).** Ekleme/adet/silme Stock'a gitmez; yetersizlik checkout'ta `CommitStock` reddeder, saga telafi eder.
 - **Sabit üst sınır otoriter.** Satır adedi `Basket.MaxItemQuantity` (5) üstüne çıkamaz — UI/API/agent farketmez.
 - **Fiyat snapshot'tır.** Satır fiyatı ekleme anındaki vitrin fiyatıdır; sepette güncellenmez.

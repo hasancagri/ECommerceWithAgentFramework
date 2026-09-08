@@ -1,36 +1,34 @@
 # Payment — Domain Süreci
 
-**BC ne yapar:** Checkout sırasında bir tutar için **maket ödeme kaydı** üretir. Kart bilgisi
-alınır ama YOK sayılır; yalnız `Amount` anlamlıdır. Ödeme daima Success döner, kanıt siparişe verilir.
+**BC ne yapar:** Checkout sırasında bir tutar için **maket ödeme kaydı** üretir. Kart alanı hiç
+taşımaz; yalnız `Amount` anlamlıdır. Tek-faz Charge daima Success döner, kanıt saga'ya verilir.
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
 
 ## Süreç
 
-1. **Checkout ödemeyi önce ister.** WebApp, sipariş           `(CreatePaymentCommand)`
-   yaratmadan ÖNCE kullanıcı token'ıyla REST çağrısı yapar.
-2. **Kart alanları gelir ama düşer.** İstek kart no/ad/tarih   `(CreatePaymentCommandHandler)`
-   taşır (PAN yok, son-4 + boş CVV); handler yalnız `Amount` okur.
-3. **Pending ödeme oluşur, tutar doğrulanır.** `UserId` boş    `(Payment.Create)`
-   ya da tutar ≤ 0 ise Result hatası; aksi halde Pending kayıt.
-4. **Maket kabul: durum anında Success.** Dış PSP/otorizasyon  `(SetStatus → PaymentStatus)`
-   yok; kayıt koşulsuz başarılı işaretlenir, saklanır.
-5. **Ödeme kimliği çağırana döner.** `Id` yanıt olarak verilir; `(CreatePaymentResponse)`
-   WebApp bunu siparişe `paymentId` olarak taşır (idempotency).
-6. **Kullanıcı ödemelerini okur.** Kişi kendi geçmişini        `(GetAllPaymentsByUserIdQuery)`
-   listeler; agent için MCP tool'u aynı slice'ı sarar.         `(GetMyPaymentsMcpTool)`
+1. **Checkout ödemeyi broker'la ister.** Orchestrator pivot       `(ChargePaymentCommand`
+   adımında komutu kuyruktan gönderir; REST yazma ucu YOK.         ` → PaymentEventHandlers)`
+2. **Aynı checkout ikinci kez ödeme yaratamaz.** Var olan kayıt
+   aynı `PaymentId` ile döner (idempotent).
+3. **Tutar doğrulanır, ödeme tek fazda çekilir.** `UserId` boş     `(Payment.Charge)`
+   ya da tutar ≤ 0 ise Result hatası; maket kabul — koşulsuz Success.
+4. **Sonuç reply kuyruğuna yayınlanır.** Başarı ya da kalıcı hata  `(PaymentCharged)`
+   sınıfı döner; saga pivot kararını bununla verir.
+5. **Kullanıcı ödemelerini okur.** Kişi kendi geçmişini            `(GetAllPaymentsByUserIdQuery)`
+   listeler; agent için MCP tool'u aynı slice'ı sarar.             `(GetMyPaymentsMcpTool)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
-- **Yalnız `Amount` gerçektir.** Kart alanları kontrat gereği alınır, domain'e girmez (PAN asla saklanmaz).
-- **Maket = hep başarı.** Otorizasyon/red/iade yok; kayıt Pending doğar, hemen `PaymentStatus.Success` olur.
+- **Kart alanı yoktur.** Kontrat yalnız `Amount` taşır; PAN/kart verisi bu BC'ye hiç girmez.
+- **Maket = hep başarı.** Otorizasyon/red/iade yok; `Charge` kaydı koşulsuz Success üretir.
 - **Zengin aggregate (İLKE II).** `Payment` `AggregateRoot`'tan türer; fabrika + mutator Result döner, anemik değil.
 - **İzole BC (İLKE I).** Kendi `paymentDb`'si; event yaymaz, başka BC'ye erişmez. Sipariş bağı çağıranda kurulur.
 - **Scope yetki (İLKE V).** Yazma `payment.write`, okuma `payment.read` scope'uyla korunur.
 
 ## Sınır (bu BC'nin dokunmadığı)
 
-Gerçek çekim/taksit/iade, kart vault (Customer/PaymentGateway'de), sipariş/stok yok. CheckoutSaga bu
-BC'yi çağırmaz — ödeme sipariş yaratımından önce WebApp tarafından tetiklenir. Yapısal PSP entegrasyonu
-ayrı (Order BC'nin dış `PaymentGateway` istemcisi, 039).
+Gerçek çekim/taksit/iade, kart vault (Customer/PaymentGateway'de), sipariş/stok yok. Çekim YALNIZ
+checkout broker komutuyla tetiklenir — kullanıcıya açık yazma ucu yok. Yapısal PSP entegrasyonu
+ayrı (Order BC'nin dış `PaymentGateway` istemcisi, 039 chat yolu).
