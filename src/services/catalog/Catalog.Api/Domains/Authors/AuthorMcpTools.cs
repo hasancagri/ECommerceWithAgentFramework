@@ -5,7 +5,7 @@ namespace Catalog.Api.Domains.Authors;
 [McpServerToolType]
 public static class ListAuthorsMcpTool
 {
-    [McpServerTool(Name = "list_authors")]
+    [McpServerTool(Name = Shared.CatalogTools.ListAuthors)]
     [Description("Magazadaki yazarlari listeler (yalniz yayinda kitabi olanlar), kitap sayisi cok olan " +
                  "once. totalCount toplam yazar sayisidir; liste kirpilmis olabilir — daraltmak icin " +
                  "search ile ada gore filtrele.")]

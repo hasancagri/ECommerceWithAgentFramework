@@ -177,7 +177,7 @@ var adminAgent = builder.AddAIAgent("admin", (sp, name) =>
     var instructions = dropShop is null
         ? Prompts.AdminOnboardingInstructions
         : $"{Prompts.AdminOnboardingInstructions}\n\n" +
-          "submit_registration çağrısında bu mağazanın başvuru alanlarını kullan:\n" +
+          $"{OnboardingTools.SubmitRegistration} çağrısında bu mağazanın başvuru alanlarını kullan:\n" +
           $"- type: {onboarding.Type}\n" +
           $"- name: {onboarding.Name}\n" +
           $"- email: {onboarding.Email}\n" +
@@ -191,7 +191,7 @@ var adminAgent = builder.AddAIAgent("admin", (sp, name) =>
           $"- taxNumber: {onboarding.TaxNumber}\n" +
           $"- legalCompanyTitle: {onboarding.LegalCompanyTitle}\n" +
           "Boş görünen opsiyonel alanları çağrıya HİÇ gönderme (uydurma değer üretme).\n" +
-          $"registration_status sorgusunu bu mağazanın e-postasıyla ({onboarding.Email}) yap.";
+          $"{OnboardingTools.RegistrationStatus} sorgusunu bu mağazanın e-postasıyla ({onboarding.Email}) yap.";
 
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), instructions, name, null, tools);
 }, ServiceLifetime.Singleton);

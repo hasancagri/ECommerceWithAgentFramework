@@ -4,7 +4,7 @@ namespace Basket.Api.Domains.Baskets;
 [McpServerToolType]
 public static class UpdateBasketQuantityMcpTool
 {
-    [McpServerTool(Name = "update_basket_quantity")]
+    [McpServerTool(Name = Shared.BasketTools.UpdateBasketQuantity)]
     [Description(
         "Giris yapmis kullanicinin sepetindeki bir urunun adedini belirtilen mutlak degere gunceller. " +
         "productId = get_basket'ten donen urun kimligi; quantity 0 veya altiysa urun sepetten cikarilir " +
@@ -26,7 +26,7 @@ public static class UpdateBasketQuantityMcpTool
 [McpServerToolType]
 public static class AddToCartMcpTool
 {
-    [McpServerTool(Name = "add_to_cart")]
+    [McpServerTool(Name = Shared.BasketTools.AddToCart)]
     [Description("Giris yapmis kullanicinin sepetine bir urun ekler.")]
     public static Task<FeatureObjectResultModel<AddBasketItemForAgent.AddBasketItemResponse>> AddToCartAsync(
         [Description("Sepete eklenecek urunun Id'si")] Guid productId,
@@ -47,7 +47,7 @@ public static class AddToCartMcpTool
 [McpServerToolType]
 public static class GetBasketMcpTool
 {
-    [McpServerTool(Name = "get_basket")]
+    [McpServerTool(Name = Shared.BasketTools.GetBasket)]
     [Description("Giris yapmis kullanicinin sepetini (urunler, toplam fiyat) doner.")]
     public static Task<FeatureObjectResultModel<GetBasketForAgent.GetBasketResponse>> GetBasketAsync(
         IMessageBus bus,
@@ -64,7 +64,7 @@ public static class GetBasketMcpTool
 [McpServerToolType]
 public static class RemoveBasketItemMcpTool
 {
-    [McpServerTool(Name = "remove_basket_item")]
+    [McpServerTool(Name = Shared.BasketTools.RemoveBasketItem)]
     [Description("Sepetten verilen Id'ye sahip urunu cikarir.")]
     public static Task<FeatureObjectResultModel<DeleteBasketItemForAgent.DeleteBasketItemResponse>> RemoveBasketItemAsync(
         [Description("Sepetten cikarilacak urunun (sepet item) Id'si")] Guid itemId,

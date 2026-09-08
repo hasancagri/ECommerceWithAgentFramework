@@ -12,7 +12,7 @@ namespace Mail.Mcp;
 [McpServerToolType]
 public static class MailTools
 {
-    [McpServerTool(Name = "send_mail")]
+    [McpServerTool(Name = Shared.MailTools.SendMail)]
     [Description("Bir e-posta gonderir. Basarida 'sent:<messageId>' doner; hatada hata firlatir.")]
     public static async Task<string> SendMailAsync(
         [Description("Alici e-posta adresi")] string to,

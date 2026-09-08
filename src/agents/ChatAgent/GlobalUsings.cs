@@ -14,3 +14,4 @@ global using Microsoft.Agents.AI.Hosting;
 global using Microsoft.Extensions.Options;
 global using OpenAI;
 global using System.Net.Http.Headers;
+global using Shared;

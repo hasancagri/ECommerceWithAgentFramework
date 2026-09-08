@@ -6,7 +6,7 @@ namespace Storefront.Api.Domains.StorefrontView;
 [McpServerToolType]
 public static class QueryStorefrontMcpTool
 {
-    [McpServerTool(Name = "query_storefront")]
+    [McpServerTool(Name = Shared.StorefrontTools.QueryStorefront)]
     [Description("Kitap magazasi vitrininde SERBEST salt-okur SQL sorgusu calistirir (Postgres). " +
                  "TEK ilişki: storefront_sellable (yalniz satistaki kitaplar). Kolonlar: " +
                  "product_id uuid, name text, description text, authors text[] (yazar adlari; " +

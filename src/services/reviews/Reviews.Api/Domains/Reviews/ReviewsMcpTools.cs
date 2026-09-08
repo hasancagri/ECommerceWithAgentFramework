@@ -10,7 +10,7 @@ namespace Reviews.Api.Domains.Reviews;
 [McpServerToolType]
 public static class GetReviewsMcpTool
 {
-    [McpServerTool(Name = "get_reviews")]
+    [McpServerTool(Name = Shared.ReviewsTools.GetReviews)]
     [Description(
         "Bir urunun gorunur yorumlarini (maskeli ad, puan, metin, tarih) en yeni ustte listeler. " +
         "productId = search_products/get_product'tan donen urun kimligi. page opsiyonel (varsayilan 1).")]
@@ -26,7 +26,7 @@ public static class GetReviewsMcpTool
 [McpServerToolType]
 public static class CheckReviewEligibilityMcpTool
 {
-    [McpServerTool(Name = "check_review_eligibility")]
+    [McpServerTool(Name = Shared.ReviewsTools.CheckReviewEligibility)]
     [Description(
         "Giris yapmis kullanicinin bu urune yorum yapip yapamayacagini (satin-alma sarti + tek-yorum) " +
         "kontrol eder. productId = urun kimligi. canReview=false ise reasonCode nedeni verir.")]
@@ -46,7 +46,7 @@ public static class CheckReviewEligibilityMcpTool
 [McpServerToolType]
 public static class SubmitReviewMcpTool
 {
-    [McpServerTool(Name = "submit_review")]
+    [McpServerTool(Name = Shared.ReviewsTools.SubmitReview)]
     [Description(
         "Giris yapmis kullanicinin satin aldigi bir urune yorum + puan birakir (urun basina tek yorum). " +
         "productId = urun kimligi; rating 1-5; text opsiyonel yorum metni. Gorunen ad kullanicinin " +

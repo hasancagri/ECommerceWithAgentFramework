@@ -4,7 +4,7 @@ namespace Catalog.Api.Domains.Publishers;
 [McpServerToolType]
 public static class ListPublishersMcpTool
 {
-    [McpServerTool(Name = "list_publishers")]
+    [McpServerTool(Name = Shared.CatalogTools.ListPublishers)]
     [Description("Magazadaki yayinevlerini listeler (yalniz yayinda kitabi olanlar), kitap sayisi cok " +
                  "olan once. totalCount toplam yayinevi sayisidir; daraltmak icin search kullan.")]
     public static Task<FeatureObjectResultModel<Features.Agents.ListPublishersForAgent.ListPublishersResponse>> ListPublishersAsync(

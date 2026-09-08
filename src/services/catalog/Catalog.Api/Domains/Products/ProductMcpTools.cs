@@ -7,7 +7,7 @@ namespace Catalog.Api.Domains.Products;
 [McpServerToolType]
 public static class GetPriceHistoryMcpTool
 {
-    [McpServerTool(Name = "get_price_history")]
+    [McpServerTool(Name = Shared.CatalogTools.GetPriceHistory)]
     [Description(
         "Bir urunun gecmis fiyat degisikliklerini (eski fiyat, yeni fiyat, tarih) kronolojik listeler. " +
         "productId = search_products/get_product'tan donen urun kimligi.")]
@@ -22,7 +22,7 @@ public static class GetPriceHistoryMcpTool
 [McpServerToolType]
 public static class GetProductMcpTool
 {
-    [McpServerTool(Name = "get_product")]
+    [McpServerTool(Name = Shared.CatalogTools.GetProduct)]
     [Description("Sepete ekleme icin: urunu isme gore arar ve add_to_cart'a yetecek bilgiyi (id, ad, fiyat, gorsel) doner.")]
     public static Task<FeatureObjectResultModel<GetProductForAgent.GetProductResponse>> GetProductAsync(
         [Description("Aranacak urun adi (kismi eslesme yeterli)")] string name,
@@ -35,7 +35,7 @@ public static class GetProductMcpTool
 [McpServerToolType]
 public static class GetProductByNameMcpTool
 {
-    [McpServerTool(Name = "search_products")]
+    [McpServerTool(Name = Shared.CatalogTools.SearchProducts)]
     [Description("Katalogda isme gore en iyi eslesen urunun productId ve adini doner (link YOK — magaza " +
                  "ekransiz). Kategori ve/veya yazar adiyla daraltilabilir.")]
     public static Task<FeatureObjectResultModel<SearchProductsForAgent.SearchProductResponse>> SearchProductsAsync(

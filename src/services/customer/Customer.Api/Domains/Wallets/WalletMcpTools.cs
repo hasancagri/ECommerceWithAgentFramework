@@ -6,7 +6,7 @@ namespace Customer.Api.Domains.Wallets;
 [McpServerToolType]
 public static class ListCardsMcpTool
 {
-    [McpServerTool(Name = "list_cards")]
+    [McpServerTool(Name = Shared.CustomerTools.ListCards)]
     [Description("Giris yapmis kullanicinin kayitli kartlarini listeler (yalniz marka + son 4 hane + son-kullanma + etiket; PAN/CVV/token asla).")]
     public static Task<FeatureListResultModel<GetCardsForAgent.CardView>> ListCardsAsync(
         IMessageBus bus,
@@ -25,7 +25,7 @@ public static class ListCardsMcpTool
 [McpServerToolType]
 public static class DefaultCardBinMcpTool
 {
-    [McpServerTool(Name = "get_default_card_bin")]
+    [McpServerTool(Name = Shared.CustomerTools.GetDefaultCardBin)]
     [Description("Kullanicinin varsayilan kartinin BIN'ini (ilk 6 hane, banka tespiti icin) + marka + son 4 hane doner. Taksit sorgusunda kullanilir. PAN/CVV/token asla donmez. Varsayilan kart yoksa bulunamaz.")]
     public static Task<FeatureObjectResultModel<GetDefaultCardBinForAgent.DefaultCardBinView>> GetDefaultCardBinAsync(
         IMessageBus bus,
@@ -48,7 +48,7 @@ public static class DefaultCardBinMcpTool
 [McpServerToolType]
 public static class PaymentContextMcpTool
 {
-    [McpServerTool(Name = "get_payment_context")]
+    [McpServerTool(Name = Shared.CustomerTools.GetPaymentContext)]
     [Description("Odeme (taksit sorgusu/cekim) icin baglami doner: gateway merchantId + secilen ya da " +
                  "varsayilan kartin vault token'i + alici (buyer) bilgisi (ad, soyad, e-posta, GSM, " +
                  "kayitli varsayilan adres). cardId verilirse o kart, verilmezse varsayilan kart secilir. " +

@@ -11,7 +11,7 @@ public static class LogoutMcpTool
         public string Message { get; set; } = default!;
     }
 
-    [McpServerTool(Name = "logout")]
+    [McpServerTool(Name = Shared.AuthTools.Logout)]
     [Description(
         "Kullanici cikis yapmak/baglantiyi kesmek istediginde bu agent'in magaza erisim yetkisini iptal " +
         "eder. Sonrasinda islem yapmak icin yeniden baglanti ve onay gerekir. Yanittaki 'message' alanini " +
