@@ -102,8 +102,16 @@ builder.Services.AddAuthentication(configureOption =>
         options.Scope.Add("email");
         options.Scope.Add("roles");
         options.Scope.Add("offline_access"); // refresh token
-        // 066: müşteri alışveriş scope'ları söküldü (basket/order/payment/customer/reviews/library/
-        // storefront) — o BFF istemcileri kaldırıldı; müşteri işlemleri artık yalnız agent/MCP yolunda.
+        // 066 scope kırpması KISMEN geri alındı: BFF ekran istemcileri yok ama login'li CHAT
+        // (assistant agent'a user-token forward) müşteri MCP'lerine bu token'la gider; scope yoksa
+        // token aud'suz kalır, basket/order/payment/customer MCP transport'u 401 döner (canlı bulgu,
+        // 2026-09-08). Assistant tool seti kadar geri eklendi; reviews/library hâlâ yok (tool da yok).
+        options.Scope.Add("basket.read");
+        options.Scope.Add("basket.write");
+        options.Scope.Add("order.read");
+        options.Scope.Add("order.write");
+        options.Scope.Add("payment.read");
+        options.Scope.Add("customer.read");
         // 033: merchant kimligi ekrani. Talep herkese, verilme role bagli (030): granted =
         // requested ∩ rol demeti — customer demetinde yok, yalniz admin token'ina biner.
         options.Scope.Add("merchant.credentials.write");

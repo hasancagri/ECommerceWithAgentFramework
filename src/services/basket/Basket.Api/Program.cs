@@ -1,4 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 builder.AddOpenApiDocumentation();
 
 var basketDb = builder.Configuration.GetConnectionString("basketDb")!;
@@ -81,6 +82,8 @@ builder.Services
     .WithToolsFromAssembly();
 
 var app = builder.Build();
+// AppHost WithHttpHealthCheck("/health") bu ucu yoklar (Development-only map).
+app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
 var apiVersionSet = app.NewApiVersionSet()

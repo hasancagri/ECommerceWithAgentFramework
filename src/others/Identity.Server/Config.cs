@@ -132,6 +132,17 @@ public static class Config
             // 053: ingest (sinyal yaz) + read (zevk profili oku) — ikisi de reco.trainer audience.
             Scopes = ["personalization.ingest", "personalization.read"],
         },
+        // ChatAgent açılış MCP tool keşfi m2m: 061 korumalı /mcp transport'ları kimlik ister; keşif
+        // (ListTools) bu istemciyle geçer. Tool ÇAĞRISI her zaman o anki kullanıcı token'ıyla gider
+        // (PerUserMcpTool) — bu token'la tool çalıştırılmaz; scope'lar audience üretimi için (salt-read).
+        new ClientSeed
+        {
+            ClientId = "chat-agent-discovery",
+            ClientSecret = "chat-agent-discovery-secret",
+            DisplayName = "ChatAgent MCP discovery (m2m)",
+            AllowClientCredentials = true,
+            Scopes = ["basket.read", "order.read", "payment.read", "customer.read"],
+        },
         // 050: çok-tedarikçi feed (Procurement/Supplier + eski ingestion-agent) söküldü — first-party
         // ürün-CRUD yazım yolu, ayrı m2m istemci gerektirmez.
         // WebApp (Razor Pages BFF): yalnız kullanıcı login'i (code+PKCE+refresh, confidential).

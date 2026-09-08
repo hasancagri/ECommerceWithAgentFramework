@@ -1,5 +1,6 @@
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 builder.AddOpenApiDocumentation();
 
 var paymentDb = builder.Configuration.GetConnectionString("paymentDb")!;
@@ -78,6 +79,8 @@ builder.Services
 builder.Services.AddApiKeyAuthentication(builder.Configuration);
 
 var app = builder.Build();
+// AppHost WithHttpHealthCheck("/health") bu ucu yoklar (Development-only map).
+app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
 var apiVersionSet = app.NewApiVersionSet()

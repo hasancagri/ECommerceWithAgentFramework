@@ -94,6 +94,16 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
 
 builder.Services.AddTransient<TokenInjectingHandler>();
 
+// Keşif makine kimliği (061 korumalı /mcp transport'ları): Identity adresi service discovery'den
+// (Options istisnası). Config veya adres yoksa null-option => keşif anonim kalır, korumalı
+// MCP'ler tool'suz atlanır (graceful-degrade; 401 artık retry'sız aninda atlanir).
+var discoveryAuth = builder.Configuration.GetSection("DiscoveryAuth").Get<DiscoveryAuthOption>();
+var identityUrl = builder.Configuration["services:identity-server:https:0"];
+if (discoveryAuth is not null && identityUrl is not null)
+    discoveryAuth.IdentityAddress = identityUrl;
+builder.Services.AddSingleton(new DiscoveryTokenSource(
+    string.IsNullOrEmpty(discoveryAuth?.IdentityAddress) ? null : discoveryAuth));
+
 // Iki auth davranisi, iki named-client (yapi tek; MCP hangisini istedigini ClientName ile secer):
 // WithToken -> TokenInjectingHandler kullanici token'ini forward eder (kendi server'larimiz).
 // NoToken   -> handler yok; token gitmez (dis MCP'ler, or. gmail'i dogrudan cagirirken).
@@ -159,7 +169,9 @@ var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 // acilir (graceful-degrade); prompt "kullanilamiyor" der. Singleton (framework agent'lari boot'ta yakalar).
 var adminAgent = builder.AddAIAgent("admin", (sp, name) =>
 {
-    var tools = sp.GetRequiredService<IMcpToolProvider>().CollectTools(adminAgentTools);
+    // Dış MCP (DropShop) Aspire boot yarışına dahil değil — retry bütçesi yok, tek deneme:
+    // gateway kapalıysa (dev'de olağan) startup'ı 60sn bekletmeden tool'suz açıl (graceful-degrade).
+    var tools = sp.GetRequiredService<IMcpToolProvider>().CollectTools(adminAgentTools, attempts: 1);
 
     // 029: alan seti gateway'in 023 Merchant sözleşmesi (tip + tip-uyum matrisi alanları).
     var instructions = dropShop is null

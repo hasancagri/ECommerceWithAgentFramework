@@ -1,4 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 builder.AddOpenApiDocumentation();
 
 var catalogDb = builder.Configuration.GetConnectionString("catalogDb")!;
@@ -111,6 +112,8 @@ builder.Services
 builder.Services.AddApiKeyAuthentication(builder.Configuration);
 
 var app = builder.Build();
+// AppHost WithHttpHealthCheck("/health") bu ucu yoklar (Development-only map).
+app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
 var apiVersionSet = app.NewApiVersionSet()
