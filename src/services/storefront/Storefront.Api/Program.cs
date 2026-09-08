@@ -30,6 +30,9 @@ builder.Services.AddMarten(opts =>
         // temsili — içerik eşdeğer). Görünürlük StorefrontView satılabilirlik filtresinde (FR-007).
         opts.Schema.For<Storefront.Api.Domains.StorefrontView.ProductDescriptionEmbedding>()
             .Identity(x => x.ProductId);
+
+        // 069: sorgu izi (ret dahil her query_storefront çağrısı bir satır; FR-006/SC-005).
+        opts.Schema.For<Storefront.Api.AgentSql.AgentQueryLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -95,9 +98,10 @@ builder.Services.AddAllDependencies();
 builder.Services.AddOptions<OpenAiOption>().BindConfiguration("OpenAI")
     .ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<OpenAiOption>>().Value);
-builder.Services.AddOptions<SemanticSearchOption>().BindConfiguration(nameof(SemanticSearchOption))
+// 069: SemanticSearchOption söküldü (eşik prompt kalıbında); backfill batch ayarı dar option'da.
+builder.Services.AddOptions<EmbeddingBackfillOption>().BindConfiguration(nameof(EmbeddingBackfillOption))
     .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<SemanticSearchOption>>().Value);
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<EmbeddingBackfillOption>>().Value);
 
 // 067: embedding üretici — düz deterministik API çağrısı ("agent" davranışı değil; ayrı worker yok).
 builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
@@ -110,6 +114,30 @@ builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp 
 
 // 067: geçmiş katalog backfill'i — her açılışta idempotent tarama (FR-008); iş yoksa no-op.
 builder.Services.AddHostedService<EmbeddingBackfillService>();
+
+// 069: serbest-sorgu kapısı ayarları (RolePassword user-secrets'tan; fail-fast).
+builder.Services.AddOptions<AgentQueryOption>().BindConfiguration(nameof(AgentQueryOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<AgentQueryOption>>().Value);
+
+// 069 R1: view + kısıtlı rol bootstrap'ı — AddMarten SONRASI kayıt şart (mt_doc tabloları önce kurulur).
+builder.Services.AddHostedService(sp => new Storefront.Api.AgentSql.AgentQuerySurfaceBootstrap(
+    storefrontDb,
+    sp.GetRequiredService<AgentQueryOption>(),
+    sp.GetRequiredService<ILogger<Storefront.Api.AgentSql.AgentQuerySurfaceBootstrap>>()));
+
+// 069 R2: kısıtlı bağlantı — storefrontDb conn-string'i rol kimliğiyle; TEK yetki view SELECT'i.
+builder.Services.AddSingleton(sp =>
+{
+    var opt = sp.GetRequiredService<AgentQueryOption>();
+    var csb = new Npgsql.NpgsqlConnectionStringBuilder(storefrontDb)
+    {
+        Username = opt.RoleName,
+        Password = opt.RolePassword
+    };
+    return new Storefront.Api.AgentSql.AgentQueryConnectionSource(
+        Npgsql.NpgsqlDataSource.Create(csb.ConnectionString));
+});
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)

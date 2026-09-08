@@ -53,8 +53,9 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
 // public: yalnizca vitrin aramasi (019 FR-018: Catalog search_products anonim agent'tan cikti).
 (string Name, string Url, string ClientName, string[] allowedTools)[] publicAgentTools =
 [
+    // 069: tek serbest-sorgu kapısı (eski 2 arama tool'u tam ikameyle silindi).
     (McpServers.Storefront, storefrontUrl, McpClients.WithToken,
-        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks]),
+        [StorefrontTools.QueryStorefront]),
     // 067: keşif envanteri Catalog'da (anonim MCP; DAR allowlist — 019'un "anonim'e search_products yok"
     // kararına dokunmaz, yalnız list_* girer).
     (McpServers.Catalog, catalogUrl, McpClients.WithToken,
@@ -63,8 +64,9 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
 // assistant: vitrin aramasi + catalog okuma (sepet akisi icin) + basket + servis-basi okuma tool'lari.
 (string Name, string Url, string ClientName, string[] allowedTools)[] assistantAgentTools =
 [
+    // 069: tek serbest-sorgu kapısı (Catalog list_* DOKUNULMAZ — FR-009).
     (McpServers.Storefront, storefrontUrl, McpClients.WithToken,
-        [StorefrontTools.SearchStorefrontProducts, StorefrontTools.FindSimilarBooks]),
+        [StorefrontTools.QueryStorefront]),
     (McpServers.Catalog, catalogUrl, McpClients.WithToken,
         [CatalogTools.SearchProducts, CatalogTools.GetProduct,
             CatalogTools.ListCategories, CatalogTools.ListAuthors, CatalogTools.ListPublishers]),

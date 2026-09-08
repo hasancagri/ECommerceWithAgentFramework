@@ -1,8 +1,8 @@
 # Storefront — Domain Süreci
 
 **BC ne yapar:** Catalog+Stock+Reviews+Order'dan akan **şişman event'leri** ürün-anahtarlı tek satırda
-(composite read-model) toplar; listeyi, facet'i, varyant ailesini, filtre aramasını ve sipariş-temelli
-kişisel feed'i vitrine sunar.
+(composite read-model) toplar; listeyi, facet'i, varyant ailesini, sipariş-temelli kişisel feed'i ve
+asistana açık **tek serbest-sorgu kapısını** vitrine sunar.
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
@@ -27,15 +27,19 @@ kişisel feed'i vitrine sunar.
 8. **Ana sayfa/liste TEK okumayla dolar.** Dolu-satır filtresi +        `(GetStorefrontProductList)`
    spec kesişimi; aile başına tek temsilci + kart-bazlı sayfalama.
 9. **Facet seçenekleri satılabilir satırlardan türetilir** (cache'li).  `(GetStorefrontFilterOptions)`
-10. **Varyant ailesi + filtre araması sunulur.** Aile eksenleri;         `(GetProductFamily,`
-   yazar/fiyat/stok filtresi (Name ASC, deterministik).                 ` SearchStorefrontProductsForAgent)`
-11. **Anlamsal arama + benzerlik sunulur.** Temalı sorgu yapısal       `(SearchStorefrontProductsForAgent,`
-    filtre SONRASI kNN sıralar; "buna benzer" ürünün kendi              ` FindSimilarBooksForAgent)`
-    temsiliyle koşar; eşik altı sonuç = "bulunamadı". Keşif
-    envanteri (kategori/yazar/yayınevi listeleri) Catalog'dadır.
-12. **Tamamlanan sipariş satın-alma kaydına döner.** Kalem başına        `(OrderCompleted`
+10. **Varyant ailesi sunulur.** Aile eksenleri ve üyeler.               `(GetProductFamily)`
+11. **Asistan sorusu TEK sorgu kapısından yanıtlanır.** Asistanın        `(AgentSqlGuard`
+    kurduğu salt-okur sorgu önce bekçiden geçer (yazma/yüzey-dışı        ` → QueryStorefrontForAgent`
+    istek ÇALIŞMADAN reddedilir), anlamsal metin sistemce temsile        ` → AgentQueryLog)`
+    çevrilir, sorgu yalnız satılabilir yüzeyde koşar ve ret dahil
+    her çağrı iz bırakır. Temalı arama + benzerlik de bu kapıdandır;
+    eşik altı sonuç = "bulunamadı". Keşif envanteri Catalog'dadır.
+12. **Satılabilir yüzey tek ilişki olarak kurulur.** Açılışta           `(StorefrontSellableSchema`
+    satılabilirlik filtresi gömülü görünüm + tek-yetkili kısıtlı         ` → AgentQuerySurfaceBootstrap)`
+    rol tazelenir; yayından kalkan ürün yüzeyde HİÇ var olmaz.
+13. **Tamamlanan sipariş satın-alma kaydına döner.** Kalem başına        `(OrderCompleted`
    kullanıcı+ürün satırı; tekrar teslim/alım aynı satır (idempotent).    ` → UserPurchase)`
-13. **Kişisel feed sunulur.** Satın alınan kitapların kategori+yazar    `(GetPersonalFeed`
+14. **Kişisel feed sunulur.** Satın alınan kitapların kategori+yazar    `(GetPersonalFeed`
     sinyalinden, alınmamış (aile dahil) kitaplar; yazar > kategori.      ` → RankFeed)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
@@ -46,6 +50,7 @@ kişisel feed'i vitrine sunar.
 - **Tek yazıcı + Sequential.** Dört exchange tek kuyruğa; eşzamanlı yazım = optimistic concurrency → Wolverine retry.
 - **Anlamsal temsil yaşam-döngüsü taşımaz.** Ayrı yol-arkadaşı satırda yaşar; görünürlük HER ZAMAN satılabilirlik filtresinden gelir (yayından kalkan ürün temsili dursa da görünmez).
 - **Alakasızlık eşiği dürüstlük kuralıdır.** Eşik altı benzerlik "bulunamadı"dır; en-yakın-ama-alakasız sonuç asla "benzer" diye sunulmaz.
+- **Serbest sorgu yalnız satılabilir yüzeyi görür ve iz bırakır.** Kapı salt-okurdur; satın-alma kayıtları ve yayından kalkan ürün yüzeyin yapısal DIŞIDIR; ret dahil her sorgu kayda geçer (`AgentQueryLog`).
 - **Kişisel feed kullanıcıya bağlı tek okuma yüzeyidir.** Kimlik token'dan; sinyalsiz kullanıcı boş liste alır (fallback vitrin YOK); satın alınan ürün ve varyant ailesi asla önerilmez.
 
 ## Sınır (bu BC'nin dokunmadığı)

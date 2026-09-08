@@ -1,51 +1,34 @@
 namespace Storefront.Api.Domains.StorefrontView;
 
 // MCP tool'lari ince sarmalayicidir ve yalnizca Features/Agent slice'larini cagirir (005 karari).
+// 069: search_storefront_products + find_similar_books TAM IKAME ile silindi — tek kapi query_storefront.
+// Aciklama dis agent'lar icin de sozlesmedir (Claude Desktop vb. yalniz bunu gorur): sema + kurallar burada.
 [McpServerToolType]
-public static class SearchStorefrontProductsMcpTool
+public static class QueryStorefrontMcpTool
 {
-    [McpServerTool(Name = "search_storefront_products")]
-    [Description("Vitrinde kitap arar. Yapisal filtreler: yazar listesi (VEYA), yazar/yayinevi DISLAMA, " +
-                 "kategori, yayinevi, fiyat araligi, asgari stok. Bulanik/temali istekler (or. 'kis icin " +
-                 "surukleyici bilim kurgu') semanticQuery'ye yazilir — yapisal filtreler ONCE uygulanir, " +
-                 "kalan kumede anlamca en yakinlar doner. En az bir kriter zorunlu. found=false ise sonuc " +
-                 "YOKTUR; asla uydurma. Her urun ad, yazarlar, yayinevi, kategori, fiyat, stok tasir.")]
-    public static Task<FeatureObjectResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductsResponse>> SearchStorefrontProductsAsync(
+    [McpServerTool(Name = "query_storefront")]
+    [Description("Kitap magazasi vitrininde SERBEST salt-okur SQL sorgusu calistirir (Postgres). " +
+                 "TEK ilişki: storefront_sellable (yalniz satistaki kitaplar). Kolonlar: " +
+                 "product_id uuid, name text, description text, authors text[] (yazar adlari; " +
+                 "unnest/ILIKE ile ara), publisher text, category text, price numeric, stock int " +
+                 "(NULL=bilinmiyor), rating_average numeric (NULL=puansiz), rating_count int, " +
+                 "specs jsonb ([{Attribute,Option}] ozellik ciftleri), family_code text (varyant " +
+                 "ailesi), image_url text, added_at timestamptz (YAKLASIK eklenis), embedding vector " +
+                 "(anlamsal temsil; yanita donmez). Kurallar: tek SELECT/WITH; baska iliski/yazma " +
+                 "yasak; sonuc 50 satirla sinirlanir (truncated=true ise LIMIT/OFFSET ile sayfala). " +
+                 "Anlamsal/temali arama icin metni {{EMBED:\"tema metni\"}} yer-tutucusuyla yaz " +
+                 "(vektore sistem cevirir), or: embedding <=> {{EMBED:\"kis temali bilim kurgu\"}} < 0.68 " +
+                 "AND embedding IS NOT NULL, ayni ifadeyle ORDER BY. Benzerlik: embedding <=> (SELECT " +
+                 "embedding FROM storefront_sellable WHERE product_id = 'X') + product_id <> 'X'. " +
+                 "Hata donerse (messages[].code) sorguyu duzeltip yeniden dene.")]
+    public static Task<FeatureObjectResultModel<QueryStorefrontForAgent.QueryStorefrontResponse>> QueryStorefrontAsync(
         IMessageBus bus,
         CancellationToken ct,
-        [Description("Yazar adlari; urun herhangi birine uyarsa eslesir (VEYA birlesimi)")] string[]? authors = null,
-        [Description("En dusuk fiyat (dahil)")] decimal? minPrice = null,
-        [Description("En yuksek fiyat (dahil); 'fiyati X'ten az' icin maxPrice=X")] decimal? maxPrice = null,
-        [Description("Stokta en az N adet; 'stokta olsun' icin 1")] int? minStock = null,
-        [Description("Sonuc sayisi; varsayilan 8, en fazla 20")] int? maxResults = null,
-        [Description("Kategori adi (tam ad; list_categories'ten)")] string? category = null,
-        [Description("Yayinevi adi (tam ad)")] string? publisher = null,
-        [Description("HARIC tutulacak yazarlar ('X haric')")] string[]? excludeAuthors = null,
-        [Description("HARIC tutulacak yayinevleri ('X yayinevi haric')")] string[]? excludePublishers = null,
-        [Description("Bulanik/temali ifade (tema, ruh hali, konu). Yapisal kisimlari BURAYA YAZMA — " +
-                     "fiyat/yazar/kategori kendi parametresine")] string? semanticQuery = null)
-        => bus.InvokeAsync<FeatureObjectResultModel<SearchStorefrontProductsForAgent.SearchStorefrontProductsResponse>>(
-            new SearchStorefrontProductsForAgent.SearchStorefrontProductsQuery(
-                authors, minPrice, maxPrice, minStock, maxResults,
-                category, publisher, excludeAuthors, excludePublishers, semanticQuery), ct);
+        [Description("storefront_sellable uzerinde TEK SELECT/WITH sorgusu; anlamsal metin {{EMBED:\"...\"}} ile")]
+        string sql)
+        => bus.InvokeAsync<FeatureObjectResultModel<QueryStorefrontForAgent.QueryStorefrontResponse>>(
+            new QueryStorefrontForAgent.QueryStorefrontQuery(sql), ct);
 }
 
-// 067 US2: "buna benzer" — referans urunun KENDI temsiliyle kNN (yeni OpenAI cagrisi yok), kendisi haric.
-[McpServerToolType]
-public static class FindSimilarBooksMcpTool
-{
-    [McpServerTool(Name = "find_similar_books")]
-    [Description("Verilen urune (productId) anlamca benzer, satistaki diger kitaplari dondurur (kendisi " +
-                 "haric). found=false ise benzer YOKTUR ya da urunun aciklama temsili henuz yok — " +
-                 "'benzer bulunamadi' de, asla zorla oneri uydurma.")]
-    public static Task<FeatureObjectResultModel<FindSimilarBooksForAgent.FindSimilarBooksResponse>> FindSimilarBooksAsync(
-        IMessageBus bus,
-        CancellationToken ct,
-        [Description("Referans urunun productId'si (aramadan gelen)")] Guid productId,
-        [Description("Sonuc sayisi; varsayilan 8, en fazla 20")] int? maxResults = null)
-        => bus.InvokeAsync<FeatureObjectResultModel<FindSimilarBooksForAgent.FindSimilarBooksResponse>>(
-            new FindSimilarBooksForAgent.FindSimilarBooksQuery(productId, maxResults), ct);
-}
-
-// 067 NOT: kesif envanteri tool'lari (list_categories/authors/publishers) Catalog'a TASINDI
-// (kullanici karari: envanter otoritesi = Catalog; Storefront = kitap listesi/arama/benzerlik yuzeyi).
+// 067 NOT: kesif envanteri tool'lari (list_categories/authors/publishers) Catalog'dadir
+// (envanter otoritesi = Catalog; Storefront = tek sorgu kapisi yuzeyi).

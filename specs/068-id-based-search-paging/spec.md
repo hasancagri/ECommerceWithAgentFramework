@@ -150,3 +150,8 @@ doğrulama sorgu izinde); temalı arama + sayfa 2 kombinasyonu eşik davranış�
   planlama aşamasının konusudur.
 - Kapsam dışı: kategori taksonomisinin düzeltilmesi, ad-benzeri dışlama genişletmeleri ("Harlequin"
   → "Harlequin Mills & Boon"), anlamsal temsil metninin zenginleştirilmesi, yazar birleştirme.
+---
+
+> **İPTAL (2026-09-07 gece):** Bu spec, 069 kararıyla büyük ölçüde geçersizleşti — parametrik arama
+> tool'u tamamen kaldırılıyor (tek text-to-SQL kapısı `query_storefront`, bkz `specs/069-query-storefront`).
+> Id-bazlı parametre ve sayfalama fikirleri 069'un prompt/sorgu kalıplarında yaşamaya devam eder.
