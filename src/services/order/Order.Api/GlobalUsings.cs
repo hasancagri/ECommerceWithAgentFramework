@@ -11,7 +11,6 @@ global using Order.Api.Constants;
 global using Order.Api.Dependencies;
 global using Order.Api.Domains.Orders.Entities;
 global using Order.Api.Domains.Orders.Features.Commands;
-global using Order.Api.Domains.Orders.Features.Queries;
 global using Order.Api.Domains.Orders.ValueObjects;
 global using Order.Api.Domains.Orders;
 global using System.Reflection;

@@ -86,17 +86,11 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 // X-User-Key varsa eager cozer: gecersiz->401, gecerli->principal (UseAuthorization'dan once).
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-app.AddBasketGroupEndpointExtension(apiVersionSet);
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();

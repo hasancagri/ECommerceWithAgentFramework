@@ -91,8 +91,6 @@ var apiVersionSet = app.NewApiVersionSet()
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.AddAddressBookGroupEndpointExtension(apiVersionSet);
-app.AddWalletGroupEndpointExtension(apiVersionSet);
 app.AddMerchantInformationGroupEndpointExtension(apiVersionSet);
 // 039: Order.Api chat siparis tamamlama yapisal odeme-baglami ucu (customer.read makine token'i).
 app.AddPaymentContextInternalEndpoint(apiVersionSet);

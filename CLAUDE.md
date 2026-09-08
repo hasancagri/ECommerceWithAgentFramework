@@ -47,7 +47,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | Servis | DB | Ne yapar | Origin spec |
 |---|---|---|---|
 | `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi); admin düzenleme + yayın anahtarı + fiyat geçmişi (058, append-only `ProductPriceChange`) | `specs/040-catalog-domain-extract` |
-| `basket` | basketDb | Kalıcı sepet + kalem; anonim sahiplik (057; login-merge yüzeyi söküldü, `MergeFrom` domain'de durur); stok tutmaz/süre yok (056), stok gerçeği checkout'ta | `specs/012-stock-reservation` |
+| `basket` | basketDb | Kalıcı sepet + kalem; anonim sahiplik (057; login-merge yüzeyi söküldü, `MergeFrom` domain'de durur); stok tutmaz/süre yok (056), stok gerçeği checkout'ta; yüzey MCP-only + checkout gRPC | `specs/012-stock-reservation` |
 | `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Create/Confirm/Cancel; chat charge yolu; Confirm'de `OrderCompleted` fanout (Reviews + Storefront tüketir) | `specs/028-checkout-saga` |
 | `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); CreateOrder→CommitStock→Charge→Confirm→ClearBasket; pivot=Charge, pivot-öncesi LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount; tek-faz Charge) | — |
@@ -75,6 +75,11 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
   Eşleşmeyen route `MapFallback`→köke. Müşteri işlemleri agent/MCP yolunda (062–065 parite). TUZAK:
   `ICustomerRefitService` merchant-only KALDI (admin onboarding kullanır); adres/cüzdan yüzeyi silindi.
   AÇIK BULGU: ANONİM chat-sepet 4 katmanda bloke (bkz memory; login yolu kapandı).
+- **Müşteri yüzeyi MCP-only:** basket/order/payment/reviews/library/customer(cards+addresses)
+  müşteri REST uçları + Commands/Queries ikizleri SÖKÜLDÜ — chat işlemleri yalnız MCP→`Features/Agents`
+  slice'larından. Kalan REST = admin (catalog/merchant/stock) + S2S internal (payment-context,
+  merchant-key) + checkout gRPC. Eski "her aggregate REST penceresi" kuralı EMEKLİ. Gateway'de yalnız
+  MCP/PRM + catalog rotaları.
 - **ChatAgent MCP keşfi makine kimliğiyle:** açılışta ListTools `chat-agent-discovery` m2m token'ı taşır
   (061 korumalı transport'lar için; `DiscoveryTokenSource` + `TokenInjectingHandler` HttpContext-yok
   fallback'i). Tool ÇAĞRISI her zaman o anki kullanıcı token'ıyla. Keşifte 401/403 KALICI sayılır (retry

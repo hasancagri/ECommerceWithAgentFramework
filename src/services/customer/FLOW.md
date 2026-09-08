@@ -2,7 +2,7 @@
 
 **BC ne yapar:** Kullanıcının **cüzdanını** (tokenize kart, PAN yok) ve **adres defterini** tutar.
 Chat/checkout yolunun okuduğu kayıtlı ödeme/teslimat kaynağıdır. İzole BC: hiçbir integration
-event yayınlamaz/tüketmez; tek kanalı REST (+ MCP sarmalayıcıları).
+event yayınlamaz/tüketmez; kanalı MCP (chat) + yapısal S2S REST (Order).
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-invariant) bu dosya güncellenir; mekanik rename'i guard yakalar.
@@ -11,8 +11,8 @@ event yayınlamaz/tüketmez; tek kanalı REST (+ MCP sarmalayıcıları).
 
 1. **Adres eklenir/güncellenir/silinir + varsayılan seçilir.**       `(AddressBook.AddAddress`
    ≤1 varsayılan invariant'ı defterde tek yazmada korunur;           ` / SetDefaultAddress)`
-   yüzey chat/MCP + REST.
-2. **Kayıtlı kartlar okunur.** Yalnız gösterilebilir alanlar         `(GetCards)`
+   yüzey chat/MCP.
+2. **Kayıtlı kartlar okunur.** Yalnız gösterilebilir alanlar         `(GetCardsForAgent)`
    (Brand/Last4/Bin) döner; agent MCP tool'u aynı slice'ı sarar.
 3. **Sipariş ödeme bağlamını yapısal kanaldan çeker.** Buyer +       `(GetPaymentContextForAgent)`
    vaultToken + varsayılan adres; Order makine token'ıyla okur (039).

@@ -103,15 +103,9 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.AddReviewGroupEndpointExtension(apiVersionSet);
 
 // 064: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge (dış agent keşfi).
 // get_reviews login yeter (RequiredScope yok); eligibility/submit reviews.write (Wolverine middleware).

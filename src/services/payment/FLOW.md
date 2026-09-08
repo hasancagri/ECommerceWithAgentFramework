@@ -16,7 +16,7 @@ taşımaz; yalnız `Amount` anlamlıdır. Tek-faz Charge daima Success döner, k
    ya da tutar ≤ 0 ise Result hatası; maket kabul — koşulsuz Success.
 4. **Sonuç reply kuyruğuna yayınlanır.** Başarı ya da kalıcı hata  `(PaymentCharged)`
    sınıfı döner; saga pivot kararını bununla verir.
-5. **Kullanıcı ödemelerini okur.** Kişi kendi geçmişini            `(GetAllPaymentsByUserIdQuery)`
+5. **Kullanıcı ödemelerini okur.** Kişi kendi geçmişini            `(GetAllPaymentsByUserIdForAgent)`
    listeler; agent için MCP tool'u aynı slice'ı sarar.             `(GetMyPaymentsMcpTool)`
 
 ## Domain kuralları (süreci yöneten değişmezler)

@@ -89,15 +89,9 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.AddPriceAlarmGroupEndpointExtension(apiVersionSet);
 
 // 065: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge (dış agent keşfi).
 // get_price_alarm library.read; create/remove library.write (agent slice [RequiredScope]).

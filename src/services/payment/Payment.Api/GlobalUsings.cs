@@ -10,7 +10,6 @@ global using Marten.Newtonsoft;
 global using Weasel.Core;
 global using Microsoft.AspNetCore.Mvc;
 global using Payment.Api.Dependencies;
-global using Payment.Api.Domains.Payments.Features.Queries;
 global using Payment.Api.Domains.Payments;
 global using System.Reflection;
 global using System;

@@ -9,11 +9,11 @@ TUTMAZ ve süre İŞLETMEZ (056); stok gerçeği checkout anındadır.
 
 ## Süreç
 
-1. **Kullanıcı ürünü sepete atar.** Sepet yoksa oluşur; adet 1 artar,    `(AddBasketItemCommandHandler`
+1. **Kullanıcı ürünü sepete atar.** Sepet yoksa oluşur; adet 1 artar,    `(AddBasketItemForAgent`
    satır upsert edilir. Stok'a hiçbir çağrı gitmez.                       ` → Basket.SetItem)`
-2. **Adet mutlak değere getirilir.** `≤0` ise satır çıkar; 5 tavanı      `(SetBasketItemQuantityCommandHandler)`
+2. **Adet mutlak değere getirilir.** `≤0` ise satır çıkar; 5 tavanı      `(SetBasketItemQuantityForAgent)`
    aşılamaz.
-3. **Satır elle silinir.** Yalnız sepet belgesi değişir.                  `(DeleteBasketItemCommandHandler`
+3. **Satır elle silinir.** Yalnız sepet belgesi değişir.                  `(DeleteBasketItemForAgent`
                                                                           ` → Basket.RemoveItem)`
 4. **Checkout sepeti boşaltır (hand-off).** Orchestrator pivot-sonrası   `(BasketEventHandlers`
    broker komutuyla çağırır; sepet silinir (idempotent).                  ` → ClearBasketByCheckoutCommandHandler)`
