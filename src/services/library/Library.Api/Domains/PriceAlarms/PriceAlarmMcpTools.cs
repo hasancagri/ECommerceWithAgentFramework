@@ -7,7 +7,7 @@ namespace Library.Api.Domains.PriceAlarms;
 [McpServerToolType]
 public static class GetPriceAlarmMcpTool
 {
-    [McpServerTool(Name = "get_price_alarm")]
+    [McpServerTool(Name = Shared.LibraryTools.GetPriceAlarm)]
     [Description(
         "Giris yapmis kullanicinin bu urun icin fiyat alarmi olup olmadigini doner. " +
         "productId = search_products/get_product'tan donen urun kimligi.")]
@@ -27,7 +27,7 @@ public static class GetPriceAlarmMcpTool
 [McpServerToolType]
 public static class CreatePriceAlarmMcpTool
 {
-    [McpServerTool(Name = "create_price_alarm")]
+    [McpServerTool(Name = Shared.LibraryTools.CreatePriceAlarm)]
     [Description(
         "Giris yapmis kullanici icin bir urune fiyat alarmi kurar: fiyat dusunce kullaniciya mail gider. " +
         "productId/productName = search_products/get_product'tan; currentPrice = urunun su anki fiyati " +
@@ -52,7 +52,7 @@ public static class CreatePriceAlarmMcpTool
 [McpServerToolType]
 public static class RemovePriceAlarmMcpTool
 {
-    [McpServerTool(Name = "remove_price_alarm")]
+    [McpServerTool(Name = Shared.LibraryTools.RemovePriceAlarm)]
     [Description(
         "Giris yapmis kullanicinin bir urundeki fiyat alarmini kaldirir. productId = urun kimligi. " +
         "Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]

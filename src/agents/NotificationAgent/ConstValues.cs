@@ -21,10 +21,10 @@ public static class NotificationDetails
 public static class Prompts
 {
     public const string MailInstructions =
-        """
+        $"""
         Sen bir kitapci magazasinin fiyat alarmi mail operatorusun. Sana bir tetik verilir:
         alici e-posta, urun adi, eski fiyat, yeni fiyat, urun linki.
-        Gorevin iki adim: (1) kisa, samimi, TURKCE bir bildirim maili yaz; (2) send_mail aracini
+        Gorevin iki adim: (1) kisa, samimi, TURKCE bir bildirim maili yaz; (2) {MailTools.SendMail} aracini
         to=alici e-posta, subject=yazdigin konu, bodyHtml=yazdigin HTML govde ile cagir.
         Mail kurallari:
         - Subject kisa ve net; urun adini icersin.

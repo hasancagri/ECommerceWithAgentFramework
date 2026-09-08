@@ -4,7 +4,7 @@ namespace Order.Api.Domains.Orders;
 [McpServerToolType]
 public static class GetOrdersMcpTool
 {
-    [McpServerTool(Name = "get_orders")]
+    [McpServerTool(Name = Shared.OrderTools.GetOrders)]
     [Description("Giris yapmis kullanicinin siparislerini (kod, tarih, tutar, durum, urunler) listeler.")]
     public static Task<FeatureObjectResultModel<List<GetOrdersForAgent.GetOrdersResponse>>> GetOrdersAsync(
         IMessageBus bus,
@@ -23,7 +23,7 @@ public static class GetOrdersMcpTool
 [McpServerToolType]
 public static class PlaceOrderMcpTool
 {
-    [McpServerTool(Name = "place_order")]
+    [McpServerTool(Name = Shared.OrderTools.PlaceOrder)]
     [Description(
         "Kullanici odemeyi ONAYLADIGINDA sepetteki urunler icin siparisi tamamlar. Sunucu odemeyi ceker " +
         "ve siparisi olusturur. Parametreler: cardId (secilen kayitli kartin kimligi; verilmezse varsayilan " +

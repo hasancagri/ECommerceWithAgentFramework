@@ -5,7 +5,7 @@ namespace Customer.Api.Domains.AddressBooks;
 [McpServerToolType]
 public static class ListAddressesMcpTool
 {
-    [McpServerTool(Name = "list_addresses")]
+    [McpServerTool(Name = Shared.CustomerTools.ListAddresses)]
     [Description("Giris yapmis kullanicinin kayitli adreslerini (adres alanlari + varsayilan + adres kimligi) listeler.")]
     public static Task<FeatureListResultModel<GetAddressesForAgent.AddressView>> ListAddressesAsync(
         IMessageBus bus,
@@ -22,7 +22,7 @@ public static class ListAddressesMcpTool
 [McpServerToolType]
 public static class AddAddressMcpTool
 {
-    [McpServerTool(Name = "add_address")]
+    [McpServerTool(Name = Shared.CustomerTools.AddAddress)]
     [Description(
         "Giris yapmis kullaniciya yeni bir teslimat adresi ekler. Tum alanlar zorunlu: province (il), " +
         "district (ilce), street (cadde/sokak), zipCode (posta kodu), line (acik adres). Yanittaki " +
@@ -47,7 +47,7 @@ public static class AddAddressMcpTool
 [McpServerToolType]
 public static class UpdateAddressMcpTool
 {
-    [McpServerTool(Name = "update_address")]
+    [McpServerTool(Name = Shared.CustomerTools.UpdateAddress)]
     [Description(
         "Giris yapmis kullanicinin mevcut bir adresini gunceller. addressId = list_addresses'ten donen " +
         "adres kimligi; tum adres alanlari (province/district/street/zipCode/line) yeni degerleriyle verilir. " +
@@ -74,7 +74,7 @@ public static class UpdateAddressMcpTool
 [McpServerToolType]
 public static class RemoveAddressMcpTool
 {
-    [McpServerTool(Name = "remove_address")]
+    [McpServerTool(Name = Shared.CustomerTools.RemoveAddress)]
     [Description(
         "Giris yapmis kullanicinin bir kayitli adresini siler. addressId = list_addresses'ten donen adres " +
         "kimligi. Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]
@@ -94,7 +94,7 @@ public static class RemoveAddressMcpTool
 [McpServerToolType]
 public static class SetDefaultAddressMcpTool
 {
-    [McpServerTool(Name = "set_default_address")]
+    [McpServerTool(Name = Shared.CustomerTools.SetDefaultAddress)]
     [Description(
         "Giris yapmis kullanicinin varsayilan teslimat adresini belirler. addressId = list_addresses'ten " +
         "donen adres kimligi. Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]

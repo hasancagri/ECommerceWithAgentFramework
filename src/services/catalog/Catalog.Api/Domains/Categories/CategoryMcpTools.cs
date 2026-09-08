@@ -4,7 +4,7 @@ namespace Catalog.Api.Domains.Categories;
 [McpServerToolType]
 public static class ListCategoriesMcpTool
 {
-    [McpServerTool(Name = "list_categories")]
+    [McpServerTool(Name = Shared.CatalogTools.ListCategories)]
     [Description("Magazadaki kategorileri listeler (yalniz yayinda urunu olan kategoriler). Her kategori " +
                  "ad, ust kategori (parentCategory, varsa) ve urun sayisi (productCount) tasir. 'Hangi " +
                  "kategoriler var' tarzi kesif sorulari icin.")]
