@@ -159,16 +159,9 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
-
-app.AddStorefrontViewGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
 

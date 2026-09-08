@@ -17,8 +17,6 @@ global using PagedList.Core;
 global using Reviews.Api.Constants;
 global using Reviews.Api.Dependencies;
 global using Reviews.Api.Domains.Reviews;
-global using Reviews.Api.Domains.Reviews.Features.Commands;
-global using Reviews.Api.Domains.Reviews.Features.Queries;
 global using Reviews.Api.Domains.Reviews.ValueObjects;
 global using Shared;
 global using Shared.Utils.Constants;

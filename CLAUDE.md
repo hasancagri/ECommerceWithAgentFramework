@@ -47,13 +47,13 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | Servis | DB | Ne yapar | Origin spec |
 |---|---|---|---|
 | `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi); admin düzenleme + yayın anahtarı + fiyat geçmişi (058, append-only `ProductPriceChange`) | `specs/040-catalog-domain-extract` |
-| `basket` | basketDb | Kalıcı sepet + kalem; anonim sahiplik + login'de merge (057); stok tutmaz/süre yok (056), stok gerçeği checkout'ta | `specs/012-stock-reservation` |
+| `basket` | basketDb | Kalıcı sepet + kalem; anonim sahiplik (057; login-merge yüzeyi söküldü, `MergeFrom` domain'de durur); stok tutmaz/süre yok (056), stok gerçeği checkout'ta; yüzey MCP-only + checkout gRPC | `specs/012-stock-reservation` |
 | `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Create/Confirm/Cancel; chat charge yolu; Confirm'de `OrderCompleted` fanout (Reviews + Storefront tüketir) | `specs/028-checkout-saga` |
 | `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); CreateOrder→CommitStock→Charge→Confirm→ClearBasket; pivot=Charge, pivot-öncesi LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
 | `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount; tek-faz Charge) | — |
 | `stock` | stockDb | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; checkout düşümü broker'dan (056); admin artır/azalt + mutlak set (058) | `specs/014-supplier-stock-authority` |
-| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); facet + varyant gruplama; kişisel feed (`UserPurchase` birikimi); asistan yüzeyi TEK tool `query_storefront` (069: salt-okur `storefront_sellable` view + `AgentSqlGuard` bekçi + kısıtlı DB rolü + `{{EMBED}}` anlamsal + `AgentQueryLog` izi; eşik 0.68 prompt'ta; parametrik arama + `find_similar_books` SÖKÜLDÜ) | `specs/003-storefront-read-model` |
-| `customer` | customerDb | Wallet (tokenize kart, PAN yok) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
+| `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); müşteri REST okuma yüzeyi (liste/facet/aile/harf-dizin/feed) SÖKÜLDÜ — okuma yolu asistan; `UserPurchase` birikimi sürer; asistan yüzeyi TEK tool `query_storefront` (069: salt-okur `storefront_sellable` view + `AgentSqlGuard` bekçi + kısıtlı DB rolü + `{{EMBED}}` anlamsal + `AgentQueryLog` izi; eşik 0.68 prompt'ta; parametrik arama + `find_similar_books` SÖKÜLDÜ) | `specs/003-storefront-read-model` |
+| `customer` | customerDb | Wallet (tokenize kart, PAN yok; kart YAZMA yüzeyi yok — yalnız okuma + payment-context) + AddressBook; izole, event yok | `specs/022-wallet-address-book` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `library` | libraryDb | Kullanıcı-ürün ilgi kayıtları; ilk dilim fiyat alarmı (yaşayan abonelik, email snapshot) + `NotificationRecord` izi; `ProductChangedEvent.OldPrice` tetiği → alarm başına `PriceAlarmTriggered` | `specs/060-price-alarm-mail` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
@@ -75,6 +75,11 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
   Eşleşmeyen route `MapFallback`→köke. Müşteri işlemleri agent/MCP yolunda (062–065 parite). TUZAK:
   `ICustomerRefitService` merchant-only KALDI (admin onboarding kullanır); adres/cüzdan yüzeyi silindi.
   AÇIK BULGU: ANONİM chat-sepet 4 katmanda bloke (bkz memory; login yolu kapandı).
+- **Müşteri yüzeyi MCP-only:** basket/order/payment/reviews/library/customer(cards+addresses)
+  müşteri REST uçları + Commands/Queries ikizleri SÖKÜLDÜ — chat işlemleri yalnız MCP→`Features/Agents`
+  slice'larından. Kalan REST = admin (catalog/merchant/stock) + S2S internal (payment-context,
+  merchant-key) + checkout gRPC. Eski "her aggregate REST penceresi" kuralı EMEKLİ. Gateway'de yalnız
+  MCP/PRM + catalog rotaları.
 - **ChatAgent MCP keşfi makine kimliğiyle:** açılışta ListTools `chat-agent-discovery` m2m token'ı taşır
   (061 korumalı transport'lar için; `DiscoveryTokenSource` + `TokenInjectingHandler` HttpContext-yok
   fallback'i). Tool ÇAĞRISI her zaman o anki kullanıcı token'ıyla. Keşifte 401/403 KALICI sayılır (retry

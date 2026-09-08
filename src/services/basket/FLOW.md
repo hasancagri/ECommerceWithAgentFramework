@@ -9,23 +9,21 @@ TUTMAZ ve süre İŞLETMEZ (056); stok gerçeği checkout anındadır.
 
 ## Süreç
 
-1. **Kullanıcı ürünü sepete atar.** Sepet yoksa oluşur; adet 1 artar,    `(AddBasketItemCommandHandler`
+1. **Kullanıcı ürünü sepete atar.** Sepet yoksa oluşur; adet 1 artar,    `(AddBasketItemForAgent`
    satır upsert edilir. Stok'a hiçbir çağrı gitmez.                       ` → Basket.SetItem)`
-2. **Adet mutlak değere getirilir.** `≤0` ise satır çıkar; 5 tavanı      `(SetBasketItemQuantityCommandHandler)`
+2. **Adet mutlak değere getirilir.** `≤0` ise satır çıkar; 5 tavanı      `(SetBasketItemQuantityForAgent)`
    aşılamaz.
-3. **Satır elle silinir.** Yalnız sepet belgesi değişir.                  `(DeleteBasketItemCommandHandler`
+3. **Satır elle silinir.** Yalnız sepet belgesi değişir.                  `(DeleteBasketItemForAgent`
                                                                           ` → Basket.RemoveItem)`
-4. **Login'de anonim sepet hesaba taşınır.** Kalemler tek sepette        `(MergeBasketCommandHandler`
-   toplanır; ortak üründe adetler toplanıp tavana sabitlenir; anonim      ` → Basket.MergeFrom)`
-   sepet silinir (ikinci merge sessiz no-op).
-5. **Checkout sepeti boşaltır (hand-off).** Orchestrator pivot-sonrası   `(BasketEventHandlers`
+4. **Checkout sepeti boşaltır (hand-off).** Orchestrator pivot-sonrası   `(BasketEventHandlers`
    broker komutuyla çağırır; sepet silinir (idempotent).                  ` → ClearBasketByCheckoutCommandHandler)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Sepet kalıcıdır (056).** Zamana bağlı hiçbir üye/temizlik yok; terk edilmiş sepet süresiz durur.
 - **Anonim sahiplik meşrudur (057).** Ekleme/okuma/adet/silme kimlik doğrulama İSTEMEZ; sahip tahmin
-  edilemez Guid'dir (token `sub` ya da anonim kimlik). Yalnız merge login ister; yön tek: anonim → hesap.
+  edilemez Guid'dir (token `sub` ya da anonim kimlik). Login-merge yüzeyi 066 sonrası söküldü;
+  `Basket.MergeFrom` davranışı domain'de durur, yüzey açılırsa buradan döner.
 - **Sepet stok tutmaz (056).** Ekleme/adet/silme Stock'a gitmez; yetersizlik checkout'ta `CommitStock` reddeder, saga telafi eder.
 - **Sabit üst sınır otoriter.** Satır adedi `Basket.MaxItemQuantity` (5) üstüne çıkamaz — UI/API/agent farketmez.
 - **Fiyat snapshot'tır.** Satır fiyatı ekleme anındaki vitrin fiyatıdır; sepette güncellenmez.

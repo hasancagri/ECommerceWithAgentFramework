@@ -11,7 +11,7 @@ yaşayan abonelik olarak kurulur, her fiyat değişiminde bildirim tetiği yayı
 1. **Kullanıcı ürüne fiyat alarmı kurar.** E-posta kuruluş anında      `(PriceAlarm.Create)`
    snapshot alınır (doğrulanmaz, boş olabilir); ürün adı + o anki
    fiyat bağlam olarak saklanır.
-2. **Aynı kullanıcı × ürüne tek alarm.** Mevcut kayıt varsa ikinci     `(CreatePriceAlarmCommandHandler)`
+2. **Aynı kullanıcı × ürüne tek alarm.** Mevcut kayıt varsa ikinci     `(CreatePriceAlarmForAgent)`
    kurma isteği idempotent başarı döner, yeni kayıt yazılmaz.
 3. **Fiyat değişimi dinlenir.** Catalog'un ürün event'inde eski        `(LibraryEventHandlers ← ProductChangedEvent)`
    fiyat doluysa VE yeni fiyattan farklıysa tetik doğar; yön bakılmaz.
@@ -19,7 +19,7 @@ yaşayan abonelik olarak kurulur, her fiyat değişiminde bildirim tetiği yayı
    yetecek her alan event'te (email snapshot dahil); worker kimseye sormaz.
 5. **Alarm tetikte KAPANMAZ.** Yaşayan abonelik: kullanıcı kaldırana   `(PriceAlarm — mutator'suz)`
    dek her fiyat değişimi yeni tetik üretir.
-6. **Kullanıcı alarmı kaldırır.** Hard delete; yaşam döngüsü biter.    `(RemovePriceAlarmCommandHandler)`
+6. **Kullanıcı alarmı kaldırır.** Hard delete; yaşam döngüsü biter.    `(RemovePriceAlarmForAgent)`
 7. **Gönderim sonucu iz olarak yazılır.** Worker'ın sonucu             `(LibraryEventHandlers ← NotificationSent`
    append-only kayda düşer (sent / no-email / hata özeti).              ` → NotificationRecord)`
 

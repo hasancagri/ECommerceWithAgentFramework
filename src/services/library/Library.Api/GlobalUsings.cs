@@ -14,8 +14,6 @@ global using ModelContextProtocol.Server;
 global using Library.Api.Constants;
 global using Library.Api.Dependencies;
 global using Library.Api.Domains.PriceAlarms;
-global using Library.Api.Domains.PriceAlarms.Features.Commands;
-global using Library.Api.Domains.PriceAlarms.Features.Queries;
 global using Marten;
 global using Weasel.Core;
 global using Marten.Newtonsoft;

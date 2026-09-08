@@ -1,8 +1,9 @@
 namespace Basket.Api.Domains.Baskets.Features.Queries;
 
+// REST ucu söküldü (müşteri yüzeyi MCP-only); slice'ı yalnız checkout gRPC'si tüketir
+// (BasketItemsGrpcService). Chat yolu ayrı ikizden gider (GetBasketForAgent).
 public static class GetBasket
 {
-    // 057: [RequiredScope] kalkti — anonim yol scope tasiyamaz; sahiplik Guid gizliligiyle korunur.
     public record GetBasketQuery(Guid UserId);
 
     public class GetBasketResponse
@@ -59,23 +60,5 @@ public static class GetBasket
 
             return FeatureObjectResultModel<GetBasketResponse>.Ok(GetBasketResponse.From(basket));
         }
-    }
-}
-
-public static class GetBasketQueryEndpoint
-{
-    public static RouteGroupBuilder GetBasketGroupItemEndpoint(this RouteGroupBuilder group)
-    {
-        group.MapGet("/user", async (HttpContext httpContext, ICurrentUser currentUser, IMessageBus bus) =>
-        {
-            // 057: anonim erisim — sahip token'dan ya da anonim header'dan.
-            var ownerId = BasketEndpointExtension.ResolveOwnerId(httpContext, currentUser);
-            if (ownerId == Guid.Empty) return Results.BadRequest();
-
-            var result = await bus.InvokeAsync<FeatureObjectResultModel<GetBasket.GetBasketResponse>>(
-                new GetBasket.GetBasketQuery(ownerId));
-            return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
-        }).WithName("GetBasket");
-        return group;
     }
 }
