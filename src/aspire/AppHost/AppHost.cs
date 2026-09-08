@@ -33,6 +33,7 @@ var identityServer = builder.AddProject<Projects.Identity_Server>("identity-serv
     .WaitFor(identityDb);
 
 var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
+    .WithHttpHealthCheck("/health")
     .WithReference(catalogDb)
     .WithReference(rabbit)
     .WithReference(redis)
@@ -41,6 +42,7 @@ var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WaitFor(redis);
 
 var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
+    .WithHttpHealthCheck("/health")
     .WithReference(stockDb)
     .WithReference(rabbit)
     .WithReference(redis)
@@ -50,6 +52,7 @@ var stockApi = builder.AddProject<Projects.Stock_Api>("stock-api")
 
 // 012: Basket & Order, Stock'a senkron gRPC (rezervasyon Reserve/Release/Commit) çağırır.
 var basketApi = builder.AddProject<Projects.Basket_Api>("basket-api")
+    .WithHttpHealthCheck("/health")
     .WithReference(basketDb)
     .WithReference(rabbit)
     .WithReference(stockApi)
@@ -60,6 +63,7 @@ var basketApi = builder.AddProject<Projects.Basket_Api>("basket-api")
     .WaitFor(redis);
 
 var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
+    .WithHttpHealthCheck("/health")
     .WithReference(orderDb)
     .WithReference(rabbit)
     .WithReference(stockApi)
@@ -73,6 +77,7 @@ var orderApi = builder.AddProject<Projects.Order_Api>("order-api")
     .WaitFor(redis);
 
 var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api")
+    .WithHttpHealthCheck("/health")
     .WithReference(storefrontDb)
     .WithReference(rabbit)
     .WithReference(identityServer)
@@ -83,6 +88,7 @@ var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api"
     .WaitFor(redis);
 
 var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
+    .WithHttpHealthCheck("/health")
     .WithReference(paymentDb)
     .WithReference(rabbit)
     .WithReference(redis)
@@ -93,6 +99,7 @@ var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
 // 022: Customer BC — Wallet (kayitli kart) + AddressBook (adres defteri). Kendi DB'si;
 // bu feature'da servisler-arasi event/gRPC yok (identity token'iyla korunan salt CRUD + MCP okuma).
 var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
+    .WithHttpHealthCheck("/health")
     .WithReference(customerDb)
     .WithReference(identityServer)
     .WithReference(redis)
@@ -211,6 +218,9 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithEnvironment("PaymentGateway__A2AUrl", builder.Configuration["PaymentGateway:A2AUrl"] ?? "")
     // 032: admin onboarding descriptor linki WebApp well-known'inden turetilir (service discovery).
     .WithReference(web)
+    // Keşif makine token'ı (chat-agent-discovery client_credentials) Identity'den alınır.
+    .WithReference(identityServer)
+    .WaitFor(identityServer)
     .WaitFor(gateway)
     // 069 canli bulgu: MAF agent'lari STARTUP'ta kurulur (Map* cagrisi resolve eder) ve MCP tool'lari
     // o anda toplanir — tool MCP'si ayakta degilse agent KALICI tool'suz kalir (singleton, retry yok).

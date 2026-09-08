@@ -70,10 +70,15 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 - **WebApp agent-only (066):** Müşteri görsel ekranları (vitrin/ürün-liste/detay/kategori/sepet/checkout/
   hesap) SÖKÜLDÜ; kök (`/`) = mağaza asistanı chat (`Pages/MusteriHizmetleri.cshtml` route `"/"`). WebApp
   yalnız **admin** (ürün düzenleme + onboarding) + **login/OIDC** + **chat** + BFF proxy tutar. Talep edilen
-  scope yalnız kimlik + yönetim (`catalog.write`/`stock.write`/`merchant.credentials.write`); müşteri
-  alışveriş scope'ları kalktı. Eşleşmeyen route `MapFallback`→köke. Müşteri işlemleri agent/MCP yolunda
-  (062–065 parite). TUZAK: `ICustomerRefitService` merchant-only KALDI (admin onboarding kullanır); adres/
-  cüzdan yüzeyi silindi. AÇIK BULGU: anonim chat-sepet 4 katmanda bloke (bkz memory).
+  scope = kimlik + yönetim + assistant tool setinin alışveriş scope'ları (basket/order r+w, payment.read,
+  customer.read — 066 kırpması login-chat 401 verdiği için kısmen geri alındı; ekran istemcisi dönmedi).
+  Eşleşmeyen route `MapFallback`→köke. Müşteri işlemleri agent/MCP yolunda (062–065 parite). TUZAK:
+  `ICustomerRefitService` merchant-only KALDI (admin onboarding kullanır); adres/cüzdan yüzeyi silindi.
+  AÇIK BULGU: ANONİM chat-sepet 4 katmanda bloke (bkz memory; login yolu kapandı).
+- **ChatAgent MCP keşfi makine kimliğiyle:** açılışta ListTools `chat-agent-discovery` m2m token'ı taşır
+  (061 korumalı transport'lar için; `DiscoveryTokenSource` + `TokenInjectingHandler` HttpContext-yok
+  fallback'i). Tool ÇAĞRISI her zaman o anki kullanıcı token'ıyla. Keşifte 401/403 KALICI sayılır (retry
+  yok); dış MCP'ler (DropShop) tek deneme — retry bütçesi yalnız Aspire iç boot yarışına.
 - **ModerationAgent (ayrı `reviews-moderation-agent` worker'ı):** Singleton ChatClientAgent (Temp=0,
   structured JSON, MCP'siz), retry→error queue. Moderasyon 046'da BC'den broker'lı worker'a taşındı
   (Reviews'te agent-framework yok; iletişim `ReviewModerationRequested`/`ReviewModerated` event'leriyle).

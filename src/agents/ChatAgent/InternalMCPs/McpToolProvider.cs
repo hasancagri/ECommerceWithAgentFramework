@@ -1,16 +1,19 @@
 namespace ChatAgent.InternalMCPs;
 
-// MCP tool'larini boot'ta bir kez ANONIM keşfeder (ListTools) ve allowlist'e gore filtreler; her
-// sema icin bir PerUserMcpTool uretir. Keşif token okumaz (transport acik, allowlist statik). Asil
+// MCP tool'larini boot'ta bir kez keşfeder (ListTools) ve allowlist'e gore filtreler; her
+// sema icin bir PerUserMcpTool uretir. Keşif 061 korumali transport'larda MAKINE token'i tasir
+// (TokenInjectingHandler + DiscoveryTokenSource; HttpContext yok => m2m fallback). Asil
 // yetki CAGRI ANINDA cozulur: PerUserMcpTool her cagride, MCP'ye ozel named-client'a takili handler'in
 // forward ettigi token'la taze bir session acar. Handler MCP'ye ozeldir: kendi server'larimiz
 // Identity token'i tasir; dis MCP'ler (or. gmail) kendi client'iyla farkli/handler'siz baglanir.
 // Tasarim: docs/superpowers/specs/2026-07-08-per-user-mcp-session-design.md
 public interface IMcpToolProvider
 {
+    // attempts: null => varsayılan retry bütçesi (Aspire iç boot yarışı için). Dış MCP'ler
+    // (Aspire'ın beklemediği, ör. DropShop) 1 verir — kapalıysa retry başlatmayı geciktirmesin.
     Task<IList<AITool>> GetToolsAsync(
         string serverName, string url, string clientName,
-        IReadOnlyCollection<string> allowedTools, CancellationToken ct = default);
+        IReadOnlyCollection<string> allowedTools, int? attempts = null, CancellationToken ct = default);
 }
 
 public sealed class McpToolProvider(
@@ -21,32 +24,51 @@ public sealed class McpToolProvider(
     // hedef MCP henüz dinlemiyorsa (Aspire boot yarışı — WaitFor "Running" der, "dinliyor" demez)
     // tek deneme agent'ı KALICI tool'suz bırakır (singleton). Sınırlı retry yarışı kapatır; sınır
     // sonunda yine boş dönülür (gerçekten olmayan dış MCP için graceful-degrade korunur).
-    private const int DiscoveryAttempts = 10;
+    // 20×3sn: soğuk açılışta (container recovery + Marten şema taraması) storefront 30sn'yi aşabiliyor
+    // (canlı bulgu, 2026-09-08); asıl güvence AppHost WithHttpHealthCheck+WaitFor, bu bütçe backstop.
+    private const int DiscoveryAttempts = 20;
     private static readonly TimeSpan DiscoveryRetryDelay = TimeSpan.FromSeconds(3);
 
     public async Task<IList<AITool>> GetToolsAsync(
         string serverName, string url, string clientName,
-        IReadOnlyCollection<string> allowedTools, CancellationToken ct = default)
+        IReadOnlyCollection<string> allowedTools, int? attempts = null, CancellationToken ct = default)
     {
+        var maxAttempts = attempts ?? DiscoveryAttempts;
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 return await DiscoverAsync(serverName, url, clientName, allowedTools, ct);
             }
-            catch (Exception ex) when (attempt < DiscoveryAttempts)
+            catch (Exception ex) when (IsAuthFailure(ex))
+            {
+                // 401/403 KALICIDIR (kesif kimligi eksik/yanlis) — retry bosuna startup'i uzatir.
+                logger.LogWarning("MCP '{Server}' tool kesfi yetki hatasina carpti ({Error}); " +
+                    "retry yok, bu server atlandi. DiscoveryAuth config'ini ve chat-agent-discovery seed'ini kontrol et.",
+                    serverName, ex.Message);
+                return [];
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
             {
                 logger.LogWarning("MCP '{Server}' tool kesfi basarisiz (deneme {Attempt}/{Max}): {Error} — tekrar denenecek.",
-                    serverName, attempt, DiscoveryAttempts, ex.Message);
+                    serverName, attempt, maxAttempts, ex.Message);
                 await Task.Delay(DiscoveryRetryDelay, ct);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "MCP '{Server}' tool kesfi {Max} denemede basarisiz; bu server atlandi.",
-                    serverName, DiscoveryAttempts);
+                logger.LogWarning("MCP '{Server}' tool kesfi {Max} denemede basarisiz ({Error}); bu server atlandi.",
+                    serverName, maxAttempts, ex.Message);
                 return [];
             }
         }
+    }
+
+    private static bool IsAuthFailure(Exception ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException!)
+            if (e is HttpRequestException { StatusCode: System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden })
+                return true;
+        return false;
     }
 
     private async Task<IList<AITool>> DiscoverAsync(
@@ -92,11 +114,12 @@ public static class McpToolProviderExtensions
     // (agent factory icinde). Her server girisi: izin verilen tool adlari + baglanacagi named-client.
     public static IList<AITool> CollectTools(
         this IMcpToolProvider provider,
-        params (string Name, string Url, string ClientName, string[] allowedTools)[] servers)
+        (string Name, string Url, string ClientName, string[] allowedTools)[] servers,
+        int? attempts = null)
     {
         List<AITool> tools = [];
         foreach (var (name, url, clientName, allowedTools) in servers)
-            tools.AddRange(provider.GetToolsAsync(name, url, clientName, allowedTools).GetAwaiter().GetResult());
+            tools.AddRange(provider.GetToolsAsync(name, url, clientName, allowedTools, attempts).GetAwaiter().GetResult());
         return tools;
     }
 }
