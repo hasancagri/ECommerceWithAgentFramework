@@ -30,6 +30,9 @@ global using ModelContextProtocol.Server;
 global using Shared.Utils.Constants;
 // --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Common.Dependencies;
+// --- 069: serbest-sorgu kapısı (AgentSql) ---
+global using Common.Results;
+global using Storefront.Api.AgentSql;
 // --- 067: semantik arama (pgvector + OpenAI embedding) ---
 global using Marten.PgVector;
 global using Storefront.Api;

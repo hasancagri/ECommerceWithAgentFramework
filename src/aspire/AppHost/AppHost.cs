@@ -211,7 +211,17 @@ var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
     .WithEnvironment("PaymentGateway__A2AUrl", builder.Configuration["PaymentGateway:A2AUrl"] ?? "")
     // 032: admin onboarding descriptor linki WebApp well-known'inden turetilir (service discovery).
     .WithReference(web)
-    .WaitFor(gateway);
+    .WaitFor(gateway)
+    // 069 canli bulgu: MAF agent'lari STARTUP'ta kurulur (Map* cagrisi resolve eder) ve MCP tool'lari
+    // o anda toplanir — tool MCP'si ayakta degilse agent KALICI tool'suz kalir (singleton, retry yok).
+    // Bu yuzden chat-agent tool topladigi TUM ic MCP servislerini bekler.
+    .WaitFor(storefrontApi)
+    .WaitFor(catalogApi)
+    .WaitFor(basketApi)
+    .WaitFor(orderApi)
+    .WaitFor(paymentApi)
+    .WaitFor(stockApi)
+    .WaitFor(customerApi);
 
 // WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
 web.WithReference(chatAgent);

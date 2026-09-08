@@ -63,16 +63,8 @@ public class StorefrontViewReembeddingTests
             .ShouldBe(EmbeddingDecision.Generate);
     }
 
-    [Theory]
-    [InlineData("H.G. Wells", "H. G. Wells")]
-    [InlineData("h g wells", "H.G. Wells")]
-    [InlineData("Harlequin  Mills & Boon", "harlequin mills-boon")]
-    public void Ad_normalizasyonu_noktalama_ve_bosluk_duyarsizdir(string a, string b)
-    {
-        // Canlı bulgu: "H.G. Wells" tam-ad eşleşmesi DB'deki "H. G. Wells"i ıskalıyordu.
-        SearchStorefrontProductsForAgent.NormalizeName(a)
-            .ShouldBe(SearchStorefrontProductsForAgent.NormalizeName(b));
-    }
+    // 069: Ad_normalizasyonu testi silindi — NormalizeName parametrik arama slice'ıyla söküldü;
+    // yazım-varyantı dayanıklılığı artık sorgu kalıbında (ILIKE '%...%', prompt sözleşmesi).
 
     [Fact]
     public void Temsil_dokumani_pk_ve_vektor_tasir()

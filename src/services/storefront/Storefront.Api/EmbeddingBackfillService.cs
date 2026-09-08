@@ -6,7 +6,7 @@ namespace Storefront.Api;
 public class EmbeddingBackfillService(
     IDocumentStore store,
     IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
-    SemanticSearchOption options,
+    EmbeddingBackfillOption options,
     ILogger<EmbeddingBackfillService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

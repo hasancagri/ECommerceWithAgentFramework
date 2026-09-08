@@ -17,11 +17,42 @@ public sealed class McpToolProvider(
     IHttpClientFactory httpClientFactory,
     ILogger<McpToolProvider> logger) : IMcpToolProvider
 {
+    // 069 canlı bulgu: agent'lar STARTUP'ta kurulur (MAF Map* resolve eder) ve keşif O ANDA koşar;
+    // hedef MCP henüz dinlemiyorsa (Aspire boot yarışı — WaitFor "Running" der, "dinliyor" demez)
+    // tek deneme agent'ı KALICI tool'suz bırakır (singleton). Sınırlı retry yarışı kapatır; sınır
+    // sonunda yine boş dönülür (gerçekten olmayan dış MCP için graceful-degrade korunur).
+    private const int DiscoveryAttempts = 10;
+    private static readonly TimeSpan DiscoveryRetryDelay = TimeSpan.FromSeconds(3);
+
     public async Task<IList<AITool>> GetToolsAsync(
         string serverName, string url, string clientName,
         IReadOnlyCollection<string> allowedTools, CancellationToken ct = default)
     {
-        try
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await DiscoverAsync(serverName, url, clientName, allowedTools, ct);
+            }
+            catch (Exception ex) when (attempt < DiscoveryAttempts)
+            {
+                logger.LogWarning("MCP '{Server}' tool kesfi basarisiz (deneme {Attempt}/{Max}): {Error} — tekrar denenecek.",
+                    serverName, attempt, DiscoveryAttempts, ex.Message);
+                await Task.Delay(DiscoveryRetryDelay, ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "MCP '{Server}' tool kesfi {Max} denemede basarisiz; bu server atlandi.",
+                    serverName, DiscoveryAttempts);
+                return [];
+            }
+        }
+    }
+
+    private async Task<IList<AITool>> DiscoverAsync(
+        string serverName, string url, string clientName,
+        IReadOnlyCollection<string> allowedTools, CancellationToken ct)
+    {
         {
             // MCP'ye ozel named-client: handler (Identity token / dis auth / hicbiri) bu client'ta yasar.
             var httpClient = httpClientFactory.CreateClient(clientName);
@@ -51,11 +82,6 @@ public sealed class McpToolProvider(
             return filtered
                 .Select(AITool (t) => new PerUserMcpTool(t, httpClient, serverName, url, logger))
                 .ToList();
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "MCP '{Server}' tool kesfi basarisiz; bu istek icin atlandi.", serverName);
-            return [];
         }
     }
 }
