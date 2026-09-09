@@ -24,24 +24,6 @@ public static class McpClients
     public const string MachineOnboarding = "mcp-machine-onboarding";
 }
 
-// 024: uzak A2A PaymentAgent (ayri solution) kontrat sabitleri (FR-007). Isimler onceden
-// kararlastirildi; uzak taraf bunlara gore yayinlar. A2A named HttpClient MCP client'lari gibi
-// resilience-muaf (SSE); auth handler YOK (merchant key ertelendi, FR-008).
-public static class A2APayment
-{
-    public const string AgentName = "payment-gateway-agent";
-    public const string InstallmentQuoteSkill = "installment_quote";
-    // 038: canli akisin skill'leri — vault token'la taksit sorgusu + kayitli kartla cekim.
-    public const string QuoteInstallmentsSkill = "quote-installments";
-    public const string ChargeSkill = "charge_saved_card";
-    public const string HttpClient = "a2a-payment";
-    public const string A2AUrlConfigKey = "PaymentGateway:A2AUrl";
-}
-
-// MCP tool adları Shared/McpToolNames.cs'te (tek kaynak: sunucu attribute'ı + buradaki allowlist/
-// prompt aynı sabiti okur). Burada yalnız DIŞ solution kontratı kalır (DropShop onboarding).
-
-// 032: DropShop Merchant.Api onboarding tool'lari (admin persona toplar).
 public static class OnboardingTools
 {
     public const string SubmitRegistration = "submit_registration";
@@ -181,20 +163,16 @@ public static class Prompts
         kullanıcıya özetle.
 
         8) TAKSİT SORGUSU ("taksitleri getir", "kayıtlı kartımla taksitler", "sepet tutarına
-        taksit"): (a) {{{BasketTools.GetBasket}}} ile sepet toplamını al. Sepet BOŞSA devam etme; önce sepete ürün
-        eklemesini iste. Sepet toplamı ALINAMAZSA (araç hata döner) devam etme; durumu açıkça
-        söyle. (b) {{{CustomerTools.GetPaymentContext}}} aracını çağır (kullanıcı belirli bir kart SEÇTİYSE cardId
-        ile — bkz. kural 10; seçmediyse parametresiz = varsayılan kart). Araç kartın vault
-        token'ını ve alıcı (buyer) bilgisini döner. Varsayılan kart yoksa kullanıcıdan önce kart
-        eklemesini/varsayılan seçmesini iste; kayıtlı adres yoksa önce adres eklemesini iste.
-        (c) Ödeme ajanı aracını (PaymentAgent) şu içerikle çağır: intent=installments,
-        merchantId=bağlamdaki merchantId, vaultToken=bağlamdaki token, amount=sepet toplamı.
-        merchantId'yi {{{CustomerTools.GetPaymentContext}}}'ten OLDUĞU GİBİ al (üretme). Dönen seçenekleri (taksit sayısı +
-        toplam tutar) numaralı liste hâlinde göster; tek çekim = installmentNumber 1. Yalnız dönen
-        alanları göster, ASLA alan UYDURMA. Hiç seçenek yoksa "uygun taksit seçeneği yok" de.
-        NOT: bu YALNIZ BİLGİdir, henüz çekim yapma. Bağlamdaki buyer alanlarını ve vault token'ı
-        kullanıcıya GÖSTERME. Kullanıcı listeden bir taksit seçerse kural 9'a geç; tutarları
-        yeniden sorgulama/sorma, gösterdiğin listedeki değerleri kullan.
+        taksit"): {{{OrderTools.QuoteInstallments}}} aracını çağır — kullanıcı belirli bir kart SEÇTİYSE cardId
+        ile (bkz. kural 10), seçmediyse parametresiz (= varsayılan kart). Sepet toplamı, kart ve
+        taksit hesabı SUNUCUDA çözülür; sepet/kart/tutar TOPLAMA-HESAPLAMA, başka araç çağırma.
+        Yanıt: basketTotal + options[{installmentNumber, totalPrice}] (+ opsiyonel message).
+        options BOŞ ve message doluysa message'ı kullanıcıya OLDUĞU GİBİ ilet (ör. sepet boş,
+        kart/adres yok, sağlayıcı erişilemez) ve eksikliği gidermesini iste. Seçenekleri numaralı
+        liste hâlinde göster; tek çekim = installmentNumber 1. Yalnız dönen alanları göster, ASLA
+        alan UYDURMA. NOT: bu YALNIZ BİLGİdir, henüz çekim yapma. Kullanıcı listeden bir taksit
+        seçerse kural 9'a geç; tutarları yeniden sorgulama/sorma, gösterdiğin listedeki değerleri
+        kullan.
 
         9) ÖDEME / SİPARİŞİ TAMAMLAMA ("öde", "satın al", "siparişi tamamla", "kartımdan çek",
         "N taksitle öde"): kayıtlı kartla GERÇEK çekim + siparişin oluşturulması TEK adımda. Bu işi
@@ -220,8 +198,8 @@ public static class Prompts
         10) KARTLARIM / KART SEÇİMİ ("kartlarımı göster", "şu kartımla öde/taksit"): {{{CustomerTools.ListCards}}}
         aracıyla kartları listele (marka + son 4 hane + etiket + varsayılan işareti); kart Id'sini
         ve token'ı LİSTEDE GÖSTERME, yalnız güvenli alanları göster. Kullanıcı bir kart seçerse
-        sonraki {{{CustomerTools.GetPaymentContext}}} çağrısını o kartın cardId'siyle yap; taksit/çekim o kartla
-        yürür. Seçim yoksa varsayılan kart kullanılır.
+        sonraki {{{OrderTools.QuoteInstallments}}} / {{{OrderTools.PlaceOrder}}} çağrısını o kartın cardId'siyle yap;
+        taksit/çekim o kartla yürür. Seçim yoksa varsayılan kart kullanılır.
 
         11) KART EKLEME / SİLME: chat üzerinden ASLA yapılmaz (güvenlik kuralı) — kart numarası
         (PAN/CVV) sohbete yazılırsa işleme alma; "kart ekleme/silme şu an sohbetten yapılamıyor"
@@ -231,8 +209,8 @@ public static class Prompts
         kullanıcı açıkça "ekle/at" demedikçe sepete asla ekleme yapma.
         Bir ürün bulunamazsa veya bir işlem başarısız olursa durumu kullanıcıya açıkça söyle.
 
-        Taksit/ödeme aracı ELİNDE YOKSA veya çağrı başarısız olursa: kullanıcıya "bu işlem şu an
-        yapılamıyor" de; teknik hata/exception ayrıntısı verme, sohbetin geri kalanı normal çalışır.
+        Taksit/ödeme çağrısı başarısız olursa: kullanıcıya "bu işlem şu an yapılamıyor" de;
+        teknik hata/exception ayrıntısı verme, sohbetin geri kalanı normal çalışır.
 
         """ + StorefrontQueryPlaybook;
 

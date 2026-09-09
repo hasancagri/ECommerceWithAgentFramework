@@ -3,7 +3,6 @@ global using Microsoft.Extensions.Logging.Abstractions;
 global using ModelContextProtocol.Client;
 global using ModelContextProtocol.Protocol;
 global using System.Text.Json;
-global using A2A;
 global using Microsoft.Agents.AI;
 // --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using ChatAgent.InternalMCPs;

@@ -42,10 +42,6 @@ if (dropShop is not null)
     builder.Services.AddSingleton(dropShop);
 builder.Services.AddSingleton(onboarding);
 
-// 024: A2A PaymentAgent config — section "PaymentGateway" (house-style Options; config[...] yerine).
-builder.Services.AddOptions<PaymentGateway>().BindConfiguration(nameof(PaymentGateway))
-    .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptions<PaymentGateway>>().Value);
 
 // Her agent'in toplayacagi MCP tool'lari: (server, url, baglanacagi named-client, izin verilen tool'lar).
 // Tek kaynak; delete_product hicbir listede yok. ClientName = MCP'ye ozel handler/baglanti; kendi
@@ -72,14 +68,13 @@ builder.Services.AddSingleton<PaymentGateway>(sp => sp.GetRequiredService<IOptio
             CatalogTools.ListCategories, CatalogTools.ListAuthors, CatalogTools.ListPublishers]),
     (McpServers.Basket, basketUrl, McpClients.WithToken,
         [BasketTools.AddToCart, BasketTools.GetBasket, BasketTools.RemoveBasketItem]),
-    (McpServers.Order, orderUrl, McpClients.WithToken, [OrderTools.GetOrders, OrderTools.PlaceOrder]),
+    (McpServers.Order, orderUrl, McpClients.WithToken,
+        [OrderTools.GetOrders, OrderTools.PlaceOrder, OrderTools.QuoteInstallments]),
     (McpServers.Payment, paymentUrl, McpClients.WithToken, [PaymentTools.GetMyPayments]),
     (McpServers.Stock, stockUrl, McpClients.WithToken, [StockTools.GetStock]),
-    // 024: default kart BIN okumasi (PAN/CVV asla). 038: odeme baglami (kart vault token +
-    // gercek buyer — A2A istegine verbatim) + kart listesi (kart secimi). 033 taksit/cekim
-    // tool'lari SOKULDU — taksit sorgusu ve cekim A2A -> PaymentGateway zinciriyle.
-    (McpServers.Customer, customerUrl, McpClients.WithToken,
-        [CustomerTools.GetDefaultCardBin, CustomerTools.GetPaymentContext, CustomerTools.ListCards])
+    // 070-sonrasi: yalniz guvenli kart listesi (marka+son4). get_payment_context/get_default_card_bin
+    // MCP'den SOKULDU — odeme baglami sunucuda kalir (quote_installments/place_order zinciri).
+    (McpServers.Customer, customerUrl, McpClients.WithToken, [CustomerTools.ListCards])
 ];
 // 032: admin persona YALNIZ DropShop onboarding MCP'sini toplar (submit_registration + registration_status).
 // Config yoksa bos -> CollectTools bos doner, persona tool'suz acilir (graceful-degrade).
@@ -117,10 +112,6 @@ builder.Services.AddHttpClient(McpClients.WithToken)
 builder.Services.AddHttpClient(McpClients.NoToken)
     .RemoveAllResilienceHandlers();
 
-// 024: A2A istemci HttpClient'i. MCP gibi uzun-omurlu SSE tuttugu icin standart resilience/
-// timeout akisi keser -> muaf tut + comert timeout. Auth handler YOK (merchant key ertelendi, FR-008).
-builder.Services.AddHttpClient(A2APayment.HttpClient, c => c.Timeout = TimeSpan.FromSeconds(60))
-    .RemoveAllResilienceHandlers();
 
 // 032: DropShop onboarding MCP'ye makine token'i forward eden named-client (MCP uzun-omurlu SSE ->
 // resilience muaf). Handler her istege client_credentials Bearer takar (kesif ListTools dahil).
@@ -143,23 +134,13 @@ var publicAgent = builder.AddAIAgent("public", (sp, name) =>
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.PublicInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);
 
-// ASSISTANT agent (login): catalog + basket + odeme (A2A).
+// ASSISTANT agent (login): catalog + basket + siparis/taksit (sunucu-orkestrali tool'lar).
+// 070-sonrasi: A2A PaymentAgent koprusu SOKULDU — taksit sorgusu quote_installments (Order /mcp)
+// zinciriyle SUNUCUDA kosar; vault token/buyer agent baglamina hic girmez.
 var assistant = builder.AddAIAgent("assistant", (sp, name) =>
 {
-    // 038: taksit sorgusu + kayitli kartla cekim A2A uzerinden PaymentGateway Payment.Agent'a
-    // devredildi (033'un Customer.Api MCP odeme yolu SOKULDU — tek yol A2A). Odeme baglami
-    // (vault token + buyer) Customer.Api get_payment_context'ten gelir, A2A istegine verbatim.
     var tools = sp.GetRequiredService<IMcpToolProvider>()
         .CollectTools(assistantAgentTools);
-
-    var a2aLogger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("ChatAgent.A2APayment");
-    var paymentAgentTool = ChatAgent.ExternalAgents.PaymentAgentInstallmentTool.TryBuildAsync(
-            sp.GetRequiredService<PaymentGateway>(),
-            sp.GetRequiredService<IHttpClientFactory>(),
-            a2aLogger)
-        .GetAwaiter().GetResult();
-    if (paymentAgentTool is not null)
-        tools.Add(paymentAgentTool);
 
     return new ChatClientAgent(sp.GetRequiredService<IChatClient>(), Prompts.AssistantInstructions, name, null, tools);
 }, ServiceLifetime.Singleton);

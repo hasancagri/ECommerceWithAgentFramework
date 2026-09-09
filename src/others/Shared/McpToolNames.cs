@@ -53,10 +53,9 @@ public static class StorefrontTools
 
 public static class CustomerTools
 {
-    public const string GetDefaultCardBin = "get_default_card_bin";
-    // 038: odeme baglami (kart vault token + gercek buyer; A2A istegine verbatim tasinir) +
-    // kart listesi (kart secimi icin). 033 taksit/cekim tool'lari SOKULDU — A2A uzerinden.
-    public const string GetPaymentContext = "get_payment_context";
+    // 070-sonrasi guvenlik sokumu: get_payment_context + get_default_card_bin MCP'den KALDIRILDI —
+    // vault token/buyer PII agent baglamina tasiniyordu; taksit zinciri artik sunucuda
+    // (OrderTools.QuoteInstallments). Odeme baglami yalniz S2S internal REST'te yasar.
     public const string ListCards = "list_cards";
     // 062: adres defteri (dış agent yüzeyi; ChatAgent allowlist'inde değil).
     public const string ListAddresses = "list_addresses";
