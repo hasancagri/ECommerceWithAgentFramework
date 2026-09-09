@@ -51,9 +51,10 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     // Vault merchant kimliği yönetimi (admin-only capability).
     AuthorizationScopes.MerchantCredentialsWrite);
 // 061: RFC 9728 keşif (metadata dokümanı + 401 challenge parametreleri) — dış agent OAuth zinciri.
-// Dış-agent demeti yalnız customer.read (yazma/merchant yüzeyi demet dışı — data-model).
+// 070 fix: 062 adres YAZMA tool'ları açıldığında bu liste bayat kalmıştı — scope'unu PRM'den türeten
+// istemciler (mcp-remote köprüsü) customer.write'sız token alıp add_address'te düşüyordu.
 builder.Services.AddMcpResourceMetadata(builder.Configuration, "customer",
-    AuthorizationScopes.CustomerRead);
+    AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite);
 // 061 logout: `logout` MCP tool'unun Identity.Server agent-logout ucuna forward client'ı.
 builder.Services.AddAgentLogoutClient(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
