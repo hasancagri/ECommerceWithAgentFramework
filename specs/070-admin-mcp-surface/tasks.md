@@ -68,7 +68,7 @@ güncelle→yayından kaldır→geçmiş zinciri; customer rolüyle 403; DCR'dan
   sarmalayıcı; Description'lar contracts/admin-mcp-tools.md kalitesinde (alan+değer+örnek; FR-015)
 - [X] T012 [US1] Catalog `Program.cs`: `MapMcp("/mcp-admin").RequireAuthorization()` + admin tool'ların
   YALNIZ bu uçta yayını (anonim `/mcp` tool seti DEĞİŞMEZ) + `AddMcpResourceMetadata` (catalog.write)
-- [ ] T013 [US1] Canlı doğrulama: quickstart.md §2-3 (OAuth akışı + zincir + negatifler + catalogDb izi)
+- [X] T013 [US1] Canlı doğrulama: quickstart.md §2-3 (OAuth akışı + zincir + negatifler + catalogDb izi)
 
 **Checkpoint**: US1 tek başına gösterilebilir — MVP
 
