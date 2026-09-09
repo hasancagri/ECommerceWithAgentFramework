@@ -63,7 +63,8 @@ public static class AdminGetProductMcpTool
         "YONETIM: tek urunun tam yonetim detayini doner (draft dahil): kunye (name, shortDescription, " +
         "fullDescription, sku, isbn, price, imageUrl), baglar (authors ad+id, publisherId+publisherName, " +
         "categoryId+categoryName), isPublished ve fiyat degisiklik gecmisi (oldPrice→newPrice, " +
-        "changedAtUtc) — TEK cagrida. productId = admin_list_products'tan donen kimlik.")]
+        "changedAtUtc) — TEK cagrida. productId = admin_list_products'tan donen kimlik. imageUrl'i " +
+        "kullaniciya TIKLANABILIR link olarak sun (markdown: [Kapak](url)).")]
     public static Task<FeatureObjectResultModel<AdminGetProductForAgent.AdminProductDetailResponse>> AdminGetProductAsync(
         [Description("Urun kimligi (admin_list_products'tan)")] Guid productId,
         IMessageBus bus,

@@ -40,7 +40,10 @@ public static class QueryStorefrontMcpTool
         "(6) SAYFALAMA/genis liste: 'tum X'leri listele' isteginde ONCE COUNT(*) ile toplami ogren, " +
         "sonra ilk sayfayi LIMIT 20 ile ver; toplami soyle ve devamini isteyip istemedigini sor — " +
         "devami = AYNI sorgu, sonraki OFFSET. Yanitta truncated=true ise ayni davranis (sonuc " +
-        "kirpilmistir; 'hepsini gosterdim' deme). ";
+        "kirpilmistir; 'hepsini gosterdim' deme). " +
+        "(7) KAPAK GORSELI: kullanici kapak/gorsel isterse image_url kolonunu SELECT'e ekle ve " +
+        "yanitinda TIKLANABILIR link olarak sun (markdown: [Kapak](url)); gorseli inline " +
+        "gosteremeyebilirsin, link her zaman ver. ";
 
     private const string SemanticBlock =
         "TEMALI/ANLAMSAL arama: bulanik tema/ruh hali/konu ifadesini {{EMBED:\"tema metni\"}} " +
