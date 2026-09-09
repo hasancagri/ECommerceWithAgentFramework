@@ -92,12 +92,13 @@ public sealed class SeedHostedService(IServiceProvider provider) : IHostedServic
 
     private static OpenIddictApplicationDescriptor BuildDescriptor(ClientSeed client)
     {
+        // 070: public seed istemci (external-admin-agent) secret'sız + PKCE; diğerleri confidential.
         var d = new OpenIddictApplicationDescriptor
         {
             ClientId = client.ClientId,
-            ClientSecret = client.ClientSecret,
+            ClientSecret = client.IsPublic ? null : client.ClientSecret,
             DisplayName = client.DisplayName,
-            ClientType = ClientTypes.Confidential,
+            ClientType = client.IsPublic ? ClientTypes.Public : ClientTypes.Confidential,
             ConsentType = ConsentTypes.Implicit,
         };
 

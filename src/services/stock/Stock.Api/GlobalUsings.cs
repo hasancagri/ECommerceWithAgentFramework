@@ -30,3 +30,7 @@ global using ModelContextProtocol.Server;
 global using Shared.Utils.Constants;
 // --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Common.Dependencies;
+// --- 070: admin MCP yüzeyi ---
+global using Common.Utils.Authorization;
+global using Common.Auths;
+global using Stock.Api.AdminAudit;

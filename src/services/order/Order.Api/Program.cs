@@ -151,6 +151,14 @@ builder.Services.AddHttpClient<PaymentGatewayClient>((sp, c) =>
     c.Timeout = TimeSpan.FromSeconds(60);
 });
 
+// 070: A2A quote istemcisi HttpClient'i — MCP gibi uzun-omurlu SSE tuttugu icin standart resilience
+// akisi keser -> muaf + comert timeout (ChatAgent A2APayment deseni). Auth handler YOK.
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers experimental; A2A SSE icin gerekli
+builder.Services.AddHttpClient(Order.Api.A2A.PaymentAgentQuoteClient.HttpClientName,
+        c => c.Timeout = TimeSpan.FromSeconds(60))
+    .RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()

@@ -31,6 +31,8 @@ public static class OrderTools
     public const string GetOrders = "get_orders";
     // 039: chat'ten uctan uca siparis tamamlama (sunucu orkestrasyonu; cardId?/installment).
     public const string PlaceOrder = "place_order";
+    // 070: sipariş öncesi taksit seçenekleri (kayıtlı kart + sepet toplamı; PG A2A quote).
+    public const string QuoteInstallments = "quote_installments";
 }
 
 public static class PaymentTools
@@ -76,6 +78,33 @@ public static class LibraryTools
     public const string GetPriceAlarm = "get_price_alarm";
     public const string CreatePriceAlarm = "create_price_alarm";
     public const string RemovePriceAlarm = "remove_price_alarm";
+}
+
+// 070: admin yönetim tool'ları — her BC'nin KORUMALI /mcp-admin ucunda yayınlanır
+// (anonim /mcp keşif setine GİRMEZ). Yazma tool'ları tek-kayıt işler + AdminActionLog izi bırakır.
+
+public static class CatalogAdminTools
+{
+    public const string ListProducts = "admin_list_products";
+    public const string GetProduct = "admin_get_product";
+    public const string UpdateProduct = "admin_update_product";
+    public const string SetPublished = "admin_set_published";
+    public const string GetPriceHistory = "admin_get_price_history";
+}
+
+public static class StockAdminTools
+{
+    public const string SetStock = "admin_set_stock";
+    public const string AdjustStock = "admin_adjust_stock";
+}
+
+public static class CustomerAdminTools
+{
+    public const string GetMerchantStatus = "admin_get_merchant_status";
+    public const string SetMerchantCredentials = "admin_set_merchant_credentials";
+    // FR-016: DropShop onboarding sarmalayıcıları — makine kimliği sunucu içinde taşınır.
+    public const string SubmitOnboarding = "admin_submit_onboarding";
+    public const string OnboardingStatus = "admin_onboarding_status";
 }
 
 // 061: korumalı MCP'lerdeki ortak oturum-kapatma tool'u (basket/order/payment/customer).

@@ -13,6 +13,14 @@ public static class OptionsExt
         services.AddSingleton<DropShopVaultOption>(sp =>
             sp.GetRequiredService<IOptions<DropShopVaultOption>>().Value);
 
+        // 070: DropShop onboarding (PG Merchant.Api MCP + Identity) — section "DropShopOnboarding".
+        // Alanlar opsiyonel: config yoksa tool'lar dostane "yapılamıyor" döner (IsConfigured).
+        services.AddOptions<Customer.Api.Onboarding.DropShopOnboardingOption>()
+            .BindConfiguration("DropShopOnboarding")
+            .ValidateDataAnnotations().ValidateOnStart();
+        services.AddSingleton<Customer.Api.Onboarding.DropShopOnboardingOption>(sp =>
+            sp.GetRequiredService<IOptions<Customer.Api.Onboarding.DropShopOnboardingOption>>().Value);
+
         return services;
     }
 }

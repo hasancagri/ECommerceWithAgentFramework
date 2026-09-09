@@ -15,6 +15,9 @@ builder.Services.AddMarten(opts =>
         opts.Schema.For<Customer.Api.Domains.AddressBooks.AddressBook>().Index(x => x.UserId);
         // Vault: DropShop merchant kimliği (tekil kayıt) — vault token'ı bundan mint edilir.
         opts.Schema.For<Customer.Api.Domains.MerchantInformations.MerchantInformation>();
+
+        // 070: admin yazma tool'larının salt-append denetim izi (FR-009).
+        opts.Schema.For<Customer.Api.AdminAudit.AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -58,12 +61,25 @@ builder.Services.AddAllDependencies();
 
 // Vault: DropShop bağlantı config'i (section "DropShopVault") + gateway HTTP client.
 builder.Services.AddOptionsExt();
+
+// 070 FR-016: DropShop onboarding sarmalayıcısı — PG Merchant.Api MCP'sine makine kimliği
+// (client_credentials) forward eden named-client (MCP uzun-ömürlü SSE → resilience muaf).
+builder.Services.AddTransient<Customer.Api.Onboarding.OnboardingGatewayTokenHandler>();
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers experimental; MCP SSE icin gerekli
+builder.Services.AddHttpClient(Customer.Api.Onboarding.MerchantOnboardingClient.HttpClientName)
+    .RemoveAllResilienceHandlers()
+    .AddHttpMessageHandler<Customer.Api.Onboarding.OnboardingGatewayTokenHandler>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
 // Dev: gateway self-signed sertifikasını kabul et (Aspire https). PROD'da kaldırılır.
 builder.Services.AddHttpClient("dropshop-vault")
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     });
+#pragma warning restore EXTEXP0001
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -73,10 +89,33 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("customer");
 
 builder.Services.AddHttpContextAccessor();
+// 070: TEK MCP server, İKİ korumalı uç — /mcp (müşteri tool seti, 061) + /mcp-admin (merchant
+// yönetimi). Oturum başına TAZE options; tool seti isteğin yoluna göre budanır: admin tool'lar
+// YALNIZ /mcp-admin'de, müşteri tool'ları YALNIZ /mcp'de görünür (müşteri DCR istemcileri admin
+// şemasını görmez — R1).
+string[] customerAdminToolNames =
+[
+    Shared.CustomerAdminTools.GetMerchantStatus, Shared.CustomerAdminTools.SetMerchantCredentials,
+    Shared.CustomerAdminTools.SubmitOnboarding, Shared.CustomerAdminTools.OnboardingStatus,
+];
 builder.Services
     .AddMcpServer()
-    .WithHttpTransport()
+    .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
+    {
+        var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
+        var tools = opts.ToolCollection;
+        if (tools is null)
+            return Task.CompletedTask;
+        foreach (var tool in tools
+                     .Where(t => customerAdminToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+            tools.Remove(tool);
+        return Task.CompletedTask;
+    })
     .WithToolsFromAssembly();
+
+// 070: /mcp-admin RFC 9728 keşfi — admin scope'uyla (challenge yol-prefix'ine göre seçilir).
+builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "customer",
+    AuthorizationScopes.MerchantCredentialsWrite);
 
 var app = builder.Build();
 // AppHost WithHttpHealthCheck("/health") bu ucu yoklar (Development-only map).
@@ -99,6 +138,8 @@ app.AddMerchantKeyInternalEndpoint(apiVersionSet);
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();
+// 070: yönetim ucu — merchant admin tool'ları yalnız burada (scope katmanı handler'larda).
+app.MapMcp("/mcp-admin").RequireAuthorization();
 app.MapMcpResourceMetadata();
 
 await app.RunAsync();

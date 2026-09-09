@@ -36,6 +36,9 @@ builder.Services.AddMarten(opts =>
         // 043: özellik registry'si — NormalizedName teklik anahtarı (seed get-or-create güvencesi).
         opts.Schema.For<Catalog.Api.Domains.SpecificationAttributes.SpecificationAttribute>()
             .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+
+        // 070: admin yazma tool'larının salt-append denetim izi (FR-009).
+        opts.Schema.For<AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -102,10 +105,33 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("catalog");
 
 builder.Services.AddHttpContextAccessor();
+// 070: TEK MCP server, İKİ uç — anonim /mcp (keşif) + korumalı /mcp-admin (yönetim). Oturum
+// başına TAZE options (SDK, ConfigureSessionOptions verilince IOptionsFactory'den yeni kurar);
+// tool seti isteğin yoluna göre budanır: admin tool'lar YALNIZ /mcp-admin'de görünür.
+string[] catalogAdminToolNames =
+[
+    Shared.CatalogAdminTools.ListProducts, Shared.CatalogAdminTools.GetProduct,
+    Shared.CatalogAdminTools.UpdateProduct, Shared.CatalogAdminTools.SetPublished,
+    Shared.CatalogAdminTools.GetPriceHistory,
+];
 builder.Services
     .AddMcpServer()
-    .WithHttpTransport()
+    .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
+    {
+        var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
+        var tools = opts.ToolCollection;
+        if (tools is null)
+            return Task.CompletedTask;
+        foreach (var tool in tools
+                     .Where(t => catalogAdminToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+            tools.Remove(tool);
+        return Task.CompletedTask;
+    })
     .WithToolsFromAssembly();
+
+// 070: /mcp-admin RFC 9728 keşfi (401 challenge + metadata) — admin scope'uyla; anonim /mcp etkilenmez.
+builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "catalog",
+    AuthorizationScopes.CatalogWrite);
 
 
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
@@ -133,5 +159,10 @@ app.AddPublisherGroupEndpointExtension(apiVersionSet);
 app.AddSpecificationAttributeGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
+
+// 070: korumalı yönetim ucu — kimliksiz istek 401 + resource_metadata challenge (OAuth zinciri
+// buradan başlar); scope katmanı handler'larda ([RequiredScope(CatalogWrite)]).
+app.MapMcp("/mcp-admin").RequireAuthorization();
+app.MapMcpResourceMetadata();
 
 await app.RunAsync();

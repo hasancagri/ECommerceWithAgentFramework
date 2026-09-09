@@ -8,6 +8,9 @@ public static class StockResourceConstants
     // 056: checkout dususu (rezervasyonsuz)
     public static readonly string STOCK_INSUFFICIENT = "STOCK_INSUFFICIENT";
 
+    // 070: admin artir/azalt (Adjust) — sifir delta anlamsiz.
+    public static readonly string STOCK_ADJUST_INVALID = "STOCK_ADJUST_INVALID";
+
     public static readonly string RECORD_NOT_FOUND = "COMMON_MESSAGE_RECORD_NOT_FOUND";
     public static readonly string AMOUNT_MUST_BE_POSITIVE = "AMOUNT_MUST_BE_POSITIVE";
 

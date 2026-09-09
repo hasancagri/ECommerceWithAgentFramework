@@ -50,3 +50,6 @@ global using Common.Utils.Authorization;
 global using System.ComponentModel.DataAnnotations;
 global using System.Security.Cryptography;
 global using System.Text;
+
+// --- 070: taksit quote (A2A istemcisi) ---
+global using Order.Api.A2A;

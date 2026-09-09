@@ -16,6 +16,9 @@ builder.Services.AddMarten(opts =>
 
         // barkod ↔ ProductId eşlemesi (Catalog ProductAdded yazar).
         opts.Schema.For<BarcodeLink>();
+
+        // 070: admin yazma tool'larının salt-append denetim izi (FR-009).
+        opts.Schema.For<AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -86,10 +89,28 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("stock");
 
 builder.Services.AddHttpContextAccessor();
+// 070: TEK MCP server, İKİ uç — anonim /mcp (get_stock) + korumalı /mcp-admin (yönetim). Oturum
+// başına TAZE options (SDK, ConfigureSessionOptions verilince IOptionsFactory'den yeni kurar);
+// tool seti isteğin yoluna göre budanır: admin tool'lar YALNIZ /mcp-admin'de görünür.
+string[] stockAdminToolNames = [Shared.StockAdminTools.SetStock, Shared.StockAdminTools.AdjustStock];
 builder.Services
     .AddMcpServer()
-    .WithHttpTransport()
+    .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
+    {
+        var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
+        var tools = opts.ToolCollection;
+        if (tools is null)
+            return Task.CompletedTask;
+        foreach (var tool in tools
+                     .Where(t => stockAdminToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+            tools.Remove(tool);
+        return Task.CompletedTask;
+    })
     .WithToolsFromAssembly();
+
+// 070: /mcp-admin RFC 9728 keşfi (401 challenge + metadata) — admin scope'uyla; anonim /mcp etkilenmez.
+builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "stock",
+    AuthorizationScopes.StockWrite);
 
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
 builder.Services.AddApiKeyAuthentication(builder.Configuration);
@@ -111,5 +132,10 @@ app.UseAuthorization();
 app.AddStockGroupEndpointExtension(apiVersionSet);
 
 app.MapMcp("/mcp");
+
+// 070: korumalı yönetim ucu — kimliksiz istek 401 + resource_metadata challenge (OAuth zinciri
+// buradan başlar); scope katmanı handler'larda ([RequiredScope(StockWrite)]).
+app.MapMcp("/mcp-admin").RequireAuthorization();
+app.MapMcpResourceMetadata();
 
 await app.RunAsync();

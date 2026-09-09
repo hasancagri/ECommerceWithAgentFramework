@@ -42,3 +42,5 @@ global using Customer.Api.Extensions;
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---
 global using Customer.Api.Options;
 global using System.Text.Json;
+// --- 070: admin MCP yüzeyi (tool adı sabitleri + iz) ---
+global using Shared;
