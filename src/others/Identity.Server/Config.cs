@@ -20,6 +20,11 @@ public static class Config
     // 030 RBAC: rol/scope/kullanıcı yönetim yüzeyi scope'u (audience'sız; IdP iç yüzeyi + WebApp link).
     public const string IdentityRolesManageScope = "identity.roles.manage";
 
+    // 070: seed'li dış-agent YÖNETİM istemcisi (Claude Desktop admin bağlantısı). DCR yüzeyinin
+    // tamamen DIŞINDA — ExternalAgentDefaults/DcrRequestValidator değişmez; loopback redirect
+    // muafiyeti AdminAgentApplicationManager'da bu ClientId'ye özeldir.
+    public const string ExternalAdminAgentClientId = "external-admin-agent";
+
     // Scope → audience (resource) haritası. Token üretiminde ListResourcesAsync bu eşlemeden
     // 'aud' claim'ini üretir; servisler kendi adını (basket.api...) ValidateAudience ile arar.
     public static readonly IReadOnlyDictionary<string, string> ScopeResources =
@@ -143,6 +148,30 @@ public static class Config
             AllowClientCredentials = true,
             Scopes = ["basket.read", "order.read", "payment.read", "customer.read"],
         },
+        // 070: dış-agent YÖNETİM istemcisi — public+PKCE, code+refresh; consent Implicit (mağaza
+        // sahibinin kendi aracı). Scope TAVANI yönetim demeti; gerçek yetki = tavan ∩ kullanıcı ROL
+        // demeti (030) — admin-olmayan kullanıcı bu istemciyle girse de yönetim scope'u ALAMAZ.
+        // Redirect: Claude callback'leri sabit; loopback (http://localhost|127.0.0.1, her port)
+        // AdminAgentApplicationManager.ValidateRedirectUriAsync muafiyetiyle (RFC 8252 §7.3).
+        new ClientSeed
+        {
+            ClientId = ExternalAdminAgentClientId,
+            ClientSecret = null,
+            DisplayName = "External admin agent (Claude Desktop)",
+            IsPublic = true,
+            AllowAuthorizationCode = true,
+            AllowRefreshToken = true,
+            RedirectUris =
+            [
+                "https://claude.ai/api/mcp/auth_callback",
+                "https://claude.com/api/mcp/auth_callback",
+            ],
+            Scopes =
+            [
+                "openid", "profile",
+                "storefront.read", "catalog.write", "stock.write", "merchant.credentials.write",
+            ],
+        },
         // 050: çok-tedarikçi feed (Procurement/Supplier + eski ingestion-agent) söküldü — first-party
         // ürün-CRUD yazım yolu, ayrı m2m istemci gerektirmez.
         // WebApp (Razor Pages BFF): yalnız kullanıcı login'i (code+PKCE+refresh, confidential).
@@ -165,8 +194,11 @@ public static class Config
 public sealed class ClientSeed
 {
     public required string ClientId { get; init; }
-    public required string ClientSecret { get; init; }
+    // 070: public (PKCE) istemcide secret YOK — null bırakılır.
+    public required string? ClientSecret { get; init; }
     public required string DisplayName { get; init; }
+    // 070: public istemci (secret'sız + PKCE zorunlu); confidential seed'ler için false kalır.
+    public bool IsPublic { get; init; }
     public bool AllowAuthorizationCode { get; init; }
     public bool AllowClientCredentials { get; init; }
     public bool AllowRefreshToken { get; init; }

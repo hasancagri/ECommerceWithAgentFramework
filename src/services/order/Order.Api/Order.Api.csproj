@@ -21,6 +21,9 @@
         <PackageReference Include="Asp.Versioning.Http" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="ModelContextProtocol.AspNetCore" />
+        <!-- 070: taksit quote — PG A2A skill'i Order.Api içinden çağrılır (sürümler props'ta). -->
+        <PackageReference Include="A2A" />
+        <PackageReference Include="Microsoft.Agents.AI.A2A" />
         <PackageReference Include="Grpc.Net.ClientFactory" />
         <PackageReference Include="Grpc.AspNetCore" />
         <PackageReference Include="Google.Protobuf" />

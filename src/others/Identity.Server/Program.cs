@@ -52,7 +52,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddOpenIddict()
     .AddCore(options =>
-        options.UseEntityFrameworkCore().UseDbContext<ApplicationDbContext>())
+    {
+        options.UseEntityFrameworkCore().UseDbContext<ApplicationDbContext>();
+        // 070: seed admin istemcisine loopback redirect muafiyeti (yalnız o ClientId).
+        options.ReplaceApplicationManager(typeof(AdminAgentApplicationManager<>));
+    })
     .AddServer(options =>
     {
         // Issuer birebir korunur (servislerin Authority değeri buna bağlı).

@@ -183,4 +183,63 @@ public class ProductStockTests
         result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_REVERT_WITHOUT_COMMIT);
         stock.OnHand.ShouldBe(5);
     }
+
+    // --- 070: Adjust (admin artir/azalt) — tek delta metodu; negatife dusus AGGREGATE'te reddedilir ---
+
+    [Fact]
+    public void Adjust_PositiveDelta_IncreasesOnHand()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 10);
+
+        var result = stock.Adjust(5);
+
+        result.IsSuccess.ShouldBeTrue();
+        stock.OnHand.ShouldBe(15);
+    }
+
+    [Fact]
+    public void Adjust_NegativeDelta_DecreasesOnHand()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 10);
+
+        var result = stock.Adjust(-3);
+
+        result.IsSuccess.ShouldBeTrue();
+        stock.OnHand.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Adjust_BelowZero_ReturnsError_AndOnHandUnchanged()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 3);
+
+        var result = stock.Adjust(-5);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_QUANTITY_CANNOT_BE_NEGATIVE);
+        stock.OnHand.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Adjust_ZeroDelta_ReturnsError()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 3);
+
+        var result = stock.Adjust(0);
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Messages.ShouldContain(m => m.Code == StockResourceConstants.STOCK_ADJUST_INVALID);
+        stock.OnHand.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Adjust_ToExactlyZero_IsAllowed()
+    {
+        var stock = ProductStock.Create(Guid.NewGuid(), 3);
+
+        var result = stock.Adjust(-3);
+
+        result.IsSuccess.ShouldBeTrue();
+        stock.OnHand.ShouldBe(0);
+    }
 }

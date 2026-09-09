@@ -49,20 +49,23 @@ public static class UpdateAddressMcpTool
 {
     [McpServerTool(Name = Shared.CustomerTools.UpdateAddress)]
     [Description(
-        "Giris yapmis kullanicinin mevcut bir adresini gunceller. addressId = list_addresses'ten donen " +
-        "adres kimligi; tum adres alanlari (province/district/street/zipCode/line) yeni degerleriyle verilir. " +
-        "Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]
+        "Giris yapmis kullanicinin mevcut bir adresini KISMI gunceller: YALNIZ degistirmek istedigin " +
+        "alanlari gonder, digerlerini hic gonderme — verilmeyen alanlar mevcut degerinde AYNEN kalir " +
+        "(degismeyen alani yeniden yazma/uydurma). addressId = list_addresses'ten donen adres kimligi. " +
+        "Ornek: ilceyi degistirmek icin yalniz addressId + district gonder. Yanit adresin GUNCEL " +
+        "halidir; 'message' alanini kullaniciya oldugu gibi ilet.")]
     public static Task<FeatureObjectResultModel<UpdateAddressForAgent.UpdateAddressResponse>> UpdateAddressAsync(
         IMessageBus bus,
         IHttpContextAccessor http,
         ICurrentUser currentUser,
         Guid addressId,
-        string province,
-        string district,
-        string street,
-        string zipCode,
-        string line,
-        CancellationToken ct)
+        CancellationToken ct,
+        // MCP optional param DEFAULT sart (nullable yetmez) — verilmeyen alan mevcut degerinde kalir.
+        [Description("Yeni il (degistirmeyeceksen gonderme)")] string? province = null,
+        [Description("Yeni ilce (degistirmeyeceksen gonderme)")] string? district = null,
+        [Description("Yeni cadde/sokak (degistirmeyeceksen gonderme)")] string? street = null,
+        [Description("Yeni posta kodu (degistirmeyeceksen gonderme)")] string? zipCode = null,
+        [Description("Yeni acik adres (degistirmeyeceksen gonderme)")] string? line = null)
     {
         var userId = currentUser.Load(http.HttpContext!.User).Id;
         return bus.InvokeAsync<FeatureObjectResultModel<UpdateAddressForAgent.UpdateAddressResponse>>(

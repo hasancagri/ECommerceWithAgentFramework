@@ -70,6 +70,28 @@ public class ProductStock : AggregateRoot
         return ResultDomain.Ok();
     }
 
+    // 070: admin artir/azalt tek delta metodu — invariant (OnHand >= 0) aggregate'te; sifir delta anlamsiz.
+    /// <summary>Stok adedini delta kadar oynatir (+/-); negatife dusus ve sifir delta reddedilir.</summary>
+    public ResultDomain Adjust(int delta)
+    {
+        if (delta == 0)
+            return ResultDomain.Error(new MessageItem
+            {
+                Property = nameof(Quantity),
+                Code = StockResourceConstants.STOCK_ADJUST_INVALID
+            });
+
+        if (Quantity + delta < 0)
+            return ResultDomain.Error(new MessageItem
+            {
+                Property = nameof(Quantity),
+                Code = StockResourceConstants.STOCK_QUANTITY_CANNOT_BE_NEGATIVE
+            });
+
+        Quantity += delta;
+        return ResultDomain.Ok();
+    }
+
     // 056: rezervasyon kalkti — sepet stok tutmaz; stok gercegi checkout anidir.
     // Commit = dogrudan dusum. Invariant'lar: yeterlilik (OnHand >= quantity, eksiye inmez) +
     // orderId idempotency (at-least-once teslimatta mukerrer Commit no-op).
