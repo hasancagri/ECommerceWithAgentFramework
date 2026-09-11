@@ -43,6 +43,15 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<IntegrationEvents.OrderCompleted>()
         .ToRabbitExchange(RabbitMqConstants.OrderCompleted.Exchange);
 
+    // 072: sipariş iptal fanout'u — UCP kanalı tüketir (order.canceled webhook). Yayıncı yalnız
+    // exchange deklare eder; kuyruk + binding tüketicide (UCP). Additive.
+    rabbit.DeclareExchange(RabbitMqConstants.OrderCanceled.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+    });
+    opts.PublishMessage<IntegrationEvents.OrderCanceledEvent>()
+        .ToRabbitExchange(RabbitMqConstants.OrderCanceled.Exchange);
+
     // 049: checkout sipariş komutlarını (Create/Confirm/Cancel) dinle; yanıtları reply kuyruğuna.
     opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
     // 049: chat (AlreadyCaptured) checkout'u StartCheckout ile orchestrator'a tetikler (cross-service).
@@ -105,6 +114,9 @@ builder.Services.AddSingleton<CheckoutReconcile>(sp => sp.GetRequiredService<IOp
 builder.Services.AddOptions<CorrelationKeyOption>().BindConfiguration(nameof(CorrelationKeyOption))
     .ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddSingleton<CorrelationKeyOption>(sp => sp.GetRequiredService<IOptions<CorrelationKeyOption>>().Value);
+// 072: UCP already-captured dış-sipariş sandbox ödeme + sentetik kullanıcı config'i.
+builder.Services.AddOptions<UcpOrderOption>().BindConfiguration(nameof(UcpOrderOption));
+builder.Services.AddSingleton<UcpOrderOption>(sp => sp.GetRequiredService<IOptions<UcpOrderOption>>().Value);
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -159,6 +171,9 @@ builder.Services.AddHttpClient(Order.Api.A2A.PaymentAgentQuoteClient.HttpClientN
     .RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
 
+// 072: UCP → Order sanksiyonlu gRPC sunucusu (external-order girişi).
+builder.Services.AddGrpc();
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()
@@ -180,5 +195,8 @@ app.UseAuthorization();
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();
 app.MapMcpResourceMetadata();
+
+// 072: UCP dış-sipariş gRPC ucu (order.write; UCP makine token'ı).
+app.MapGrpcService<ExternalOrderGrpcService>().RequireAuthorization(AuthorizationScopes.OrderWrite);
 
 await app.RunAsync();

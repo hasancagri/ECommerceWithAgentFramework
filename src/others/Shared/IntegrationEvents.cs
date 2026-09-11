@@ -73,6 +73,15 @@ public static class IntegrationEvents
         string? Category = null,
         string? Brand = null);
 
+    // 072: Order → UCP. Bir siparişin iptali (additive; eski tüketici yok, alanlar default'lu).
+    // UCP BC bunu OrderRef ile kendi session'ına eşler → platforma imzalı `order.canceled` webhook'u.
+    // Reason opsiyonel (null = neden belirtilmemiş). OrderCompleted emsali, ters yön.
+    public record OrderCanceledEvent(
+        Guid OrderId,
+        Guid UserId,
+        DateTimeOffset CanceledAt,
+        string? Reason = null);
+
     // 060: Library → NotificationAgent. Üründeki HER alarm için bir event (alarm açık kalır — yaşayan
     // abonelik, FR-004). Mail'e yetecek her alan event'te; worker başka servise SORMAZ (email snapshot).
     public record PriceAlarmTriggered(

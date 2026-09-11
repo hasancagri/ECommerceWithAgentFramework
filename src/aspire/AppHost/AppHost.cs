@@ -26,6 +26,7 @@ var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
 var customerDb = postgres.AddDatabase("customerDb");
 var checkoutDb = postgres.AddDatabase("checkoutDb");
+var ucpDb = postgres.AddDatabase("ucpDb");
 
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
@@ -156,6 +157,32 @@ var libraryApi = builder.AddProject<Projects.Library_Api>("library-api")
     .WaitFor(rabbit)
     .WaitFor(identityServer);
 
+// 072: UCP checkout kanalı BC (ucpDb). Kendi izole modeli; katalog projeksiyonu product/stock
+// fanout'undan beslenir; session complete Order'a sanksiyonlu gRPC (already-captured). Order + Identity
+// bekler (gRPC hedefi + token). Tüketici kuyruğu yayıncıdan önce ayakta olsun diye catalog/stock'u bekler.
+var ucpApi = builder.AddProject<Projects.Ucp_Api>("ucp-api")
+    .WithHttpHealthCheck("/health")
+    .WithReference(ucpDb)
+    .WithReference(rabbit)
+    .WithReference(redis)
+    .WithReference(orderApi)
+    .WithReference(identityServer)
+    .WaitFor(ucpDb)
+    .WaitFor(rabbit)
+    .WaitFor(redis)
+    .WaitFor(orderApi)
+    .WaitFor(identityServer)
+    .WaitFor(catalogApi)
+    .WaitFor(stockApi);
+
+// 072: UCP platform simülatörü — DB'siz MCP server (Claude Desktop dış platform rolüyle bağlanır).
+// Mağaza /ucp cephesini client_credentials (ucp-platform) ile sürer; Identity + ucp-api bekler.
+builder.AddProject<Projects.Ucp_Sim>("ucp-sim")
+    .WithReference(ucpApi)
+    .WithReference(identityServer)
+    .WaitFor(ucpApi)
+    .WaitFor(identityServer);
+
 // 060: Mailpit — dev posta kutusu (ham container; SMTP 1025 + web UI 8025).
 var mailpit = builder.AddContainer("mailpit", "axllent/mailpit")
     .WithHttpEndpoint(targetPort: 8025, name: "http")
@@ -192,6 +219,8 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(reviewsApi)
     // 065: Library MCP gateway üzerinden (dış agent fiyat alarmı); service discovery için referans.
     .WithReference(libraryApi)
+    // 072: UCP checkout kanalı gateway üzerinden (/ucp + /.well-known/ucp); service discovery referansı.
+    .WithReference(ucpApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 

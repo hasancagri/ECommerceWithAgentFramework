@@ -56,12 +56,14 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok; kart YAZMA yüzeyi yok — yalnız okuma + payment-context) + AddressBook; izole, event yok; korumalı `/mcp-admin` (070: merchant kimlik + PG onboarding sarmalayıcı — imperatif MCP istemcisi ANAYASA SAPMASI, tek slice) | `specs/022-wallet-address-book` |
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `library` | libraryDb | Kullanıcı-ürün ilgi kayıtları; ilk dilim fiyat alarmı (yaşayan abonelik, email snapshot) + `NotificationRecord` izi; `ProductChangedEvent.OldPrice` tetiği → alarm başına `PriceAlarmTriggered` | `specs/060-price-alarm-mail` |
+| `ucp` | ucpDb | Dış AI platformları için UCP checkout kanalı (REST + `.well-known/ucp`); `UcpCheckoutSession` durum makinesi + fulfillment/discount uzantıları (kanal-içi basit; indirim ileride ayrı BC); katalog projeksiyonu product/stock fanout'tan; complete→Order'a sanksiyonlu gRPC `CreateExternalOrder` (already-captured, charge Order içinde/iyzico sandbox); imzalı giden webhook (RFC 9421); platform=makine kimliği `dev.ucp.shopping.checkout`; `ucp-sim` simülatörü | `specs/072-ucp-checkout-channel` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
 | `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC; dış agent için RFC 7591 DCR (`/connect/register`) + tek consent sayfası (Explicit) + revocation (061) | `specs/029-openiddict-migration` |
 | `chat-agent` | — | AI asistan (MAF); MCP istemci + A2A ödeme (uzak PaymentGateway) | `specs/024-a2a-payment-agent` |
 | `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 | `notification-agent` | — | Fiyat alarmı maili (DB'siz worker); `PriceAlarmTriggered`→LLM compose→Mail.Mcp `send_mail`→`NotificationSent` | `specs/060-price-alarm-mail` |
 | `mail-mcp` | — | İlk standalone MCP server; tek tool `send_mail` (MailKit→Mailpit); yalnız NotificationAgent tüketir, ChatAgent'a KAYITLI DEĞİL | `specs/060-price-alarm-mail` |
+| `ucp-sim` | — | UCP dış-platform simülatörü (test aracı; DB'siz MCP server); Claude Desktop bağlanır, mağaza `/ucp` cephesini `ucp-platform` makine token'ıyla sürer + imzalı webhook `/inbox` alıcısı; ChatAgent'a KAYITLI DEĞİL | `specs/072-ucp-checkout-channel` |
 
 - **Ürün yazım yolu (050 pivot — first-party):** Çok-tedarikçi feed (Procurement + Supplier) SÖKÜLDÜ;
   mallar mağazanın. Düzenleme = 058 admin ekranları (künye/fiyat/stok/yayın); elle ürün OLUŞTURMA hâlâ yok

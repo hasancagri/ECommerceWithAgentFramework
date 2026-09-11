@@ -27,6 +27,8 @@
       <ProjectReference Include="..\..\agents\Reviews.Moderation\Reviews.Moderation.csproj" />
       <ProjectReference Include="..\..\services\reviews\Reviews.Api\Reviews.Api.csproj" />
       <ProjectReference Include="..\..\services\library\Library.Api\Library.Api.csproj" />
+      <ProjectReference Include="..\..\services\ucp\Ucp.Api\Ucp.Api.csproj" />
+      <ProjectReference Include="..\..\agents\Ucp.Sim\Ucp.Sim.csproj" />
     </ItemGroup>
 
     <ItemGroup>

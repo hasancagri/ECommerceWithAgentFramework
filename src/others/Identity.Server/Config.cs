@@ -54,6 +54,9 @@ public static class Config
             // ile talep eder; customer/admin kullanıcı token'ına binmez.
             ["personalization.ingest"] = "reco.trainer",
             ["personalization.read"] = "reco.trainer",
+            // 072: UCP dış-platform checkout kanalı — audience ucp.api. Yalnız makine kimliği
+            // (ucp-platform client_credentials) talep eder; kullanıcı rol demetine girmez.
+            ["dev.ucp.shopping.checkout"] = "ucp.api",
         };
 
     // WebApp BFF'nin talep ettiği 12 servis scope'u (apikeys.manage HARİÇ; bugünkü Duende paritesi).
@@ -171,6 +174,27 @@ public static class Config
                 "openid", "profile",
                 "storefront.read", "catalog.write", "stock.write", "merchant.credentials.write",
             ],
+        },
+        // 072: UCP dış-platform kimliği — client_credentials + statik scope dev.ucp.shopping.checkout
+        // (İlke V makine kimliği; RBAC dışı). Dış platform bununla /ucp checkout uçlarına erişir; sipariş
+        // kullanıcısı sentetik. Order'a doğrudan erişim YOK (ayrı ucp-service istemcisi).
+        new ClientSeed
+        {
+            ClientId = "ucp-platform",
+            ClientSecret = "ucp-platform-secret",
+            DisplayName = "UCP external platform (m2m)",
+            AllowClientCredentials = true,
+            Scopes = ["dev.ucp.shopping.checkout"],
+        },
+        // 072: UCP → Order iç makine kimliği — already-captured sipariş devri (client_credentials,
+        // order.write). Dış platform kimliğinden AYRI (dış taraf Order'a erişemez).
+        new ClientSeed
+        {
+            ClientId = "ucp-service",
+            ClientSecret = "ucp-service-secret",
+            DisplayName = "UCP → Order service (m2m)",
+            AllowClientCredentials = true,
+            Scopes = ["order.write"],
         },
         // 050: çok-tedarikçi feed (Procurement/Supplier + eski ingestion-agent) söküldü — first-party
         // ürün-CRUD yazım yolu, ayrı m2m istemci gerektirmez.

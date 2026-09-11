@@ -56,14 +56,21 @@ public class OrderEventHandlers
     }
 
     [Transactional]
-    public async Task<OrderCancelled> Handle(CancelOrderCommand cmd, IDocumentSession session, CancellationToken ct)
+    public async Task<OrderCancelled> Handle(CancelOrderCommand cmd, IDocumentSession session, IMessageBus bus, CancellationToken ct)
     {
         var order = await session.LoadAsync<OrderAggregate>(cmd.OrderId, ct);
         if (order is null || order.Status == OrderStatus.Cancelled)
             return new OrderCancelled(cmd.CheckoutId, true, ErrorClass.None); // idempotent
 
         var result = order.Cancel(cmd.ReasonCode);
-        if (result.IsSuccess) session.Store(order);
+        if (result.IsSuccess)
+        {
+            session.Store(order);
+            // 072: iptal fanout'u — UCP kanalı tüketip platforma `order.canceled` webhook'u gönderir
+            // (UCP-dışı tüketici yok; additive). CanceledAt = şimdi (cancel anı).
+            await bus.PublishAsync(new IntegrationEvents.OrderCanceledEvent(
+                order.Id, order.BuyerId, DateTimeOffset.UtcNow, cmd.ReasonCode));
+        }
         return new OrderCancelled(cmd.CheckoutId, true, ErrorClass.None);
     }
 }

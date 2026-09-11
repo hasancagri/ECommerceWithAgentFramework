@@ -37,6 +37,8 @@
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_clear.proto" GrpcServices="Client" />
         <!-- 039: sepet kalemleri okuma istemcisi (chat siparis tamamlama). -->
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_items.proto" GrpcServices="Client" />
+        <!-- 072: UCP dış-sipariş girişi (SUNUCU; UCP.Api istemci). -->
+        <Protobuf Include="..\..\..\others\Shared\Protos\external_order.proto" GrpcServices="Server" />
     </ItemGroup>
 
     <ItemGroup>

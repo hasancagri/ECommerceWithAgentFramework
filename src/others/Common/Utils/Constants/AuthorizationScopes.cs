@@ -52,4 +52,9 @@ public static class AuthorizationScopes
 
     // reco.trainer (053): zevk profili okuma ucu (WebApp BFF m2m).
     public const string PersonalizationRead = "personalization.read";
+
+    // ucp.api (072): dış AI platformu checkout kanalı. UCP standardının önerdiği checkout scope'una
+    // hizalı (interop). Platform = makine kimliği (client_credentials + statik scope, RBAC dışı);
+    // UCP siparişinin kullanıcısı sentetik. İç müşteri scope'larından ayrı bir kanal scope'u.
+    public const string UcpCheckout = "dev.ucp.shopping.checkout";
 }

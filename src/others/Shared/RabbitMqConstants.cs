@@ -12,6 +12,21 @@ public static class RabbitMqConstants
         public const string Queue = "storefront.events";
     }
 
+    // 072: UCP katalog projeksiyonu TEK kuyruk dinler (Storefront deseni) — product.changed +
+    // stock.changed aynı kuyruğa bağlanır, Sequential işlenir. Aynı UcpCatalogItem satırına eşzamanlı
+    // yazım yapısal olarak imkânsızlaşır. Sipariş-olayı webhook'u AYRI kuyrukta (UcpOrderEvents).
+    public static class UcpCatalogEvents
+    {
+        public const string Queue = "ucp.catalog-events";
+    }
+
+    // 072: UCP sipariş-olayı webhook tetiği — order.completed + order.canceled aynı kuyruğa bağlanır
+    // (Sequential); UCP OrderEventsHandler tüketip imzalı webhook gönderir. Binding'i tüketici kurar.
+    public static class UcpOrderEvents
+    {
+        public const string Queue = "ucp.order-events";
+    }
+
     public static class ProductChanged
     {
         public const string Exchange = "product.changed";
@@ -22,6 +37,9 @@ public static class RabbitMqConstants
 
             // 060: Library fiyat değişimini dinler (alarm tetiği); binding'i tüketici kurar (007).
             public const string Library = "library.events";
+
+            // 072: UCP katalog projeksiyonu (tek sıralı kuyruk).
+            public const string Ucp = UcpCatalogEvents.Queue;
         }
     }
 
@@ -32,6 +50,21 @@ public static class RabbitMqConstants
         public static class Queues
         {
             public const string Storefront = StorefrontEvents.Queue;
+
+            // 072: UCP katalog projeksiyonu (uygunluk = OnHand > 0).
+            public const string Ucp = UcpCatalogEvents.Queue;
+        }
+    }
+
+    // 072: Order yayınlar (bir siparişin iptali). UCP tüketir → `order.canceled` webhook'u.
+    // OrderCompleted emsali; binding'i tüketici kurar.
+    public static class OrderCanceled
+    {
+        public const string Exchange = "order.canceled";
+
+        public static class Queues
+        {
+            public const string Ucp = UcpOrderEvents.Queue;
         }
     }
 
@@ -92,6 +125,9 @@ public static class RabbitMqConstants
         {
             public const string Reviews = "reviews.order-completed";
             public const string Storefront = StorefrontEvents.Queue;
+
+            // 072: UCP `order.confirmed` webhook tetiği (order.canceled ile aynı kuyruk, Sequential).
+            public const string Ucp = UcpOrderEvents.Queue;
         }
     }
 
