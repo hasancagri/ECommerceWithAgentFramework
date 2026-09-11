@@ -64,9 +64,11 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `mcp-gateway` | — | Tek müşteri MCP fasadı (DB'siz proxy); alt BC `/mcp`'lerini LAZY toplar (SDK `WithListToolsHandler`/`WithCallToolHandler`), ad→BC token-forward proxy (`PerUserMcpTool` server ikizi); tek `/mcp` (müşteri) + `/mcp-admin` (yönetim), tek consent (`external-customer-agent`); auth `RequireLoginUpfront` bayraklı (taban=upfront login; anonim+checkout step-up kod var, kapalı); **mağazanın TEK müşteri yüzeyi** (ChatAgent+UI söküldü) | `specs/073-customer-mcp-facade` |
 
 - **Ürün yazım yolu (050 pivot — first-party):** Çok-tedarikçi feed (Procurement + Supplier) SÖKÜLDÜ;
-  mallar mağazanın. Düzenleme = 058 admin ekranları (künye/fiyat/stok/yayın); elle ürün OLUŞTURMA hâlâ yok
-  (giriş 051 import). Catalog yeni üründe `ProductLinked` → Stock + `ProductChangedEvent` → Storefront.
-  Silme yok (016); yayından kaldırma `IsDeleted:true` ile vitrini gizler (058).
+  mallar mağazanın. Giriş = 051 import + **074 doktrin kayması: elle ürün OLUŞTURMA VAR** — admin
+  `create_product` (`/mcp-admin`, TASLAK doğar, ISBN=Gtin çakışması reddedilir, yayın ayrı
+  `set_published`). Düzenleme = MCP admin tool'ları (`update_product`/dimensions/seo/tag/category/
+  author/spec; 058 REST ekranları 074'te söküldü). Catalog yeni üründe `ProductLinked` → Stock +
+  `ProductChangedEvent` → Storefront. Silme yok (016); yayından kaldırma `IsDeleted:true` (058).
 - **UI (WebApp) + ChatAgent SÖKÜLDÜ (2026-09-11):** Mağaza artık ne görsel ekran ne kendi sohbet
   agent'ı host eder — tam **agent-only / BYO-agent**. Müşteri **kendi AI istemcisiyle** (Claude Desktop
   vb.) `mcp-gateway` fasadına (tek `/mcp` müşteri + `/mcp-admin` yönetim, tek login) bağlanır; tool'lar
@@ -79,13 +81,17 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
   `MapMcp("/mcp-admin")` ucu açar (anonim `/mcp` keşif seti DEĞİŞMEZ; tool seti oturum açılışında yol-
   prefix'iyle budanır — `ConfigureSessionOptions`, options oturum başına TAZE). Seed OAuth istemcisi
   `external-admin-agent` (public+PKCE; loopback muafiyeti `AdminAgentApplicationManager`, yalnız o
-  ClientId). DCR tavanı DEĞİŞMEDİ. Her admin yazma BC'sinde salt-append `AdminActionLog`. 058 admin
-  ekranları PARALEL yaşar; söküm 071 adayı.
+  ClientId). DCR tavanı DEĞİŞMEDİ. Her admin yazma BC'sinde salt-append `AdminActionLog`. **074: catalog
+  admin parite tamamlandı (create_product + category/author/tag/spec/dimensions/seo + list'ler) ve TÜM
+  domain iş REST'i (catalog/stock/customer-merchant admin + checkout POST) SÖKÜLDÜ — yüzey tümüyle MCP.
+  Filtre ad-prefix DEĞİL açık allowlist (`catalogAdminToolNames`/`stockAdminToolNames`) — yeni admin tool
+  eklerken allowlist'e EKLE.** Kalan REST = S2S internal + auth + MCP-infra.
 - **Müşteri yüzeyi MCP-only:** basket/order/payment/reviews/library/customer(cards+addresses)
   müşteri REST uçları + Commands/Queries ikizleri SÖKÜLDÜ — chat işlemleri yalnız MCP→`Features/Agents`
-  slice'larından. Kalan REST = admin (catalog/merchant/stock) + S2S internal (payment-context,
-  merchant-key) + checkout gRPC. Eski "her aggregate REST penceresi" kuralı EMEKLİ. Gateway'de yalnız
-  MCP/PRM + catalog rotaları.
+  slice'larından. **074: admin domain REST'i de söküldü (catalog/stock/customer-merchant + checkout POST)
+  — yüzey tümüyle MCP.** Kalan REST = S2S internal (payment-context, merchant-key) + auth (Identity OIDC) +
+  MCP-infra (PRM). Kalan senkron kontrat = checkout gRPC (basket). Eski "her aggregate REST penceresi"
+  kuralı EMEKLİ. Gateway'de yalnız MCP/PRM rotaları (catalog REST proxy `catalog-route` de söküldü).
 - **ChatAgent MCP keşfi makine kimliğiyle:** açılışta ListTools `chat-agent-discovery` m2m token'ı taşır
   (061 korumalı transport'lar için; `DiscoveryTokenSource` + `TokenInjectingHandler` HttpContext-yok
   fallback'i). Tool ÇAĞRISI her zaman o anki kullanıcı token'ıyla. Keşifte 401/403 KALICI sayılır (retry

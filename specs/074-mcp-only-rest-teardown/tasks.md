@@ -160,12 +160,12 @@ kurulmadan kaldırma yeteneği yok. Twin-mevcut kaldırmalar (T021 stock, T022 c
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T031 [P] `src/services/catalog/Catalog.Api/FLOW.md`: ürün girişi adımını güncelle (create_product =
+- [X] T031 [P] `src/services/catalog/Catalog.Api/FLOW.md`: ürün girişi adımını güncelle (create_product =
   yeni elle giriş yolu; doktrin kayması import-only → import + admin) — İLKE VII, aynı PR
-- [ ] T032 [P] `CLAUDE.md` BC haritası + notlar: catalog/stock/customer admin REST→MCP; "058 admin ekranları"
+- [X] T032 [P] `CLAUDE.md` BC haritası + notlar: catalog/stock/customer admin REST→MCP; "058 admin ekranları"
   ve REST admin referanslarını güncelle; müşteri+admin yüzey MCP-only son durumu. AYRICA "Ürün yazım yolu"
   notundaki "elle ürün OLUŞTURMA hâlâ yok" satırını güncelle (create_product ile doktrin kayması: import + admin)
-- [ ] T033 Guard'lar: `scripts/check-flow-links.sh` + `scripts/check-claude-spec-links.sh` PASS
+- [X] T033 Guard'lar: `scripts/check-flow-links.sh` + `scripts/check-claude-spec-links.sh` PASS
 
 ---
 

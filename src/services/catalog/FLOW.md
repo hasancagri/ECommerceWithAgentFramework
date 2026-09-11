@@ -11,14 +11,19 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 > (aggregate metotları) ürün oluşturulunca aynen işler.
 
 > **051 notu (kitap import):** İlk gerçek yazıcı = açılış kitap import'u (`books.json` → her kitap
-> `ImportBook` command). ProductId ISBN'den deterministik türer (idempotent upsert). Yayın kapısı
+> `ImportBook` command). ISBN `Product.Gtin`'de yaşar (idempotent upsert Gtin-query ile). Yayın kapısı
 > **fiyat>0** (fiyatsız kitap taslak kalır, event yayılmaz). Omurga (`ProductAdded`) bu feature'da uyandı.
+
+> **074 notu (MCP-only + elle giriş):** Domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle
+> MCP (`/mcp` keşif + `/mcp-admin` yönetim). Doktrin kayması: import-only değil — admin `create_product`
+> (`AdminCreateProductForAgent`) ile elle künye girilir (TASLAK doğar; ISBN=Gtin çakışması reddedilir;
+> yayın ayrı `admin_set_published`). Düzenleme = `AdminUpdateProductForAgent` (058 ekran ikizi).
 
 ## Süreç
 
-1. **Ürün komutla oluşturulur/güncellenir** (051 kitap import veya       `(ImportBook, UpdateProduct,`
-   058 admin düzenleme; ISBN/ad/fiyat girdi). Deterministik id ile      ` Product.Create, Product.Rename)`
-   bulun-veya-kur (idempotent upsert).
+1. **Ürün komutla oluşturulur/güncellenir** (051 import, admin           `(ImportBook, AdminCreateProductForAgent,`
+   `create_product` elle giriş, veya `update_product` düzenleme;         ` AdminUpdateProductForAgent, Product.Create, Product.Rename)`
+   ISBN/ad/fiyat girdi). ISBN=Gtin ile bulun-veya-kur (idempotent).
 1a. **Fiyat her gerçek değişimde geçmişe yazılır (058).** İlk fiyat      `(Product.SetPrice,`
    ilk satırdır; aynı fiyatla kayıt satır düşürmez (append-only).       ` ProductPriceChange)`
 2. **Yazar(lar) + yayınevi bulun-veya-doğur.** Her yazar adı           `(Author.Create, Product.SetAuthors,`
@@ -32,7 +37,7 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
    ad/açıklamadan türetilir.                                            ` Product.SetSeo)`
 6. **Özellikler registry'den Id'ye çözülüp TAM yazılır.**              `(Product.SetSpecifications)`
    Bilinmeyen ad opsiyoneldir — yok sayılır, satır spec'siz ilerler.
-7. **Yayın anahtarı admin'dedir (058) — kapı fiyat>0.** Fiyatsız         `(SetProductPublished,`
+7. **Yayın anahtarı admin'dedir (058) — kapı fiyat>0.** Fiyatsız         `(AdminSetPublishedForAgent,`
    yayına alma reddedilir; yayından kaldırma vitrini gizler (silmez).   ` Product.Publish, Product.Unpublish)`
    Düzenleme yayın durumunu DEĞİŞTİRMEZ (koruma).
 8. **Değişim Storefront'a KANONİK yayınlanır.** Fiyat decimal,          `(ProductChangedEvent)`

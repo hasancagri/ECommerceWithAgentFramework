@@ -9,9 +9,9 @@ telafi eder. Broker-only sağa (kendi DB'si yok yerine state Marten belgesi); hi
 
 ## Süreç
 
-1. **Giriş: checkout başlar, senkron bekleme yok.** WebApp POST →       `(CheckoutEndpointExtension`
-   `StartCheckout` yayılır; aynı kullanıcı+sepet → aynı CheckoutId        ` → StartCheckout)`
-   (idempotent). Chat aynı `StartCheckout`'u AlreadyCaptured ile yayar.
+1. **Giriş: checkout başlar, senkron bekleme yok.** Agent `place_order`  `(StartCheckout)`
+   → Order.Api `StartCheckout` yayınlar (074: REST POST /checkout söküldü —
+   giriş yalnız broker); aynı kullanıcı+sepet → aynı CheckoutId (idempotent).
 2. **Sağa doğar + watchdog kurulur.** Web (Charge) → sipariş           `(CheckoutProcess`
    oluşturma ilk adım; chat (AlreadyCaptured) → sipariş+ödeme zaten       ` → CheckoutTimedOut)`
    var, doğrudan stok commit'e geçer.
