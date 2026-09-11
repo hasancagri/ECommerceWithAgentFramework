@@ -24,13 +24,18 @@ public static class GetBasketForAgent
         public string Name { get; set; } = default!;
         public string? ImageUrl { get; set; }
         public decimal Price { get; set; }
+        // Birim fiyat + adet + kalem toplamı (LLM sepeti adetiyle sunabilsin — fasad verbatim taşır).
+        public int Quantity { get; set; }
+        public decimal LineTotal { get; set; }
 
         public static GetBasketItemResponse From(BasketItem item) => new()
         {
             Id = item.Id,
             Name = item.Name,
             ImageUrl = item.ImageUrl,
-            Price = item.Price
+            Price = item.Price,
+            Quantity = item.Quantity,
+            LineTotal = item.Price * item.Quantity
         };
     }
 
