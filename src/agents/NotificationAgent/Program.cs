@@ -10,13 +10,6 @@ builder.Services.AddOptions<NotificationOptions>()
 builder.Services.AddSingleton<NotificationOptions>(sp =>
     sp.GetRequiredService<IOptions<NotificationOptions>>().Value);
 
-// Mail linki mutlak WebApp adresiyle kurulur (relatif link Mailpit UI'da 404 — canli bulgu).
-builder.Services.AddOptions<WebAppOptions>()
-    .BindConfiguration(WebAppOptions.SectionName)
-    .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton<WebAppOptions>(sp =>
-    sp.GetRequiredService<IOptions<WebAppOptions>>().Value);
-
 // Agent Singleton'dir (konvansiyon: framework baslangicta yakalar).
 builder.Services.AddSingleton<MailAgent>();
 

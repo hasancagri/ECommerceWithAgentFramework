@@ -24,7 +24,7 @@ scripts/check-flow-links.sh                               # FLOW.md domain-süre
 - **Sistemi hep Aspire AppHost'tan başlat**, tek servis değil — servisler birbirini/DB/RabbitMQ'yu
   service discovery + conn-string enjeksiyonuyla bulur; tek API bağımsız açılmaz.
 - **Marten şeması otomatik kurulur** (`ApplyAllDatabaseChangesOnStartup`) — migration komutu yok.
-- **OpenAI kullanan servisler** (ChatAgent, ModerationAgent, NotificationAgent, Storefront —
+- **OpenAI kullanan servisler** (ModerationAgent, NotificationAgent, Storefront —
   embedding, 067) açılışta fail-fast:
   `dotnet user-secrets set OpenAI:ApiKey <k> --project <proj>` (+ `OpenAI:Model`, ör. gpt-4o-mini).
 - **Paket sürümleri yalnız `Directory.Packages.props`'ta** (Central Package Management); `.csproj`
@@ -35,8 +35,8 @@ scripts/check-flow-links.sh                               # FLOW.md domain-süre
 .NET 10 (`Nullable`+`ImplicitUsings` açık) · **Marten** (Postgres = document/event store, Newtonsoft,
 non-public setter+ctor) · **Wolverine** (in-proc bus `IMessageBus` + RabbitMQ fanout; handler assembly
 taramasıyla) · **OpenIddict + ASP.NET Identity** (IdP) · **YARP** gateway · **MCP** (her API `/mcp`;
-ChatAgent istemci) · **Microsoft Agent Framework** + `Microsoft.Extensions.AI` (ChatAgent,
-ModerationAgent) · **Scrutor** (DI) · **xUnit + Shouldly** (saf domain birim testi).
+müşteri yüzeyi `mcp-gateway` fasadı — dış AI istemcisi tüketir) · **Microsoft Agent Framework** +
+`Microsoft.Extensions.AI` (ModerationAgent, NotificationAgent) · **Scrutor** (DI) · **xUnit + Shouldly**.
 
 ## BC haritası
 
@@ -58,24 +58,23 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `library` | libraryDb | Kullanıcı-ürün ilgi kayıtları; ilk dilim fiyat alarmı (yaşayan abonelik, email snapshot) + `NotificationRecord` izi; `ProductChangedEvent.OldPrice` tetiği → alarm başına `PriceAlarmTriggered` | `specs/060-price-alarm-mail` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
 | `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC; dış agent için RFC 7591 DCR (`/connect/register`) + tek consent sayfası (Explicit) + revocation (061) | `specs/029-openiddict-migration` |
-| `chat-agent` | — | AI asistan (MAF); MCP istemci + A2A ödeme (uzak PaymentGateway) | `specs/024-a2a-payment-agent` |
 | `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 | `notification-agent` | — | Fiyat alarmı maili (DB'siz worker); `PriceAlarmTriggered`→LLM compose→Mail.Mcp `send_mail`→`NotificationSent` | `specs/060-price-alarm-mail` |
 | `mail-mcp` | — | İlk standalone MCP server; tek tool `send_mail` (MailKit→Mailpit); yalnız NotificationAgent tüketir, ChatAgent'a KAYITLI DEĞİL | `specs/060-price-alarm-mail` |
-| `mcp-gateway` | — | Tek müşteri MCP fasadı (DB'siz proxy); alt BC `/mcp`'lerini LAZY toplar (SDK `WithListToolsHandler`/`WithCallToolHandler`), ad→BC token-forward proxy (`PerUserMcpTool` server ikizi); tek `/mcp` (müşteri) + `/mcp-admin` (yönetim), tek consent (`external-customer-agent`); auth `RequireLoginUpfront` bayraklı (taban=upfront; anonim+checkout step-up denenir); ChatAgent söküm ayrı, UCP ayrı | `specs/073-customer-mcp-facade` |
+| `mcp-gateway` | — | Tek müşteri MCP fasadı (DB'siz proxy); alt BC `/mcp`'lerini LAZY toplar (SDK `WithListToolsHandler`/`WithCallToolHandler`), ad→BC token-forward proxy (`PerUserMcpTool` server ikizi); tek `/mcp` (müşteri) + `/mcp-admin` (yönetim), tek consent (`external-customer-agent`); auth `RequireLoginUpfront` bayraklı (taban=upfront login; anonim+checkout step-up kod var, kapalı); **mağazanın TEK müşteri yüzeyi** (ChatAgent+UI söküldü) | `specs/073-customer-mcp-facade` |
 
 - **Ürün yazım yolu (050 pivot — first-party):** Çok-tedarikçi feed (Procurement + Supplier) SÖKÜLDÜ;
   mallar mağazanın. Düzenleme = 058 admin ekranları (künye/fiyat/stok/yayın); elle ürün OLUŞTURMA hâlâ yok
   (giriş 051 import). Catalog yeni üründe `ProductLinked` → Stock + `ProductChangedEvent` → Storefront.
   Silme yok (016); yayından kaldırma `IsDeleted:true` ile vitrini gizler (058).
-- **WebApp agent-only (066):** Müşteri görsel ekranları (vitrin/ürün-liste/detay/kategori/sepet/checkout/
-  hesap) SÖKÜLDÜ; kök (`/`) = mağaza asistanı chat (`Pages/MusteriHizmetleri.cshtml` route `"/"`). WebApp
-  yalnız **admin** (ürün düzenleme + onboarding) + **login/OIDC** + **chat** + BFF proxy tutar. Talep edilen
-  scope = kimlik + yönetim + assistant tool setinin alışveriş scope'ları (basket/order r+w, payment.read,
-  customer.read — 066 kırpması login-chat 401 verdiği için kısmen geri alındı; ekran istemcisi dönmedi).
-  Eşleşmeyen route `MapFallback`→köke. Müşteri işlemleri agent/MCP yolunda (062–065 parite). TUZAK:
-  `ICustomerRefitService` merchant-only KALDI (admin onboarding kullanır); adres/cüzdan yüzeyi silindi.
-  AÇIK BULGU: ANONİM chat-sepet 4 katmanda bloke (bkz memory; login yolu kapandı).
+- **UI (WebApp) + ChatAgent SÖKÜLDÜ (2026-09-11):** Mağaza artık ne görsel ekran ne kendi sohbet
+  agent'ı host eder — tam **agent-only / BYO-agent**. Müşteri **kendi AI istemcisiyle** (Claude Desktop
+  vb.) `mcp-gateway` fasadına (tek `/mcp` müşteri + `/mcp-admin` yönetim, tek login) bağlanır; tool'lar
+  alt BC `/mcp`'lerinden toplanır, çağrı sahibi BC'ye kullanıcı token'ıyla proxy'lenir. Admin de
+  `/mcp-admin`'de (070). Login/OIDC doğrudan Identity (agent OAuth); web cookie-login yok. Kalkan
+  referanslar: AppHost web/chat-agent kayıtları, Identity `ecommerce.bff`+`chat-agent-discovery` client +
+  WebApp redirect URI'ları, NotificationAgent mail'deki WebApp ürün linki. UI'a ait `ICustomerRefitService`
+  vb. WebApp ile birlikte gitti.
 - **Admin yüzeyi MCP'de (070, `specs/070-admin-mcp-surface`):** catalog/stock/customer İKİNCİ korumalı
   `MapMcp("/mcp-admin")` ucu açar (anonim `/mcp` keşif seti DEĞİŞMEZ; tool seti oturum açılışında yol-
   prefix'iyle budanır — `ConfigureSessionOptions`, options oturum başına TAZE). Seed OAuth istemcisi

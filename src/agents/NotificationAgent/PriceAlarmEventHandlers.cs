@@ -9,7 +9,6 @@ public class PriceAlarmEventHandlers
     public async Task<IntegrationEvents.NotificationSent> Handle(
         IntegrationEvents.PriceAlarmTriggered evt,
         MailAgent mailAgent,
-        WebAppOptions webAppOptions,
         CancellationToken ct)
     {
         // E-posta bos → gonderim atlanir, iz "no-email" ile DUSER (R9).
@@ -17,10 +16,8 @@ public class PriceAlarmEventHandlers
             return new IntegrationEvents.NotificationSent(
                 evt.UserId, evt.ProductId, evt.Email, Success: false, Detail: NotificationDetails.NoEmail);
 
-        // Mutlak link: relatif yol mail istemcisinde yanlis host'a cozulur (Mailpit UI 404 bulgusu).
-        var link = $"{webAppOptions.BaseUrl.TrimEnd('/')}/products/{evt.ProductId}";
-
-        await mailAgent.SendPriceAlarmMailAsync(evt, link, ct);
+        // WebApp (UI) söküldü → mail'de ürün linki yok (agent-only; ürün sayfası kalmadı).
+        await mailAgent.SendPriceAlarmMailAsync(evt, ct);
 
         return new IntegrationEvents.NotificationSent(
             evt.UserId, evt.ProductId, evt.Email, Success: true, Detail: NotificationDetails.Sent);

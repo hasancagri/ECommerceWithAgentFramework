@@ -28,7 +28,7 @@ public sealed class MailAgent(
 
     /// <summary>Tetik verisinden Turkce maili yazdirip send_mail ile gonderir; her hatada NotificationException firlatir.</summary>
     public async Task SendPriceAlarmMailAsync(
-        IntegrationEvents.PriceAlarmTriggered evt, string link, CancellationToken ct)
+        IntegrationEvents.PriceAlarmTriggered evt, CancellationToken ct)
     {
         string text;
         try
@@ -53,7 +53,6 @@ public sealed class MailAgent(
                  Urun adi: {evt.ProductName}
                  Eski fiyat: {evt.OldPrice:0.00} TL
                  Yeni fiyat: {evt.NewPrice:0.00} TL
-                 Urun linki: {link}
                  """;
             var response = await _agent.RunAsync(prompt,
                 options: new ChatClientAgentRunOptions(new ChatOptions

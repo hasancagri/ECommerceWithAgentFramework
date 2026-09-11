@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/agents/">
-    <Project Path="src/agents/ChatAgent/ChatAgent.csproj" />
     <Project Path="src/agents/Mail.Mcp/Mail.Mcp.csproj" />
     <Project Path="src/agents/NotificationAgent/NotificationAgent.csproj" />
     <Project Path="src/agents/Reviews.Moderation/Reviews.Moderation.csproj" />
@@ -30,7 +29,6 @@
     <Project Path="src/services/storefront/Storefront.Api/Storefront.Api.csproj" />
   </Folder>
   <Folder Name="/src/ui/">
-    <Project Path="src/ui/WebApp/WebApp.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Basket.Api.Tests/Basket.Api.Tests.csproj" />
