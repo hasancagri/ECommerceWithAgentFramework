@@ -15,7 +15,6 @@ global using Stock.Api.Constants;
 global using Stock.Api.Dependencies;
 global using Stock.Api.Domains.Stocks.Features.Agents;
 global using Stock.Api.Domains.Stocks.Features.Commands;
-global using Stock.Api.Domains.Stocks.Features.Queries;
 global using Stock.Api.Domains.Stocks;
 global using Stock.Api.Domains.Stocks.Entities;
 global using System.Reflection;

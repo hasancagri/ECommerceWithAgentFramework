@@ -36,7 +36,6 @@ global using ModelContextProtocol.Server;
 
 // --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Customer.Api.Domains.MerchantInformations;
-global using Customer.Api.Domains.MerchantInformations.Features.Commands;
 global using Customer.Api.Extensions;
 
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---

@@ -121,16 +121,12 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-app.AddStockGroupEndpointExtension(apiVersionSet);
+// 074: domain iş REST yüzeyi söküldü — stok okuma/yönetim tümüyle MCP (/mcp get_stock + /mcp-admin).
+// Checkout saga stok düşümü broker (CommitStock/RevertCommitStock handler'ları) — REST endpoint YOK.
 
 app.MapMcp("/mcp");
 

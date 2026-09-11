@@ -114,26 +114,26 @@ gateway `catalog-route` sök. Son durum: `Features/Commands|Queries`'te yalnız 
 **⚠️ Bağımlılık**: catalog no-twin Command/Query kaldırma (T018-T019) US1 (T003-T015) SONRASI — ikizi
 kurulmadan kaldırma yeteneği yok. Twin-mevcut kaldırmalar (T021 stock, T022 customer) US1'den bağımsız.
 
-- [ ] T018 [P] [US2] Catalog Products REST sök: `Features/Commands/`'ten UpdateProduct, SetProductPublished,
+- [X] T018 [P] [US2] Catalog Products REST sök: `Features/Commands/`'ten UpdateProduct, SetProductPublished,
   CreateProduct, SetProductDimensions, SetProductSeo, AssignTagToProduct, RemoveTagFromProduct sil;
   `Features/Queries/`'ten AdminGetProduct, AdminListProducts, GetProductById, GetProductPriceHistory sil.
   KORU: `ImportBook` (051)
-- [ ] T019 [P] [US2] Catalog Categories/Authors/Publishers/ProductTags/SpecificationAttributes REST sök:
+- [X] T019 [P] [US2] Catalog Categories/Authors/Publishers/ProductTags/SpecificationAttributes REST sök:
   Create/Update/Rename Commands + Get* Queries + `*EndpointExtension.cs` sil (aggregate + yeni Agent slice KALIR)
-- [ ] T020 [US2] `src/services/catalog/Catalog.Api/Program.cs` + ilgili `*EndpointExtension` map çağrılarını
+- [X] T020 [US2] `src/services/catalog/Catalog.Api/Program.cs` + ilgili `*EndpointExtension` map çağrılarını
   temizle; `MapMcp("/mcp")` + `MapMcp("/mcp-admin")` + `MapMcpResourceMetadata` DEĞİŞMEZ (T018,T019)
-- [ ] T021 [P] [US2] Stock REST sök: `Features/Commands/`'ten SetStockQuantity/IncreaseStock/DecreaseStock,
+- [X] T021 [P] [US2] Stock REST sök: `Features/Commands/`'ten SetStockQuantity/IncreaseStock/DecreaseStock,
   `Features/Queries/`'ten GetAllStock/GetStockByProductId sil + `StockEndpointExtension` + Program.cs map.
   KORU: CommitStock, RevertCommitStock (checkout saga)
-- [ ] T022 [P] [US2] Customer merchant-information admin REST sök: `MerchantInformationEndpointExtension`'daki
+- [X] T022 [P] [US2] Customer merchant-information admin REST sök: `MerchantInformationEndpointExtension`'daki
   `merchant-information` grup + GetMerchantInformation/SetMerchantInformation slice sil. KORU (DOKUNMA):
   `/internal/merchant-key` (GetMerchantKeyInternal) + `/internal/payment-context` (Wallet)
-- [ ] T023 [P] [US2] Checkout POST `/checkout` sök: `Domains/Checkout/CheckoutEndpointExtension.cs` + Program.cs
+- [X] T023 [P] [US2] Checkout POST `/checkout` sök: `Domains/Checkout/CheckoutEndpointExtension.cs` + Program.cs
   map temizle (broker StartCheckout tetikleyici KALIR)
-- [ ] T024 [P] [US2] `src/services/gateway/Gateway/appsettings.Development.json`: `catalog-route` sil;
+- [X] T024 [P] [US2] `src/services/gateway/Gateway/appsettings.Development.json`: `catalog-route` sil;
   `ClientCredential` policy başka route kullanmıyorsa temizle (grep ile doğrula). MCP/PRM route'ları KALIR
-- [ ] T025 [P] [US2] 5 `.http` sil: `Order.http`, `Basket.http`, `Payment.http`, `Catalog.http`, `Customer.http`
-- [ ] T026 [US2] `dotnet build` (tüm çözüm) 0 hata; ölü GlobalUsings/referansları temizle (T018-T025)
+- [X] T025 [P] [US2] 5 `.http` sil: `Order.http`, `Basket.http`, `Payment.http`, `Catalog.http`, `Customer.http`
+- [X] T026 [US2] `dotnet build` (tüm çözüm) 0 hata; ölü GlobalUsings/referansları temizle (T018-T025)
 
 **Checkpoint**: Domain iş REST'i sıfır; yüzey tümüyle MCP; kritik/iç slice ayakta.
 
@@ -145,14 +145,14 @@ kurulmadan kaldırma yeteneği yok. Twin-mevcut kaldırmalar (T021 stock, T022 c
 
 **Independent Test (statik)**: quickstart S1 grep'leri + kod incelemesi + `dotnet build` PASS.
 
-- [ ] T027 [US3] quickstart S1 statik grep'leri: domain iş REST 0, customer'da yalnız `/internal/*`,
+- [X] T027 [US3] quickstart S1 statik grep'leri: domain iş REST 0, customer'da yalnız `/internal/*`,
   `.http` 0, gateway `catalog-route` 0, `Features/Commands|Queries`'te yalnız kritik/iç (SC-001/006/007)
-- [ ] T028 [US3] Kod incelemesi: anonim catalog `/mcp` tool seti değişmedi (get_product/search_products/
+- [X] T028 [US3] Kod incelemesi: anonim catalog `/mcp` tool seti değişmedi (get_product/search_products/
   get_price_history/list_*); `admin_*` yalnız `/mcp-admin` (Program.cs filtresi) (SC-005)
-- [ ] T029 [US3] Kod incelemesi: KORUNAN uçlar duruyor — customer `/internal/payment-context` +
+- [X] T029 [US3] Kod incelemesi: KORUNAN uçlar duruyor — customer `/internal/payment-context` +
   `/internal/merchant-key`, basket gRPC (`basket_items`/`basket_clear`), checkout broker, Identity OIDC,
   Mcp.Gateway MapMcp+PRM, order Process/ReconcileTick (SC-003)
-- [ ] T030 [US3] Tam `dotnet build` 0 hata (regresyon yok kanıtı)
+- [X] T030 [US3] Tam `dotnet build` 0 hata (regresyon yok kanıtı)
 
 **Checkpoint**: Söküm sonrası çözüm derlenir; korunan yollar kodda ayakta.
 

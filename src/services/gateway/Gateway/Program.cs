@@ -12,13 +12,11 @@ builder.Services.AddReverseProxy()
 
 builder.Services.AddAuthenticationAndAuthorizationExtension(builder.Configuration);
 
-// YARP route'lari iki policy adi istiyor (appsettings.Development.json -> AuthorizationPolicy):
-//   ClientCredential = uygulama token'i (catalog/file), Password = kullanici token'i (basket/order/...).
-// Simdilik ikisi de yalnizca gecerli (authenticated) bir token sart kosuyor; grant-tipine gore
-// ayristirma ertelenmis auth isine ait (bkz. dummy/deferred auth modeli).
+// 074: ClientCredential policy söküldü (tek kullanan catalog-route REST proxy'si kalktı — MCP-only yüzey).
+// Kalan "Password" policy = kullanıcı token'i şartı (gerekirse route'larda kullanılır; grant-tipi
+// ayrıştırması ertelenmiş auth işine ait).
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("ClientCredential", policy => policy.RequireAuthenticatedUser());
     options.AddPolicy("Password", policy => policy.RequireAuthenticatedUser());
 });
 

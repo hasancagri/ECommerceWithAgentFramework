@@ -131,7 +131,7 @@ var apiVersionSet = app.NewApiVersionSet()
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.AddMerchantInformationGroupEndpointExtension(apiVersionSet);
+// 074: merchant-information admin REST söküldü (merchant yönetimi /mcp-admin). İç S2S uçları KALIR.
 // 039: Order.Api chat siparis tamamlama yapisal odeme-baglami ucu (customer.read makine token'i).
 app.AddPaymentContextInternalEndpoint(apiVersionSet);
 // 049: Order.Api charge/reconcile merchant API key ucu (customer.read); MerchantKey agent'a cikmaz.

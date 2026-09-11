@@ -150,21 +150,12 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-app.AddProductGroupEndpointExtension(apiVersionSet);
-app.AddProductTagGroupEndpointExtension(apiVersionSet);
-app.AddCategoryGroupEndpointExtension(apiVersionSet);
-app.AddAuthorGroupEndpointExtension(apiVersionSet);
-app.AddPublisherGroupEndpointExtension(apiVersionSet);
-app.AddSpecificationAttributeGroupEndpointExtension(apiVersionSet);
+// 074: domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle MCP (/mcp + /mcp-admin).
+// Ürün girişi ImportBook (051, endpoint'siz seeder) + admin_create_product (MCP). REST endpoint YOK.
 
 app.MapMcp("/mcp");
 
