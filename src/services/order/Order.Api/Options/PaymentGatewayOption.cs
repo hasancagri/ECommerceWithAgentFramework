@@ -6,7 +6,5 @@ namespace Order.Api.Options;
 public class PaymentGatewayOption
 {
     [Required] public string BaseUrl { get; set; } = "";
-
-    // 070: PG A2A ucu (quote_installments). Boşsa taksit tool'u dostane "yapılamıyor" döner.
-    public string? A2AUrl { get; set; }
+    // 070 A2AUrl KALDIRILDI — taksit/quote söküldü (tek çekim).
 }

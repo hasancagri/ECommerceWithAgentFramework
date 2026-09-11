@@ -29,10 +29,9 @@ public static class BasketTools
 public static class OrderTools
 {
     public const string GetOrders = "get_orders";
-    // 039: chat'ten uctan uca siparis tamamlama (sunucu orkestrasyonu; cardId?/installment).
+    // 039: chat'ten uctan uca siparis tamamlama (sunucu orkestrasyonu; cardId?, tek çekim).
     public const string PlaceOrder = "place_order";
-    // 070: sipariş öncesi taksit seçenekleri (kayıtlı kart + sepet toplamı; PG A2A quote).
-    public const string QuoteInstallments = "quote_installments";
+    // TAKSİT KALDIRILDI: quote_installments sabiti söküldü (tek çekim; 070 A2A borcu ödendi).
 }
 
 public static class PaymentTools
