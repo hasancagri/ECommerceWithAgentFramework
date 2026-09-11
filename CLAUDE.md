@@ -64,6 +64,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `notification-agent` | — | Fiyat alarmı maili (DB'siz worker); `PriceAlarmTriggered`→LLM compose→Mail.Mcp `send_mail`→`NotificationSent` | `specs/060-price-alarm-mail` |
 | `mail-mcp` | — | İlk standalone MCP server; tek tool `send_mail` (MailKit→Mailpit); yalnız NotificationAgent tüketir, ChatAgent'a KAYITLI DEĞİL | `specs/060-price-alarm-mail` |
 | `ucp-sim` | — | UCP dış-platform simülatörü (test aracı; DB'siz MCP server); Claude Desktop bağlanır, mağaza `/ucp` cephesini `ucp-platform` makine token'ıyla sürer + imzalı webhook `/inbox` alıcısı; ChatAgent'a KAYITLI DEĞİL | `specs/072-ucp-checkout-channel` |
+| `mcp-gateway` | — | Tek müşteri MCP fasadı (DB'siz proxy); alt BC `/mcp`'lerini LAZY toplar (SDK `WithListToolsHandler`/`WithCallToolHandler`), ad→BC token-forward proxy (`PerUserMcpTool` server ikizi); tek `/mcp` (müşteri) + `/mcp-admin` (yönetim), tek consent (`external-customer-agent`); auth `RequireLoginUpfront` bayraklı (upfront login; kullanıcı kararı); ChatAgent söküm ayrı, UCP ayrı | `specs/073-customer-mcp-facade` |
 
 - **Ürün yazım yolu (050 pivot — first-party):** Çok-tedarikçi feed (Procurement + Supplier) SÖKÜLDÜ;
   mallar mağazanın. Düzenleme = 058 admin ekranları (künye/fiyat/stok/yayın); elle ürün OLUŞTURMA hâlâ yok

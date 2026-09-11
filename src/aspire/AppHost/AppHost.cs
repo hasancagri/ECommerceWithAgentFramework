@@ -208,6 +208,21 @@ var notificationAgent = builder.AddProject<Projects.NotificationAgent>("notifica
     .WaitFor(rabbit)
     .WaitFor(mailMcp);
 
+// 073: tek müşteri MCP fasadı (DB'siz) — alt BC /mcp'lerini toplayıp tek /mcp + /mcp-admin sunar.
+// Downstream'lere service discovery için referans; lazy keşif olduğundan WaitFor kozmetik (correctness
+// garanti). Identity token (discovery) + gateway route (aşağıda) ile tek dış giriş.
+var mcpGateway = builder.AddProject<Projects.Mcp_Gateway>("mcp-gateway")
+    .WithHttpHealthCheck("/health")
+    .WithReference(storefrontApi)
+    .WithReference(catalogApi)
+    .WithReference(basketApi)
+    .WithReference(orderApi)
+    .WithReference(customerApi)
+    .WithReference(paymentApi)
+    .WithReference(stockApi)
+    .WithReference(identityServer)
+    .WaitFor(identityServer);
+
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)
@@ -221,6 +236,8 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(libraryApi)
     // 072: UCP checkout kanalı gateway üzerinden (/ucp + /.well-known/ucp); service discovery referansı.
     .WithReference(ucpApi)
+    // 073: tek müşteri MCP fasadı (/mcp + /mcp-admin) gateway üzerinden.
+    .WithReference(mcpGateway)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 

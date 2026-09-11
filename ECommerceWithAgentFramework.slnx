@@ -6,6 +6,7 @@
     <Project Path="src/agents/NotificationAgent/NotificationAgent.csproj" />
     <Project Path="src/agents/Reviews.Moderation/Reviews.Moderation.csproj" />
     <Project Path="src/agents/Ucp.Sim/Ucp.Sim.csproj" />
+    <Project Path="src/agents/Mcp.Gateway/Mcp.Gateway.csproj" />
   </Folder>
   <Folder Name="/src/aspire/">
     <Project Path="src/aspire/AppHost/AppHost.csproj" />
@@ -46,5 +47,6 @@
     <Project Path="tests/Stock.Api.Tests/Stock.Api.Tests.csproj" />
     <Project Path="tests/Storefront.Api.Tests/Storefront.Api.Tests.csproj" />
     <Project Path="tests/Ucp.Api.Tests/Ucp.Api.Tests.csproj" />
+    <Project Path="tests/Mcp.Gateway.Tests/Mcp.Gateway.Tests.csproj" />
   </Folder>
 </Solution>
