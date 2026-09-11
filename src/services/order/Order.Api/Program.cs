@@ -57,7 +57,7 @@ builder.Host.UseWolverine(opts =>
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
     // Konvansiyonel keşif *EventHandlers sınıfını atlayabiliyor → açık kayıt (Stock emsali).
-    opts.Discovery.IncludeType(typeof(Order.Api.OrderEventHandlers));
+    opts.Discovery.IncludeType(typeof(Order.Api.Saga.OrderEventHandlers));
 });
 
 

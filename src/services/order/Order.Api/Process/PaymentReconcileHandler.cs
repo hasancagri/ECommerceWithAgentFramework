@@ -1,4 +1,4 @@
-namespace Order.Api.Domains.PaymentAttempts;
+namespace Order.Api.Process;
 
 // 039: durable reconcile mesaji (Order BC ici, durable local queue). PaymentAttempt.Id anahtar.
 public record ReconcileTick(string CorrelationKey);
@@ -8,6 +8,7 @@ public record ReconcileTick(string CorrelationKey);
 // place_order var-olan Unknown attempt icin HEMEN ReconcileTick yayinlar. Her tick PG retrieve(key) ->
 // OnReconcileTick karari -> basari: siparis olustur; pending: backoff'la yeniden zamanla; deadline:
 // terminal (NeedsReconciliation, ops gorunurluk). Asla cift cekim (retrieve key ile), asla sonsuz (deadline).
+// 074: kullanici istegi DEGIL — Order BC'nin KENDI dayanikli sureci (watchdog) → Domains/ disi Process/.
 public class PaymentReconcileHandler
 {
     [Transactional]

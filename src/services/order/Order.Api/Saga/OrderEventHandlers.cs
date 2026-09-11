@@ -1,12 +1,13 @@
 using static Shared.CheckoutMessages;
 using OrderAggregate = Order.Api.Domains.Orders.Order;
 
-namespace Order.Api;
+namespace Order.Api.Saga;
 
 // 049: checkout orchestrator sipariş broker handler'ları. Komutları OrderCommandsQueue'dan tüketir,
 // Order aggregate davranışını (Create/Confirm/Cancel — İlke II) tetikler, sonucu reply kuyruğuna
 // yayınlar. Pivot (Confirm) anında OrderCompleted fanout'u (048 Personalization) burada yayılır.
 // Idempotent: PaymentId=CheckoutId ile tek sipariş; Confirm/Cancel yalnız Pending'den.
+// 074: bu BC checkout sağasının KATILIMCISI (kullanıcı isteği değil, süreç güdümlü) → Domains/ dışı Saga/.
 public class OrderEventHandlers
 {
     [Transactional]
