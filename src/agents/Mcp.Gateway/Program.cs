@@ -91,9 +91,15 @@ app.MapDefaultEndpoints();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Taban: RequireLoginUpfront=true → iki uç da korumalı (bağlanınca tek login). Anonim/step-up (false)
-// sonraki artım — canlı doğrulanınca (kullanıcı: önce dene, olmazsa upfront).
-app.MapMcp("/mcp").RequireAuthorization();
+// Step-up: anonim /mcp'de korumalı tool çağrısı + token yok → 401 + PRM (login satın almada, açılışta değil).
+app.UseMiddleware<Mcp.Gateway.Auth.McpStepUpMiddleware>();
+
+// Müşteri ucu: RequireLoginUpfront=true → bağlanınca tek login. false → ANONİM bağlan/gez (arama/katalog
+// login'siz); korumalı tool çağrısı downstream'de 401 → tool-error (satın almada login gerekir). Yönetim
+// ucu HER ZAMAN korumalı.
+var facade = app.Services.GetRequiredService<FacadeOption>();
+var customerMcp = app.MapMcp("/mcp");
+if (facade.RequireLoginUpfront) customerMcp.RequireAuthorization();
 app.MapMcp("/mcp-admin").RequireAuthorization();
 
 // Fasad PRM (RFC 9728): resource = fasad ucu; authorization_servers = OpenIddict issuer (trailing slash).
