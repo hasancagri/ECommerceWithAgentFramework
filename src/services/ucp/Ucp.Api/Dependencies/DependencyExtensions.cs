@@ -5,14 +5,17 @@ public static class DependencyExtensions
 {
     public static void AddAllDependencies(this IServiceCollection serviceCollection)
     {
+        // AsSelfWithInterfaces: concrete tip + arayüzler aynı instance. UCP servisleri (ExternalOrderClient,
+        // HttpMessageSigner/Verifier, UcpWebhookSender) concrete tiple enjekte edilir — yalnız arayüz kaydı
+        // "Unable to resolve concrete type" verirdi.
         serviceCollection.Scan(scan => scan
             .FromApplicationDependencies()
             .AddClasses(classes => classes.AssignableTo<ITransientDependency>())
-                .AsImplementedInterfaces().WithTransientLifetime()
+                .AsSelfWithInterfaces().WithTransientLifetime()
             .AddClasses(classes => classes.AssignableTo<IScopedDependency>())
-                .AsImplementedInterfaces().WithScopedLifetime()
+                .AsSelfWithInterfaces().WithScopedLifetime()
             .AddClasses(classes => classes.AssignableTo<ISingletonDependency>())
-                .AsImplementedInterfaces().WithSingletonLifetime()
+                .AsSelfWithInterfaces().WithSingletonLifetime()
         );
     }
 }
