@@ -25,6 +25,10 @@ public static class Config
     // muafiyeti AdminAgentApplicationManager'da bu ClientId'ye özeldir.
     public const string ExternalAdminAgentClientId = "external-admin-agent";
 
+    // 073: seed'li dış MÜŞTERİ agent istemcisi (tek müşteri MCP fasadı; Claude Desktop müşteri bağlantısı).
+    // Loopback redirect muafiyeti external-admin-agent ile aynı (AdminAgentApplicationManager).
+    public const string ExternalCustomerAgentClientId = "external-customer-agent";
+
     // Scope → audience (resource) haritası. Token üretiminde ListResourcesAsync bu eşlemeden
     // 'aud' claim'ini üretir; servisler kendi adını (basket.api...) ValidateAudience ile arar.
     public static readonly IReadOnlyDictionary<string, string> ScopeResources =
@@ -170,6 +174,43 @@ public static class Config
             [
                 "openid", "profile",
                 "storefront.read", "catalog.write", "stock.write", "merchant.credentials.write",
+            ],
+        },
+        // 073: tek müşteri MCP fasadı — dış müşteri agent kimliği (public+PKCE, Explicit consent). Tek
+        // consent = tek login; müşteri scope demeti (gerçek yetki = demet ∩ kullanıcı rolü). Redirect
+        // loopback (mcp-remote dinamik port) AdminAgentApplicationManager muafiyetiyle + Claude callback.
+        new ClientSeed
+        {
+            ClientId = ExternalCustomerAgentClientId,
+            ClientSecret = null,
+            DisplayName = "External customer agent (Claude Desktop)",
+            IsPublic = true,
+            AllowAuthorizationCode = true,
+            AllowRefreshToken = true,
+            RedirectUris =
+            [
+                "https://claude.ai/api/mcp/auth_callback",
+                "https://claude.com/api/mcp/auth_callback",
+            ],
+            Scopes =
+            [
+                "openid", "profile",
+                "basket.read", "basket.write", "order.read", "order.write",
+                "customer.read", "payment.read", "storefront.read",
+            ],
+        },
+        // 073: fasad keşif (ListTools) makine kimliği — client_credentials, salt audience üretimi
+        // (tool ÇAĞRISI her zaman kullanıcı token'ıyla; bu token'la çalıştırılmaz). ChatAgent discovery emsali.
+        new ClientSeed
+        {
+            ClientId = "mcp-gateway-discovery",
+            ClientSecret = "mcp-gateway-discovery-secret",
+            DisplayName = "MCP Gateway discovery (m2m)",
+            AllowClientCredentials = true,
+            Scopes =
+            [
+                "basket.read", "order.read", "customer.read", "payment.read",
+                "catalog.write", "stock.write", "merchant.credentials.write",
             ],
         },
         // 050: çok-tedarikçi feed (Procurement/Supplier + eski ingestion-agent) söküldü — first-party

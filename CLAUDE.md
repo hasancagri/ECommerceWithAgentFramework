@@ -62,6 +62,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 | `notification-agent` | — | Fiyat alarmı maili (DB'siz worker); `PriceAlarmTriggered`→LLM compose→Mail.Mcp `send_mail`→`NotificationSent` | `specs/060-price-alarm-mail` |
 | `mail-mcp` | — | İlk standalone MCP server; tek tool `send_mail` (MailKit→Mailpit); yalnız NotificationAgent tüketir, ChatAgent'a KAYITLI DEĞİL | `specs/060-price-alarm-mail` |
+| `mcp-gateway` | — | Tek müşteri MCP fasadı (DB'siz proxy); alt BC `/mcp`'lerini LAZY toplar (SDK `WithListToolsHandler`/`WithCallToolHandler`), ad→BC token-forward proxy (`PerUserMcpTool` server ikizi); tek `/mcp` (müşteri) + `/mcp-admin` (yönetim), tek consent (`external-customer-agent`); auth `RequireLoginUpfront` bayraklı (taban=upfront; anonim+checkout step-up denenir); ChatAgent söküm ayrı, UCP ayrı | `specs/073-customer-mcp-facade` |
 
 - **Ürün yazım yolu (050 pivot — first-party):** Çok-tedarikçi feed (Procurement + Supplier) SÖKÜLDÜ;
   mallar mağazanın. Düzenleme = 058 admin ekranları (künye/fiyat/stok/yayın); elle ürün OLUŞTURMA hâlâ yok
