@@ -113,6 +113,14 @@ string[] catalogAdminToolNames =
     Shared.CatalogAdminTools.ListProducts, Shared.CatalogAdminTools.GetProduct,
     Shared.CatalogAdminTools.UpdateProduct, Shared.CatalogAdminTools.SetPublished,
     Shared.CatalogAdminTools.GetPriceHistory,
+    // 074: parite tool'ları (REST admin söküldü) — hepsi YALNIZ /mcp-admin'de.
+    Shared.CatalogAdminTools.CreateProduct, Shared.CatalogAdminTools.SetProductDimensions,
+    Shared.CatalogAdminTools.SetProductSeo, Shared.CatalogAdminTools.AssignProductTag,
+    Shared.CatalogAdminTools.RemoveProductTag, Shared.CatalogAdminTools.CreateCategory,
+    Shared.CatalogAdminTools.UpdateCategory, Shared.CatalogAdminTools.CreateAuthor,
+    Shared.CatalogAdminTools.CreateProductTag, Shared.CatalogAdminTools.RenameProductTag,
+    Shared.CatalogAdminTools.ListProductTags, Shared.CatalogAdminTools.CreateSpecificationAttribute,
+    Shared.CatalogAdminTools.AddSpecificationAttributeOption, Shared.CatalogAdminTools.ListSpecificationAttributes,
 ];
 builder.Services
     .AddMcpServer()
@@ -142,21 +150,12 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-app.AddProductGroupEndpointExtension(apiVersionSet);
-app.AddProductTagGroupEndpointExtension(apiVersionSet);
-app.AddCategoryGroupEndpointExtension(apiVersionSet);
-app.AddAuthorGroupEndpointExtension(apiVersionSet);
-app.AddPublisherGroupEndpointExtension(apiVersionSet);
-app.AddSpecificationAttributeGroupEndpointExtension(apiVersionSet);
+// 074: domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle MCP (/mcp + /mcp-admin).
+// Ürün girişi ImportBook (051, endpoint'siz seeder) + admin_create_product (MCP). REST endpoint YOK.
 
 app.MapMcp("/mcp");
 

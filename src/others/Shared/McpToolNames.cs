@@ -87,12 +87,29 @@ public static class CatalogAdminTools
     public const string UpdateProduct = "admin_update_product";
     public const string SetPublished = "admin_set_published";
     public const string GetPriceHistory = "admin_get_price_history";
+    // 074: REST admin yüzeyi söküldü; parite tool'ları (MCP-only iş yüzeyi).
+    public const string CreateProduct = "admin_create_product";
+    public const string SetProductDimensions = "admin_set_product_dimensions";
+    public const string SetProductSeo = "admin_set_product_seo";
+    public const string AssignProductTag = "admin_assign_product_tag";
+    public const string RemoveProductTag = "admin_remove_product_tag";
+    public const string CreateCategory = "admin_create_category";
+    public const string UpdateCategory = "admin_update_category";
+    public const string CreateAuthor = "admin_create_author";
+    public const string CreateProductTag = "admin_create_product_tag";
+    public const string RenameProductTag = "admin_rename_product_tag";
+    public const string ListProductTags = "admin_list_product_tags";
+    public const string CreateSpecificationAttribute = "admin_create_specification_attribute";
+    public const string AddSpecificationAttributeOption = "admin_add_specification_attribute_option";
+    public const string ListSpecificationAttributes = "admin_list_specification_attributes";
 }
 
 public static class StockAdminTools
 {
     public const string SetStock = "admin_set_stock";
     public const string AdjustStock = "admin_adjust_stock";
+    // 074: admin stok genel görünüm (parite; GetAllStock REST'i söküldü).
+    public const string ListAllStock = "admin_list_all_stock";
 }
 
 public static class CustomerAdminTools

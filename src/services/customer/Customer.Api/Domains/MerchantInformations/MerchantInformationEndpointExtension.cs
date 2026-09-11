@@ -4,15 +4,8 @@ namespace Customer.Api.Domains.MerchantInformations;
 
 public static class MerchantInformationEndpointExtension
 {
-    public static void AddMerchantInformationGroupEndpointExtension(this WebApplication app, ApiVersionSet apiVersionSet)
-    {
-        app.MapGroup("api/v{version:apiVersion}/merchant-information")
-            .WithTags("MerchantInformation")
-            .WithApiVersionSet(apiVersionSet)
-            .SetMerchantInformationGroupItemEndpoint()
-            .GetMerchantInformationGroupItemEndpoint()
-            .RequireAuthorization();
-    }
+    // 074: merchant-information admin REST (get/set) söküldü — merchant yönetimi /mcp-admin tool'larında
+    // (admin_get_merchant_status / admin_set_merchant_credentials). Aşağıdaki internal S2S uçları KALIR.
 
     // 049: Order.Api (charge/reconcile) merchant API key'ini YAPISAL S2S kanaldan ceker (makine token
     // customer.read; SagaTokenHandler). MerchantKey MCP/agent'a cikmaz — yalniz bu internal uc doner;

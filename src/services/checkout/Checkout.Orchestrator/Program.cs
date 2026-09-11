@@ -78,15 +78,11 @@ builder.Services
 var app = builder.Build();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.AddCheckoutEndpoints(apiVersionSet);
+// 074: POST /checkout REST giriş yüzü söküldü — checkout sağası yalnız broker StartCheckout ile doğar
+// (Order.Api place_order yayınlar). REST endpoint YOK.
 
 app.MapMcp("/mcp");
 

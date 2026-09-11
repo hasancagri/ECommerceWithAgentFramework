@@ -163,3 +163,128 @@ public static class GetProductByNameMcpTool
         => bus.InvokeAsync<FeatureObjectResultModel<SearchProductsForAgent.SearchProductResponse>>(
             new SearchProductsForAgent.SearchProductsQuery(name, category, author), ct);
 }
+
+// 074: parite yazma tool'ları — REST admin (Create/SetDimensions/SetSeo/Tag) söküldü, MCP-only.
+// YALNIZ /mcp-admin (Program.cs allowlist). userId token'dan; scope handler'da; iz AdminActionLog.
+
+[McpServerToolType]
+public static class AdminCreateProductMcpTool
+{
+    [McpServerTool(Name = Shared.CatalogAdminTools.CreateProduct)]
+    [Description(
+        "YONETIM/YAZMA: yeni kitap kunyesi olusturur (TASLAK — yayina almaz; ayrica admin_set_published " +
+        "cagir). isbn kimliktir; ayni isbn zaten varsa hata doner (guncelleme icin admin_update_product). " +
+        "En az bir yazar (authorIds YA DA newAuthorNames) + yayinevi (publisherId YA DA newPublisherName) + " +
+        "categoryId zorunlu; katalogda olmayan yazar/yayinevi adlari olusturulur. Fiyat TL (>=0). Islem " +
+        "denetim izine kaydedilir.")]
+    public static Task<FeatureObjectResultModel<AdminCreateProductForAgent.AdminCreateProductResponse>> AdminCreateProductAsync(
+        [Description("Kitap adi")] string name,
+        [Description("ISBN (kimlik; benzersiz)")] string isbn,
+        [Description("Fiyat (TL, >= 0)")] decimal price,
+        [Description("Kategori kimligi (list_categories'ten)")] Guid categoryId,
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        CancellationToken ct,
+        [Description("Kisa aciklama")] string? shortDescription = null,
+        [Description("Tam aciklama")] string? fullDescription = null,
+        [Description("Var olan yazar kimlikleri")] List<Guid>? authorIds = null,
+        [Description("Katalogda olmayan yeni yazar adlari (olusturulur)")] List<string>? newAuthorNames = null,
+        [Description("Var olan yayinevi kimligi")] Guid? publisherId = null,
+        [Description("Katalogda olmayan yeni yayinevi adi (olusturulur)")] string? newPublisherName = null,
+        [Description("Kapak gorseli URL")] string? imageUrl = null)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<AdminCreateProductForAgent.AdminCreateProductResponse>>(
+            new AdminCreateProductForAgent.AdminCreateProductCommand(
+                userId, name, isbn, price, shortDescription, fullDescription,
+                authorIds, newAuthorNames, publisherId, newPublisherName, categoryId, imageUrl), ct);
+    }
+}
+
+[McpServerToolType]
+public static class AdminSetProductDimensionsMcpTool
+{
+    [McpServerTool(Name = Shared.CatalogAdminTools.SetProductDimensions)]
+    [Description("YONETIM/YAZMA: TEK urunun fiziksel olculerini ayarlar (agirlik + boy x en x yukseklik). " +
+                 "Islem denetim izine kaydedilir.")]
+    public static Task<FeatureObjectResultModel<AdminSetProductDimensionsForAgent.AdminSetProductDimensionsResponse>> AdminSetProductDimensionsAsync(
+        [Description("Urun kimligi")] Guid productId,
+        [Description("Agirlik")] decimal weight,
+        [Description("Boy (length)")] decimal length,
+        [Description("En (width)")] decimal width,
+        [Description("Yukseklik (height)")] decimal height,
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<AdminSetProductDimensionsForAgent.AdminSetProductDimensionsResponse>>(
+            new AdminSetProductDimensionsForAgent.AdminSetProductDimensionsCommand(
+                userId, productId, weight, length, width, height), ct);
+    }
+}
+
+[McpServerToolType]
+public static class AdminSetProductSeoMcpTool
+{
+    [McpServerTool(Name = Shared.CatalogAdminTools.SetProductSeo)]
+    [Description("YONETIM/YAZMA: TEK urunun SEO ust-verisini ayarlar (metaTitle/metaKeywords/metaDescription; " +
+                 "verilmeyen alan bos gecer). Islem denetim izine kaydedilir.")]
+    public static Task<FeatureObjectResultModel<AdminSetProductSeoForAgent.AdminSetProductSeoResponse>> AdminSetProductSeoAsync(
+        [Description("Urun kimligi")] Guid productId,
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        CancellationToken ct,
+        [Description("Meta baslik")] string? metaTitle = null,
+        [Description("Meta anahtar kelimeler")] string? metaKeywords = null,
+        [Description("Meta aciklama")] string? metaDescription = null)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<AdminSetProductSeoForAgent.AdminSetProductSeoResponse>>(
+            new AdminSetProductSeoForAgent.AdminSetProductSeoCommand(
+                userId, productId, metaTitle, metaKeywords, metaDescription), ct);
+    }
+}
+
+[McpServerToolType]
+public static class AdminAssignProductTagMcpTool
+{
+    [McpServerTool(Name = Shared.CatalogAdminTools.AssignProductTag)]
+    [Description("YONETIM/YAZMA: TEK urune bir etiket atar. tagId = admin_list_product_tags'ten. " +
+                 "Islem denetim izine kaydedilir.")]
+    public static Task<FeatureObjectResultModel<AdminAssignProductTagForAgent.AdminAssignProductTagResponse>> AdminAssignProductTagAsync(
+        [Description("Urun kimligi")] Guid productId,
+        [Description("Etiket kimligi (admin_list_product_tags'ten)")] Guid tagId,
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<AdminAssignProductTagForAgent.AdminAssignProductTagResponse>>(
+            new AdminAssignProductTagForAgent.AdminAssignProductTagCommand(userId, productId, tagId), ct);
+    }
+}
+
+[McpServerToolType]
+public static class AdminRemoveProductTagMcpTool
+{
+    [McpServerTool(Name = Shared.CatalogAdminTools.RemoveProductTag)]
+    [Description("YONETIM/YAZMA: TEK urunden bir etiketi kaldirir. tagId = admin_get_product/admin_list_product_tags'ten. " +
+                 "Islem denetim izine kaydedilir.")]
+    public static Task<FeatureObjectResultModel<AdminRemoveProductTagForAgent.AdminRemoveProductTagResponse>> AdminRemoveProductTagAsync(
+        [Description("Urun kimligi")] Guid productId,
+        [Description("Etiket kimligi")] Guid tagId,
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<AdminRemoveProductTagForAgent.AdminRemoveProductTagResponse>>(
+            new AdminRemoveProductTagForAgent.AdminRemoveProductTagCommand(userId, productId, tagId), ct);
+    }
+}

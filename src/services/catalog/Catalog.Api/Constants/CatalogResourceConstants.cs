@@ -26,6 +26,11 @@ public static class CatalogResourceConstants
     public static readonly string AUTHOR_ALREADY_EXISTS = "CATALOG_AUTHOR_ALREADY_EXISTS";
     public static readonly string PUBLISHER_ALREADY_EXISTS = "CATALOG_PUBLISHER_ALREADY_EXISTS";
     public static readonly string PRODUCT_DIMENSIONS_INVALID = "CATALOG_PRODUCT_DIMENSIONS_INVALID";
+    // 074: create_product ISBN çakışması (Gtin zaten var) — çoğaltma yok, admin_update_product'a yönlendir.
+    public static readonly string PRODUCT_ISBN_EXISTS = "CATALOG_PRODUCT_ISBN_EXISTS";
+    public static readonly string PRODUCT_AUTHOR_REQUIRED = "CATALOG_PRODUCT_AUTHOR_REQUIRED";
+    public static readonly string PRODUCT_PUBLISHER_REQUIRED = "CATALOG_PRODUCT_PUBLISHER_REQUIRED";
+    public static readonly string PRODUCT_CATEGORY_REQUIRED = "CATALOG_PRODUCT_CATEGORY_REQUIRED";
 
     // 043: özellik (specification) tanımları + atama guard'ları.
     public static readonly string SPEC_NAME_REQUIRED = "CATALOG_SPEC_NAME_REQUIRED";

@@ -92,7 +92,8 @@ builder.Services.AddHttpContextAccessor();
 // 070: TEK MCP server, İKİ uç — anonim /mcp (get_stock) + korumalı /mcp-admin (yönetim). Oturum
 // başına TAZE options (SDK, ConfigureSessionOptions verilince IOptionsFactory'den yeni kurar);
 // tool seti isteğin yoluna göre budanır: admin tool'lar YALNIZ /mcp-admin'de görünür.
-string[] stockAdminToolNames = [Shared.StockAdminTools.SetStock, Shared.StockAdminTools.AdjustStock];
+string[] stockAdminToolNames =
+    [Shared.StockAdminTools.SetStock, Shared.StockAdminTools.AdjustStock, Shared.StockAdminTools.ListAllStock];
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
@@ -120,16 +121,12 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
-var apiVersionSet = app.NewApiVersionSet()
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
-
 app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-app.AddStockGroupEndpointExtension(apiVersionSet);
+// 074: domain iş REST yüzeyi söküldü — stok okuma/yönetim tümüyle MCP (/mcp get_stock + /mcp-admin).
+// Checkout saga stok düşümü broker (CommitStock/RevertCommitStock handler'ları) — REST endpoint YOK.
 
 app.MapMcp("/mcp");
 
