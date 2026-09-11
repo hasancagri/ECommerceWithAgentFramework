@@ -74,7 +74,10 @@ public static class McpResourceMetadataExtension
                 app.MapGet(path, (HttpContext http) => TypedResults.Json(new
                 {
                     resource = $"{ExternalBase(http.Request)}/{option.PathPrefix}/{option.ServiceSlug}",
-                    authorization_servers = new[] { option.AuthorizationServer },
+                    // RFC 8414 §3.3: authorization_servers girdisi, AS metadata'sındaki `issuer` ile BİREBİR
+                    // eşleşmeli. OpenIddict issuer'ı trailing slash'le biter (Uri normalizasyonu) → burada da
+                    // slash'i garanti et (yoksa katı mcp-remote "issuer mismatch" ile bağlantıyı düşürür).
+                    authorization_servers = new[] { option.AuthorizationServer.TrimEnd('/') + "/" },
                     scopes_supported = option.Scopes,
                     bearer_methods_supported = new[] { "header" },
                 })).AllowAnonymous();
