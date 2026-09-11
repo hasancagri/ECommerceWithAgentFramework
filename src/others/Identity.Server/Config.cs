@@ -4,10 +4,6 @@ namespace Identity.Server;
 // açılışta OpenIddict application/scope manager'larına idempotent yazar.
 public static class Config
 {
-    // WebApp'in redirect/logout URI'ları (launchSettings https profili).
-    public const string WebAppRedirectUri = "https://localhost:7042/signin-oidc";
-    public const string WebAppPostLogoutRedirectUri = "https://localhost:7042/signout-callback-oidc";
-
     // Kullanıcı token'larına taşınan claim'ler (WebApp + servis policy'leri okur).
     public static readonly string[] UserClaims = ["role", "email", "name"];
 
@@ -141,17 +137,6 @@ public static class Config
             // 053: ingest (sinyal yaz) + read (zevk profili oku) — ikisi de reco.trainer audience.
             Scopes = ["personalization.ingest", "personalization.read"],
         },
-        // ChatAgent açılış MCP tool keşfi m2m: 061 korumalı /mcp transport'ları kimlik ister; keşif
-        // (ListTools) bu istemciyle geçer. Tool ÇAĞRISI her zaman o anki kullanıcı token'ıyla gider
-        // (PerUserMcpTool) — bu token'la tool çalıştırılmaz; scope'lar audience üretimi için (salt-read).
-        new ClientSeed
-        {
-            ClientId = "chat-agent-discovery",
-            ClientSecret = "chat-agent-discovery-secret",
-            DisplayName = "ChatAgent MCP discovery (m2m)",
-            AllowClientCredentials = true,
-            Scopes = ["basket.read", "order.read", "payment.read", "customer.read"],
-        },
         // 070: dış-agent YÖNETİM istemcisi — public+PKCE, code+refresh; consent Implicit (mağaza
         // sahibinin kendi aracı). Scope TAVANI yönetim demeti; gerçek yetki = tavan ∩ kullanıcı ROL
         // demeti (030) — admin-olmayan kullanıcı bu istemciyle girse de yönetim scope'u ALAMAZ.
@@ -213,21 +198,8 @@ public static class Config
                 "catalog.write", "stock.write", "merchant.credentials.write",
             ],
         },
-        // 050: çok-tedarikçi feed (Procurement/Supplier + eski ingestion-agent) söküldü — first-party
-        // ürün-CRUD yazım yolu, ayrı m2m istemci gerektirmez.
-        // WebApp (Razor Pages BFF): yalnız kullanıcı login'i (code+PKCE+refresh, confidential).
-        // 031: anonim okuma artık gerçekten anonim (storefront AllowAnonymous) → client_credentials KALKTI.
-        new ClientSeed
-        {
-            ClientId = "ecommerce.bff",
-            ClientSecret = "webshop-secret",
-            DisplayName = "ECommerce (Razor Pages BFF)",
-            AllowAuthorizationCode = true,
-            AllowRefreshToken = true,
-            RedirectUris = [WebAppRedirectUri],
-            PostLogoutRedirectUris = [WebAppPostLogoutRedirectUri],
-            Scopes = [.. IdentityScopes, .. BffServiceScopes],
-        },
+        // WebApp (Razor Pages BFF) SÖKÜLDÜ (2026-09-11) — UI kaldırıldı, agent-only. ecommerce.bff
+        // istemcisi + WebApp redirect URI'ları kalktı; müşteri/admin agent'ları external-*-agent ile girer.
     ];
 }
 

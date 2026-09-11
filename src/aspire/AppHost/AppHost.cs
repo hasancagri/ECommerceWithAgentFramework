@@ -212,51 +212,7 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
-var web = builder.AddProject<Projects.WebApp>("ecommerce-web");
-web.WithReference(basketApi)
-    // 058: admin ürün düzenleme ekranları Catalog'un yönetim penceresini çağırır.
-    .WithReference(catalogApi)
-    .WithReference(stockApi)
-    .WithReference(orderApi)
-    .WithReference(paymentApi)
-    .WithReference(storefrontApi)
-    .WithReference(customerApi)
-    .WithReference(reviewsApi)
-    // 060: detay sayfası fiyat alarmı düğmesi Library.Api'ye Refit ile gider (gateway route yok).
-    .WithReference(libraryApi)
-    .WithReference(identityServer)
-    .WaitFor(identityServer);
-
-
-var chatAgent = builder.AddProject<Projects.ChatAgent>("chat-agent")
-    .WithReference(gateway)
-    // 024: uzak A2A PaymentAgent url'i (ayri solution). Bos/eksik ise ChatAgent taksit tool'unu
-    // eklemeden acilir (graceful-degrade, US2). Uzak taraf gelince buraya adres verilir.
-    .WithEnvironment("PaymentGateway__A2AUrl", builder.Configuration["PaymentGateway:A2AUrl"] ?? "")
-    // 032: admin onboarding descriptor linki WebApp well-known'inden turetilir (service discovery).
-    .WithReference(web)
-    // Keşif makine token'ı (chat-agent-discovery client_credentials) Identity'den alınır.
-    .WithReference(identityServer)
-    .WaitFor(identityServer)
-    .WaitFor(gateway)
-    // 069 canli bulgu: MAF agent'lari STARTUP'ta kurulur (Map* cagrisi resolve eder) ve MCP tool'lari
-    // o anda toplanir — tool MCP'si ayakta degilse agent KALICI tool'suz kalir (singleton, retry yok).
-    // Bu yuzden chat-agent tool topladigi TUM ic MCP servislerini bekler.
-    .WaitFor(storefrontApi)
-    .WaitFor(catalogApi)
-    .WaitFor(basketApi)
-    .WaitFor(orderApi)
-    .WaitFor(paymentApi)
-    .WaitFor(stockApi)
-    .WaitFor(customerApi);
-
-// WebApp chat widget'i orchestrator'a proxy uzerinden gider => adres cozumu icin referans.
-web.WithReference(chatAgent);
-
-// 060: mail'deki urun linki MUTLAK WebApp adresiyle kurulur (relatif link Mailpit UI'da 404).
-notificationAgent.WithEnvironment("WebApp__BaseUrl", web.GetEndpoint("https"));
-
-// 049: WebApp checkout girişi Checkout.Orchestrator'a POST eder → adres çözümü için referans.
-web.WithReference(checkoutOrchestrator);
+// WebApp (UI) + ChatAgent SÖKÜLDÜ (2026-09-11) — agent-only/BYO-agent yönü: müşteri kendi AI istemcisiyle
+// MCP fasadına (mcp-gateway) bağlanır; mağaza kendi ekranını/agent'ını host etmez. Admin de /mcp-admin'de.
 
 await builder.Build().RunAsync();
