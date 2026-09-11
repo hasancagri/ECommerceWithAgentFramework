@@ -1,4 +1,4 @@
-using Order.Api.Domains.Orders.Features.Commands;
+using Order.Api.Domains.Orders;
 using Order.Api.Domains.PaymentAttempts;
 using Order.Api.Http;
 using Order.Api.Options;
@@ -20,8 +20,8 @@ public class PaymentAttemptTests
     private static PaymentAttempt NewAttempt(decimal amount = 100m, int deadline = 3600) =>
         PaymentAttempt.Begin(
             "deadbeef", User, Merchant, amount, installment: 1, cardId: null,
-            items: [new CreateOrder.OrderItemDto(Guid.NewGuid(), "Urun", amount, 1)],
-            address: new CreateOrder.AddressDto("Istanbul", "", "", "", "adres"),
+            items: [new OrderDtos.OrderItemDto(Guid.NewGuid(), "Urun", amount, 1)],
+            address: new OrderDtos.AddressDto("Istanbul", "", "", "", "adres"),
             Now, Cfg(deadline));
 
     // --- US1: mutlu yol ---
