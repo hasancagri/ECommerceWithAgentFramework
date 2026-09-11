@@ -82,8 +82,22 @@ Phase 0 — teknik bilinmeyenlerin çözümü. Kaynak: mevcut kod (ChatAgent MCP
   edilebilir + İlke I ruhuna yakın.
 - **Alternatif**: Gateway içinde MCP server — reddedildi (gateway'e uygulama mantığı sızdırır).
 
-## Açık dış bağımlılık / riskler (özet)
+## R8 — SPIKE sonucu (T010) + auth fallback kararı
 
-- **Spike (implementasyon 1. adımı)**: tek BC ile fasad ListTools+CallTool proxy uçtan uca + mcp-remote
-  step-up login çalışan sürüm doğrulaması.
-- **En ağır alt-iş**: anonim sepet X-User-Key + login-merge agent yoluna açma (R3).
+- **SDK fizibilitesi: GREEN.** ModelContextProtocol 1.4.0 `WithListToolsHandler` + `WithCallToolHandler`
+  (server custom handler → dinamik proxy) + client `McpClient.CreateAsync`/`HttpClientTransport` mevcut.
+  Fasad çekirdeği (lazy toplama + ad→BC yönlendirme + token-forward) uygulanabilir (dll doğrulandı).
+- **Auth zamanlaması — fallback (kullanıcı kararı):** step-up (anonim→checkout'ta giriş) canlıda tutmazsa
+  **upfront login**. Bu yüzden fasad `RequireLoginUpfront` bayraklı:
+  - `true` (garantili taban): `/mcp` blanket-auth → bağlanınca tek login; anonim/anon-sepet YOK → merge
+    gerekmez. Kanıtlanmış mekanizma.
+  - `false` (iyileştirme): anonim gez+sepet + checkout step-up + login-merge (R2/R3). Canlı step-up
+    tutarsa açılır; tutmazsa `true` kalır.
+- **Gerekçe**: Kullanıcı "olmuyorsa baştan login, yapacak bir şey yok" dedi. Bayrak, en riskli iki
+  parçayı (mid-session step-up + anon-basket-merge) opsiyonele indirir; MVP her hâlükârda çalışır.
+
+## Açık riskler (özet)
+
+- **Canlı step-up** (mcp-remote mid-session 401): `RequireLoginUpfront=false` yolunun canlı doğrulaması;
+  tutmazsa bayrak `true` (fallback).
+- **En ağır alt-iş** (yalnız `false` yolunda): anonim sepet X-User-Key + login-merge agent yoluna açma (R3).

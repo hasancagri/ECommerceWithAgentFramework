@@ -21,7 +21,9 @@ public sealed class AdminAgentApplicationManager<TApplication>(
         if (await base.ValidateRedirectUriAsync(application, uri, cancellationToken))
             return true;
 
-        if (await GetClientIdAsync(application, cancellationToken) != Config.ExternalAdminAgentClientId)
+        // 070 admin + 073 müşteri fasad agent'ı: ikisi de loopback (mcp-remote dinamik port) kullanır.
+        var clientId = await GetClientIdAsync(application, cancellationToken);
+        if (clientId is not (Config.ExternalAdminAgentClientId or Config.ExternalCustomerAgentClientId))
             return false;
 
         return Uri.TryCreate(uri, UriKind.Absolute, out var parsed)
