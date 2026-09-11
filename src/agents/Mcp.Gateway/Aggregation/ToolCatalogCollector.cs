@@ -38,8 +38,9 @@ public sealed class ToolCatalogCollector(
             {
                 try
                 {
-                    // Korumalı downstream keşfi makine token'ı ister; anonim downstream tokensiz.
-                    await using var client = await clients.CreateAsync(bc.McpUrl, bc.RequiresUserAuth ? token : null, null, ct);
+                    // Keşif her downstream'e makine token'ı taşır (korumalı BC /mcp 401 vermesin; anonim
+                    // BC token'ı yok sayar). RequiresUserAuth yalnız ÇAĞRI step-up'ını belirler, keşfi DEĞİL.
+                    await using var client = await clients.CreateAsync(bc.McpUrl, token, null, ct);
                     var list = await client.ListToolsAsync(cancellationToken: ct);
                     foreach (var t in list)
                     {
