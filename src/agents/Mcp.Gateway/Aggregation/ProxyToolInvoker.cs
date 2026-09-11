@@ -41,15 +41,10 @@ public sealed class ProxyToolInvoker(
         var auth = ctx.Request.Headers.Authorization.FirstOrDefault();
         var bearer = auth?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true ? auth["Bearer ".Length..] : null;
 
-        // Giriş varsa kullanıcı token'ı; yoksa ANONİM sepet için oturuma bağlı opak X-User-Key üret
-        // (MCP-Session-Id'den deterministik → aynı Claude Desktop oturumu = aynı sepet; 057 + UserKey yan yolu).
-        // Login (step-up) sonrası bearer gelir; anon sepet→kullanıcı devri (merge) ayrı iş (T021).
+        // Yalnız GERÇEK (issue edilmiş) X-User-Key varsa taşı — uydurma key downstream ApiKey resolve'da
+        // "Invalid or revoked" 401 verir ve anonim endpoint'i bile bozar. Anonim aramada hiçbir kimlik
+        // gönderilmez (storefront/catalog anonim çalışır). Anonim sepet gerçek anon-key üretimi ister (gap).
         var userKey = ctx.Request.Headers["X-User-Key"].FirstOrDefault();
-        if (bearer is null && string.IsNullOrEmpty(userKey))
-        {
-            var sessionId = ctx.Request.Headers["Mcp-Session-Id"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(sessionId)) userKey = "anon-" + sessionId;
-        }
         return (bearer, userKey);
     }
 
