@@ -26,8 +26,8 @@ public class PaymentAttempt
     public Guid? OrderId { get; set; }
     public string? OrderCode { get; set; }
     public Guid? CardId { get; set; }
-    public List<CreateOrder.OrderItemDto> Items { get; set; } = [];
-    public CreateOrder.AddressDto Address { get; set; } = new("", "", "", "", "");
+    public List<OrderDtos.OrderItemDto> Items { get; set; } = [];
+    public OrderDtos.AddressDto Address { get; set; } = new("", "", "", "", "");
 
     [JsonIgnore]
     public bool IsTerminal =>
@@ -37,7 +37,7 @@ public class PaymentAttempt
     // Yeni girisim: Charging durumunda, siparis blueprint'iyle. Cekim henuz yapilmadi.
     public static PaymentAttempt Begin(
         string key, Guid userId, Guid merchantId, decimal amount, int installment, Guid? cardId,
-        IReadOnlyList<CreateOrder.OrderItemDto> items, CreateOrder.AddressDto address, DateTimeOffset now,
+        IReadOnlyList<OrderDtos.OrderItemDto> items, OrderDtos.AddressDto address, DateTimeOffset now,
         CheckoutReconcile cfg) => new()
     {
         Id = key,

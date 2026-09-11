@@ -65,7 +65,7 @@ public static class PlaceOrderForAgent
                 return await ResumeExisting(existing, snapshot, ct);
 
             var amount = snapshot.TotalPrice;
-            var address = new CreateOrder.AddressDto(
+            var address = new OrderDtos.AddressDto(
                 Province: ctx.BuyerCity, District: "", Street: "", ZipCode: "", Line: ctx.BuyerRegistrationAddress);
             var attempt = PaymentAttempt.Begin(
                 key, cmd.UserId, ctx.MerchantId, amount, installment, cmd.CardId,

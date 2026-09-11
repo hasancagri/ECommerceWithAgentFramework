@@ -4,7 +4,7 @@ namespace Order.Api.Grpc;
 // Reachable=false ise Basket erisilemez (fail-closed; siparis olusmaz, FR-009).
 public sealed record BasketSnapshot(
     bool Reachable,
-    IReadOnlyList<CreateOrder.OrderItemDto> Items,
+    IReadOnlyList<OrderDtos.OrderItemDto> Items,
     decimal TotalPrice,
     string ContentHash)
 {
@@ -30,7 +30,7 @@ public sealed class BasketItemsClientProxy(BasketQuery.BasketQueryClient client)
             }, deadline: DateTime.UtcNow.Add(CallDeadline), cancellationToken: ct);
 
             var items = reply.Items
-                .Select(l => new CreateOrder.OrderItemDto(
+                .Select(l => new OrderDtos.OrderItemDto(
                     Guid.Parse(l.ProductId), l.Name, (decimal)l.UnitPrice, l.Quantity))
                 .ToList();
 
@@ -44,7 +44,7 @@ public sealed class BasketItemsClientProxy(BasketQuery.BasketQueryClient client)
 
     // Deterministik sepet-icerik hash'i: kalemleri ProductId'ye gore sirala, ProductId:Quantity:UnitPrice
     // birlestir, SHA256 hex. Sepet degisince hash degisir -> correlation-key degisir -> yeni cekim dogru.
-    private static string ComputeContentHash(IReadOnlyList<CreateOrder.OrderItemDto> items)
+    private static string ComputeContentHash(IReadOnlyList<OrderDtos.OrderItemDto> items)
     {
         var payload = string.Join("|", items
             .OrderBy(i => i.ProductId)

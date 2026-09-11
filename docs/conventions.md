@@ -78,6 +78,14 @@ Domains/<Aggregate>/
 - Endpoint: `CurrentUser.Load(httpContext.User)` ile kullanıcı, `IMessageBus.InvokeAsync` ile handler,
   `.RequireAuthorization(...)` ile koruma; `IsSuccess ? Ok : BadRequest`.
 - API sürümleme URL-segment (`v1`); doküman Scalar ile kök.
+- **`Domains/` = kullanıcı isteği; süreç güdümlü handler `Domains/` DIŞINDA.** `Features/{Commands,
+  Queries,Agents}` = "biri (müşteri/admin, endpoint/MCP/agent) bunu İSTEDİ" niyet yüzeyi. Kullanıcının
+  tetiklemediği, süreç-güdümlü handler'lar feature slice DEĞİL → `Domains/` dışına, iki klasöre:
+  `Saga/` = başka BC'nin sağa-orchestrator'ının broker komutuyla bu BC'yi süren katılım handler'ları;
+  `Process/` = bu BC'nin KENDİ dayanıklı süreci (watchdog/reconcile, `ScheduleAsync` tick'i). Okuma
+  testi: "kullanıcı mı tetikledi, süreç mi?" → kullanıcı=Domains, dış-saga=Saga, iç-süreç=Process.
+  Aggregate davranışı (İlke II) her iki yoldan da çağrılsa Domains'te kalır; ikisinin paylaştığı saf
+  helper de Domains'te (aggregate değil, ortak altyapı). Taşınan yalnız süreç-glue'su (handler + mesajı).
 
 ## Kod standartları
 

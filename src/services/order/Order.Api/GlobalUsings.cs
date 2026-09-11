@@ -10,7 +10,6 @@ global using Microsoft.AspNetCore.Mvc;
 global using Order.Api.Constants;
 global using Order.Api.Dependencies;
 global using Order.Api.Domains.Orders.Entities;
-global using Order.Api.Domains.Orders.Features.Commands;
 global using Order.Api.Domains.Orders.ValueObjects;
 global using Order.Api.Domains.Orders;
 global using System.Reflection;
@@ -44,6 +43,7 @@ global using Microsoft.Extensions.Options;
 global using Order.Api.Http;
 global using Order.Api.Domains.PaymentAttempts;
 global using Order.Api.Domains.PaymentAttempts.ValueObjects;
+global using Order.Api.Process;
 global using Common.Utils.Authorization;
 
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---
