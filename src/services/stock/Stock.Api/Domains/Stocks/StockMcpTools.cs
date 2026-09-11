@@ -18,6 +18,23 @@ public static class GetStockMcpTool
 // [RequiredScope(StockWrite)]. Yazma TEK ürün işler (FR-010) + AdminActionLog izi bırakır.
 
 [McpServerToolType]
+public static class AdminListAllStockMcpTool
+{
+    [McpServerTool(Name = Shared.StockAdminTools.ListAllStock)]
+    [Description(
+        "YONETIM/OKUMA: tum urunlerin stok (OnHand) genel gorunumu — {productId, onHand} listesi. " +
+        "Opsiyonel sayfalama: page (1'den baslar) + pageSize; ikisi de verilmezse tum kayitlar doner. " +
+        "Salt-okuma, denetim izi birakmaz. Tek urun icin get_stock kullan.")]
+    public static Task<FeatureListResultModel<AdminListAllStockForAgent.StockItemResponse>> AdminListAllStockAsync(
+        IMessageBus bus,
+        CancellationToken ct,
+        [Description("Sayfa numarasi (1'den baslar); verilmezse sayfalama yok")] int? page = null,
+        [Description("Sayfa basina kayit; verilmezse sayfalama yok")] int? pageSize = null)
+        => bus.InvokeAsync<FeatureListResultModel<AdminListAllStockForAgent.StockItemResponse>>(
+            new AdminListAllStockForAgent.AdminListAllStockQuery(page, pageSize), ct);
+}
+
+[McpServerToolType]
 public static class AdminSetStockMcpTool
 {
     [McpServerTool(Name = Shared.StockAdminTools.SetStock)]

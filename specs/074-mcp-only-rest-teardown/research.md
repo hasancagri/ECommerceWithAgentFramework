@@ -4,11 +4,14 @@ Phase 0. Spec'teki açık kararlar + söküm/çevirme sınırının netleştiril
 
 ## R1 — `create_product` ISBN çakışması
 
-**Decision**: `create_product` ProductId = ISBN (051 import ile aynı kimlik uzayı). Var olan ISBN'e
-çarparsa **hata döner** (`FeatureObjectResultModel.Error`, kod = mevcut "duplicate/exists" resource
-sabiti); idempotent üzerine-yazma YAPMAZ. ISBN'siz kitap oluşturma: ISBN opsiyonel değil — künye için
-zorunlu (kimlik anahtarı). ISBN yoksa üretilmiş Guid Id kullanılabilir mi? HAYIR — 051 ile tutarlılık
-için ISBN zorunlu (Assumptions'ta işaretli).
+**Decision** (DÜZELTİLDİ — kod incelemesi): ISBN mağazada `Product.Gtin`'de yaşar (indexli), ProductId
+rastgele Guid'dir (`Product.Create` — AggregateRoot). `ImportBook` idempotency'yi Gtin-query ile kurar
+(Id=ISBN DEĞİL). Dolayısıyla `create_product`: `session.Query<Product>().FirstOrDefault(p => p.Gtin == isbn)`
+ile bakar; VARSA **Error** (çoğaltma yok, agent kullanıcıya admin_update_product önerir); YOKSA
+`Product.Create(...)` + `SetIdentifiers(isbn, gtin: isbn, null)`. ISBN zorunlu param (künye kimliği).
+**Draft doğar** (spec FR-009): eski REST CreateProduct auto-`Publish()` ederdi; yeni tool ETMEZ —
+`admin_set_published` ayrı adım. Fiyat>0 ise geçmişin ilk satırı (`ProductPriceChange`, OldPrice=null).
+Draft olduğu için `ProductChangedEvent` YAYILMAZ (AdminUpdateProduct deseni: yalnız Published'da event).
 
 **Rationale**: İki yazım yolu (import + admin) aynı kimliği paylaşır; sessiz üzerine-yazma veri kaybı
 riski. Hata = güvenli varsayılan, agent kullanıcıya "bu ISBN zaten var, güncellemek için admin_update_product"

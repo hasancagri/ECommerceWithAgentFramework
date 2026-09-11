@@ -20,10 +20,10 @@ düzenleme) tamamen MCP tool'ları ile yapar. Hiçbir REST ekranı veya HTTP ça
 o işlevler bugün hiçbir yüzeyden erişilemez. Parite tool'ları olmadan katalog bakımı
 imkansız — bu hikaye canlıyken mağaza fiilen yönetilebilir olur.
 
-**Independent Test**: `/mcp-admin` (catalog) oturumu aç; sırayla category oluştur, author
-oluştur, product-tag oluştur + ürüne ata, specification-attribute + option ekle,
-create_product ile künye gir, dimensions ve SEO ata. Her çağrı başarılı döner ve
-`AdminActionLog`'a iz düşer.
+**Independent Test** (statik): catalog+stock derlenir; her admin işlev için `Features/Agents/
+Admin*ForAgent` slice + `*McpTools` wrapper var (`[McpServerTool]`, `Shared.CatalogAdminTools.*`
+adı); yazma slice'ları `[RequiredScope(CatalogWrite)]` + `AdminActionLog` yazar; anonim `/mcp`
+filtresi (Program.cs) değişmemiş. Canlı çağrı kapsam dışı.
 
 **Acceptance Scenarios**:
 
@@ -49,7 +49,7 @@ saldırı yüzeyi + bakım yükü; anayasa (BC izolasyonu, agent-yüzey) ile hiz
 
 **Independent Test**: Kod tabanında domain iş endpoint'i (Map{Get,Post,Put,Delete} — S2S/auth/
 MCP-infra hariç) arayışı boş döner; `.http` dosyaları yoktur; gateway config'inde `catalog-route`
-kalmaz. Sistem Aspire'dan sorunsuz açılır.
+kalmaz; `dotnet build` 0 hata.
 
 **Acceptance Scenarios**:
 
@@ -68,21 +68,20 @@ Bir müşteri kendi AI istemcisiyle mağazaya bağlanır: keşif, sepet, checkou
 Login (OIDC) akışı, MCP OAuth keşfi (PRM), servis-arası ödeme bağlamı çekimi ve checkout gRPC
 adımları söküm sonrası da ayaktadır.
 
-**Why this priority**: Söküm hiçbir canlı yolu kırmamalı. Auth + MCP-infra + S2S/gRPC korunan
-sınırdır; regresyon en yüksek risk.
+**Why this priority**: Söküm hiçbir korunan yolu kırmamalı. Auth + MCP-infra + S2S/gRPC korunan
+sınırdır; regresyon en yüksek risk. Doğrulama STATİK (kod incelemesi + build; canlı test yok).
 
-**Independent Test**: Chat E2E — keşif (`query_storefront`) → sepete ekle → checkout →
-sipariş tamamlanır. Ayrı olarak order charge yolu customer `/internal/payment-context` +
-`/internal/merchant-key`'i çekebilir; checkout gRPC sepet temizler.
+**Independent Test**: Kod incelemesi — korunan uçlar duruyor: müşteri yolu (`query_storefront`/
+basket/checkout MCP slice'ları), order charge S2S (`/internal/payment-context` +
+`/internal/merchant-key`), checkout gRPC (`basket_clear`), Identity OIDC, MCP PRM; `dotnet build` 0 hata.
 
 **Acceptance Scenarios**:
 
-1. **Given** müşteri MCP oturumu, **When** keşif→sepet→checkout akışı yürütülür, **Then**
-   sipariş `Confirmed` olur (canlı PASS).
-2. **Given** checkout sağası çalışır, **When** charge adımı ödeme bağlamı ister, **Then**
-   S2S `/internal/payment-context` yanıt verir (REST söküm bunu etkilememiştir).
-3. **Given** MCP istemcisi bağlanır, **When** OAuth keşfi yapılır, **Then** PRM (RFC 9728)
-   metadata uçları yanıt verir.
+1. **Given** söküm tamam, **When** müşteri MCP slice'ları (query_storefront/add_to_cart/place_order)
+   incelenir, **Then** hepsi kodda duruyor + derleniyor (davranış değişmemiş).
+2. **Given** checkout charge yolu, **When** kod incelenir, **Then** S2S `/internal/payment-context` +
+   `/internal/merchant-key` uçları söküm-dışı, duruyor.
+3. **Given** MCP-infra, **When** kod incelenir, **Then** PRM (RFC 9728) + MapMcp uçları duruyor.
 
 ---
 
@@ -129,7 +128,8 @@ sipariş tamamlanır. Ayrı olarak order charge yolu customer `/internal/payment
 #### Kurma (Catalog admin parite tool'ları — yalnız `/mcp-admin`)
 
 - **FR-009**: Sistem, admin `/mcp-admin` ucunda `create_product` tool'u sağlaMALI (elle
-  kitap künyesi oluşturma); doktrin import-only'den admin-yazma-dahil'e genişler.
+  kitap künyesi oluşturma); doktrin import-only'den admin-yazma-dahil'e genişler. ProductId=ISBN
+  (051 ile aynı kimlik uzayı); var olan ISBN'e çarparsa **Error** döner (idempotent üzerine-yazma YOK).
 - **FR-010**: Sistem, category create + update tool'ları sağlaMALI.
 - **FR-011**: Sistem, author create tool'u sağlaMALI.
 - **FR-012**: Sistem, product-tag create + rename + ürüne-ata + üründen-çıkar tool'ları
@@ -151,7 +151,9 @@ sipariş tamamlanır. Ayrı olarak order charge yolu customer `/internal/payment
 - **FR-020**: Mcp.Gateway MapMcp + PRM keşfi ve Common `McpResourceMetadataExtension`
   değişmeden çalışMALI.
 - **FR-021**: Checkout gRPC (basket_items/basket_clear) ayakta kalMALI.
-- **FR-022**: Söküm sonrası çözüm hatasız derlenMELİ ve sistem Aspire AppHost'tan açılMALI.
+- **FR-022**: Söküm sonrası çözüm hatasız derlenMELİ ve korunan yollar (auth/MCP-infra/S2S/gRPC/saga)
+  kodda ayakta kalMALI. Doğrulama STATİK (grep + `dotnet build` + kod incelemesi); canlı Aspire boot /
+  chat E2E kapsam DIŞI (kullanıcı kararı).
 
 ### Key Entities *(include if feature involves data)*
 
@@ -170,7 +172,8 @@ sipariş tamamlanır. Ayrı olarak order charge yolu customer `/internal/payment
   iş REST endpoint'i kalır (tarama ile doğrulanır).
 - **SC-002**: WebApp söküm sonrası erişilemez olan tüm catalog admin işlevleri (%100)
   `/mcp-admin` tool'ları ile yeniden erişilebilir.
-- **SC-003**: Chat E2E (keşif→sepet→checkout) canlı akışı PASS; hiçbir müşteri yolu kırılmaz.
+- **SC-003**: Korunan müşteri+servis yolları (query_storefront/basket/checkout/S2S/gRPC/saga) kodda
+  ayakta + çözüm derlenir; hiçbir yol söküm nedeniyle kırılmaz (statik + build kanıtı).
 - **SC-004**: Admin `/mcp-admin` parite akışı (create_product + category/author/tag/spec +
   dimensions/seo) uçtan uca PASS; her yazma `AdminActionLog`'ta izli.
 - **SC-005**: Anonim `/mcp` keşif tool seti söküm+kurma öncesiyle aynı kalır (yeni admin

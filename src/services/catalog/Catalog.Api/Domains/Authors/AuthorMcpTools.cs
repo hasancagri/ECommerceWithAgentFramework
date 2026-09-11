@@ -17,3 +17,26 @@ public static class ListAuthorsMcpTool
         => bus.InvokeAsync<FeatureObjectResultModel<Features.Agents.ListAuthorsForAgent.ListAuthorsResponse>>(
             new Features.Agents.ListAuthorsForAgent.ListAuthorsQuery(search, maxResults), ct);
 }
+
+// 074: ADMIN tool — YALNIZ korumalı /mcp-admin ucunda yayınlanır (anonim /mcp keşif seti DEĞİŞMEZ).
+// Kullanıcı token'dan (ICurrentUser); scope katmanı handler'da [RequiredScope(CatalogWrite)].
+[McpServerToolType]
+public static class AdminCreateAuthorMcpTool
+{
+    [McpServerTool(Name = Shared.CatalogAdminTools.CreateAuthor)]
+    [Description(
+        "YONETIM/YAZMA: bir yazar kaydi olusturur. Ayni ad zaten varsa YENISI olusturulmaz — mevcut " +
+        "yazar dondurulur (idempotent get-or-create), boylece urun bagi kurmadan once yazar kimligini " +
+        "guvenle alabilirsin. Yanit {id, name}. Islem denetim izine kaydedilir.")]
+    public static Task<FeatureObjectResultModel<Features.Agents.AdminCreateAuthorForAgent.AdminCreateAuthorResponse>> AdminCreateAuthorAsync(
+        [Description("Yazar adi")] string name,
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<Features.Agents.AdminCreateAuthorForAgent.AdminCreateAuthorResponse>>(
+            new Features.Agents.AdminCreateAuthorForAgent.AdminCreateAuthorCommand(userId, name), ct);
+    }
+}

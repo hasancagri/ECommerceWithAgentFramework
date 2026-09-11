@@ -22,7 +22,7 @@ test task'ı GEREKMEZ. **Canlı test YOK** (kullanıcı kararı) — doğrulama 
 
 ## Phase 1: Setup
 
-- [ ] T001 Baseline: `dotnet build` çalıştır, 0 hata doğrula (söküm öncesi referans nokta)
+- [X] T001 Baseline: `dotnet build` çalıştır, 0 hata doğrula (söküm öncesi referans nokta)
 
 ---
 
@@ -32,7 +32,7 @@ test task'ı GEREKMEZ. **Canlı test YOK** (kullanıcı kararı) — doğrulama 
 
 **⚠️ US1 başlayamaz T002 bitmeden.**
 
-- [ ] T002 `src/others/Shared/McpToolNames.cs`: `CatalogAdminTools`'a yeni sabitler ekle (create_product,
+- [X] T002 `src/others/Shared/McpToolNames.cs`: `CatalogAdminTools`'a yeni sabitler ekle (create_product,
   set_product_dimensions, set_product_seo, assign_product_tag, remove_product_tag, create_category,
   update_category, create_author, create_product_tag, rename_product_tag, list_product_tags,
   create_specification_attribute, add_specification_attribute_option, list_specification_attributes);
@@ -58,46 +58,46 @@ değişmemiş (yeni tool'lar yalnız `/mcp-admin` yol-prefix'inde).
 
 ### Products (catalog)
 
-- [ ] T003 [P] [US1] `Domains/Products/Features/Agents/AdminCreateProductForAgent.cs` — `Product.Create`
+- [X] T003 [P] [US1] `Domains/Products/Features/Agents/AdminCreateProductForAgent.cs` — `Product.Create`
   (ISBN=Id; çakışma→Error, research R1); get-or-create author/publisher; draft doğar; ilk fiyat
   `ProductPriceChange`; yayında değil → event yok
-- [ ] T004 [P] [US1] `Domains/Products/Features/Agents/AdminSetProductDimensionsForAgent.cs` — `Product.SetDimensions`
-- [ ] T005 [P] [US1] `Domains/Products/Features/Agents/AdminSetProductSeoForAgent.cs` — `Product.SetSeo`
-- [ ] T006 [P] [US1] `Domains/Products/Features/Agents/AdminAssignProductTagForAgent.cs` +
+- [X] T004 [P] [US1] `Domains/Products/Features/Agents/AdminSetProductDimensionsForAgent.cs` — `Product.SetDimensions`
+- [X] T005 [P] [US1] `Domains/Products/Features/Agents/AdminSetProductSeoForAgent.cs` — `Product.SetSeo`
+- [X] T006 [P] [US1] `Domains/Products/Features/Agents/AdminAssignProductTagForAgent.cs` +
   `AdminRemoveProductTagForAgent.cs` — `Product.AddTag` / tag çıkar (mevcut RemoveTag mantığı)
-- [ ] T007 [US1] `Domains/Products/ProductMcpTools.cs`'e 5 admin wrapper ekle (T003-T006; aynı dosya → seri)
+- [X] T007 [US1] `Domains/Products/ProductMcpTools.cs`'e 5 admin wrapper ekle (T003-T006; aynı dosya → seri)
 
 ### Categories (catalog)
 
-- [ ] T008 [P] [US1] `Domains/Categories/Features/Agents/AdminCreateCategoryForAgent.cs` (`Category.Create`) +
+- [X] T008 [P] [US1] `Domains/Categories/Features/Agents/AdminCreateCategoryForAgent.cs` (`Category.Create`) +
   `AdminUpdateCategoryForAgent.cs` (kısmi: `Rename`/`SetSeo`)
-- [ ] T009 [US1] `Domains/Categories/CategoryMcpTools.cs`'e 2 admin wrapper ekle (T008)
+- [X] T009 [US1] `Domains/Categories/CategoryMcpTools.cs`'e 2 admin wrapper ekle (T008)
 
 ### Authors (catalog)
 
-- [ ] T010 [P] [US1] `Domains/Authors/Features/Agents/AdminCreateAuthorForAgent.cs` (`Author.Create`, normalize get-or-create)
-- [ ] T011 [US1] `Domains/Authors/AuthorMcpTools.cs`'e create wrapper ekle (T010)
+- [X] T010 [P] [US1] `Domains/Authors/Features/Agents/AdminCreateAuthorForAgent.cs` (`Author.Create`, normalize get-or-create)
+- [X] T011 [US1] `Domains/Authors/AuthorMcpTools.cs`'e create wrapper ekle (T010)
 
 ### ProductTags (catalog)
 
-- [ ] T012 [P] [US1] `Domains/ProductTags/Features/Agents/` — AdminCreateProductTagForAgent (`Create`),
+- [X] T012 [P] [US1] `Domains/ProductTags/Features/Agents/` — AdminCreateProductTagForAgent (`Create`),
   AdminRenameProductTagForAgent (`Rename`), AdminListProductTagsForAgent (list; okuma, iz yok)
-- [ ] T013 [US1] `Domains/ProductTags/ProductTagMcpTools.cs` OLUŞTUR + 3 wrapper (2 yazma + 1 list) (T012)
+- [X] T013 [US1] `Domains/ProductTags/ProductTagMcpTools.cs` OLUŞTUR + 3 wrapper (2 yazma + 1 list) (T012)
 
 ### SpecificationAttributes (catalog)
 
-- [ ] T014 [P] [US1] `Domains/SpecificationAttributes/Features/Agents/` — AdminCreateSpecificationAttributeForAgent
+- [X] T014 [P] [US1] `Domains/SpecificationAttributes/Features/Agents/` — AdminCreateSpecificationAttributeForAgent
   (`Create`), AdminAddSpecificationAttributeOptionForAgent (`AddOption`), AdminListSpecificationAttributesForAgent (list)
-- [ ] T015 [US1] `Domains/SpecificationAttributes/SpecificationAttributeMcpTools.cs` OLUŞTUR + 3 wrapper (T014)
+- [X] T015 [US1] `Domains/SpecificationAttributes/SpecificationAttributeMcpTools.cs` OLUŞTUR + 3 wrapper (T014)
 
 ### Stock
 
-- [ ] T016 [P] [US1] `src/services/stock/Stock.Api/Domains/Stocks/Features/Agents/AdminListAllStockForAgent.cs`
+- [X] T016 [P] [US1] `src/services/stock/Stock.Api/Domains/Stocks/Features/Agents/AdminListAllStockForAgent.cs`
   (GetAllStock mantığı, okuma) + `StockMcpTools.cs`'e `admin_list_all_stock` wrapper
 
 ### Doğrulama
 
-- [ ] T017 [US1] `dotnet build` (catalog+stock) 0 hata; kod incelemesi: yeni tool'lar `[McpServerTool]` ile
+- [X] T017 [US1] `dotnet build` (catalog+stock) 0 hata; kod incelemesi: yeni tool'lar `[McpServerTool]` ile
   kayıtlı, Program.cs `ConfigureSessionOptions` yol-prefix filtresi değişmemiş (anonim `/mcp` etkilenmez)
 
 **Checkpoint**: Catalog/stock admin parite tam; REST hâlâ paralel (henüz sökülmedi).
@@ -163,7 +163,8 @@ kurulmadan kaldırma yeteneği yok. Twin-mevcut kaldırmalar (T021 stock, T022 c
 - [ ] T031 [P] `src/services/catalog/Catalog.Api/FLOW.md`: ürün girişi adımını güncelle (create_product =
   yeni elle giriş yolu; doktrin kayması import-only → import + admin) — İLKE VII, aynı PR
 - [ ] T032 [P] `CLAUDE.md` BC haritası + notlar: catalog/stock/customer admin REST→MCP; "058 admin ekranları"
-  ve REST admin referanslarını güncelle; müşteri+admin yüzey MCP-only son durumu
+  ve REST admin referanslarını güncelle; müşteri+admin yüzey MCP-only son durumu. AYRICA "Ürün yazım yolu"
+  notundaki "elle ürün OLUŞTURMA hâlâ yok" satırını güncelle (create_product ile doktrin kayması: import + admin)
 - [ ] T033 Guard'lar: `scripts/check-flow-links.sh` + `scripts/check-claude-spec-links.sh` PASS
 
 ---

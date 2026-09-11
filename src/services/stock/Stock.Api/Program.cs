@@ -92,7 +92,8 @@ builder.Services.AddHttpContextAccessor();
 // 070: TEK MCP server, İKİ uç — anonim /mcp (get_stock) + korumalı /mcp-admin (yönetim). Oturum
 // başına TAZE options (SDK, ConfigureSessionOptions verilince IOptionsFactory'den yeni kurar);
 // tool seti isteğin yoluna göre budanır: admin tool'lar YALNIZ /mcp-admin'de görünür.
-string[] stockAdminToolNames = [Shared.StockAdminTools.SetStock, Shared.StockAdminTools.AdjustStock];
+string[] stockAdminToolNames =
+    [Shared.StockAdminTools.SetStock, Shared.StockAdminTools.AdjustStock, Shared.StockAdminTools.ListAllStock];
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>

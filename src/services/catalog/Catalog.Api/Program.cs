@@ -113,6 +113,14 @@ string[] catalogAdminToolNames =
     Shared.CatalogAdminTools.ListProducts, Shared.CatalogAdminTools.GetProduct,
     Shared.CatalogAdminTools.UpdateProduct, Shared.CatalogAdminTools.SetPublished,
     Shared.CatalogAdminTools.GetPriceHistory,
+    // 074: parite tool'ları (REST admin söküldü) — hepsi YALNIZ /mcp-admin'de.
+    Shared.CatalogAdminTools.CreateProduct, Shared.CatalogAdminTools.SetProductDimensions,
+    Shared.CatalogAdminTools.SetProductSeo, Shared.CatalogAdminTools.AssignProductTag,
+    Shared.CatalogAdminTools.RemoveProductTag, Shared.CatalogAdminTools.CreateCategory,
+    Shared.CatalogAdminTools.UpdateCategory, Shared.CatalogAdminTools.CreateAuthor,
+    Shared.CatalogAdminTools.CreateProductTag, Shared.CatalogAdminTools.RenameProductTag,
+    Shared.CatalogAdminTools.ListProductTags, Shared.CatalogAdminTools.CreateSpecificationAttribute,
+    Shared.CatalogAdminTools.AddSpecificationAttributeOption, Shared.CatalogAdminTools.ListSpecificationAttributes,
 ];
 builder.Services
     .AddMcpServer()
