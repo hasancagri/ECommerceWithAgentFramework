@@ -6,13 +6,7 @@ public static class OptionsExt
 {
     public static IServiceCollection AddOptionsExt(this IServiceCollection services)
     {
-        // DropShop vault (Identity + Payment.Api) config — section "DropShopVault".
-        services.AddOptions<DropShopVaultOption>().BindConfiguration("DropShopVault")
-            .ValidateDataAnnotations().ValidateOnStart();
-
-        services.AddSingleton<DropShopVaultOption>(sp =>
-            sp.GetRequiredService<IOptions<DropShopVaultOption>>().Value);
-
+        // 076: DropShopVault (kart-saklama) config söküldü. Yalnız onboarding kaldı.
         // 070: DropShop onboarding (PG Merchant.Api MCP + Identity) — section "DropShopOnboarding".
         // Alanlar opsiyonel: config yoksa tool'lar dostane "yapılamıyor" döner (IsConfigured).
         services.AddOptions<Customer.Api.Onboarding.DropShopOnboardingOption>()

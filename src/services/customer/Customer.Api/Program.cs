@@ -10,10 +10,9 @@ builder.Services.AddMarten(opts =>
         opts.UseNewtonsoftForSerialization(
             nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
             configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
-        // 022: iki aggregate root, ikisi de UserId ile keyli (kullanici basina tek cuzdan/defter).
-        opts.Schema.For<Customer.Api.Domains.Wallets.Wallet>().Index(x => x.UserId);
+        // 076: Wallet (kart-saklama) SÖKÜLDÜ; Customer BC = AddressBook + MerchantInformation.
         opts.Schema.For<Customer.Api.Domains.AddressBooks.AddressBook>().Index(x => x.UserId);
-        // Vault: DropShop merchant kimliği (tekil kayıt) — vault token'ı bundan mint edilir.
+        // Merchant kimliği (tekil kayıt) — merchant onboarding/admin.
         opts.Schema.For<Customer.Api.Domains.MerchantInformations.MerchantInformation>();
 
         // 070: admin yazma tool'larının salt-append denetim izi (FR-009).
@@ -60,7 +59,7 @@ builder.Services.AddAgentLogoutClient(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// Vault: DropShop bağlantı config'i (section "DropShopVault") + gateway HTTP client.
+// DropShop onboarding config (section "DropShopOnboarding"). (076: DropShopVault/kart config söküldü.)
 builder.Services.AddOptionsExt();
 
 // 070 FR-016: DropShop onboarding sarmalayıcısı — PG Merchant.Api MCP'sine makine kimliği
@@ -70,12 +69,6 @@ builder.Services.AddTransient<Customer.Api.Onboarding.OnboardingGatewayTokenHand
 builder.Services.AddHttpClient(Customer.Api.Onboarding.MerchantOnboardingClient.HttpClientName)
     .RemoveAllResilienceHandlers()
     .AddHttpMessageHandler<Customer.Api.Onboarding.OnboardingGatewayTokenHandler>()
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-    });
-// Dev: gateway self-signed sertifikasını kabul et (Aspire https). PROD'da kaldırılır.
-builder.Services.AddHttpClient("dropshop-vault")
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
@@ -131,10 +124,8 @@ var apiVersionSet = app.NewApiVersionSet()
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 074: merchant-information admin REST söküldü (merchant yönetimi /mcp-admin). İç S2S uçları KALIR.
-// 039: Order.Api chat siparis tamamlama yapisal odeme-baglami ucu (customer.read makine token'i).
-app.AddPaymentContextInternalEndpoint(apiVersionSet);
-// 049: Order.Api charge/reconcile merchant API key ucu (customer.read); MerchantKey agent'a cikmaz.
+// 076: payment-context internal ucu SÖKÜLDÜ (kart-saklama gitti). merchant-key internal ucu KALIR
+// (MerchantInformation admin; charge tüketicisi 076'da söküldü ama uç zararsız durur).
 app.AddMerchantKeyInternalEndpoint(apiVersionSet);
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).

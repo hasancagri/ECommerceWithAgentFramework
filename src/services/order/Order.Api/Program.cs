@@ -87,24 +87,10 @@ builder.Services.AddAllDependencies();
 builder.Services.AddOptions<IdentityOption>().BindConfiguration(nameof(IdentityOption))
     .ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddSingleton<IdentityOption>(sp => sp.GetRequiredService<IOptions<IdentityOption>>().Value);
-builder.Services.AddOptions<SagaAuth>().BindConfiguration(nameof(SagaAuth))
-    .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton<SagaAuth>(sp => sp.GetRequiredService<IOptions<SagaAuth>>().Value);
 builder.Services.AddOptions<Checkout>().BindConfiguration(nameof(Checkout))
     .ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddSingleton<Checkout>(sp => sp.GetRequiredService<IOptions<Checkout>>().Value);
-
-// 039: chat siparis tamamlama option'lari (PG cekim, Customer baglami, reconcile, correlation HMAC).
-builder.Services.AddOptions<PaymentGatewayOption>().BindConfiguration(nameof(PaymentGatewayOption))
-    .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton<PaymentGatewayOption>(sp => sp.GetRequiredService<IOptions<PaymentGatewayOption>>().Value);
-builder.Services.AddOptions<CustomerContextOption>().BindConfiguration(nameof(CustomerContextOption));
-builder.Services.AddSingleton<CustomerContextOption>(sp => sp.GetRequiredService<IOptions<CustomerContextOption>>().Value);
-builder.Services.AddOptions<CheckoutReconcile>().BindConfiguration(nameof(CheckoutReconcile));
-builder.Services.AddSingleton<CheckoutReconcile>(sp => sp.GetRequiredService<IOptions<CheckoutReconcile>>().Value);
-builder.Services.AddOptions<CorrelationKeyOption>().BindConfiguration(nameof(CorrelationKeyOption))
-    .ValidateDataAnnotations().ValidateOnStart();
-builder.Services.AddSingleton<CorrelationKeyOption>(sp => sp.GetRequiredService<IOptions<CorrelationKeyOption>>().Value);
+// 076: chat charge option'ları (SagaAuth/PaymentGateway/CustomerContext/CheckoutReconcile/CorrelationKey) SÖKÜLDÜ.
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -114,44 +100,8 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("order");
 builder.Services.AddHttpContextAccessor();
 
-// 039: makine token'i (order-saga client-credentials) — chat place_order gRPC/HTTP istemcilerinde kullanılır.
-// (049: 028 checkout saga gRPC adımları söküldü; Stock commit/BasketClear artık orchestrator broker işi.)
-builder.Services.AddTransient<SagaTokenHandler>();
-
-var basketGrpcAddress = builder.Configuration["services:basket-api:https:0"]
-    ?? builder.Configuration["services:basket-api:http:0"]
-    ?? "https://basket-api";
-
-// 039: GetBasketItems gRPC istemcisi (place_order kalem sentezi; makine token'i basket.read).
-builder.Services
-    .AddGrpcClient<Shared.Grpc.Basket.BasketQuery.BasketQueryClient>(o => o.Address = new Uri(basketGrpcAddress))
-    .AddHttpMessageHandler<SagaTokenHandler>();
-builder.Services.AddScoped<BasketItemsClientProxy>();
-
-// 039: Customer yapisal odeme-baglami HTTP istemcisi (makine token'i customer.read; SagaTokenHandler).
-var customerHttpAddress = builder.Configuration["services:customer-api:https:0"]
-    ?? builder.Configuration["services:customer-api:http:0"]
-    ?? "https://customer-api";
-builder.Services
-    .AddHttpClient<CustomerPaymentContextClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
-    .AddHttpMessageHandler<SagaTokenHandler>();
-
-// 049: merchant API key istemcisi (charge/reconcile X-Api-Key kaynagi; customer.read makine token'i).
-// Key MerchantInformation'dan cozulur -> statik config anahtari (senkron derdi) kalkti.
-builder.Services
-    .AddHttpClient<MerchantKeyClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
-    .AddHttpMessageHandler<SagaTokenHandler>();
-
-// 039: PaymentGateway (dis repo) cekim/retrieve HTTP istemcisi — auth merchant API key (kullanici JWT
-// degil). 049: X-Api-Key PER-REQUEST verilir (MerchantKeyClient'tan cozulur) — statik header YOK.
-builder.Services.AddHttpClient<PaymentGatewayClient>((sp, c) =>
-{
-    var pg = sp.GetRequiredService<PaymentGatewayOption>();
-    c.BaseAddress = new Uri(pg.BaseUrl.TrimEnd('/') + "/");
-    c.Timeout = TimeSpan.FromSeconds(60);
-});
-
-// TAKSİT KALDIRILDI: PG A2A quote istemcisi söküldü (070 A2A teknik borcu ödendi; ödeme tek çekim).
+// 076: chat charge yolu (SagaTokenHandler + basket gRPC istemcisi + Customer/PG/merchant-key HTTP
+// istemcileri) SÖKÜLDÜ (kart-saklama + charge kaldırıldı; checkout geçici boşlukta, hosted-CF sonraki spec).
 
 builder.Services
     .AddMcpServer()

@@ -4,10 +4,6 @@ global using Customer.Api.Dependencies;
 global using Customer.Api.Domains.AddressBooks;
 global using Customer.Api.Domains.AddressBooks.Features.Agents;
 global using Customer.Api.Domains.AddressBooks.ValueObjects;
-global using Customer.Api.Domains.Wallets;
-global using Customer.Api.Domains.Wallets.Entities;
-global using Customer.Api.Domains.Wallets.Features.Agents;
-global using Customer.Api.Infrastructure.Tokenization;
 global using Common.Domains;
 global using Common.Dependencies;
 global using Common.Exceptions;
@@ -39,7 +35,6 @@ global using Customer.Api.Domains.MerchantInformations;
 global using Customer.Api.Extensions;
 
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---
-global using Customer.Api.Options;
 global using System.Text.Json;
 // --- 070: admin MCP yüzeyi (tool adı sabitleri + iz) ---
 global using Shared;
