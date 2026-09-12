@@ -23,7 +23,6 @@ global using Common.Utils.Constants;
 global using Shared;
 global using Shared.Utils.Constants;
 global using Common.Auths;
-global using Order.Api.Grpc;
 global using System.Net.Http.Headers;
 global using System.Text.Json;
 
@@ -39,11 +38,7 @@ global using Common.Options;
 global using Order.Api.Options;
 global using Microsoft.Extensions.Options;
 
-// --- 039: chat siparis tamamlama ---
-global using Order.Api.Http;
-global using Order.Api.Domains.PaymentAttempts;
-global using Order.Api.Domains.PaymentAttempts.ValueObjects;
-global using Order.Api.Process;
+// 076: chat charge yolu (Http/PaymentAttempts/Process/Grpc-client) SÖKÜLDÜ.
 global using Common.Utils.Authorization;
 
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---
