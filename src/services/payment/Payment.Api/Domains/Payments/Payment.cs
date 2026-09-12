@@ -43,9 +43,10 @@ public class Payment : AggregateRoot
         return ResultDomain.Ok();
     }
 
-    /// <summary>Tek-faz checkout tahsilatı: tutarı çeker (Success). PSP hop stub — lokal olarak başarılı
-    /// döner. Void/refund yok; idempotency (aynı checkoutId tek ödeme) handler'da çözülür.</summary>
-    public static ResultDomain<Payment> Charge(Guid userId, decimal amount, Guid checkoutId)
+    /// <summary>075: Tek-faz NON-3D çekim başarılı sonucunu kaydeder. Gerçek çekimi handler PG'ye
+    /// yaptırır (PSP artık PG); bu factory yalnız başarılı sonucu (PG paymentId'siyle) domain'e
+    /// yazar. Void/refund yok; idempotency (aynı checkoutId tek ödeme) handler'da çözülür.</summary>
+    public static ResultDomain<Payment> Charge(Guid userId, decimal amount, Guid checkoutId, string pgPaymentId)
     {
         var messages = new List<MessageItem>();
 
@@ -67,7 +68,8 @@ public class Payment : AggregateRoot
             Amount = amount,
             Status = PaymentStatus.Success,
             CheckoutId = checkoutId,
-            ChargeRef = $"PAY-{checkoutId:N}"
+            // 075: mock "PAY-{id}" yerine gerçek PG çekim kimliği (iz/eşleştirme).
+            ChargeRef = pgPaymentId
         });
     }
 }

@@ -27,3 +27,9 @@ global using ModelContextProtocol.Server;
 global using Common.Dependencies;
 global using Payment.Api.Domains.Payments.Features.Agents;
 global using Shared.Utils.Constants;
+
+// --- 075: PG NON-3D çekim S2S (Order'dan taşındı) ---
+global using Payment.Api.Http;
+global using Payment.Api.Options;
+global using Common.Options;
+global using Microsoft.Extensions.Options;

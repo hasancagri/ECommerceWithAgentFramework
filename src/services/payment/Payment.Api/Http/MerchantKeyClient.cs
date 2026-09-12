@@ -1,9 +1,9 @@
-namespace Order.Api.Http;
+namespace Payment.Api.Http;
 
-// 049: Order -> Customer merchant API key istemcisi (PG charge/retrieve X-Api-Key kaynagi). Customer.Api
-// /internal/merchant-key ucunu makine token'iyla (customer.read; SagaTokenHandler) cagirir. Statik config
-// anahtari yerine tek kaynak MerchantInformation -> reset/rotate senkron derdi biter. Fail-closed:
-// NotFound/erisilemez -> null (cekim yapilmaz / reconcile belirsiz sayar). Key ASLA UI/LLM'e sizmaz.
+// 075: Payment -> Customer merchant API key istemcisi (PG charge X-Api-Key kaynağı). Customer.Api
+// /internal/merchant-key ucunu makine token'iyla (customer.read; SagaTokenHandler) çağırır. Tek kaynak
+// MerchantInformation → reset/rotate senkron derdi yok. Fail-closed: NotFound/erişilemez → null
+// (çekim yapılmaz). Key ASLA UI/LLM'e sızmaz.
 public sealed class MerchantKeyClient(HttpClient http)
 {
     private sealed record MerchantKeyReply(Guid merchantId, string merchantKey);
@@ -21,7 +21,7 @@ public sealed class MerchantKeyClient(HttpClient http)
         }
         catch (HttpRequestException)
         {
-            return null; // fail-closed: Customer erisilemez
+            return null; // fail-closed: Customer erişilemez
         }
         catch (TaskCanceledException)
         {

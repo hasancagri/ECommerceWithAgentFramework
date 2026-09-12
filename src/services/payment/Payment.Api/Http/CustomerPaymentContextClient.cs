@@ -1,10 +1,9 @@
-namespace Order.Api.Http;
+namespace Payment.Api.Http;
 
-// 075: Customer yapısal ödeme-bağlamı yanıtı (Order-tarafı — yalnız SİPARİŞ ADRESİ + kart/adres
-// varlık ön-kontrolü için). Çekim Order'dan KALKTI (Payment BC yapar — analyze I1); Order artık PG'ye
-// çekim yapmaz. Bu istemci place_order'da (a) kayıtlı kart + varsayılan adres var mı hızlı doğrular
-// (yoksa saga başlatmadan reddet), (b) StartCheckout için sipariş adresini sağlar. Found=false ise
-// kart/adres/merchant yok → place_order reddedilir.
+// 075: Customer yapısal ödeme-bağlamı yanıtı (PaymentContextView Payment-tarafı karşılığı). VaultToken
+// KALKTI → PG kart-handle'ları (PgUserHandle + CardHandle) + buyer + MerchantId. Found=false ise kart/
+// adres/merchant yok VEYA Customer erişilemez → çekim başarısız (fail-closed). Handle'lar yalnız PG
+// çekiminde kullanılır; PAN/CVV asla.
 public sealed record PaymentContext(
     Guid MerchantId,
     string PgUserHandle,
@@ -19,8 +18,9 @@ public sealed record PaymentContext(
     string BuyerCountry,
     string BuyerIp);
 
-// 075: Order -> Customer yapısal ödeme-bağlamı istemcisi. /internal/payment-context'i makine token'iyla
-// (customer.read; SagaTokenHandler) çağırır. Fail-closed: NotFound/erişilemez → null (sipariş oluşmaz).
+// 075: Payment -> Customer yapısal ödeme-bağlamı istemcisi. Customer.Api /internal/payment-context
+// ucunu makine token'iyla (customer.read; SagaTokenHandler) çağırır. Fail-closed: NotFound/erişilemez
+// → null (çekim yapılmaz). Handle'lar/merchantId asla UI/LLM'e sızmaz; yalnız PG charge.
 public sealed class CustomerPaymentContextClient(HttpClient http)
 {
     public async Task<PaymentContext?> GetAsync(Guid userId, string? cardHandle, CancellationToken ct)
@@ -33,13 +33,13 @@ public sealed class CustomerPaymentContextClient(HttpClient http)
 
             using var response = await http.GetAsync(url, ct);
             if (!response.IsSuccessStatusCode)
-                return null;
+                return null; // NotFound (kart/adres/merchant yok) veya yetki/hata → çekim yok
 
             return await response.Content.ReadFromJsonAsync<PaymentContext>(cancellationToken: ct);
         }
         catch (HttpRequestException)
         {
-            return null;
+            return null; // fail-closed: Customer erişilemez
         }
         catch (TaskCanceledException)
         {

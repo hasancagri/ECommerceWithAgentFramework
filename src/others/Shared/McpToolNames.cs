@@ -55,6 +55,10 @@ public static class CustomerTools
     // GÜVENLİK: get_default_card_bin + get_payment_context sabitleri KALDIRILDI (tool'lar söküldü —
     // vault token + buyer PII sohbet bağlamına sızıyordu). Ödeme bağlamı yalnız S2S internal REST.
     public const string ListCards = "list_cards";
+    // 075: PG aracılı kart saklama (ekle hosted link + sil + varsayılan; PAN/CVV asla).
+    public const string AddCard = "add_card";
+    public const string DeleteCard = "delete_card";
+    public const string SetDefaultCard = "set_default_card";
     // 062: adres defteri (dış agent yüzeyi; ChatAgent allowlist'inde değil).
     public const string ListAddresses = "list_addresses";
     public const string AddAddress = "add_address";

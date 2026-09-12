@@ -21,6 +21,13 @@ public static class OptionsExt
         services.AddSingleton<Customer.Api.Onboarding.DropShopOnboardingOption>(sp =>
             sp.GetRequiredService<IOptions<Customer.Api.Onboarding.DropShopOnboardingOption>>().Value);
 
+        // 075: PG kart-sözleşmesi uçları (add-session/list/delete) — section "PgCardOptions".
+        services.AddOptions<Customer.Api.Infrastructure.PaymentGateway.Options.PgCardOptions>()
+            .BindConfiguration(nameof(Customer.Api.Infrastructure.PaymentGateway.Options.PgCardOptions))
+            .ValidateDataAnnotations().ValidateOnStart();
+        services.AddSingleton<Customer.Api.Infrastructure.PaymentGateway.Options.PgCardOptions>(sp =>
+            sp.GetRequiredService<IOptions<Customer.Api.Infrastructure.PaymentGateway.Options.PgCardOptions>>().Value);
+
         return services;
     }
 }

@@ -39,11 +39,8 @@ global using Common.Options;
 global using Order.Api.Options;
 global using Microsoft.Extensions.Options;
 
-// --- 039: chat siparis tamamlama ---
+// --- 039/075: chat siparis tamamlama (çekim Payment BC'ye taşındı; reconcile subsystem söküldü) ---
 global using Order.Api.Http;
-global using Order.Api.Domains.PaymentAttempts;
-global using Order.Api.Domains.PaymentAttempts.ValueObjects;
-global using Order.Api.Process;
 global using Common.Utils.Authorization;
 
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---

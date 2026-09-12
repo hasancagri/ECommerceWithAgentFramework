@@ -19,4 +19,7 @@ public static class OrderResourceConstants
     public static readonly string ORDER_PAYMENT_PENDING = "ORDER_PAYMENT_PENDING";
     public static readonly string ORDER_BASKET_EMPTY = "ORDER_BASKET_EMPTY";
     public static readonly string ORDER_PAYMENT_CONTEXT_MISSING = "ORDER_PAYMENT_CONTEXT_MISSING";
+
+    // 075: NON-3D çekim onayı zorunlu (FR-014) — onaysız place_order çekim başlatmaz.
+    public static readonly string ORDER_PAYMENT_CONFIRMATION_REQUIRED = "ORDER_PAYMENT_CONFIRMATION_REQUIRED";
 }

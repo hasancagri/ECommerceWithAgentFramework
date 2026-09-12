@@ -21,27 +21,31 @@ public static class GetOrdersMcpTool
 // TAKSİT KALDIRILDI (2026-09-11, Google-Pay-like): quote_installments tool + PG A2A quote yolu söküldü
 // (070 A2A teknik borcu ödendi). Ödeme TEK ÇEKİM; taksit sohbet/agent yüzeyinde yok.
 
-// 039: chat'ten uctan uca siparis tamamlama tetikleyicisi. LLM yalniz bunu secer + cardId? verir;
-// tutar/buyer/kalem/adres/vaultToken SUNUCU tarafinda sentezlenir (LLM'e verdirilmez). Tek çekim.
+// 075: chat'ten uçtan uca sipariş tamamlama. Çekim NON-3D (banka ekranı yok) → onay AGENT konuşmasında
+// (FR-014). LLM yalnız bunu seçer + confirmed + cardHandle? verir; tutar/buyer/kalem/adres SUNUCU
+// tarafında sentezlenir. Çekim saga→Payment BC→PG yapar (Order çekmez).
 [McpServerToolType]
 public static class PlaceOrderMcpTool
 {
     [McpServerTool(Name = Shared.OrderTools.PlaceOrder)]
     [Description(
-        "Kullanici odemeyi ONAYLADIGINDA sepetteki urunler icin siparisi tamamlar (TEK CEKIM). Sunucu " +
-        "odemeyi ceker ve siparisi olusturur. Parametre: cardId (secilen kayitli kartin kimligi; " +
-        "verilmezse varsayilan kart). Tutar/alici/adres/kalem VERME — sunucu belirler. Yanittaki " +
-        "'message' alanini kullaniciya oldugu gibi ilet.")]
+        "Sepetteki urunler icin siparisi baslatir ve odemeyi (TEK CEKIM, NON-3D) tetikler. ONEMLI onay " +
+        "akisi: ONCE kullaniciya toplam tutari + odenecek kartin son 4 hanesini goster ('list_cards' ile " +
+        "al) ve ACIK onay iste; kullanici onaylayinca bu tool'u confirmed:true ile cagir. confirmed " +
+        "verilmez/false ise cekim BASLAMAZ. Parametreler: confirmed (kullanici onayi), cardHandle " +
+        "(list_cards'tan secilen kart; verilmezse varsayilan kart). Tutar/alici/adres/kalem VERME — " +
+        "sunucu belirler. Yanittaki 'message' alanini kullaniciya oldugu gibi ilet.")]
     public static Task<FeatureObjectResultModel<PlaceOrderForAgent.PlaceOrderResponse>> PlaceOrderAsync(
         IMessageBus bus,
         IHttpContextAccessor http,
         ICurrentUser currentUser,
         CancellationToken ct,
-        Guid? cardId = null)
+        // MCP optional-default tuzağı: default false → LLM omit ederse çekim başlamaz (fail-closed).
+        bool confirmed = false,
+        string? cardHandle = null)
     {
         var userId = currentUser.Load(http.HttpContext!.User).Id;
-        // Taksit yok → tek çekim (installment=1 iç plumbing sabiti).
         return bus.InvokeAsync<FeatureObjectResultModel<PlaceOrderForAgent.PlaceOrderResponse>>(
-            new PlaceOrderForAgent.PlaceOrderCommand(userId, cardId, 1), ct);
+            new PlaceOrderForAgent.PlaceOrderCommand(userId, cardHandle, confirmed), ct);
     }
 }

@@ -35,7 +35,10 @@ public static class CheckoutMessages
         int Installments = 1,
         // 049: Charge (web, mock tek-faz ödeme) varsayılan; AlreadyCaptured (chat, dış PG çekti) OrderId dolu gelir.
         PaymentMode PaymentMode = PaymentMode.Charge,
-        Guid OrderId = default);
+        Guid OrderId = default,
+        // 075: seçilen kayıtlı kartın opak PG handle'ı (null = kullanıcının varsayılan kartı). Charge
+        // adımında Payment BC'ye taşınır; PAN taşımaz (additive — eski tüketici kırılmaz).
+        string? CardHandle = null);
 
     // --- Adım komutları (orchestrator → hedef BC) + yanıt-event'leri (→ orchestrator) ---
     // Komutlar BC handler'ında düz tüketilir (saga değil) → SagaIdentity yok. Yanıtlar saga'ya döner
@@ -49,7 +52,10 @@ public static class CheckoutMessages
 
     // Tek-faz tahsilat (pivot): stok commit sonrası SON adım. Void/refund yok — başarısızsa telafi = stok
     // revert + sipariş cancel (para hareket etmez); başarılıysa geri-alma yok.
-    public record ChargePaymentCommand(Guid CheckoutId, Guid UserId, decimal Amount, int Installments, string IdempotencyKey);
+    // 075: CardHandle additive (null = varsayılan kart). Payment BC UserId+CardHandle ile Customer
+    // payment-context S2S'ten PG handle'larını + buyer'ı çeker → PG NON-3D çekim. Installments korunur
+    // (eski tüketici/web yolu kırılmaz; Payment BC yok sayar — tek çekim).
+    public record ChargePaymentCommand(Guid CheckoutId, Guid UserId, decimal Amount, int Installments, string IdempotencyKey, string? CardHandle = null);
     public record PaymentCharged([property: SagaIdentity] Guid CheckoutId, Guid PaymentId, bool Success, ErrorClass ErrorClass, string? MessageCode = null);
 
     public record ConfirmOrderCommand(Guid CheckoutId, Guid OrderId, string IdempotencyKey);

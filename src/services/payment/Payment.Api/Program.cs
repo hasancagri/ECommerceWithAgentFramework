@@ -70,6 +70,41 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("payment");
 
 builder.Services.AddHttpContextAccessor();
+
+// 075: PG NON-3D çekim S2S (çekim sahibi Payment BC — analyze I1). Options tip'li okuma.
+builder.Services.AddOptions<IdentityOption>().BindConfiguration(nameof(IdentityOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<IdentityOption>(sp => sp.GetRequiredService<IOptions<IdentityOption>>().Value);
+builder.Services.AddOptions<SagaAuth>().BindConfiguration(nameof(SagaAuth))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<SagaAuth>(sp => sp.GetRequiredService<IOptions<SagaAuth>>().Value);
+builder.Services.AddOptions<PaymentGatewayOption>().BindConfiguration(nameof(PaymentGatewayOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<PaymentGatewayOption>(sp => sp.GetRequiredService<IOptions<PaymentGatewayOption>>().Value);
+builder.Services.AddOptions<CustomerContextOption>().BindConfiguration(nameof(CustomerContextOption));
+builder.Services.AddSingleton<CustomerContextOption>(sp => sp.GetRequiredService<IOptions<CustomerContextOption>>().Value);
+
+// 075: makine token'i (client_credentials customer.read) — S2S istemcilerinde kullanılır (HttpContext yok).
+builder.Services.AddTransient<SagaTokenHandler>();
+
+var customerHttpAddress = builder.Configuration["services:customer-api:https:0"]
+    ?? builder.Configuration["services:customer-api:http:0"]
+    ?? "https://customer-api";
+// 075: Customer yapısal ödeme-bağlamı + merchant API key istemcileri (customer.read makine token'i).
+builder.Services
+    .AddHttpClient<CustomerPaymentContextClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+builder.Services
+    .AddHttpClient<MerchantKeyClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+// 075: PaymentGateway (dış repo) NON-3D çekim istemcisi — X-Api-Key per-request (MerchantKeyClient).
+builder.Services.AddHttpClient<PaymentGatewayClient>((sp, c) =>
+{
+    var pg = sp.GetRequiredService<PaymentGatewayOption>();
+    c.BaseAddress = new Uri(pg.BaseUrl.TrimEnd('/') + "/");
+    c.Timeout = TimeSpan.FromSeconds(60);
+});
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()

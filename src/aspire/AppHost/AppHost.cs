@@ -107,9 +107,12 @@ var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
     .WaitFor(identityServer)
     .WaitFor(redis);
 
-// 039: chat siparis tamamlama — Order.Api odeme baglamini (buyer+vaultToken+adres) Customer'dan
-// yapisal REST ile ceker (customerApi orderApi'den SONRA tanimli oldugu icin referans burada eklenir).
+// 039: chat siparis tamamlama — Order.Api odeme baglamini (buyer+adres) Customer'dan yapisal REST ile
+// ceker (customerApi orderApi'den SONRA tanimli oldugu icin referans burada eklenir).
 orderApi.WithReference(customerApi).WaitFor(customerApi);
+// 075: Payment.Api NON-3D çekimde ödeme-bağlamı + merchant-key'i Customer'dan S2S çeker (çekim sahibi
+// Payment BC). customerApi paymentApi'den SONRA tanımlı → referans burada.
+paymentApi.WithReference(customerApi).WaitFor(customerApi);
 
 // 049: Checkout.Orchestrator — ayrı BC (checkoutDb), broker-only saga. Komutları hedef BC'lere
 // yayınlar, yanıtları reply kuyruğundan dinler. BC komut-kuyruğu tüketicileri önce ayağa kalksın

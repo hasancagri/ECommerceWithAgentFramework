@@ -1,72 +1,71 @@
 namespace Customer.Api.Domains.Wallets;
 
-// Bir kullanicinin cuzdani. UserId ile keyli (kullanici basina tek cuzdan).
-// SavedCard koleksiyonu + "en fazla 1 varsayilan" invariant'i aggregate icinde korunur.
+// 075: Bir kullanicinin cuzdani (UserId ile keyli, kullanici basina tek). INCE model — kart verisi
+// mağazada DEĞİL, PG'de (FR-016). Burada yalnız iki çapa tutulur:
+//   PgUserHandle       — PG'deki kart kümesinin kullanıcı-handle'ı (ilk kart eklemede PG döner).
+//   DefaultCardHandle  — kullanıcının varsayılan kart tercihi (opak PG kart-handle'ı; ≤1 varsayılan).
+// Kart listesi/silme PG'ye canlı gider (aggregate state değil) → handler'da PG client + bu metotlar.
 public class Wallet : AggregateRoot
 {
     private Wallet() { }
 
-    /// <summary>Yeni bir cuzdan olusturur (verilen UserId ile).</summary>
+    /// <summary>Yeni bir cuzdan olusturur (verilen UserId ile); handle'lar boştur (tembel oluşum).</summary>
     public static Wallet Create(Guid userId) => new() { UserId = userId };
 
     public Guid UserId { get; private set; }
 
-    [JsonProperty("Cards")] private List<SavedCard> _cards = new();
+    /// <summary>PG kullanıcı-handle'ı — kullanıcının PG'deki kart kümesi. null = hiç kart eklenmemiş.</summary>
+    public string? PgUserHandle { get; private set; }
 
-    /// <summary>Kayitli kartlari salt-okunur olarak doner.</summary>
-    [JsonIgnore] public IReadOnlyList<SavedCard> Cards => _cards.AsReadOnly();
+    /// <summary>Varsayılan kartın opak PG kart-handle'ı. ≤1 varsayılan. null = varsayılan yok.</summary>
+    public string? DefaultCardHandle { get; private set; }
 
-    /// <summary>Kart ekler; gecmis son-kullanma reddedilir (FR-009), dogrulama domain'de.</summary>
-    // Kart ekler. Gecmis son-kullanma reddedilir (FR-009) — dogrulama domain'de, tokenizer stub'ta degil.
-    public ResultDomain AddCard(SavedCard card, DateTimeOffset now)
+    /// <summary>PG kullanıcı-handle çapasını kurar. Boş handle reddedilir; zaten varsa DEĞİŞMEZ
+    /// (aynı kullanıcı = aynı handle — ikinci ekleme yeni handle yazmaz, idempotent).</summary>
+    public ResultDomain SetPgUserHandle(string handle)
     {
-        if (!IsExpiryInFuture(card.ExpiryMonth, card.ExpiryYear, now))
+        if (string.IsNullOrWhiteSpace(handle))
             return ResultDomain.Error(
-                new MessageItem { Property = nameof(card.ExpiryYear), Code = CustomerResourceConstants.INVALID_VALUE });
+                new MessageItem { Property = nameof(PgUserHandle), Code = CustomerResourceConstants.VALUE_IS_REQUIRED });
 
-        _cards.Add(card);
+        // Idempotent: handle bir kez yazılır; sonraki eklemeler aynı kullanıcı-handle'ını korur.
+        if (!string.IsNullOrWhiteSpace(PgUserHandle))
+            return ResultDomain.Ok();
+
+        PgUserHandle = handle;
         return ResultDomain.Ok();
     }
 
-    /// <summary>Karti cikarir + token'ini doner (handler gateway'de best-effort revoke eder).</summary>
-    // Karti cikarir + token'ini doner (handler gateway'de best-effort revoke eder — fail-open).
-    public ResultDomain<RemovedCard> RemoveCard(Guid cardId)
+    /// <summary>Verilen kartı varsayılan yapar (öncekini ezer → tek varsayılan). PgUserHandle olmadan
+    /// (hiç kart yokken) reddedilir.</summary>
+    public ResultDomain SetDefaultCard(string cardHandle)
     {
-        var card = _cards.FirstOrDefault(x => x.Id == cardId);
-        if (card is null)
-            return ResultDomain<RemovedCard>.Error(new MessageItem { Code = CustomerResourceConstants.RECORD_NOT_FOUND });
-        _cards.Remove(card);
-        return ResultDomain<RemovedCard>.Ok(new RemovedCard { Token = card.Token });
-    }
+        if (string.IsNullOrWhiteSpace(cardHandle))
+            return ResultDomain.Error(
+                new MessageItem { Property = nameof(DefaultCardHandle), Code = CustomerResourceConstants.VALUE_IS_REQUIRED });
 
-    /// <summary>Hedef karti varsayilan yapar; digerlerini temizler (≤1 varsayilan invariant).</summary>
-    // ≤1 varsayilan invariant: hedef bulunur, digerleri false, hedef true (tek yazma — atomik).
-    public ResultDomain SetDefaultCard(Guid cardId)
-    {
-        var target = _cards.FirstOrDefault(x => x.Id == cardId);
-        if (target is null)
-            return ResultDomain.Error(new MessageItem { Code = CustomerResourceConstants.RECORD_NOT_FOUND });
+        if (string.IsNullOrWhiteSpace(PgUserHandle))
+            return ResultDomain.Error(
+                new MessageItem { Code = CustomerResourceConstants.CARD_NOT_FOUND });
 
-        foreach (var card in _cards)
-            card.SetDefault(card.Id == cardId);
-
+        DefaultCardHandle = cardHandle;
         return ResultDomain.Ok();
     }
 
-    /// <summary>Verilen ay/yil son-kullanmanin gelecekte olup olmadigini dogrular.</summary>
-    // Handler tokenize'dan ONCE cagirir (gecmis expiry'de token uretmeyip orphan token'i onler);
-    // aggregate AddCard da invariant olarak yeniden dogrular (defense-in-depth).
-    public static bool IsExpiryInFuture(int month, int year, DateTimeOffset now)
+    /// <summary>Silinen kart varsayılansa varsayılanı temizler (FR-012); eşleşmezse no-op.</summary>
+    public ResultDomain ClearDefaultIfMatches(string cardHandle)
     {
-        if (month is < 1 or > 12) return false;
-        if (year < now.Year) return false;
-        if (year == now.Year && month < now.Month) return false;
-        return true;
+        if (DefaultCardHandle is not null && DefaultCardHandle == cardHandle)
+            DefaultCardHandle = null;
+        return ResultDomain.Ok();
     }
 
-    // RemoveCard'in dondurdugu revoke bilgisi (token'i handler'a tasir).
-    public class RemovedCard
+    /// <summary>Varsayılan boşsa verilen kartı varsayılan yapar (FR-001a — ilk kart otomatik
+    /// varsayılan); zaten varsayılan varsa dokunmaz.</summary>
+    public ResultDomain MarkFirstCardDefault(string cardHandle)
     {
-        public string Token { get; set; } = default!;
+        if (string.IsNullOrWhiteSpace(DefaultCardHandle) && !string.IsNullOrWhiteSpace(cardHandle))
+            DefaultCardHandle = cardHandle;
+        return ResultDomain.Ok();
     }
 }

@@ -1,20 +1,22 @@
+using OrderAggregate = Order.Api.Domains.Orders.Order;
+
 namespace Order.Api.Domains.Orders.Features.Agents;
 
-// 039 (Yol 2): chat'ten uctan uca siparis. LLM yalniz place_order'i secer + cardId?/installment verir;
-// GERISI SUNUCU (LLM'siz): sepet kalemi (gRPC, sunucu-otoritesi) + buyer/adres/vaultToken (Customer
-// yapisal) + correlation-key + PG cekim + siparis. Para/guven asla LLM'de. Agent slice IZOLE:
-// Features/Commands'i IMessageBus ile CAGIRMAZ ([[agent-features-folder-convention]]); siparis olusturmayi
-// PaymentOrderCreator ile dogrudan yapar (StartCheckout yayinlar). Cekim idempotent (correlation-key),
-// siparis idempotent (paymentId). Belirsiz cekim durable reconcile'a devredilir (PaymentReconcile).
+// 075 US5: chat'ten uçtan uca sipariş — çekim YOLU DEĞİŞTİ (analyze I1: saga→PG). LLM yalnız place_order'ı
+// seçer + confirmed:true + cardHandle? verir; GERİSİ SUNUCU: sepet kalemi (gRPC, sunucu-otoritesi) +
+// sipariş adresi (Customer yapısal) + CheckoutId. Order artık ÇEKİM YAPMAZ — onay guard'ından sonra
+// StartCheckout(Charge, CardHandle) yayınlar; saga CreateOrder→CommitStock→Charge(Payment BC→PG NON-3D)→
+// Confirm→ClearBasket'i sürer. Onaysız (confirmed=false) → çekim başlamaz (FR-014). Idempotent: aynı
+// sepet → deterministik CheckoutId → tek sipariş (saga CreateOrder PaymentId==CheckoutId ile dedup).
 public static class PlaceOrderForAgent
 {
     // order.write: MCP kullanici token'i tasir; Wolverine ScopeAuthorizationMiddleware zorlar.
     [RequiredScope(AuthorizationScopes.OrderWrite)]
-    public record PlaceOrderCommand(Guid UserId, Guid? CardId, int Installment);
+    public record PlaceOrderCommand(Guid UserId, string? CardHandle, bool Confirmed);
 
     public class PlaceOrderResponse
     {
-        // created / payment_failed / pending / rejected
+        // started / created / rejected
         public string Outcome { get; set; } = default!;
         public string? OrderCode { get; set; }
         public int ItemCount { get; set; }
@@ -27,112 +29,71 @@ public static class PlaceOrderForAgent
         IDocumentSession session,
         IMessageBus bus,
         BasketItemsClientProxy basket,
-        CustomerPaymentContextClient customer,
-        MerchantKeyClient merchantKey,
-        PaymentGatewayClient gateway,
-        CorrelationKeyOption keyOption,
-        CheckoutReconcile reconcileCfg)
+        CustomerPaymentContextClient customer)
     {
         public async Task<FeatureObjectResultModel<PlaceOrderResponse>> Handle(
             PlaceOrderCommand cmd, CancellationToken ct)
         {
-            var installment = cmd.Installment < 1 ? 1 : cmd.Installment;
+            // 0) Onay guard (FR-014): NON-3D'de banka ekranı yok → açık onay şart. Onaysız çekim başlamaz.
+            if (!cmd.Confirmed)
+                return FeatureObjectResultModel<PlaceOrderResponse>.Error(
+                    new MessageItem { Code = OrderResourceConstants.ORDER_PAYMENT_CONFIRMATION_REQUIRED });
 
-            // 1) Sepet kalemleri — sunucu-otoritesi (gRPC). Fail-closed: erisilemez -> siparis yok (S5).
+            // 1) Sepet kalemleri — sunucu-otoritesi (gRPC). Fail-closed: erişilemez/boş → sipariş yok.
             var snapshot = await basket.GetItemsAsync(cmd.UserId, ct);
             if (!snapshot.Reachable)
                 return Reject("Su an siparis alinamiyor, lutfen sonra tekrar dene.");
             if (snapshot.IsEmpty)
                 return Reject("Sepetin bos, siparis olusturulamaz.");
 
-            // 2) Odeme baglami — buyer + vaultToken + varsayilan adres (Customer yapisal). Yoksa red (FR-009).
-            var ctx = await customer.GetAsync(cmd.UserId, cmd.CardId, ct);
+            // 2) Ödeme ön-kontrolü + sipariş adresi — kayıtlı kart + varsayılan adres var mı (Customer
+            //    yapısal). Yoksa saga başlatmadan reddet (FR-009). Çekim burada YAPILMAZ (Payment BC yapar).
+            var ctx = await customer.GetAsync(cmd.UserId, cmd.CardHandle, ct);
             if (ctx is null)
                 return Reject("Odeme icin kayitli kart veya varsayilan adres bulunamadi.");
 
-            // 2b) Merchant API key — PG X-Api-Key (yapisal S2S; MerchantInformation tek kaynak). Yoksa red
-            // (fail-closed: onboarding eksik/anahtar girilmemis -> cekim denenmez).
-            var apiKey = await merchantKey.GetKeyAsync(ctx.MerchantId, ct);
-            if (apiKey is null)
-                return Reject("Odeme altyapisi anahtari bulunamadi. Lutfen sonra tekrar dene.");
+            // 3) Deterministik CheckoutId (userId + sepet içeriği) → idempotency çapası (çift sipariş yok).
+            var checkoutId = DeterministicCheckoutId(cmd.UserId, snapshot.ContentHash);
 
-            // 3) Correlation-key — deterministik + HMAC (sahiplik + idempotency capasi). Sunucu uretir.
-            var key = CorrelationKey.Create(cmd.UserId, snapshot.ContentHash, installment, keyOption.ServerSecret).Value;
-
-            // 4) Idempotent re-entry: ayni sepet+taksit icin var olan girisim varsa yeni cekim YOK.
-            var existing = await session.LoadAsync<PaymentAttempt>(key, ct);
+            // 4) Idempotent re-entry: bu sepet için sipariş zaten oluşmuşsa yeni saga başlatma.
+            var existing = await session.Query<OrderAggregate>()
+                .FirstOrDefaultAsync(o => o.PaymentId == checkoutId, ct);
             if (existing is not null)
-                return await ResumeExisting(existing, snapshot, ct);
+                return Ok("created", $"Siparisin zaten olusturuldu. Siparis kodu: {existing.Code}.",
+                    snapshot, existing.Code);
 
-            var amount = snapshot.TotalPrice;
-            var address = new OrderDtos.AddressDto(
+            // 5) Checkout saga'sını Charge modunda tetikle — sipariş + çekim onun işi (KENDİ çekmiyoruz).
+            var items = snapshot.Items
+                .Select(i => new Shared.CheckoutMessages.CheckoutItem(i.ProductId, i.Quantity, i.ProductName, i.UnitPrice))
+                .ToList();
+            var address = new Shared.CheckoutMessages.OrderAddress(
                 Province: ctx.BuyerCity, District: "", Street: "", ZipCode: "", Line: ctx.BuyerRegistrationAddress);
-            var attempt = PaymentAttempt.Begin(
-                key, cmd.UserId, ctx.MerchantId, amount, installment, cmd.CardId,
-                snapshot.Items, address, DateTimeOffset.UtcNow, reconcileCfg);
 
-            // 5) PG cekim — idempotent (correlation-key). Yanit kaybolursa Ambiguous -> reconcile.
-            var charge = await gateway.ChargeAsync(key, ctx.MerchantId, apiKey, ctx, amount, installment, ct);
-            var decision = attempt.OnChargeResult(
-                charge.Outcome, charge.PaymentId, charge.Price, DateTimeOffset.UtcNow, reconcileCfg);
+            await bus.PublishAsync(new Shared.CheckoutMessages.StartCheckout(
+                CheckoutId: checkoutId,
+                UserId: cmd.UserId,
+                Items: items,
+                Amount: snapshot.TotalPrice,
+                Address: address,
+                CardRef: "",
+                Installments: 1,
+                PaymentMode: Shared.CheckoutMessages.PaymentMode.Charge,
+                OrderId: default,
+                CardHandle: cmd.CardHandle));
 
-            var response = await Apply(decision, attempt, snapshot, ct);
-            session.Store(attempt);
-            return response;
+            return Ok("started",
+                "Odemen aliniyor ve siparisin olusturuluyor. Durumu birazdan 'siparislerim' ile gorebilirsin.",
+                snapshot);
         }
 
-        // Var olan girisimi ilerlet (idempotent). Succeeded -> ayni siparis; Unknown -> hemen tick (on-demand).
-        private async Task<FeatureObjectResultModel<PlaceOrderResponse>> ResumeExisting(
-            PaymentAttempt attempt, BasketSnapshot snapshot, CancellationToken ct)
+        // Deterministik CheckoutId: SHA256(userId:contentHash) ilk 16 bayt → Guid. Aynı sepet → aynı Id
+        // → saga CreateOrder (PaymentId==CheckoutId) idempotent → çift sipariş/çift çekim yok.
+        private static Guid DeterministicCheckoutId(Guid userId, string contentHash)
         {
-            switch (attempt.Status)
-            {
-                case PaymentAttemptStatus.Succeeded:
-                    return Ok("created", $"Siparisin zaten olusturuldu. Siparis kodu: {attempt.OrderCode}.",
-                        snapshot, attempt.OrderCode);
-
-                case PaymentAttemptStatus.Failed:
-                    return Ok("payment_failed", "Onceki odeme alinamadi. Farkli kartla tekrar deneyebilirsin.", snapshot);
-
-                case PaymentAttemptStatus.NeedsReconciliation:
-                    return Ok("pending", PendingMessage, snapshot);
-
-                default: // Unknown / Charging — kullanici tekrar sordu: HEMEN bir reconcile tick koy (T039).
-                    await bus.PublishAsync(new ReconcileTick(attempt.Id));
-                    return Ok("pending", PendingMessage, snapshot);
-            }
+            var payload = $"{userId:N}:{contentHash}";
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
+            return new Guid(hash.AsSpan(0, 16));
         }
-
-        // Charge kararini uygular; siparis olusturma / reconcile zamanlama burada. Attempt cagiran store eder.
-        private async Task<FeatureObjectResultModel<PlaceOrderResponse>> Apply(
-            PaymentAttemptDecision decision, PaymentAttempt attempt, BasketSnapshot snapshot, CancellationToken ct)
-        {
-            switch (decision.Action)
-            {
-                case PaymentAttemptAction.CreateOrder:
-                    var (orderId, code) = await PaymentOrderCreator.CreateAsync(attempt, session, bus, ct);
-                    attempt.OrderId = orderId;
-                    attempt.OrderCode = code;
-                    return Ok("created", $"Siparisin olusturuldu. Siparis kodu: {code}.", snapshot, code);
-
-                case PaymentAttemptAction.NotifyFailed:
-                    return Ok("payment_failed", "Odeme alinamadi. Lutfen tekrar dene veya farkli kart sec.", snapshot);
-
-                case PaymentAttemptAction.VerifyFailed:
-                    return Ok("payment_failed", "Odeme dogrulanamadi, siparis olusturulmadi.", snapshot);
-
-                case PaymentAttemptAction.ScheduleReconcile:
-                    await bus.ScheduleAsync(new ReconcileTick(attempt.Id), decision.ReconcileDelay!.Value);
-                    return Ok("pending", PendingMessage, snapshot);
-
-                default: // AlreadyCompleted (charge sonrasi nadir) — var olan siparis
-                    return Ok("created", $"Siparisin olusturuldu. Siparis kodu: {attempt.OrderCode}.",
-                        snapshot, attempt.OrderCode);
-            }
-        }
-
-        private const string PendingMessage =
-            "Odemen alinmis olabilir, kontrol ediliyor. Durumu birazdan 'siparislerim' ile gorebilirsin.";
 
         private static FeatureObjectResultModel<PlaceOrderResponse> Ok(
             string outcome, string message, BasketSnapshot snapshot, string? code = null) =>

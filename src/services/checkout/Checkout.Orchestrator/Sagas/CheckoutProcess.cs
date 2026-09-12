@@ -20,6 +20,7 @@ public class CheckoutProcess : Saga
     public OrderAddress? Address { get; set; } // → Order (CreateOrder)
     public string CardRef { get; set; } = ""; // → Payment (referans; mock yok sayar)
     public int Installments { get; set; } = 1; // → Payment (Charge)
+    public string? CardHandle { get; set; } // 075: seçilen kartın PG handle'ı (null=varsayılan) → Payment (Charge)
 
     // Yol boyu ÜRETİLEN (yanıttan yakalanır, sonraki adım kullanır):
     public List<CheckoutItem> CommittedItems { get; set; } = []; // → Stock (telafi LIFO Revert)
@@ -49,6 +50,7 @@ public class CheckoutProcess : Saga
             Address = m.Address,
             CardRef = m.CardRef,
             Installments = m.Installments,
+            CardHandle = m.CardHandle,
             PaymentMode = m.PaymentMode
         };
 
@@ -138,7 +140,7 @@ public class CheckoutProcess : Saga
         else
         {
             Phase = CheckoutPhases.Charging;
-            await bus.PublishAsync(new ChargePaymentCommand(Id, UserId, Amount, Installments, Key("charge")));
+            await bus.PublishAsync(new ChargePaymentCommand(Id, UserId, Amount, Installments, Key("charge"), CardHandle));
         }
     }
 

@@ -13,6 +13,8 @@ builder.Services.AddMarten(opts =>
         // 022: iki aggregate root, ikisi de UserId ile keyli (kullanici basina tek cuzdan/defter).
         opts.Schema.For<Customer.Api.Domains.Wallets.Wallet>().Index(x => x.UserId);
         opts.Schema.For<Customer.Api.Domains.AddressBooks.AddressBook>().Index(x => x.UserId);
+        // 075: hosted kart-ekleme korelasyon oturumu (tek-kullanımlık; callback UserId çözer).
+        opts.Schema.For<Customer.Api.Domains.Wallets.AddCardSession>();
         // Vault: DropShop merchant kimliği (tekil kayıt) — vault token'ı bundan mint edilir.
         opts.Schema.For<Customer.Api.Domains.MerchantInformations.MerchantInformation>();
 
@@ -80,6 +82,13 @@ builder.Services.AddHttpClient("dropshop-vault")
     {
         ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     });
+// 075: PG kart-sözleşmesi named client'ı (add-session/list/delete). Auth: PgCardClient her istekte
+// MerchantTokenProvider'dan Bearer set eder (silinen GatewayCardTokenizer deseni; ayrı handler yok).
+builder.Services.AddHttpClient(Customer.Api.Infrastructure.PaymentGateway.PgCardClient.HttpClientName)
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
 #pragma warning restore EXTEXP0001
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
@@ -136,6 +145,8 @@ app.UseAuthorization();
 app.AddPaymentContextInternalEndpoint(apiVersionSet);
 // 049: Order.Api charge/reconcile merchant API key ucu (customer.read); MerchantKey agent'a cikmaz.
 app.AddMerchantKeyInternalEndpoint(apiVersionSet);
+// 075: PG hosted kart-ekleme callback ucu (JWT'siz, conversationId korelasyonlu; anonim).
+app.AddCardCallbackEndpoint(apiVersionSet);
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();

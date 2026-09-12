@@ -1,110 +1,95 @@
 
 namespace Customer.Api.Tests;
 
+// 075: ince Wallet — yerel kart deposu yok; yalnız PG kullanıcı-handle çapası + varsayılan kart tercihi.
+// İlke VI: davranış + invariant test-first.
 public class WalletTests
 {
-    private static readonly DateTimeOffset Now = new(2026, 7, 30, 0, 0, 0, TimeSpan.Zero);
-
-    private static SavedCard FutureCard(string? label = null) =>
-        SavedCard.Create("tok_1", "Visa", "1111", 12, 2030, label);
-
     [Fact]
-    public void Create_SetsUserId_AndEmptyWallet()
+    public void Create_SetsUserId_AndNoHandles()
     {
         var userId = Guid.NewGuid();
 
         var wallet = Wallet.Create(userId);
 
         wallet.UserId.ShouldBe(userId);
-        wallet.Cards.ShouldBeEmpty();
+        wallet.PgUserHandle.ShouldBeNull();
+        wallet.DefaultCardHandle.ShouldBeNull();
     }
 
     [Fact]
-    public void AddCard_AddsCard()
+    public void SetPgUserHandle_Rejects_Empty()
     {
         var wallet = Wallet.Create(Guid.NewGuid());
 
-        wallet.AddCard(FutureCard(), Now).IsSuccess.ShouldBeTrue();
-
-        wallet.Cards.Count.ShouldBe(1);
-        wallet.Cards[0].IsDefault.ShouldBeFalse();
+        wallet.SetPgUserHandle("").IsSuccess.ShouldBeFalse();
+        wallet.SetPgUserHandle("   ").IsSuccess.ShouldBeFalse();
+        wallet.PgUserHandle.ShouldBeNull();
     }
 
     [Fact]
-    public void AddCard_Rejects_ExpiredCard()
-    {
-        var wallet = Wallet.Create(Guid.NewGuid());
-        var expired = SavedCard.Create("tok_x", "Visa", "1111", 1, 2020, null);
-
-        var result = wallet.AddCard(expired, Now);
-
-        result.IsSuccess.ShouldBeFalse();
-        wallet.Cards.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void SetDefaultCard_KeepsAtMostOneDefault()
-    {
-        var wallet = Wallet.Create(Guid.NewGuid());
-        wallet.AddCard(FutureCard("a"), Now);
-        wallet.AddCard(FutureCard("b"), Now);
-        var c1 = wallet.Cards[0].Id;
-        var c2 = wallet.Cards[1].Id;
-
-        wallet.SetDefaultCard(c1).IsSuccess.ShouldBeTrue();
-        wallet.Cards.Count(x => x.IsDefault).ShouldBe(1);
-        wallet.Cards.Single(x => x.IsDefault).Id.ShouldBe(c1);
-
-        wallet.SetDefaultCard(c2).IsSuccess.ShouldBeTrue();
-        wallet.Cards.Count(x => x.IsDefault).ShouldBe(1);
-        wallet.Cards.Single(x => x.IsDefault).Id.ShouldBe(c2);
-    }
-
-    [Fact]
-    public void SetDefaultCard_NotFound_WhenMissing()
+    public void SetPgUserHandle_SetsFirst_ThenIdempotent()
     {
         var wallet = Wallet.Create(Guid.NewGuid());
 
-        wallet.SetDefaultCard(Guid.NewGuid()).IsSuccess.ShouldBeFalse();
+        wallet.SetPgUserHandle("pg-user-1").IsSuccess.ShouldBeTrue();
+        wallet.PgUserHandle.ShouldBe("pg-user-1");
+
+        // Aynı kullanıcı = aynı handle; ikinci ekleme yeni handle YAZMAZ (idempotent).
+        wallet.SetPgUserHandle("pg-user-2").IsSuccess.ShouldBeTrue();
+        wallet.PgUserHandle.ShouldBe("pg-user-1");
     }
 
     [Fact]
-    public void RemoveCard_RemovesAndReturnsToken()
-    {
-        var wallet = Wallet.Create(Guid.NewGuid());
-        wallet.AddCard(FutureCard(), Now);
-        var id = wallet.Cards[0].Id;
-
-        var result = wallet.RemoveCard(id);
-
-        result.IsSuccess.ShouldBeTrue();
-        result.Data!.Token.ShouldBe("tok_1");
-        wallet.Cards.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void RemoveCard_NotFound_WhenMissing()
+    public void SetDefaultCard_Requires_PgUserHandle()
     {
         var wallet = Wallet.Create(Guid.NewGuid());
 
-        wallet.RemoveCard(Guid.NewGuid()).IsSuccess.ShouldBeFalse();
+        wallet.SetDefaultCard("card-1").IsSuccess.ShouldBeFalse();
+        wallet.DefaultCardHandle.ShouldBeNull();
     }
 
-    // INV-3 (PCI): SavedCard hicbir zaman ham PAN/CVV alani icermez — tip duzeyinde yasak.
     [Fact]
-    public void SavedCard_HasNo_RawPanOrCvv_Fields()
+    public void SetDefaultCard_Overwrites_KeepingSingleDefault()
     {
-        var forbidden = new[] { "pan", "cvv", "cardnumber", "securitycode", "cvc", "cvv2" };
+        var wallet = Wallet.Create(Guid.NewGuid());
+        wallet.SetPgUserHandle("pg-user-1");
 
-        var members = typeof(SavedCard)
-            .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-            .Select(p => p.Name.ToLowerInvariant())
-            .Concat(typeof(SavedCard)
-                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Select(f => f.Name.ToLowerInvariant()))
-            .ToList();
+        wallet.SetDefaultCard("card-1").IsSuccess.ShouldBeTrue();
+        wallet.DefaultCardHandle.ShouldBe("card-1");
 
-        foreach (var name in members)
-            forbidden.ShouldNotContain(f => name.Contains(f));
+        wallet.SetDefaultCard("card-2").IsSuccess.ShouldBeTrue();
+        wallet.DefaultCardHandle.ShouldBe("card-2");
+    }
+
+    [Fact]
+    public void ClearDefaultIfMatches_ClearsOnlyOnMatch()
+    {
+        var wallet = Wallet.Create(Guid.NewGuid());
+        wallet.SetPgUserHandle("pg-user-1");
+        wallet.SetDefaultCard("card-1");
+
+        // Eşleşmeyen silme → varsayılan durur.
+        wallet.ClearDefaultIfMatches("card-2").IsSuccess.ShouldBeTrue();
+        wallet.DefaultCardHandle.ShouldBe("card-1");
+
+        // Eşleşen silme → varsayılan null.
+        wallet.ClearDefaultIfMatches("card-1").IsSuccess.ShouldBeTrue();
+        wallet.DefaultCardHandle.ShouldBeNull();
+    }
+
+    [Fact]
+    public void MarkFirstCardDefault_SetsWhenEmpty_NoOpWhenSet()
+    {
+        var wallet = Wallet.Create(Guid.NewGuid());
+        wallet.SetPgUserHandle("pg-user-1");
+
+        // Varsayılan boşsa ilk kart varsayılan olur (FR-001a).
+        wallet.MarkFirstCardDefault("card-1").IsSuccess.ShouldBeTrue();
+        wallet.DefaultCardHandle.ShouldBe("card-1");
+
+        // Zaten varsayılan varsa dokunmaz (no-op).
+        wallet.MarkFirstCardDefault("card-2").IsSuccess.ShouldBeTrue();
+        wallet.DefaultCardHandle.ShouldBe("card-1");
     }
 }

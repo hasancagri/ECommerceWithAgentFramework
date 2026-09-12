@@ -1,42 +1,39 @@
 # Order — Domain Süreci
 
-**BC ne yapar:** Çekilmiş ödemeyi + adresi + sepet kalemlerini bir **siparişe** bağlar; siparişi Pending
-doğurur, dış orkestratörün komutlarıyla Confirmed/Cancelled'a alır ve satın-alma kanıtını yayar. Stok
-commit döngüsü + telafi + sepet temizliği **bu BC'de değil** — Checkout.Orchestrator sağasının işidir.
+**BC ne yapar:** Adresi + sepet kalemlerini bir **siparişe** bağlar; siparişi Pending doğurur, dış
+orkestratörün komutlarıyla Confirmed/Cancelled'a alır ve satın-alma kanıtını yayar. **Çekim bu BC'de
+DEĞİL** (075: Payment BC'nin işi, PG NON-3D); stok commit döngüsü + telafi + sepet temizliği de
+Checkout.Orchestrator sağasının işidir.
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
 
 ## Süreç
 
-1. **Chat yolu: ödeme önce çekilir, sipariş sonra.** Sepet snapshot'ı  `(PlaceOrderCommandHandler`
-   (gRPC otorite) + kayıtlı kart/adres alınır, PG'den idempotent          ` → PaymentGatewayClient)`
-   çekim yapılır. LLM yalnız `place_order` seçer; para/güven sunucuda.
-2. **Çekim sonucu karara döner.** Başarı + tutar sepetle uyuşur →         `(PaymentAttempt.OnChargeResult)`
-   sipariş; kesin hata → red; belirsiz → durable reconcile'a devir.
-3. **Sipariş Pending doğar, StartCheckout orkestratöre yayılır.**        `(PaymentOrderCreator`
-   `PaymentId` = correlation-key'ten türeyen deterministik Guid            ` → StartCheckout)`
-   (çift sipariş yok). Sonraki commit/confirm adımlarını sağa sürer.
-4. **Web/orkestratör yolu: Order sipariş komutlarını tüketir.**          `(OrderEventHandlers →`
+1. **Chat yolu: onay alınır, checkout tetiklenir (çekim YOK).** Sepet    `(PlaceOrderCommandHandler`
+   snapshot'ı (gRPC otorite) + kayıtlı kart/adres ön-kontrolü; kullanıcı   ` → StartCheckout)`
+   `confirmed:true` vermezse çekim başlamaz (FR-014). LLM yalnız
+   `place_order` seçer; tutar/adres/kalem sunucuda. Deterministik
+   CheckoutId (userId+sepet) → çift sipariş yok.
+2. **Web/orkestratör yolu: Order sipariş komutlarını tüketir.**          `(OrderEventHandlers →`
    Checkout.Orchestrator `Create/Confirm/Cancel` gönderir; Order           ` OrderCreated/OrderConfirmed)`
    aggregate davranışını çalıştırır, sonucu reply kuyruğuna yayar.
-5. **PIVOT: Confirm satın-alma kanıtını yayar.** Sipariş Confirmed       `(OrderEventHandlers →`
-   olunca `OrderCompleted` fanout'u yayılır; Reviews tüketir (gRPC yok).   ` OrderCompleted)`
+   Sipariş Pending doğar; `PaymentId` = CheckoutId (idempotent).
+3. **PIVOT: Confirm satın-alma kanıtını yayar.** Sipariş Confirmed       `(OrderEventHandlers →`
+   olunca `OrderCompleted` fanout'u yayılır; Reviews/Storefront tüketir.   ` OrderCompleted)`
    Idempotent: Confirmed'den tekrar yayınlamaz.
-6. **Belirsiz çekim sınırlı reconcile edilir.** PG retrieve →            `(PaymentReconcileHandler`
-   gecikmeli başarı siparişi kurar; deadline dolarsa terminal              ` → OnReconcileTick ← ReconcileTick)`
-   (NeedsReconciliation, ops görünürlük). Asla çift çekim/sonsuz.
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Durum geçişi aggregate'te korunur.** Yalnız `Pending→Confirmed` / `Pending→Cancelled`; ileri gitmiş sipariş değişmez.
-- **Idempotency iki katman.** Çekim = correlation-key; sipariş = `PaymentId` (aynı sepet+taksit → tek sipariş). Confirm/Cancel yalnız Pending'den.
-- **Satın-alma kanıtı Confirm'de yayılır.** `OrderCompleted` yalnız Confirmed pivotunda; komut idempotent olduğundan tekrar yayınlanmaz.
-- **Para/güven asla LLM'de.** Agent slice yalnız `PlaceOrderCommand` seçer; sepet/adres/çekim sunucu-otoritesi.
+- **Idempotency: `PaymentId` (=CheckoutId).** Aynı sepet → deterministik CheckoutId → tek sipariş. Confirm/Cancel yalnız Pending'den.
+- **Onaysız çekim yok (FR-014).** `place_order` `confirmed:true` şart; NON-3D'de banka ekranı yerine agent onayı.
+- **Satın-alma kanıtı Confirm'de yayılır.** `OrderCompleted` yalnız Confirmed pivotunda; komut idempotent → tekrar yayınlanmaz.
+- **Para/güven asla LLM'de.** Agent slice yalnız `PlaceOrderCommand` seçer; sepet/adres sunucu-otoritesi, çekim Payment BC.
 
 ## Sınır (bu BC'nin dokunmadığı)
 
-Stok commit döngüsü + LIFO telafi (revert) + watchdog timeout + sepet temizliği + commit/charge sıralaması
-**Checkout.Orchestrator** sağasının (`CheckoutProcess`); Order o adımları bilmez, yalnız kendi aggregate
-komutlarına yanıt verir. Stok düşümü Stock BC'nin; sepet içeriği Basket BC'nin; kart vault + gerçek çekim
-PaymentGateway'in. Order stok yazmaz, fiyat/indirim hesaplamaz, ürün bilmez.
+Gerçek çekim (NON-3D, PG) **Payment BC**'nin (075: Order artık çekmez); stok commit döngüsü + LIFO telafi +
+watchdog + sepet temizliği + commit/charge sıralaması **Checkout.Orchestrator** sağasının (`CheckoutProcess`).
+Order o adımları bilmez, yalnız kendi aggregate komutlarına yanıt verir. Stok düşümü Stock BC'nin; sepet
+içeriği Basket BC'nin; kart verisi + çekim PG/Payment'ın. Order stok yazmaz, fiyat/indirim hesaplamaz.
