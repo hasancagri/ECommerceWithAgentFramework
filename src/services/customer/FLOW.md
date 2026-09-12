@@ -1,34 +1,27 @@
 # Customer — Domain Süreci
 
-**BC ne yapar:** Kullanıcının **cüzdanını** (tokenize kart, PAN yok) ve **adres defterini** tutar.
-Chat/checkout yolunun okuduğu kayıtlı ödeme/teslimat kaynağıdır. İzole BC: hiçbir integration
-event yayınlamaz/tüketmez; kanalı MCP (chat) + yapısal S2S REST (Order).
+**BC ne yapar:** Kullanıcının **adres defterini** tutar (+ merchant kimliği admin kaydı). Checkout yolunun
+okuduğu kayıtlı teslimat kaynağıdır. İzole BC: integration event yayınlamaz/tüketmez; kanalı MCP (chat) +
+yapısal S2S REST (merchant-key). **Kart-saklama (Wallet/cüzdan) 076'da SÖKÜLDÜ** (kart yönünden vazgeçildi;
+ödeme hosted-CF'e taşınacak — [[hosted-cf-checkout-pivot]]).
 
-> Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
-> Süreç değişince (yeni/silinen adım-invariant) bu dosya güncellenir; mekanik rename'i guard yakalar.
+> Domain-önce anlatı. Sağdaki `(…)` = koda köprü. Süreç değişince güncellenir; guard rename'i yakalar.
 
 ## Süreç
 
 1. **Adres eklenir/güncellenir/silinir + varsayılan seçilir.**       `(AddressBook.AddAddress`
    ≤1 varsayılan invariant'ı defterde tek yazmada korunur;           ` / SetDefaultAddress)`
-   yüzey chat/MCP.
-2. **Kayıtlı kartlar okunur.** Yalnız gösterilebilir alanlar         `(GetCardsForAgent)`
-   (Brand/Last4/Bin) döner; agent MCP tool'u aynı slice'ı sarar.
-3. **Sipariş ödeme bağlamını yapısal kanaldan çeker.** Buyer +       `(GetPaymentContextForAgent)`
-   vaultToken + varsayılan adres; Order makine token'ıyla okur (039).
-4. **Kart YAZMA yüzeyi söküldü (066 sonrası).** Ekleme/silme/
-   varsayılan uçları ve komutları kaldırıldı; tokenize sınırı +      `(Wallet.AddCard`
-   davranış aggregate'te durur, yüzey açılırsa buradan döner.        ` / ICardTokenizer)`
+   yüzey chat/MCP (add_address/update/remove/set_default/list).
+2. **Merchant kimliği admin kaydı** (onboarding + anahtar).          `(MerchantInformation)`
+   Yapısal S2S merchant-key ucu (charge tüketicisi 076'da söküldü, uç zararsız durur).
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
-- **PAN/CVV asla saklanmaz (INV-3).** `SavedCard` tip düzeyinde ham PAN/CVV taşımaz; yalnız opak token + Brand/Last4/Bin.
-- **Tokenize sınırın arkasında.** `ICardTokenizer` soyut; stub bugün, PaymentGateway yarın — `Wallet` kodu değişmez.
-- **En fazla 1 varsayılan.** Hem `Wallet` hem `AddressBook`'ta varsayılan seçimi diğerlerini atomik olarak temizler.
-- **Kullanıcı başına tek defter.** Cüzdan/adres defteri `UserId` ile keyli; ilk yazımda tembel oluşturulur.
-- **İzole BC, event yok.** Ne yayınlar ne tüketir; başka BC'ye sızmaz. Tek yol = REST/MCP (chat + Order S2S).
+- **En fazla 1 varsayılan.** `AddressBook`'ta varsayılan seçimi diğerlerini atomik temizler.
+- **Kullanıcı başına tek defter.** `UserId` ile keyli; ilk yazımda tembel oluşturulur.
+- **İzole BC, event yok.** Ne yayınlar ne tüketir; kanal REST/MCP.
+- **Kart-saklama YOK (076).** Cüzdan/tokenize/vault söküldü; ödeme yöntemi hosted-CF (ayrı spec).
 
 ## Sınır (bu BC'nin dokunmadığı)
 
-Gerçek çekim/otorizasyon yok (Payment BC), sipariş yok (Order BC). Bin uzak A2A taksit sorgusu içindir
-(hassas değil); ham PAN gateway sınırının ötesine geçmez.
+Ödeme/çekim yok (hosted-CF → PG), sipariş yok (Order BC). Kart verisi hiç tutulmaz.
