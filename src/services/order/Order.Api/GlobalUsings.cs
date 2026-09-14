@@ -45,3 +45,8 @@ global using Common.Utils.Authorization;
 global using System.ComponentModel.DataAnnotations;
 global using System.Security.Cryptography;
 global using System.Text;
+
+// 077: hosted-CF ödeme başlat — S2S istemciler + gRPC + adres.
+global using Order.Api.Grpc;
+global using Order.Api.Infrastructure;
+global using System.Net.Http.Json;

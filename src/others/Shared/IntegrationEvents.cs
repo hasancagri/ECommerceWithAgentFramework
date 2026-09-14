@@ -92,4 +92,9 @@ public static class IntegrationEvents
         string Email,
         bool Success,
         string Detail);
+
+    // 077: Payment → Order (fanout). Hosted-CF ödeme başarılı callback'i / expiry sonucu. Yayıncı Payment
+    // (durable outbox); tüketici Order (binding kurar — soğuk-açılış dersi). Additive: eski tüketici yok.
+    public record PaymentSucceeded(Guid OrderId, Guid UserId, Guid PaymentIntentId, string TxRef, decimal Amount);
+    public record PaymentFailed(Guid OrderId, Guid PaymentIntentId, string TxRef, string ReasonCode);
 }

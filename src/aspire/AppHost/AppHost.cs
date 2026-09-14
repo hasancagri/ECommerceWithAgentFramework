@@ -111,6 +111,16 @@ var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
 // yapisal REST ile ceker (customerApi orderApi'den SONRA tanimli oldugu icin referans burada eklenir).
 orderApi.WithReference(customerApi).WaitFor(customerApi);
 
+// 077: Payment.Api → Customer merchant-key S2S (hosted-CF PG X-Api-Key kaynağı). customerApi
+// paymentApi'den SONRA tanımlı → service-discovery referansı burada eklenir (orderApi emsali).
+// Eksikse services:customer-api:* config null → fallback çözümsüz host → merchant-key null.
+paymentApi.WithReference(customerApi).WaitFor(customerApi);
+
+// 077: Order.Api → Payment.Api hosted-CF link isteği (start_payment S2S). paymentApi orderApi'den
+// SONRA tanımlı → referans burada. Eksikse services:payment-api:* null → fallback çözümsüz host →
+// CreateAsync null → "Ödeme başlatılamadı".
+orderApi.WithReference(paymentApi).WaitFor(paymentApi);
+
 // 049: Checkout.Orchestrator — ayrı BC (checkoutDb), broker-only saga. Komutları hedef BC'lere
 // yayınlar, yanıtları reply kuyruğundan dinler. BC komut-kuyruğu tüketicileri önce ayağa kalksın
 // (soğuk-açılış binding dersi, 007). Giriş endpoint'i checkout.write ile korunur (identity).

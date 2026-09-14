@@ -8,6 +8,8 @@ namespace Customer.Api.Domains.MerchantInformations.Features.Queries;
 /// </summary>
 public static class GetMerchantKeyInternal
 {
+    // 077: first-party mağaza = TEK MerchantInformation. merchantId opsiyonel (Guid.Empty → tek kaydı döndür);
+    // dolu gelirse eşleşme filtrelenir (geriye-uyum). Hosted-CF Payment.Api merchantId taşımaz.
     public record GetMerchantKeyQuery(Guid MerchantId);
 
     public class MerchantKeyView
@@ -23,8 +25,9 @@ public static class GetMerchantKeyInternal
             IQuerySession session,
             CancellationToken ct)
         {
-            var merchant = await session.Query<MerchantInformation>()
-                .FirstOrDefaultAsync(m => m.MerchantId == query.MerchantId, ct);
+            var merchant = query.MerchantId == Guid.Empty
+                ? await session.Query<MerchantInformation>().FirstOrDefaultAsync(ct)
+                : await session.Query<MerchantInformation>().FirstOrDefaultAsync(m => m.MerchantId == query.MerchantId, ct);
             if (merchant is null)
                 return FeatureObjectResultModel<MerchantKeyView>.NotFound();
 

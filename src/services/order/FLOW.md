@@ -1,31 +1,36 @@
 # Order — Domain Süreci
 
-**BC ne yapar:** Adresi + sepet kalemlerini bir **siparişe** bağlar; siparişi Pending doğurur, checkout
-orkestratörünün komutlarıyla Confirmed/Cancelled'a alır ve satın-alma kanıtını yayar. **Çekim + chat
-`place_order` 076'da SÖKÜLDÜ** (kart-saklama + charge yolu kaldırıldı; checkout geçici boşlukta, ödeme
-hosted-CF'e taşınacak — [[hosted-cf-checkout-pivot]]). Stok/telafi/sepet temizliği saga'nın işi.
+**BC ne yapar:** Adresi + sepet kalemlerini bir **siparişe** bağlar; siparişi Pending doğurur, ödeme
+başarılı olunca checkout orkestratörünü tetikler ve satın-alma kanıtını yayar. **077 hosted-CF:** "ödeme
+yap" → `start_payment` sepeti okur, siparişi Pending oluşturur, Payment'tan hosted link ister; ödeme
+başarılı callback'i (Payment fanout) siparişi checkout'a sokar. Stok/telafi/sepet temizliği saga'nın işi.
 
 > Domain-önce anlatı. Sağdaki `(…)` = koda köprü. Süreç değişince güncellenir; guard rename'i yakalar.
 
 ## Süreç
 
-1. **Checkout orkestratörü sipariş komutlarını gönderir.** Order      `(OrderEventHandlers →`
-   `Create/Confirm/Cancel`'ı tüketir; aggregate davranışını çalıştırır  ` OrderCreated/OrderConfirmed)`
-   sonucu reply kuyruğuna yayar. Sipariş Pending doğar (PaymentId=CheckoutId, idempotent).
-2. **PIVOT: Confirm satın-alma kanıtını yayar.** Sipariş Confirmed    `(OrderEventHandlers →`
-   olunca `OrderCompleted` fanout'u yayılır (Reviews/Storefront).       ` OrderCompleted)`
-   Idempotent: Confirmed'den tekrar yayınlamaz.
-3. **Kullanıcı siparişlerini okur.** Kişi kendi geçmişini listeler.   `(GetOrdersForAgent)`
+1. **Kullanıcı ödeme başlatır.** Sepet (gRPC, sunucu-otoritesi) +       `(StartPaymentForAgent →`
+   varsayılan adres okunur; sipariş Pending doğar; Payment'tan           ` Order.Create; PaymentIntentClient)`
+   hosted link istenir + kullanıcıya döner. Re-use: canlı link varsa
+   yeni sipariş yok. Boş sepet → dostça mesaj (sipariş yok).
+2. **Ödeme başarılı → checkout tetiklenir.** Payment `PaymentSucceeded` `(PaymentEventConsumers →`
+   fanout'unu tüketir; Pending siparişten `StartCheckout` yayınlar        ` StartCheckout)`
+   (CommitStock→Confirm→ClearBasket; charge YOK, ödeme öncedendir).
+3. **Ödeme başarısız/terk → sipariş iptal.** `PaymentFailed` →          `(PaymentEventConsumers →`
+   `Order.Cancel` (stok hiç düşmedi; saga'ya girmez).                     ` Order.Cancel)`
+4. **Checkout orkestratörü siparişi onaylar/iptal eder.** Order          `(OrderEventHandlers →`
+   `Confirm/Cancel`'ı tüketir; Confirm pivotunda `OrderCompleted`         ` OrderConfirmed/OrderCompleted)`
+   fanout'u yayılır (Reviews/Storefront). Idempotent.
+5. **Kullanıcı siparişlerini okur.** Kişi kendi geçmişini listeler.     `(GetOrdersForAgent)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
 - **Durum geçişi aggregate'te korunur.** Yalnız `Pending→Confirmed` / `Pending→Cancelled`.
-- **Idempotency: `PaymentId`(=CheckoutId).** Aynı checkout → tek sipariş. Confirm/Cancel yalnız Pending'den.
+- **Sipariş kullanıcının adresine gider.** Adres varsayılan adres defterinden (FR-001b); ödeme sahibi değiştirmez.
+- **Ödeme öncedendir (hosted-CF).** Checkout charge çekmez; StartCheckout OrderId dolu gelir (`CheckoutId=OrderId`, idempotent).
 - **Satın-alma kanıtı Confirm'de yayılır.** `OrderCompleted` yalnız Confirmed pivotunda; idempotent.
-- **Çekim/place_order YOK (076).** Chat charge yolu (PaymentAttempt/reconcile/PG client) söküldü; sipariş
-  tetiği hosted-CF ödeme-başarılı'dan gelecek (ayrı spec).
 
 ## Sınır (bu BC'nin dokunmadığı)
 
-Gerçek çekim (hosted-CF → PG), stok commit döngüsü + telafi + sepet temizliği + watchdog **Checkout.
+Gerçek çekim (hosted-CF → Payment/PG), stok commit döngüsü + telafi + sepet temizliği + watchdog **Checkout.
 Orchestrator** sağasının. Order stok yazmaz, fiyat/indirim hesaplamaz, ürün bilmez.

@@ -19,4 +19,8 @@ public static class OrderResourceConstants
     public static readonly string ORDER_PAYMENT_PENDING = "ORDER_PAYMENT_PENDING";
     public static readonly string ORDER_BASKET_EMPTY = "ORDER_BASKET_EMPTY";
     public static readonly string ORDER_PAYMENT_CONTEXT_MISSING = "ORDER_PAYMENT_CONTEXT_MISSING";
+
+    // 077: hosted-CF ödeme başlat (start_payment) — dış PG/link üretimi başarısız.
+    public static readonly string PAYMENT_GATEWAY_UNAVAILABLE = "PAYMENT_GATEWAY_UNAVAILABLE";
+    public static readonly string PAYMENT_BASKET_EMPTY = "PAYMENT_BASKET_EMPTY";
 }

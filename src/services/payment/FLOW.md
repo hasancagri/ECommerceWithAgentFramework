@@ -1,34 +1,39 @@
 # Payment — Domain Süreci
 
-**BC ne yapar:** Checkout sırasında bir tutar için **maket ödeme kaydı** üretir. Kart alanı hiç
-taşımaz; yalnız `Amount` anlamlıdır. Tek-faz Charge daima Success döner, kanıt saga'ya verilir.
+**BC ne yapar:** Bir sipariş için **hosted ödeme girişimi** (`PaymentIntent`) yürütür: dış PaymentGateway'den
+hosted ödeme linki alır, durumu Pending saklar, imzalı callback ya da terk-timeout ile terminal'e taşır.
+Kart alanı HİÇ taşımaz; PAN store'a girmez.
 
 > Domain-önce anlatı (EventStorming altitude). Sağdaki `(…)` = koda atlama köprüsü, süreç değil.
 > Süreç değişince (yeni/silinen adım-event-policy) bu dosya güncellenir; mekanik rename'i guard yakalar.
 
 ## Süreç
 
-1. **Checkout ödemeyi broker'la ister.** Orchestrator pivot       `(ChargePaymentCommand`
-   adımında komutu kuyruktan gönderir; REST yazma ucu YOK.         ` → PaymentEventHandlers)`
-2. **Aynı checkout ikinci kez ödeme yaratamaz.** Var olan kayıt
-   aynı `PaymentId` ile döner (idempotent).
-3. **Tutar doğrulanır, ödeme tek fazda çekilir.** `UserId` boş     `(Payment.Charge)`
-   ya da tutar ≤ 0 ise Result hatası; maket kabul — koşulsuz Success.
-4. **Sonuç reply kuyruğuna yayınlanır.** Başarı ya da kalıcı hata  `(PaymentCharged)`
-   sınıfı döner; saga pivot kararını bununla verir.
-5. **Kullanıcı ödemelerini okur.** Kişi kendi geçmişini            `(GetAllPaymentsByUserIdForAgent)`
-   listeler; agent için MCP tool'u aynı slice'ı sarar.             `(GetMyPaymentsMcpTool)`
+1. **Order hosted link ister (S2S).** Girişim tutar+txRef ile          `(CreatePaymentIntent`
+   gelir; re-use: aynı kullanıcı+sepet için canlı Pending varsa         ` → PaymentIntent.Create)`
+   mevcut link döner (yeni PG çağrısı yok).
+2. **MerchantKey çözülür, PG'ye hosted-payment yollanır.** Anahtar     `(MerchantKeyClient`
+   Customer'dan (tek kaynak); PG hosted URL + referans döner.          ` → PgHostedPaymentClient)`
+3. **Girişim Pending saklanır + terk-timer kurulur.** TxRef tekil       `(PaymentIntent.Create;`
+   (unique). Timeout dolunca hâlâ Pending ise süresi-doldu.             ` PaymentIntentExpiry → PaymentIntent.Expire)`
+4. **PG imzalı callback yollar; imza doğrulanır.** Geçersiz/eksik       `(CallbackSignatureValidator)`
+   imza → 401, işlem yok.
+5. **Sonuç girişimi terminal'e taşır (idempotent).** Başarı →          `(HandlePaymentCallback`
+   Succeeded + `PaymentSucceeded`; başarısız/terk → Failed/Expired      ` → PaymentIntent.MarkSucceeded/MarkFailed;`
+   + `PaymentFailed`. Aynı transaction'da yayın (durable outbox).       ` → PaymentSucceeded/PaymentFailed)`
+6. **Kullanıcı ödemelerini okur.** Kişi kendi girişimlerini            `(GetAllPaymentsByUserIdForAgent)`
+   listeler; agent için MCP tool'u aynı slice'ı sarar.                  `(GetMyPaymentsMcpTool)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
-- **Kart alanı yoktur.** Kontrat yalnız `Amount` taşır; PAN/kart verisi bu BC'ye hiç girmez.
-- **Maket = hep başarı.** Otorizasyon/red/iade yok; `Charge` kaydı koşulsuz Success üretir.
-- **Zengin aggregate (İLKE II).** `Payment` `AggregateRoot`'tan türer; fabrika + mutator Result döner, anemik değil.
-- **İzole BC (İLKE I).** Kendi `paymentDb`'si; event yaymaz, başka BC'ye erişmez. Sipariş bağı çağıranda kurulur.
-- **Scope yetki (İLKE V).** Yazma `payment.write`, okuma `payment.read` scope'uyla korunur.
+- **Kart alanı yoktur.** PAN/kart verisi bu BC'ye hiç girmez; yalnız Amount + hosted link referansları.
+- **TxRef tekil; çift callback tek sonuç.** Marten unique index + durum guard → idempotent.
+- **Succeeded terminal + geri-alınamaz.** Void/refund yok; Failed/Expired'den Succeeded'e geçilmez.
+- **Callback köken doğrulaması HMAC.** CallbackSecret MerchantKey'den AYRI (sızıntı yalıtımı).
+- **Zengin aggregate (İLKE II).** `PaymentIntent` `AggregateRoot`'tan türer; geçişler + guard'lar metotlarda.
+- **İzole BC (İLKE I).** Kendi `paymentDb`'si; sonuç yalnız fanout event'le (Order tüketir) çıkar.
 
 ## Sınır (bu BC'nin dokunmadığı)
 
-Gerçek çekim/taksit/iade, kart vault (Customer/PaymentGateway'de), sipariş/stok yok. Çekim YALNIZ
-checkout broker komutuyla tetiklenir — kullanıcıya açık yazma ucu yok. Yapısal PSP entegrasyonu
-ayrı (Order BC'nin dış `PaymentGateway` istemcisi, 039 chat yolu).
+Gerçek para hareketi/iyzico wire + iade (dış PaymentGateway'de); sipariş yaşam döngüsü + stok + sepet
+(Order/Checkout/Stock/Basket). Payment sipariş oluşturmaz, stok bilmez; yalnız ödeme girişimini yönetir.

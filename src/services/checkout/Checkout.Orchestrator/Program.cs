@@ -30,7 +30,7 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<CreateOrderCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
     opts.PublishMessage<ConfirmOrderCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
     opts.PublishMessage<CancelOrderCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
-    opts.PublishMessage<ChargePaymentCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.PaymentCommandsQueue);
+    // 077: ChargePaymentCommand route SÖKÜLDÜ (ödeme hosted-CF ile öncedendir; saga charge çekmez).
     opts.PublishMessage<CommitStockCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.StockCommandsQueue);
     opts.PublishMessage<RevertCommitStockCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.StockCommandsQueue);
     opts.PublishMessage<ClearBasketCommand>().ToRabbitQueue(RabbitMqConstants.Checkout.BasketCommandsQueue);

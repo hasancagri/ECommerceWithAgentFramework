@@ -118,6 +118,27 @@ public static class RabbitMqConstants
         }
     }
 
+    // 077: Payment yayınlar (hosted-CF callback/expiry sonucu), Order tüketir (kendi kuyruğunu bağlar).
+    public static class PaymentSucceeded
+    {
+        public const string Exchange = "payment.succeeded";
+
+        public static class Queues
+        {
+            public const string Order = "order.payment-succeeded";
+        }
+    }
+
+    public static class PaymentFailed
+    {
+        public const string Exchange = "payment.failed";
+
+        public static class Queues
+        {
+            public const string Order = "order.payment-failed";
+        }
+    }
+
     // 049: Checkout orchestrator hedefli komut/yanıt (broker; İlke I v1.11.0). Her BC kendi komut
     // kuyruğunu bağlar; yanıtlar orchestrator'ın tek yanıt kuyruğuna döner (korelasyon = CheckoutId).
     public static class Checkout

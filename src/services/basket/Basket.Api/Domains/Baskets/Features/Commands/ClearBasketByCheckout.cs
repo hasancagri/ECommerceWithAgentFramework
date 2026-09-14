@@ -1,10 +1,12 @@
 namespace Basket.Api.Domains.Baskets.Features.Commands;
 
-// 028: checkout saga'nin pivot-sonrasi adimi — onaylanan siparisin kullanicisinin sepetini siler.
-// Idempotent: sepet yoksa da Ok (FR-010). Cagiran: Order saga'si (gRPC BasketClear, makine token'i).
+// 028/049: checkout saga'nin pivot-sonrasi adimi — onaylanan siparisin kullanicisinin sepetini siler.
+// Idempotent: sepet yoksa da Ok (FR-010). Cagiran = checkout orchestrator broker handler'i
+// (BasketEventHandlers, HttpContext YOK) + legacy gRPC BasketClear. Ic komut scope-guard TASIMAZ
+// (Stock deseni): broker yolunda kullanici claim'i olmaz, guard yuzeydedir — gRPC ucu
+// .RequireAuthorization(BasketWrite) ile korunur; broker girisi orchestrator'a guvenir.
 public static class ClearBasketByCheckout
 {
-    [RequiredScope(AuthorizationScopes.BasketWrite)]
     public record ClearBasketByCheckoutCommand(Guid UserId, Guid OrderId);
 
     [Transactional]

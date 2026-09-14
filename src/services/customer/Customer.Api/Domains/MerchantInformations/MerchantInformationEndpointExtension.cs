@@ -15,10 +15,11 @@ public static class MerchantInformationEndpointExtension
         app.MapGroup("api/v{version:apiVersion}/internal/merchant-key")
             .WithTags("MerchantKeyInternal")
             .WithApiVersionSet(apiVersionSet)
-            .MapGet("/", async (Guid merchantId, IMessageBus bus, CancellationToken ct) =>
+            .MapGet("/", async (Guid? merchantId, IMessageBus bus, CancellationToken ct) =>
             {
+                // 077: merchantId opsiyonel — verilmezse tek (first-party) merchant döner.
                 var result = await bus.InvokeAsync<FeatureObjectResultModel<GetMerchantKeyInternal.MerchantKeyView>>(
-                    new GetMerchantKeyInternal.GetMerchantKeyQuery(merchantId), ct);
+                    new GetMerchantKeyInternal.GetMerchantKeyQuery(merchantId ?? Guid.Empty), ct);
 
                 return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
             })

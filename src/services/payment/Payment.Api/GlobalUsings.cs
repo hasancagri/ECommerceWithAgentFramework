@@ -27,3 +27,18 @@ global using ModelContextProtocol.Server;
 global using Common.Dependencies;
 global using Payment.Api.Domains.Payments.Features.Agents;
 global using Shared.Utils.Constants;
+
+// 077: hosted-CF ödeme — options + S2S + auth.
+global using Common.Options;
+global using Common.Utils.Authorization;
+global using Payment.Api.Options;
+global using Microsoft.Extensions.Options;
+global using System.Net.Http.Headers;
+global using System.Net.Http.Json;
+global using System.ComponentModel.DataAnnotations;
+global using System.Security.Cryptography;
+global using System.Text;
+global using System.Text.Json;
+global using System.Net.Http;
+global using Payment.Api.Infrastructure;
+global using Shared;
