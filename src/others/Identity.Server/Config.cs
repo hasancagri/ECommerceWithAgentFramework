@@ -191,7 +191,7 @@ public static class Config
             [
                 "openid", "profile",
                 "basket.read", "basket.write", "order.read", "order.write",
-                "customer.read", "payment.read", "storefront.read",
+                "customer.read", "customer.write", "payment.read", "storefront.read",
             ],
         },
         // 073: fasad keşif (ListTools) makine kimliği — client_credentials, salt audience üretimi
