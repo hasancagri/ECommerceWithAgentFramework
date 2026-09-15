@@ -31,6 +31,11 @@ builder.Host.UseWolverine(opts =>
     opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.BasketCommandsQueue);
     opts.PublishMessage<CheckoutMessages.BasketCleared>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
 
+    // 049/074: checkout sağası step-komut tüketiminde altyapı hatası retry (Checkout.Orchestrator'daki
+    // policyle aynı — FR-024). İş hatası (Result.Permanent) bunu tetiklemez, yalnız fırlayan exception.
+    opts.OnException<Exception>().RetryWithCooldown(
+        TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15));
+
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
@@ -38,7 +43,7 @@ builder.Host.UseWolverine(opts =>
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
     // *EventHandlers static sinifi ad konvansiyonuyla otomatik kesfedilmiyor (Storefront deseni);
     // acikca dahil et — yoksa ClearBasketCommand (049) calismaz.
-    opts.Discovery.IncludeType(typeof(Basket.Api.BasketEventHandlers));
+    opts.Discovery.IncludeType(typeof(Basket.Api.Saga.CheckoutConsumers));
 });
 
 

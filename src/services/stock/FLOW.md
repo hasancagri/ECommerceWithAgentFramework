@@ -11,13 +11,13 @@ olayından ilk OnHand'i yazar; checkout anında stoğu doğrudan düşer (056 �
 
 ## Süreç
 
-1. **Ürün ilk eşlendiğinde barkod↔ProductId eşlemesi kurulur** ve      `(StockEventHandlers`
+1. **Ürün ilk eşlendiğinde barkod↔ProductId eşlemesi kurulur** ve      `(CatalogConsumers`
    OnHand başlangıç değeriyle yazılır (idempotent upsert).             ` → ProductAdded)`
 2. **Stok her değişiminde vitrine bildirilir** — Storefront read-      `(IntegrationEvents`
    model'i güncel OnHand'i alır.                                       ` .StockChangedEvent)`
-3. **Checkout stoğu doğrudan düşer (056).** Saga'nın broker komutu;    `(CommitStock`
+3. **Checkout stoğu doğrudan düşer (056).** Saga'nın broker komutu;    `(CommitStockCommand`
    `OnHand >= adet` ise düş, değilse reddet — oversell imkânsız.       ` → ProductStock.Commit)`
-4. **Saga iptalinde commit edilmiş adet stoğa geri eklenir** (telafi). `(RevertCommitStock`
+4. **Saga iptalinde commit edilmiş adet stoğa geri eklenir** (telafi). `(RevertCommitStockCommand`
    Yalnız daha önce commit edilmiş sipariş geri alınabilir.            ` → ProductStock.RevertCommit)`
 5. **Admin stoğu mutlak düzeltir (058)** — "stok N olsun"; artı/eksi   `(SetStockQuantity`
    düzeltmelerden ayrı SET semantiği, negatif reddedilir.              ` → ProductStock.SetQuantity)`

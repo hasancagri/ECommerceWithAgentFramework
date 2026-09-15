@@ -1,6 +1,6 @@
 namespace Storefront.Api;
 
-public static class StorefrontEventHandlers
+public static class CatalogConsumers
 {
     public static async Task Handle(
         IntegrationEvents.ProductChangedEvent evt,
@@ -49,39 +49,5 @@ public static class StorefrontEventHandlers
         // boşaltır — CacheInvalidator üzerinden (yerel + backplane). Facet verisini yalnız Catalog
         // kaynaklı alanlar etkiler; StockChangedEvent facet'e girmez, orada boşaltma yok.
         await cacheInvalidator.InvalidateAsync("filters", ct);
-    }
-
-    // 044: puan ozeti — MUTLAK deger yazilir (Count=0 temizler). Satir yoksa da yaratilir
-    // (kismi satir gecerli — Catalog verisi gelince dolu-satir filtresine girer).
-    public static async Task Handle(IntegrationEvents.ReviewSummaryChanged evt, IDocumentSession session, CancellationToken ct)
-    {
-        var view = await session.LoadAsync<StorefrontView>(evt.ProductId, ct)
-                   ?? StorefrontView.Create(evt.ProductId);
-
-        view.ApplyReviewSummary(evt.Average, evt.Count);
-
-        session.Store(view);
-        await session.SaveChangesAsync(ct);
-    }
-
-    public static async Task Handle(IntegrationEvents.StockChangedEvent evt, IDocumentSession session, CancellationToken ct)
-    {
-        var view = await session.LoadAsync<StorefrontView>(evt.ProductId, ct)
-                   ?? StorefrontView.Create(evt.ProductId);
-
-        view.ApplyStock(evt.Quantity);
-
-        session.Store(view);
-        await session.SaveChangesAsync(ct);
-    }
-
-    // 054: kişisel feed sinyali — tamamlanan siparişin her kalemi UserPurchase satırına döner.
-    // PK = "{userId:N}:{productId:N}" → Store = idempotent upsert (tekrar teslim/tekrar alım zararsız).
-    public static async Task Handle(IntegrationEvents.OrderCompleted evt, IDocumentSession session, CancellationToken ct)
-    {
-        foreach (var item in evt.Items)
-            session.Store(Domains.UserPurchase.UserPurchase.Create(evt.UserId, item.ProductId));
-
-        await session.SaveChangesAsync(ct);
     }
 }

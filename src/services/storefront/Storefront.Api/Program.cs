@@ -76,8 +76,11 @@ builder.Host.UseWolverine(opts =>
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Konvansiyonel keşif bu sınıfı atlıyor (nedeni araştırılacak); açık kayıt garantili yol.
-    opts.Discovery.IncludeType(typeof(Storefront.Api.StorefrontEventHandlers));
+    // Konvansiyonel keşif bu sınıfları atlıyor (nedeni araştırılacak); açık kayıt garantili yol.
+    opts.Discovery.IncludeType(typeof(Storefront.Api.CatalogConsumers));
+    opts.Discovery.IncludeType(typeof(Storefront.Api.ReviewsConsumers));
+    opts.Discovery.IncludeType(typeof(Storefront.Api.StockConsumers));
+    opts.Discovery.IncludeType(typeof(Storefront.Api.OrderConsumers));
 });
 
 builder.Services.AddApiVersioning(options =>

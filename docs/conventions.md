@@ -99,6 +99,13 @@ Domains/<Aggregate>/
   testi: "kullanıcı mı tetikledi, süreç mi?" → kullanıcı=Domains, dış-saga=Saga, iç-süreç=Process.
   Aggregate davranışı (İlke II) her iki yoldan da çağrılsa Domains'te kalır; ikisinin paylaştığı saf
   helper de Domains'te (aggregate değil, ortak altyapı). Taşınan yalnız süreç-glue'su (handler + mesajı).
+- **Süreç güdümlü dosya/sınıf adı = kaynağın adı + `Consumers`.** Kaynak = event/komutu yayınlayan BC
+  ya da worker. `Saga/`'da kaynak = sağayı yöneten orchestrator (checkout sağası her katılımcıda aynı ad:
+  `Saga/CheckoutConsumers.cs`); kökte kaynak = yayıncı BC/worker (`CatalogConsumers.cs`,
+  `PaymentConsumers.cs`, `NotificationAgentConsumers.cs`). **Bir dosya = bir kaynak** — aynı serviste
+  birden fazla BC'den event geliyorsa kaynak başına ayrı dosya (tek `<Service>EventHandlers.cs`'te
+  karışık kaynak deseni EMEKLİ); dosya adından "bu nereden geliyor" cevaplanır, içerik açmaya gerek kalmaz.
+  `Process/` bu kuralın dışı (kaynak başka BC/worker değil, BC'nin KENDİ dayanıklı süreci).
 
 ## Kod standartları
 

@@ -8,7 +8,7 @@ AYRI worker'da async koşar, ihlalde yorumu gizler ve vitrin özetini Storefront
 
 ## Süreç
 
-1. **Yorum yalnız satın-alanlar tarafından yazılır.** Kanıt lokal       `(ReviewsEventHandlers ← OrderCompleted`
+1. **Yorum yalnız satın-alanlar tarafından yazılır.** Kanıt lokal       `(OrderConsumers ← OrderCompleted`
    read-model'den (OrderCompleted event-fed); yoksa RED.                 ` → PurchasedProduct)`
 2. **Kullanıcı × ürün için tek yorum.** Uygulama önce kontrol eder,     `(SubmitReview)`
    son sözü Marten unique index söyler (yarış kaybedeni nazik hata).
@@ -22,7 +22,7 @@ AYRI worker'da async koşar, ihlalde yorumu gizler ve vitrin özetini Storefront
    YOK). LLM kararı `ReviewModerated` ile geri döner.
 7. **Karar uygulanır: ihlalde gizle, temizde yalnız damgala.**          `(Review.ApplyModeration)`
    Denetim tamamlanmışsa ikinci karar no-op (at-least-once idempotent).
-8. **Gizlenen yorumda özet MUTLAK yeniden yayınlanır.** Visible→Hidden   `(ReviewsEventHandlers`
+8. **Gizlenen yorumda özet MUTLAK yeniden yayınlanır.** Visible→Hidden   `(ModerationAgentConsumers`
    olduysa yeni ortalama/adet; Count=0 ⇒ tüketici temizler.               ` → ReviewSummaryChanged)`
 
 ## Domain kuralları (süreci yöneten değişmezler)

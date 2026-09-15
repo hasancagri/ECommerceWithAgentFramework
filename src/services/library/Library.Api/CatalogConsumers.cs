@@ -1,9 +1,8 @@
 namespace Library.Api;
 
-// 060: Library'nin event yüzü — ProductChangedEvent (fiyat tetiği) + NotificationSent (iz).
-// Wolverine *EventHandlers (çoğul) adını keşfetMEZ — Program.cs IncludeType ile dahil eder.
-[Transactional]
-public class LibraryEventHandlers
+// 060: Catalog'un fiyat değişim tüketicisi. Wolverine *Consumers (çoğul) adını keşfetMEZ —
+// Program.cs IncludeType ile dahil eder.
+public class CatalogConsumers
 {
     /// <summary>
     /// Fiyat değişiminden HEMEN SONRA koşar (Catalog admin kaydeder kaydetmez, event'le).
@@ -30,25 +29,5 @@ public class LibraryEventHandlers
                 alarm.Id, alarm.UserId, alarm.Email,
                 evt.ProductId, evt.Name,
                 evt.OldPrice.Value, evt.Price));
-    }
-
-    /// <summary>
-    /// Mail gönderiminden HEMEN SONRA koşar (NotificationAgent sonucu NotificationSent ile geri yayınlar).
-    /// Her gönderim denemesi kalıcı iz olur — append-only NotificationRecord (FR-007);
-    /// "sent" / "no-email" / hata özeti. Alarm silinse de iz kalır.
-    /// </summary>
-    public void Handle(
-        IntegrationEvents.NotificationSent evt,
-        IDocumentSession session)
-    {
-        session.Store(new Domains.PriceAlarms.Entities.NotificationRecord
-        {
-            UserId = evt.UserId,
-            ProductId = evt.ProductId,
-            Email = evt.Email,
-            Success = evt.Success,
-            Detail = evt.Detail,
-            CreatedAtUtc = DateTime.UtcNow,
-        });
     }
 }

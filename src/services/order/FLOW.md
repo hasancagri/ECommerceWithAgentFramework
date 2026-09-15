@@ -13,12 +13,12 @@ başarılı callback'i (Payment fanout) siparişi checkout'a sokar. Stok/telafi/
    varsayılan adres okunur; sipariş Pending doğar; Payment'tan           ` Order.Create; PaymentIntentClient)`
    hosted link istenir + kullanıcıya döner. Re-use: canlı link varsa
    yeni sipariş yok. Boş sepet → dostça mesaj (sipariş yok).
-2. **Ödeme başarılı → checkout tetiklenir.** Payment `PaymentSucceeded` `(PaymentEventConsumers →`
+2. **Ödeme başarılı → checkout tetiklenir.** Payment `PaymentSucceeded` `(PaymentConsumers →`
    fanout'unu tüketir; Pending siparişten `StartCheckout` yayınlar        ` StartCheckout)`
    (CommitStock→Confirm→ClearBasket; charge YOK, ödeme öncedendir).
-3. **Ödeme başarısız/terk → sipariş iptal.** `PaymentFailed` →          `(PaymentEventConsumers →`
+3. **Ödeme başarısız/terk → sipariş iptal.** `PaymentFailed` →          `(PaymentConsumers →`
    `Order.Cancel` (stok hiç düşmedi; saga'ya girmez).                     ` Order.Cancel)`
-4. **Checkout orkestratörü siparişi onaylar/iptal eder.** Order          `(OrderEventHandlers →`
+4. **Checkout orkestratörü siparişi onaylar/iptal eder.** Order          `(CheckoutConsumers →`
    `Confirm/Cancel`'ı tüketir; Confirm pivotunda `OrderCompleted`         ` OrderConfirmed/OrderCompleted)`
    fanout'u yayılır (Reviews/Storefront). Idempotent.
 5. **Kullanıcı siparişlerini okur.** Kişi kendi geçmişini listeler.     `(GetOrders)`

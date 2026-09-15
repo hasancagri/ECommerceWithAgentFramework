@@ -53,6 +53,11 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<CheckoutMessages.StockCommitted>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
     opts.PublishMessage<CheckoutMessages.StockCommitReverted>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
 
+    // 049/074: checkout sağası step-komut tüketiminde altyapı hatası retry (Checkout.Orchestrator'daki
+    // policyle aynı — FR-024). İş hatası (Result.Permanent) bunu tetiklemez, yalnız fırlayan exception.
+    opts.OnException<Exception>().RetryWithCooldown(
+        TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15));
+
     opts.Policies.UseDurableLocalQueues();
     // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.
     // REST + MCP ortak yetki noktasi.
@@ -61,7 +66,8 @@ builder.Host.UseWolverine(opts =>
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
     // Konvansiyonel keşif event-handler sınıfını atlayabiliyor (Storefront emsali) — açık kayıt garantili yol.
-    opts.Discovery.IncludeType(typeof(Stock.Api.StockEventHandlers));
+    opts.Discovery.IncludeType(typeof(Stock.Api.CatalogConsumers));
+    opts.Discovery.IncludeType(typeof(Stock.Api.Saga.CheckoutConsumers));
 });
 
 builder.Services.AddApiVersioning(options =>

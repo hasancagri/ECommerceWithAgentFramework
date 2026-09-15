@@ -65,14 +65,19 @@ builder.Host.UseWolverine(opts =>
     });
     opts.ListenToRabbitQueue(RabbitMqConstants.PaymentFailed.Queues.Order);
 
+    // 049/074: checkout sağası step-komut tüketiminde altyapı hatası retry (Checkout.Orchestrator'daki
+    // policyle aynı — FR-024). İş hatası (Result.Permanent) bunu tetiklemez, yalnız fırlayan exception.
+    opts.OnException<Exception>().RetryWithCooldown(
+        TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(15));
+
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
     // Konvansiyonel keşif *EventHandlers/*Consumers sınıfını atlayabiliyor → açık kayıt (Stock emsali).
-    opts.Discovery.IncludeType(typeof(Order.Api.Saga.OrderEventHandlers));
-    opts.Discovery.IncludeType(typeof(Order.Api.PaymentEventConsumers));
+    opts.Discovery.IncludeType(typeof(Order.Api.Saga.CheckoutConsumers));
+    opts.Discovery.IncludeType(typeof(Order.Api.PaymentConsumers));
 });
 
 
