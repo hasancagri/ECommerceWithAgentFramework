@@ -35,6 +35,8 @@
     <!-- 039: sepet kalemleri okuma istemcisi (chat siparis tamamlama). -->
     <ItemGroup>
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_items.proto" GrpcServices="Client" />
+        <!-- 074: varsayılan adres okuma istemcisi (REST'ten gRPC'ye taşındı). -->
+        <Protobuf Include="..\..\..\others\Shared\Protos\address_query.proto" GrpcServices="Client" />
     </ItemGroup>
 
     <ItemGroup>

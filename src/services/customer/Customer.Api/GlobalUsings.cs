@@ -42,3 +42,7 @@ global using Shared;
 global using Microsoft.Extensions.Logging.Abstractions;
 global using ModelContextProtocol.Client;
 global using ModelContextProtocol.Protocol;
+
+// --- 074: BC-arası S2S gRPC (performans, İlke I genişletildi) ---
+global using Grpc.Core;
+global using Shared.Grpc.Customer;

@@ -125,7 +125,9 @@ app.UseAuthorization();
 // (MerchantInformation admin; charge tüketicisi 076'da söküldü ama uç zararsız durur).
 app.AddMerchantKeyInternalEndpoint(apiVersionSet);
 // 077: Order.Api hosted-CF ödemesi varsayılan adresi S2S çeker (customer.read).
-app.AddDefaultAddressInternalEndpoint(apiVersionSet);
+// 074: performans için REST'ten gRPC'ye taşındı (İlke I — BC-arası S2S artık gRPC, dış webhook hariç).
+app.MapGrpcService<Customer.Api.Grpc.AddressGrpcService>()
+    .RequireAuthorization(AuthorizationScopes.CustomerRead);
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();

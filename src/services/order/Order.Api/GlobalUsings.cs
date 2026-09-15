@@ -1,4 +1,3 @@
-global using Asp.Versioning.Builder;
 global using Asp.Versioning;
 global using Common.Domains;
 global using Common.Exceptions;
@@ -6,7 +5,6 @@ global using Common.Extensions;
 global using Common;
 global using Marten.Newtonsoft;
 global using Marten;
-global using Microsoft.AspNetCore.Mvc;
 global using Order.Api.Constants;
 global using Order.Api.Dependencies;
 global using Order.Api.Domains.Orders.Entities;
@@ -26,29 +24,19 @@ global using Shared.Utils.Constants;
 global using Common.Auths;
 global using System.Net.Http.Headers;
 global using System.Text.Json;
-
-// --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Common.Dependencies;
 global using Grpc.Core;
 global using ModelContextProtocol.Server;
-global using Newtonsoft.Json;
-global using Order.Api.Domains.Orders.Features.Agents.Commands;
-global using Order.Api.Domains.Orders.Features.Agents.Queries;
 global using Shared.Grpc.Basket;
+global using Shared.Grpc.Customer;
 global using System.ComponentModel;
 global using Common.Options;
 global using Order.Api.Options;
 global using Microsoft.Extensions.Options;
-
-// 076: chat charge yolu (Http/PaymentAttempts/Process/Grpc-client) SÖKÜLDÜ.
 global using Common.Utils.Authorization;
-
-// --- hoisted (2+ dosyada tekrar; using consolidation) ---
 global using System.ComponentModel.DataAnnotations;
 global using System.Security.Cryptography;
 global using System.Text;
-
-// 077: hosted-CF ödeme başlat — S2S istemciler + gRPC + adres.
 global using Order.Api.Grpc;
 global using Order.Api.Infrastructure;
 global using System.Net.Http.Json;

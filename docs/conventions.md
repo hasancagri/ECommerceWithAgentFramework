@@ -153,8 +153,12 @@ Domains/<Aggregate>/
 - **Integration event.** Kontrat paylaşılan bir sözleşme kitaplığında; Wolverine→RabbitMQ **fanout**.
   Yayıncı exchange deklare eder, **binding'i TÜKETİCİ kurar** (soğuk-açılış kayıp dersi). Additive alan
   default'lu ekle (eski tüketici kırılmaz).
-- **Sanksiyonlu gRPC (İLKE I).** Yalnız anlık-tutarlılık akışı; çağıran karşının API'sine erişir
-  (DB'sine değil). Sunucu ince sarmalayıcı (iş mantığı yok, `IMessageBus`'a devreder).
+- **BC-arası S2S = gRPC (İLKE I, 074 genişletme).** Performans için tercih; çağıran karşının API'sine
+  erişir (DB'sine değil). Sunucu ince sarmalayıcı (iş mantığı yok, tek çağıranı varsa mantık doğrudan
+  servis class'ına gömülür — bkz. Domains/Features kuralı). **İstisna = dış taraf webhook/PSP callback'i**
+  (ör. ödeme sağlayıcı geri bildirimi) — üçüncü taraf gRPC desteklemez, HTTP zorunlu kalır. Client tarafı
+  auth: mevcut `DelegatingHandler` (S2S makine token'ı) `AddGrpcClient(...).AddHttpMessageHandler<T>()`
+  ile aynen REST client'lardaki gibi takılır (.NET gRPC client'ı HttpClient temelli).
 - **MCP yalnız agent tüketir.** Agent olmayan kod (WebApp/servis) imperatif `CallToolAsync` süremez →
   REST/gRPC. Chat akışında MCP DOLAYLI: agent tool'u LLM prompt'uyla seçer, elle `CallToolAsync` YOK.
   MCP tool YALNIZ `Features/Agents/<X>ForAgent` slice'ını çağırır (ince sarmalayıcı).

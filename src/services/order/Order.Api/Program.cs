@@ -141,12 +141,13 @@ builder.Services
     .AddHttpClient<PaymentIntentClient>(c => c.BaseAddress = new Uri(paymentHttpAddress.TrimEnd('/') + "/"))
     .AddHttpMessageHandler<SagaTokenHandler>();
 
-var customerHttpAddress = builder.Configuration["services:customer-api:https:0"]
+var customerGrpcAddress = builder.Configuration["services:customer-api:https:0"]
     ?? builder.Configuration["services:customer-api:http:0"]
     ?? "https://customer-api";
 builder.Services
-    .AddHttpClient<AddressClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddGrpcClient<Shared.Grpc.Customer.AddressQuery.AddressQueryClient>(o => o.Address = new Uri(customerGrpcAddress))
     .AddHttpMessageHandler<SagaTokenHandler>();
+builder.Services.AddScoped<AddressClient>();
 
 builder.Services
     .AddMcpServer()
