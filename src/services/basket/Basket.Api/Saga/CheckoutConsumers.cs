@@ -1,11 +1,13 @@
 using static Shared.CheckoutMessages;
 
-namespace Basket.Api;
+namespace Basket.Api.Saga;
 
 // 049: checkout orchestrator sepet temizleme broker handler'ı. Komutu BasketCommandsQueue'dan tüketir,
 // mevcut ClearBasketByCheckout domain slice'ını IMessageBus ile çağırır (tek yazım yolu), sonucu reply
 // kuyruğuna yayınlar. Pivot sonrası geç adım — başarısızlık siparişi iptal etmez (orchestrator retry/log).
-public class BasketEventHandlers
+// 074: bu BC checkout sağasının KATILIMCISI (kullanıcı isteği değil, süreç güdümlü) → Domains/ dışı Saga/.
+// Ad = kaynak BC + Consumers (kökteki <BC>Consumers ile aynı desen); kaynak burada Checkout orchestrator.
+public class CheckoutConsumers
 {
     public async Task<BasketCleared> Handle(ClearBasketCommand cmd, IMessageBus bus, CancellationToken ct)
     {

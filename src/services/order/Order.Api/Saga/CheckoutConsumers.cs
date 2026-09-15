@@ -8,7 +8,9 @@ namespace Order.Api.Saga;
 // yayınlar. Pivot (Confirm) anında OrderCompleted fanout'u (048 Personalization) burada yayılır.
 // Idempotent: PaymentId=CheckoutId ile tek sipariş; Confirm/Cancel yalnız Pending'den.
 // 074: bu BC checkout sağasının KATILIMCISI (kullanıcı isteği değil, süreç güdümlü) → Domains/ dışı Saga/.
-public class OrderEventHandlers
+// Ad = kaynak BC/orkestratör + Consumers (Stock.Api Saga/CheckoutConsumers ile aynı desen); kaynak
+// burada Checkout orchestrator (eski ad OrderEventHandlers — aggregate'e göre, yeni kural kaynağa göre).
+public class CheckoutConsumers
 {
     [Transactional]
     public async Task<OrderCreated> Handle(CreateOrderCommand cmd, IDocumentSession session, CancellationToken ct)

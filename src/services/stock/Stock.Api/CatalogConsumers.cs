@@ -1,35 +1,11 @@
-using static Shared.CheckoutMessages;
-
 namespace Stock.Api;
 
-// 049: checkout orchestrator stok broker handler'ları. Komutları StockCommandsQueue'dan tüketir,
-// mevcut Commit/RevertCommit domain slice'ını IMessageBus ile çağırır (tek yazım yolu), sonucu reply
-// kuyruğuna cascading message ile yayınlar. Domain idempotency (_processedOps, orderId) korunur.
-// İş hatası → Permanent (telafi); altyapı hatası fırlar → Wolverine retry (temporal decoupling, US4).
-public class StockEventHandlers
+// 050/051: Catalog ProductAdded tüketicisi. Yayınlanan üründe barkod↔ProductId eşlemesini kurar ve ilk
+// OnHand'i (InitialStock) MUTLAK yazar. İlk yayıncı = kitap import (051); feed söküldü (050).
+// 074: ad = kaynak BC + Consumers (Saga/CheckoutConsumers.cs ile aynı desen); checkout sağa katılım
+// (commit/revert-commit) orada, kaynağı Checkout orchestrator.
+public class CatalogConsumers
 {
-    public async Task<StockCommitted> Handle(CommitStockCommand cmd, IMessageBus bus, CancellationToken ct)
-    {
-        var r = await bus.InvokeAsync<FeatureObjectResultModel<CommitStock.CommitStockResponse>>(
-            new CommitStock.CommitStockCommand(cmd.ProductId, cmd.UserId, cmd.Quantity, cmd.OrderId), ct);
-
-        return r.IsSuccess
-            ? new StockCommitted(cmd.CheckoutId, cmd.ProductId, true, ErrorClass.None)
-            : new StockCommitted(cmd.CheckoutId, cmd.ProductId, false, ErrorClass.Permanent, r.Messages.FirstOrDefault()?.Code);
-    }
-
-    public async Task<StockCommitReverted> Handle(RevertCommitStockCommand cmd, IMessageBus bus, CancellationToken ct)
-    {
-        var r = await bus.InvokeAsync<FeatureObjectResultModel<RevertCommitStock.RevertCommitStockResponse>>(
-            new RevertCommitStock.RevertCommitStockCommand(cmd.ProductId, cmd.UserId, cmd.Quantity, cmd.OrderId), ct);
-
-        return r.IsSuccess
-            ? new StockCommitReverted(cmd.CheckoutId, cmd.ProductId, true, ErrorClass.None)
-            : new StockCommitReverted(cmd.CheckoutId, cmd.ProductId, false, ErrorClass.Permanent, r.Messages.FirstOrDefault()?.Code);
-    }
-
-    // 050/051: Catalog ProductAdded tüketicisi. Yayınlanan üründe barkod↔ProductId eşlemesini kurar ve ilk
-    // OnHand'i (InitialStock) MUTLAK yazar. İlk yayıncı = kitap import (051); feed söküldü (050).
     [Transactional]
     public async Task Handle(
         IntegrationEvents.ProductAdded evt,

@@ -7,7 +7,8 @@ namespace Order.Api;
 // (kullanıcı tetiklemez) → Domains/ dışı. Ödeme PIVOT'u callback anında (saga dışında) geçildi:
 // PaymentSucceeded → StartCheckout (CommitStock→Confirm→ClearBasket; charge YOK); PaymentFailed → Cancel
 // (stok hiç düşmedi → saga'ya girmeden). CheckoutId = OrderId (çift event → tek saga, idempotent).
-public class PaymentEventConsumers
+// Ad = kaynak BC + Consumers, "Event" infix'siz (yeni kural; eski ad PaymentEventConsumers).
+public class PaymentConsumers
 {
     public async Task Handle(IntegrationEvents.PaymentSucceeded evt, IDocumentSession session, IMessageBus bus, CancellationToken ct)
     {
