@@ -1,5 +1,3 @@
-using Customer.Api.Domains.MerchantInformations.Features.Queries;
-
 namespace Customer.Api.Domains.MerchantInformations;
 
 public static class MerchantInformationEndpointExtension
@@ -10,18 +8,25 @@ public static class MerchantInformationEndpointExtension
     // 049: Order.Api (charge/reconcile) merchant API key'ini YAPISAL S2S kanaldan ceker (makine token
     // customer.read; SagaTokenHandler). MerchantKey MCP/agent'a cikmaz — yalniz bu internal uc doner;
     // PG X-Api-Key kaynagi. get_payment_context'ten AYRI tutulur (PaymentContextView agent'a acik).
+    // 074: tek çağıranı bu uç olduğu için sorgu Features/Queries'ten buraya gömüldü (bilinçli tekrar
+    // kabul edilir — Stock/Basket'teki gRPC-inline emsali; burada araç REST/S2S).
     public static void AddMerchantKeyInternalEndpoint(this WebApplication app, ApiVersionSet apiVersionSet)
     {
         app.MapGroup("api/v{version:apiVersion}/internal/merchant-key")
             .WithTags("MerchantKeyInternal")
             .WithApiVersionSet(apiVersionSet)
-            .MapGet("/", async (Guid? merchantId, IMessageBus bus, CancellationToken ct) =>
+            .MapGet("/", async (Guid? merchantId, IQuerySession session, CancellationToken ct) =>
             {
                 // 077: merchantId opsiyonel — verilmezse tek (first-party) merchant döner.
-                var result = await bus.InvokeAsync<FeatureObjectResultModel<GetMerchantKeyInternal.MerchantKeyView>>(
-                    new GetMerchantKeyInternal.GetMerchantKeyQuery(merchantId ?? Guid.Empty), ct);
+                var resolvedId = merchantId ?? Guid.Empty;
+                var merchant = resolvedId == Guid.Empty
+                    ? await session.Query<MerchantInformation>().FirstOrDefaultAsync(ct)
+                    : await session.Query<MerchantInformation>().FirstOrDefaultAsync(m => m.MerchantId == resolvedId, ct);
 
-                return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result);
+                if (merchant is null)
+                    return Results.NotFound();
+
+                return Results.Ok(new { MerchantId = merchant.MerchantId, MerchantKey = merchant.MerchantKey });
             })
             .RequireAuthorization(AuthorizationScopes.CustomerRead);
     }
