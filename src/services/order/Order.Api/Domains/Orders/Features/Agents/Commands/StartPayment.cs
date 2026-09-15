@@ -38,9 +38,17 @@ public static class StartPayment
             // 1) Sepet kalemleri — sunucu-otoritesi (gRPC). Fail-closed: erişilemez → link yok.
             var snapshot = await basket.GetItemsAsync(cmd.UserId, ct);
             if (!snapshot.Reachable)
-                return Info("rejected", "Şu an ödeme başlatılamıyor, lütfen sonra tekrar dene.");
+                return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
+                {
+                    Outcome = "rejected",
+                    Message = "Şu an ödeme başlatılamıyor, lütfen sonra tekrar dene."
+                });
             if (snapshot.IsEmpty)
-                return Info("empty_basket", "Lütfen sepete ürün ekleyiniz.");
+                return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
+                {
+                    Outcome = "empty_basket",
+                    Message = "Lütfen sepete ürün ekleyiniz."
+                });
 
             var basketRef = BasketItemsClientProxy.ComputeBasketRef(snapshot.Items);
             var amount = snapshot.TotalPrice;
@@ -48,12 +56,23 @@ public static class StartPayment
             // 2) Re-use: aynı kullanıcı+sepet için canlı intent varsa order oluşturmadan mevcut linki dön.
             var live = await payments.GetLiveAsync(cmd.UserId, basketRef, ct);
             if (live is not null)
-                return Ready(live.HostedUrl, live.OrderId, amount);
+                return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
+                {
+                    Outcome = "ready",
+                    HostedUrl = live.HostedUrl,
+                    OrderId = live.OrderId,
+                    Amount = amount,
+                    Message = $"Ödemeni tamamlamak için bu bağlantıyı aç: {live.HostedUrl}"
+                });
 
             // 3) Varsayılan adres (Customer S2S). Yoksa reddet (FR-001b: sipariş kullanıcının adresine gider).
             var address = await addresses.GetDefaultAsync(cmd.UserId, ct);
             if (address is null)
-                return Info("rejected", "Ödeme için kayıtlı bir varsayılan adres bulunamadı. Önce adres ekleyin.");
+                return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
+                {
+                    Outcome = "rejected",
+                    Message = "Ödeme için kayıtlı bir varsayılan adres bulunamadı. Önce adres ekleyin."
+                });
 
             // 4) Order Pending oluştur (Domains davranışı; kalem fiyat/adet sunucudan).
             var order = OrderAggregate.Create(cmd.UserId,
@@ -63,7 +82,11 @@ public static class StartPayment
             {
                 var add = order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Quantity);
                 if (!add.IsSuccess)
-                    return Info("rejected", "Sepetteki bir ürün ödeme için uygun değil, lütfen sepeti kontrol et.");
+                    return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
+                    {
+                        Outcome = "rejected",
+                        Message = "Sepetteki bir ürün ödeme için uygun değil, lütfen sepeti kontrol et."
+                    });
             }
             session.Store(order);
 
@@ -74,28 +97,22 @@ public static class StartPayment
             {
                 order.Cancel(OrderResourceConstants.PAYMENT_GATEWAY_UNAVAILABLE);
                 session.Store(order);
-                return Info("rejected", "Ödeme başlatılamadı, lütfen biraz sonra tekrar dene.");
+                return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
+                {
+                    Outcome = "rejected",
+                    Message = "Ödeme başlatılamadı, lütfen biraz sonra tekrar dene."
+                });
             }
 
-            return Ready(created.HostedUrl, order.Id, amount);
-        }
-
-        private static FeatureObjectResultModel<StartPaymentResponse> Ready(string hostedUrl, Guid orderId, decimal amount) =>
-            FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
+            return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
             {
                 Outcome = "ready",
-                HostedUrl = hostedUrl,
-                OrderId = orderId,
+                HostedUrl = created.HostedUrl,
+                OrderId = order.Id,
                 Amount = amount,
-                Message = $"Ödemeni tamamlamak için bu bağlantıyı aç: {hostedUrl}"
+                Message = $"Ödemeni tamamlamak için bu bağlantıyı aç: {created.HostedUrl}"
             });
-
-        private static FeatureObjectResultModel<StartPaymentResponse> Info(string outcome, string message) =>
-            FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
-            {
-                Outcome = outcome,
-                Message = message
-            });
+        }
     }
 }
 

@@ -1,26 +1,28 @@
-namespace Order.Api.Infrastructure;
+namespace Order.Api.Grpc;
 
 // 077: Order.Api → Customer.Api varsayılan adres istemcisi (S2S; makine token customer.read, SagaTokenHandler).
 // start_payment siparişi kullanıcının varsayılan adresine bağlar (FR-001b). Fail-closed: adres yok/erişilemez
 // → null → start_payment dostça Result hatası ("varsayılan adres bulunamadı"). Adres LLM'e girmez.
-public sealed class AddressClient(HttpClient http)
+// 074: performans için REST'ten gRPC'ye taşındı (BasketItemsClientProxy emsali).
+public sealed class AddressClient(AddressQuery.AddressQueryClient client)
 {
-    public sealed record DefaultAddress(string Province, string District, string Street, string ZipCode, string Line);
+    private static readonly TimeSpan CallDeadline = TimeSpan.FromSeconds(5);
 
-    private sealed record DefaultAddressDto(string Province, string District, string Street, string ZipCode, string Line);
+    public sealed record DefaultAddress(string Province, string District, string Street, string ZipCode, string Line);
 
     public async Task<DefaultAddress?> GetDefaultAsync(Guid userId, CancellationToken ct)
     {
         try
         {
-            using var response = await http.GetAsync($"api/v1/internal/addresses/default?userId={userId}", ct);
-            if (!response.IsSuccessStatusCode)
-                return null;
+            var reply = await client.GetDefaultAddressAsync(new GetDefaultAddressRequest
+            {
+                UserId = userId.ToString()
+            }, deadline: DateTime.UtcNow.Add(CallDeadline), cancellationToken: ct);
 
-            var dto = await response.Content.ReadFromJsonAsync<DefaultAddressDto>(cancellationToken: ct);
-            return dto is null ? null : new DefaultAddress(dto.Province, dto.District, dto.Street, dto.ZipCode, dto.Line);
+            return reply.Found
+                ? new DefaultAddress(reply.Province, reply.District, reply.Street, reply.ZipCode, reply.Line)
+                : null;
         }
-        catch (HttpRequestException) { return null; }
-        catch (TaskCanceledException) { return null; }
+        catch (RpcException) { return null; }
     }
 }

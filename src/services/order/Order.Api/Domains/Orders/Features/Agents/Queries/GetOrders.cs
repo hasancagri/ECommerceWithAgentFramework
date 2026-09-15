@@ -23,12 +23,15 @@ public static class GetOrders
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             CancelReason = order.CancelReason,
-            Items = order.OrderItems.Select(i => new OrderItemResponse
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                UnitPrice = i.UnitPrice
-            }).ToList()
+            Items =
+            [
+                .. order.OrderItems.Select(i => new OrderItemResponse
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    UnitPrice = i.UnitPrice
+                })
+            ]
         };
     }
 
