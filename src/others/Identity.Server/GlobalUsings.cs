@@ -1,3 +1,4 @@
+global using Common.Utils.Constants;
 global using Microsoft.AspNetCore.Identity;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.AspNetCore.Mvc.RazorPages;
