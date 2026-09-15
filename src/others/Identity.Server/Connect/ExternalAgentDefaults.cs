@@ -30,9 +30,6 @@ public static class ExternalAgentDefaults
     public static readonly string[] AllowedGrantTypes = ["authorization_code", "refresh_token"];
 
     // Claude callback'leri (loopback kalıpları DcrRequestValidator'da host bazlı denetlenir).
-    public static readonly string[] AllowedExactRedirectUris =
-    [
-        "https://claude.ai/api/mcp/auth_callback",
-        "https://claude.com/api/mcp/auth_callback",
-    ];
+    // Küme seed'li dış-agent istemcileriyle ortak — tek kaynak Config.
+    public static readonly string[] AllowedExactRedirectUris = Config.ClaudeCallbackRedirectUris;
 }

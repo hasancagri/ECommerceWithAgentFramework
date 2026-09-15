@@ -27,8 +27,6 @@ public static class KnownScopes
             [AuthorizationScopes.LibraryWrite] = "Kitaplık (fiyat alarmı) yazma",
             [AuthorizationScopes.ApiKeysManage] = "API anahtarı yönetimi",
             [AuthorizationScopes.IdentityRolesManage] = "Rol/scope/kullanıcı yönetimi",
-            [AuthorizationScopes.PersonalizationIngest] = "Kişiselleştirme gezinme sinyali gönderimi (m2m)",
-            [AuthorizationScopes.PersonalizationRead] = "Kişiselleştirme zevk profili okuma (m2m)",
         };
 
     // Atanabilir tüm scope'lar (Config.AllApiScopes tek kaynak) + açıklama.

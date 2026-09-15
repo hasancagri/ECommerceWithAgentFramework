@@ -4,9 +4,6 @@ namespace Identity.Server;
 // açılışta OpenIddict application/scope manager'larına idempotent yazar.
 public static class Config
 {
-    // Kullanıcı token'larına taşınan claim'ler (WebApp + servis policy'leri okur).
-    public static readonly string[] UserClaims = ["role", "email", "name"];
-
     // Identity scope'ları (openid/profile/email + role taşıyıcı "roles").
     public static readonly string[] IdentityScopes =
         [Scopes.OpenId, Scopes.Profile, Scopes.Email, Scopes.Roles, Scopes.OfflineAccess];
@@ -19,6 +16,14 @@ public static class Config
     // 073: seed'li dış MÜŞTERİ agent istemcisi (tek müşteri MCP fasadı; Claude Desktop müşteri bağlantısı).
     // Loopback redirect muafiyeti external-admin-agent ile aynı (AdminAgentApplicationManager).
     public const string ExternalCustomerAgentClientId = "external-customer-agent";
+
+    // Claude sabit callback'leri — seed'li dış-agent istemcileri + DCR izinli-liste
+    // (ExternalAgentDefaults.AllowedExactRedirectUris) aynı kümeyi paylaşır.
+    public static readonly string[] ClaudeCallbackRedirectUris =
+    [
+        "https://claude.ai/api/mcp/auth_callback",
+        "https://claude.com/api/mcp/auth_callback",
+    ];
 
     // Scope → audience (resource) haritası. Token üretiminde ListResourcesAsync bu eşlemeden
     // 'aud' claim'ini üretir; servisler kendi adını (basket.api...) ValidateAudience ile arar.
@@ -44,11 +49,6 @@ public static class Config
             // 060: fiyat alarmı (Library BC) — durum okuma + kurma/kaldırma.
             [AuthorizationScopes.LibraryRead] = "library.api",
             [AuthorizationScopes.LibraryWrite] = "library.api",
-            // 053: gezinme sinyali ingest + profil okuma — audience reco.trainer (Python beyin; 048
-            // personalization.api emekli). WebApp (BFF) m2m istemcisi (webapp-signals) client_credentials
-            // ile talep eder; customer/admin kullanıcı token'ına binmez.
-            [AuthorizationScopes.PersonalizationIngest] = "reco.trainer",
-            [AuthorizationScopes.PersonalizationRead] = "reco.trainer",
         };
 
     // Tüm API scope'ları (servis scope'ları + apikeys.manage + identity.roles.manage) — seed edilir.
@@ -77,8 +77,8 @@ public static class Config
     public static IReadOnlyDictionary<string, string[]> RoleScopeSeed =>
         new Dictionary<string, string[]>
         {
-            ["customer"] = CustomerRoleScopes,
-            ["admin"] = [.. AdminRoleScopes],
+            [RoleAssignmentService.CustomerRole] = CustomerRoleScopes,
+            [RoleAssignmentService.AdminRole] = [.. AdminRoleScopes],
         };
 
     // İstemci kayıtları (secret düz değer; store hash'ler — WebApp/SagaTokenHandler config'i değişmez).
@@ -117,17 +117,6 @@ public static class Config
             AllowClientCredentials = true,
             Scopes = [AuthorizationScopes.CustomerRead],
         },
-        // 048: WebApp davranış-sinyali gönderimi m2m — anonim gezinme user token taşımaz,
-        // WebApp client_credentials ile personalization.ingest talep eder (BFF telemetri iletici).
-        new ClientSeed
-        {
-            ClientId = "webapp-signals",
-            ClientSecret = "webapp-signals-secret",
-            DisplayName = "WebApp behavior signals (m2m)",
-            AllowClientCredentials = true,
-            // 053: ingest (sinyal yaz) + read (zevk profili oku) — ikisi de reco.trainer audience.
-            Scopes = [AuthorizationScopes.PersonalizationIngest, AuthorizationScopes.PersonalizationRead],
-        },
         // 070: dış-agent YÖNETİM istemcisi — public+PKCE, code+refresh; consent Implicit (mağaza
         // sahibinin kendi aracı). Scope TAVANI yönetim demeti; gerçek yetki = tavan ∩ kullanıcı ROL
         // demeti (030) — admin-olmayan kullanıcı bu istemciyle girse de yönetim scope'u ALAMAZ.
@@ -141,11 +130,7 @@ public static class Config
             IsPublic = true,
             AllowAuthorizationCode = true,
             AllowRefreshToken = true,
-            RedirectUris =
-            [
-                "https://claude.ai/api/mcp/auth_callback",
-                "https://claude.com/api/mcp/auth_callback",
-            ],
+            RedirectUris = ClaudeCallbackRedirectUris,
             Scopes =
             [
                 Scopes.OpenId, Scopes.Profile,
@@ -164,11 +149,7 @@ public static class Config
             IsPublic = true,
             AllowAuthorizationCode = true,
             AllowRefreshToken = true,
-            RedirectUris =
-            [
-                "https://claude.ai/api/mcp/auth_callback",
-                "https://claude.com/api/mcp/auth_callback",
-            ],
+            RedirectUris = ClaudeCallbackRedirectUris,
             Scopes =
             [
                 Scopes.OpenId, Scopes.Profile,
@@ -212,6 +193,5 @@ public sealed class ClientSeed
     public bool AllowClientCredentials { get; init; }
     public bool AllowRefreshToken { get; init; }
     public string[] RedirectUris { get; init; } = [];
-    public string[] PostLogoutRedirectUris { get; init; } = [];
     public string[] Scopes { get; init; } = [];
 }
