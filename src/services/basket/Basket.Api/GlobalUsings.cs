@@ -2,7 +2,6 @@ global using Asp.Versioning;
 global using Basket.Api.Dependencies;
 global using Basket.Api.Constants;
 global using Basket.Api.Domains.Baskets.Entities;
-global using Basket.Api.Domains.Baskets.Features.Queries;
 global using Common.Domains;
 global using Common.Exceptions;
 global using Common.Extensions;

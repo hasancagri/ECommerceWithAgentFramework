@@ -106,6 +106,15 @@ Domains/<Aggregate>/
   birden fazla BC'den event geliyorsa kaynak başına ayrı dosya (tek `<Service>EventHandlers.cs`'te
   karışık kaynak deseni EMEKLİ); dosya adından "bu nereden geliyor" cevaplanır, içerik açmaya gerek kalmaz.
   `Process/` bu kuralın dışı (kaynak başka BC/worker değil, BC'nin KENDİ dayanıklı süreci).
+- **Tek çağıranı sanksiyonlu S2S araç (gRPC vb.) olan Features slice'ı Domains dışına çıkar, o aracın
+  SINIFI İÇİNE gömülür.** "Kullanıcı mı tetikledi" testi burada da geçerli — REST/MCP/agent hiç
+  çağırmıyorsa (yalnız gRPC servisi tüketiyorsa) o slice sahte bir "niyet yüzeyi" değildir, indirekt
+  S2S glue'dur. Ayrı `Features/Commands|Queries/<Name>.cs` + `IMessageBus.InvokeAsync` hop'u yerine
+  mantık doğrudan gRPC servis class'ına yazılır (`IQuerySession`/`IDocumentSession` enjekte edilir).
+  **Bilinçli tekrar kabul edilir** — aynı sorgu/komutun agent/MCP muadili varsa (ör. `Agents/Queries/
+  GetX.cs`) paylaşılmaz, S2S tarafı kendi kopyasını taşır; amaç okurken "bu kod ne işe yarıyor" sorusunun
+  dosyadan tek bakışta cevaplanması, DRY değil. **İstisna:** aynı slice'ı hem sanksiyonlu S2S hem
+  başka somut kullanıcı/agent yolu da çağırıyorsa (paylaşılan yazım yolu) Domains'te KALIR.
 
 ## Kod standartları
 
