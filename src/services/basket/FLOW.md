@@ -15,8 +15,8 @@ TUTMAZ ve süre İŞLETMEZ (056); stok gerçeği checkout anındadır.
    aşılamaz.
 3. **Satır elle silinir.** Yalnız sepet belgesi değişir.                  `(DeleteBasketItem`
                                                                           ` → Basket.RemoveItem)`
-4. **Checkout sepeti boşaltır (hand-off).** Orchestrator pivot-sonrası   `(CheckoutConsumers`
-   broker komutuyla çağırır; sepet silinir (idempotent).                  ` → ClearBasketByCheckoutCommandHandler)`
+4. **Checkout sepeti boşaltır (hand-off).** Orchestrator pivot-sonrası   `(Saga.CheckoutConsumers`
+   broker komutuyla çağırır; sepet silinir (idempotent).                  ` → ClearBasketCommand)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 

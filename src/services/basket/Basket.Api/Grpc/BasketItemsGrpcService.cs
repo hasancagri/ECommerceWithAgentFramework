@@ -2,7 +2,7 @@ namespace Basket.Api.Grpc;
 
 // 039: chat siparis tamamlama — Order.Api sepet kalemlerini sunucu tarafinda okur (kalem
 // sunucu-otoritesi; LLM'e girmez). Ince sarici — is mantigi yok, GetBasket query'sini IMessageBus
-// ile cagirir (BasketClearGrpcService deseninin okuma muadili). Sepet yoksa bos liste + 0 total.
+// ile cagirir (ince gRPC sarmalayici — Stock/Order gRPC deseninin okuma muadili). Sepet yoksa bos liste + 0 total.
 public class BasketItemsGrpcService(IMessageBus bus) : BasketQuery.BasketQueryBase
 {
     public override async Task<GetBasketItemsReply> GetBasketItems(

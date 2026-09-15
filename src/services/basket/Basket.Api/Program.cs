@@ -101,10 +101,6 @@ app.UseAuthorization();
 app.MapMcp("/mcp").RequireAuthorization();
 app.MapMcpResourceMetadata();
 
-// 028: ClearBasket gRPC ucu; yetki endpoint seviyesinde (userId cagri govdesinde — Stock deseni).
-app.MapGrpcService<Basket.Api.Grpc.BasketClearGrpcService>()
-    .RequireAuthorization(AuthorizationScopes.BasketWrite);
-
 // 039: GetBasketItems gRPC ucu (Order.Api chat siparis tamamlama; makine token'i basket.read).
 app.MapGrpcService<Basket.Api.Grpc.BasketItemsGrpcService>()
     .RequireAuthorization(AuthorizationScopes.BasketRead);

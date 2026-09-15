@@ -1,12 +1,8 @@
-global using Asp.Versioning.Builder;
 global using Asp.Versioning;
 global using Basket.Api.Dependencies;
 global using Basket.Api.Constants;
 global using Basket.Api.Domains.Baskets.Entities;
-global using Basket.Api.Domains.Baskets.Features.Agents.Commands;
-global using Basket.Api.Domains.Baskets.Features.Commands;
 global using Basket.Api.Domains.Baskets.Features.Queries;
-global using Basket.Api.Domains.Baskets;
 global using Common.Domains;
 global using Common.Exceptions;
 global using Common.Extensions;
@@ -14,7 +10,6 @@ global using Common;
 global using Marten;
 global using Marten.Newtonsoft;
 global using Weasel.Core;
-global using Microsoft.AspNetCore.Mvc;
 global using Newtonsoft.Json;
 global using Shared;
 global using System.Reflection;
@@ -32,6 +27,5 @@ global using Grpc.Core;
 global using System.ComponentModel;
 global using ModelContextProtocol.Server;
 global using Common.Results;
-// --- hoisted (sade using'ler dosyalardan taşındı) ---
 global using Common.Dependencies;
 global using Shared.Grpc.Basket;

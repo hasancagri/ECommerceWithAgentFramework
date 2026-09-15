@@ -32,10 +32,8 @@
         </PackageReference>
     </ItemGroup>
 
-    <!-- 012: Stock rezervasyon istemcisi; 028: Basket ClearBasket istemcisi (paylaşılan protolar). -->
+    <!-- 039: sepet kalemleri okuma istemcisi (chat siparis tamamlama). -->
     <ItemGroup>
-        <Protobuf Include="..\..\..\others\Shared\Protos\basket_clear.proto" GrpcServices="Client" />
-        <!-- 039: sepet kalemleri okuma istemcisi (chat siparis tamamlama). -->
         <Protobuf Include="..\..\..\others\Shared\Protos\basket_items.proto" GrpcServices="Client" />
     </ItemGroup>
 

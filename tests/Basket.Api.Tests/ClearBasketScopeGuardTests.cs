@@ -2,16 +2,16 @@ using Common.Utils.Authorization;
 using Common.Utils.Constants;
 using Microsoft.AspNetCore.Http;
 using Wolverine;
-using Basket.Api.Domains.Baskets.Features.Commands;
+using static Shared.CheckoutMessages;
 
 namespace Basket.Api.Tests;
 
-// 077 bug #7 regresyon: checkout saga'nin ClearBasket adimi Basket'in broker handler'indan
-// (BasketEventHandlers, HttpContext YOK) IMessageBus.InvokeAsync ile cagrilir. Komut uzerinde
-// [RequiredScope] varsa ScopeAuthorizationMiddleware.Before, HttpContext null oldugundan
-// UnauthorizedAccessException firlatir -> handler firlar -> BasketCleared reply cascade olmaz ->
-// saga ClearingBasket'te takilir. Fix: attribute kaldirildi (ic komut, guard yuzeydeki gRPC ucunda).
-// Bu test hem guard mekanizmasini (scope'lu mesaj HttpContext'siz atar) hem fix'i (bu komut atmaz) kilitler.
+// 077 bug #7 regresyon: checkout sağasının ClearBasket adımı Basket'in broker handler'ından
+// (Saga.CheckoutConsumers, HttpContext YOK) doğrudan tetiklenir. Komut üzerinde [RequiredScope] varsa
+// ScopeAuthorizationMiddleware.Before, HttpContext null olduğundan UnauthorizedAccessException fırlatır
+// -> handler fırlar -> BasketCleared reply cascade olmaz -> saga ClearingBasket'te takılır.
+// 074: ara ClearBasketByCheckoutCommand (iç komut) kaldırıldı — Saga aggregate'e doğrudan dokunuyor,
+// tek dispatch katmanı kaldı. Guard artık doğrudan broker komutu ClearBasketCommand üzerinde.
 public class ClearBasketScopeGuardTests
 {
     private sealed class NullHttpContextAccessor : IHttpContextAccessor
@@ -24,9 +24,9 @@ public class ClearBasketScopeGuardTests
     private sealed record ScopedProbe;
 
     [Fact]
-    public void ClearBasketByCheckout_HasNoScopeAttribute_SoBrokerPathDoesNotThrow()
+    public void ClearBasketCommand_HasNoScopeAttribute_SoBrokerPathDoesNotThrow()
     {
-        var command = new ClearBasketByCheckout.ClearBasketByCheckoutCommand(Guid.NewGuid(), Guid.NewGuid());
+        var command = new ClearBasketCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid().ToString());
         var envelope = new Envelope(command);
 
         Should.NotThrow(() => ScopeAuthorizationMiddleware.Before(envelope, new NullHttpContextAccessor()));
