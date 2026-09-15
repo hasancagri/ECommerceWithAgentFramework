@@ -32,6 +32,8 @@ public static class OrderTools
     // 039: chat'ten uctan uca siparis tamamlama (sunucu orkestrasyonu; cardId?, tek çekim).
     public const string PlaceOrder = "place_order";
     // TAKSİT KALDIRILDI: quote_installments sabiti söküldü (tek çekim; 070 A2A borcu ödendi).
+    // 077: hosted-CF ödeme başlat — hosted ödeme linki döner (sepet gRPC, order Pending, Payment S2S).
+    public const string StartPayment = "start_payment";
 }
 
 public static class PaymentTools

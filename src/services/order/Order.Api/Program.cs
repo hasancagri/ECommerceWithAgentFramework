@@ -45,19 +45,34 @@ builder.Host.UseWolverine(opts =>
 
     // 049: checkout sipariş komutlarını (Create/Confirm/Cancel) dinle; yanıtları reply kuyruğuna.
     opts.ListenToRabbitQueue(RabbitMqConstants.Checkout.OrderCommandsQueue);
-    // 049: chat (AlreadyCaptured) checkout'u StartCheckout ile orchestrator'a tetikler (cross-service).
+    // 049/077: hosted-CF ödeme başarılı → StartCheckout (AlreadyCaptured) orchestrator'a (cross-service).
     opts.PublishMessage<CheckoutMessages.StartCheckout>().ToRabbitQueue(RabbitMqConstants.Checkout.StartQueue);
     opts.PublishMessage<CheckoutMessages.OrderCreated>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
     opts.PublishMessage<CheckoutMessages.OrderConfirmed>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
     opts.PublishMessage<CheckoutMessages.OrderCancelled>().ToRabbitQueue(RabbitMqConstants.Checkout.RepliesQueue);
+
+    // 077: Payment.Api hosted-CF sonuç fanout'ları — tüketici kendi kuyruğunu bağlar + dinler (007 dersi).
+    rabbit.DeclareExchange(RabbitMqConstants.PaymentSucceeded.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.PaymentSucceeded.Queues.Order);
+    });
+    opts.ListenToRabbitQueue(RabbitMqConstants.PaymentSucceeded.Queues.Order);
+    rabbit.DeclareExchange(RabbitMqConstants.PaymentFailed.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.PaymentFailed.Queues.Order);
+    });
+    opts.ListenToRabbitQueue(RabbitMqConstants.PaymentFailed.Queues.Order);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Konvansiyonel keşif *EventHandlers sınıfını atlayabiliyor → açık kayıt (Stock emsali).
+    // Konvansiyonel keşif *EventHandlers/*Consumers sınıfını atlayabiliyor → açık kayıt (Stock emsali).
     opts.Discovery.IncludeType(typeof(Order.Api.Saga.OrderEventHandlers));
+    opts.Discovery.IncludeType(typeof(Order.Api.PaymentEventConsumers));
 });
 
 
@@ -90,7 +105,10 @@ builder.Services.AddSingleton<IdentityOption>(sp => sp.GetRequiredService<IOptio
 builder.Services.AddOptions<Checkout>().BindConfiguration(nameof(Checkout))
     .ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddSingleton<Checkout>(sp => sp.GetRequiredService<IOptions<Checkout>>().Value);
-// 076: chat charge option'ları (SagaAuth/PaymentGateway/CustomerContext/CheckoutReconcile/CorrelationKey) SÖKÜLDÜ.
+// 077: hosted-CF start_payment makine token'ı (order-saga; basket.read + customer.read + payment.write).
+builder.Services.AddOptions<Order.Api.Options.SagaAuth>().BindConfiguration(nameof(Order.Api.Options.SagaAuth))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<Order.Api.Options.SagaAuth>(sp => sp.GetRequiredService<IOptions<Order.Api.Options.SagaAuth>>().Value);
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -100,8 +118,30 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("order");
 builder.Services.AddHttpContextAccessor();
 
-// 076: chat charge yolu (SagaTokenHandler + basket gRPC istemcisi + Customer/PG/merchant-key HTTP
-// istemcileri) SÖKÜLDÜ (kart-saklama + charge kaldırıldı; checkout geçici boşlukta, hosted-CF sonraki spec).
+// 077: hosted-CF start_payment S2S yolu — makine token (order-saga) + sepet gRPC + Payment/Customer istemcileri.
+builder.Services.AddTransient<SagaTokenHandler>();
+
+var basketGrpcAddress = builder.Configuration["services:basket-api:https:0"]
+    ?? builder.Configuration["services:basket-api:http:0"]
+    ?? "https://basket-api";
+builder.Services
+    .AddGrpcClient<Shared.Grpc.Basket.BasketQuery.BasketQueryClient>(o => o.Address = new Uri(basketGrpcAddress))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+builder.Services.AddScoped<BasketItemsClientProxy>();
+
+var paymentHttpAddress = builder.Configuration["services:payment-api:https:0"]
+    ?? builder.Configuration["services:payment-api:http:0"]
+    ?? "https://payment-api";
+builder.Services
+    .AddHttpClient<PaymentIntentClient>(c => c.BaseAddress = new Uri(paymentHttpAddress.TrimEnd('/') + "/"))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+
+var customerHttpAddress = builder.Configuration["services:customer-api:https:0"]
+    ?? builder.Configuration["services:customer-api:http:0"]
+    ?? "https://customer-api";
+builder.Services
+    .AddHttpClient<AddressClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddHttpMessageHandler<SagaTokenHandler>();
 
 builder.Services
     .AddMcpServer()

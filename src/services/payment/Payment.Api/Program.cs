@@ -15,7 +15,16 @@ builder.Services.AddMarten(opts =>
                 s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
             });
 
-        opts.Schema.For<Payment.Api.Domains.Payments.Payment>();
+        // 077: hosted-CF PaymentIntent (mock Payment aggregate söküldü). TxRef unique = idempotency temeli
+        // (çift callback tek sonuç); UserId index = get_my_payments + canlı-intent re-use sorgusu.
+        // Sabit alias ŞART: PaymentIntent tablo adı tr-TR ToLower'da 'mt_doc_paymentıntent' (dotless ı)
+        // olur; Marten'in computed-index delta eşleşmesi TABLO adındaki ı'da bozulur → var olan index'i
+        // görmez → her boot recreate → 42P07. (order/basket ı'yı yalnız index ADINDA taşır, tablo adında
+        // değil → idempotent.) Alias ı'yı tümden kaldırır: mt_doc_payment_intent.
+        opts.Schema.For<Payment.Api.Domains.Payments.PaymentIntent>()
+            .DocumentAlias("payment_intent")
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.TxRef)
+            .Index(x => x.UserId);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -27,18 +36,27 @@ builder.Host.UseWolverine(opts =>
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
 
-    // 049: checkout iki-faz ödeme komutlarını dinle; yanıtları orchestrator reply kuyruğuna yayınla.
-    opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!).AutoProvision();
-    opts.ListenToRabbitQueue(Shared.RabbitMqConstants.Checkout.PaymentCommandsQueue);
-    opts.PublishMessage<Shared.CheckoutMessages.PaymentCharged>().ToRabbitQueue(Shared.RabbitMqConstants.Checkout.RepliesQueue);
+    // CreatePaymentIntent handler'ı typed HttpClient (MerchantKeyClient/PgHostedPaymentClient,
+    // AddHttpClient<T> = opaque lambda transient) inject eder; Wolverine inline codegen bunları
+    // service-location ister. Varsayılan NotAllowed → 500. Order.Api ile aynı politika.
+    opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
+
+    // 077: checkout Charge broker yolu SÖKÜLDÜ (PaymentCommandsQueue listen + PaymentCharged publish).
+    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!).AutoProvision();
+
+    // 077: hosted-CF sonucu fanout → Order tüketir (binding'i tüketici kurar). Yayıncı yalnız exchange declare.
+    rabbit.DeclareExchange(Shared.RabbitMqConstants.PaymentSucceeded.Exchange, e => e.ExchangeType = ExchangeType.Fanout);
+    rabbit.DeclareExchange(Shared.RabbitMqConstants.PaymentFailed.Exchange, e => e.ExchangeType = ExchangeType.Fanout);
+    opts.PublishMessage<Shared.IntegrationEvents.PaymentSucceeded>()
+        .ToRabbitExchange(Shared.RabbitMqConstants.PaymentSucceeded.Exchange);
+    opts.PublishMessage<Shared.IntegrationEvents.PaymentFailed>()
+        .ToRabbitExchange(Shared.RabbitMqConstants.PaymentFailed.Exchange);
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Konvansiyonel keşif *EventHandlers sınıfını atlayabiliyor → açık kayıt (Stock emsali).
-    opts.Discovery.IncludeType(typeof(Payment.Api.PaymentEventHandlers));
 });
 
 builder.Services.AddApiVersioning(options =>
@@ -62,6 +80,31 @@ builder.Services.AddAgentLogoutClient(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
+// 077: hosted-CF ödeme yapılandırması (config[...] magic-string yasak → tip'li POCO + ValidateOnStart).
+builder.Services.AddOptions<PaymentOptions>().BindConfiguration(nameof(PaymentOptions))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<PaymentOptions>(sp => sp.GetRequiredService<IOptions<PaymentOptions>>().Value);
+// 077: Payment.Api makine token'ı (payment-s2s client_credentials) — Customer merchant-key S2S çağrısı.
+builder.Services.AddOptions<Payment.Api.Options.SagaAuth>().BindConfiguration(nameof(Payment.Api.Options.SagaAuth))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<Payment.Api.Options.SagaAuth>(sp => sp.GetRequiredService<IOptions<Payment.Api.Options.SagaAuth>>().Value);
+builder.Services.AddOptions<IdentityOption>().BindConfiguration(nameof(IdentityOption))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<IdentityOption>(sp => sp.GetRequiredService<IOptions<IdentityOption>>().Value);
+
+// 077: Customer merchant-key S2S makine token'ı (customer.read) + PG hosted-payment istemcisi.
+builder.Services.AddTransient<PaymentTokenHandler>();
+
+var customerHttpAddress = builder.Configuration["services:customer-api:https:0"]
+    ?? builder.Configuration["services:customer-api:http:0"]
+    ?? "https://customer-api";
+builder.Services
+    .AddHttpClient<MerchantKeyClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddHttpMessageHandler<PaymentTokenHandler>();
+
+// PG (dış DropShop) hosted-payment — X-Api-Key per-request (statik header YOK); tam URL istemcide (PgBaseUrl).
+builder.Services.AddHttpClient<PgHostedPaymentClient>();
+
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
     builder.AddRedisDistributedCache("redis");
@@ -83,10 +126,17 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapScalarDocumentation();
 
+var apiVersionSet = app.NewApiVersionSet()
+    .HasApiVersion(new ApiVersion(1, 0))
+    .ReportApiVersions()
+    .Build();
+
 app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
+// 077: hosted-CF S2S (intents/live, payment.write) + PG callback (HMAC, scope yok) uçları.
+app.AddPaymentIntentEndpoints(apiVersionSet);
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();

@@ -48,9 +48,9 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 |---|---|---|---|
 | `catalog` | catalogDb | Zengin `Product`+`Category`+`Author`+`Publisher`+`ProductTag`+`SpecificationAttribute` (kitap künyesi: çok-yazar + tek yayınevi); admin düzenleme + yayın anahtarı + fiyat geçmişi (058, append-only `ProductPriceChange`); korumalı `/mcp-admin` (070: 5 admin tool + `AdminActionLog` izi) | `specs/040-catalog-domain-extract` |
 | `basket` | basketDb | Kalıcı sepet + kalem; anonim sahiplik (057; login-merge yüzeyi söküldü, `MergeFrom` domain'de durur); stok tutmaz/süre yok (056), stok gerçeği checkout'ta; yüzey MCP-only + checkout gRPC | `specs/012-stock-reservation` |
-| `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Create/Confirm/Cancel; agent charge yolu (`place_order` — TEK ÇEKİM; taksit + PG A2A quote SÖKÜLDÜ, Google-Pay-like); Confirm'de `OrderCompleted` fanout (Reviews + Storefront tüketir) | `specs/028-checkout-saga` |
-| `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); CreateOrder→CommitStock→Charge→Confirm→ClearBasket; pivot=Charge, pivot-öncesi LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
-| `payment` | paymentDb | Ödeme (mock; kart alanı yok, yalnız Amount; tek-faz Charge) | — |
+| `order` | orderDb | Sipariş aggregate + yaşam döngüsü; orchestrator'dan broker Confirm/Cancel; hosted-CF ödeme yolu (`start_payment` — sepet+adres oku, Pending order, Payment S2S hosted link; 077); `PaymentSucceeded`→StartCheckout / `PaymentFailed`→Cancel tüketir; Confirm'de `OrderCompleted` fanout (Reviews + Storefront) | `specs/028-checkout-saga` |
+| `checkout` | checkoutDb | Broker-only checkout sağası (`CheckoutProcess`, ayrı servis); 077: ödeme öncedendir (hosted-CF) → CommitStock→Confirm→ClearBasket (Charge adımı SÖKÜLDÜ); StartCheckout OrderId dolu (`CheckoutId=OrderId`); CommittingStock'ta LIFO telafi + watchdog | `specs/049-checkout-orchestrator` |
+| `payment` | paymentDb | Hosted-CF ödeme (077): `PaymentIntent` (kart alanı yok); PG hosted link (`PgHostedPaymentClient`, MerchantKey S2S) + HMAC callback (`CallbackSecret` ayrı) → `PaymentSucceeded`/`PaymentFailed` fanout; terk-timer `ScheduleAsync`→Expire; TxRef unique idempotent | `specs/077-hosted-cf-payment` |
 | `stock` | stockDb | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; checkout düşümü broker'dan (056); admin artır/azalt + mutlak set (058); korumalı `/mcp-admin` (070: set/adjust tool + iz; `Adjust` domain guard'lı) | `specs/014-supplier-stock-authority` |
 | `storefront` | storefrontDb | Push-only read-model (`StorefrontView`); müşteri REST okuma yüzeyi (liste/facet/aile/harf-dizin/feed) SÖKÜLDÜ — okuma yolu asistan; `UserPurchase` birikimi sürer; asistan yüzeyi TEK tool `query_storefront` (069: salt-okur `storefront_sellable` view + `AgentSqlGuard` bekçi + kısıtlı DB rolü + `{{EMBED}}` anlamsal + `AgentQueryLog` izi; 070: sorgu rehberi/playbook KANONİK evi tool Description'ı, ChatAgent kopyası donduruldu; parametrik arama + `find_similar_books` SÖKÜLDÜ) | `specs/003-storefront-read-model` |
 | `customer` | customerDb | Wallet (tokenize kart, PAN yok; kart YAZMA yüzeyi yok — yalnız okuma + payment-context) + AddressBook; izole, event yok; korumalı `/mcp-admin` (070: merchant kimlik + PG onboarding sarmalayıcı — imperatif MCP istemcisi ANAYASA SAPMASI, tek slice) | `specs/022-wallet-address-book` |
@@ -89,8 +89,9 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 - **Müşteri yüzeyi MCP-only:** basket/order/payment/reviews/library/customer(cards+addresses)
   müşteri REST uçları + Commands/Queries ikizleri SÖKÜLDÜ — chat işlemleri yalnız MCP→`Features/Agents`
   slice'larından. **074: admin domain REST'i de söküldü (catalog/stock/customer-merchant + checkout POST)
-  — yüzey tümüyle MCP.** Kalan REST = S2S internal (payment-context, merchant-key) + auth (Identity OIDC) +
-  MCP-infra (PRM). Kalan senkron kontrat = checkout gRPC (basket). Eski "her aggregate REST penceresi"
+  — yüzey tümüyle MCP.** Kalan REST = S2S internal (merchant-key + adres varsayılan + 077 Payment intents/
+  callback) + auth (Identity OIDC) + MCP-infra (PRM). Kalan senkron kontrat = checkout gRPC (basket) + Order→
+  Payment hosted-link S2S (077). Eski "her aggregate REST penceresi"
   kuralı EMEKLİ. Gateway'de yalnız MCP/PRM rotaları (catalog REST proxy `catalog-route` de söküldü).
 - **ChatAgent MCP keşfi makine kimliğiyle:** açılışta ListTools `chat-agent-discovery` m2m token'ı taşır
   (061 korumalı transport'lar için; `DiscoveryTokenSource` + `TokenInjectingHandler` HttpContext-yok

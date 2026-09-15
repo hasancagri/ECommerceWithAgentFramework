@@ -123,8 +123,18 @@ public static class Config
             ClientSecret = "order-saga-secret",
             DisplayName = "Checkout saga (m2m)",
             AllowClientCredentials = true,
-            // 028/056: basket.write; 039: basket.read (kalem okuma) + customer.read (odeme baglami).
-            Scopes = ["basket.write", "basket.read", "customer.read"],
+            // 028/056: basket.write; 039: basket.read (kalem okuma) + customer.read (adres/odeme baglami);
+            // 077: payment.write (hosted-CF start_payment → Payment.Api link isteği S2S).
+            Scopes = ["basket.write", "basket.read", "customer.read", "payment.write"],
+        },
+        // 077: Payment.Api m2m — hosted-CF link isteği/callback arka planda Customer merchant-key okur.
+        new ClientSeed
+        {
+            ClientId = "payment-s2s",
+            ClientSecret = "payment-s2s-secret",
+            DisplayName = "Payment S2S (m2m)",
+            AllowClientCredentials = true,
+            Scopes = ["customer.read"],
         },
         // 048: WebApp davranış-sinyali gönderimi m2m — anonim gezinme user token taşımaz,
         // WebApp client_credentials ile personalization.ingest talep eder (BFF telemetri iletici).
@@ -181,7 +191,7 @@ public static class Config
             [
                 "openid", "profile",
                 "basket.read", "basket.write", "order.read", "order.write",
-                "customer.read", "payment.read", "storefront.read",
+                "customer.read", "customer.write", "payment.read", "storefront.read",
             ],
         },
         // 073: fasad keşif (ListTools) makine kimliği — client_credentials, salt audience üretimi

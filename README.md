@@ -1,66 +1,66 @@
-# ECommerce with Agent Framework
+# Agent Framework ile E-Ticaret
 
-> An event-driven, Domain-Driven microservices e-commerce platform with a built-in AI shopping agent — orchestrated end-to-end with .NET Aspire.
+> Olay-güdümlü, Domain-Driven mikroservis e-ticaret platformu — müşteri yüzeyi tamamen **kendi getirdiğin AI istemcisi** (Claude Desktop vb.) üzerinden, uçtan uca **.NET Aspire** ile orkestre.
 
 <p>
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
-  <img alt="Aspire" src="https://img.shields.io/badge/.NET_Aspire-orchestration-512BD4">
+  <img alt="Aspire" src="https://img.shields.io/badge/.NET_Aspire-orkestrasyon-512BD4">
   <img alt="Marten" src="https://img.shields.io/badge/Marten-document%2Fevent_store-16a34a">
   <img alt="Wolverine" src="https://img.shields.io/badge/Wolverine-CQRS%20%2B%20messaging-0ea5e9">
-  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-per--service-4169E1?logo=postgresql&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-servis_başına-4169E1?logo=postgresql&logoColor=white">
   <img alt="RabbitMQ" src="https://img.shields.io/badge/RabbitMQ-integration_events-FF6600?logo=rabbitmq&logoColor=white">
   <img alt="OpenIddict" src="https://img.shields.io/badge/OpenIddict-OIDC%2FOAuth-512BD4">
   <img alt="YARP" src="https://img.shields.io/badge/YARP-gateway-blueviolet">
-  <img alt="MCP" src="https://img.shields.io/badge/MCP-tool_server%2Fclient-9333ea">
-  <img alt="A2A" src="https://img.shields.io/badge/A2A-agent--to--agent-e11d48">
-  <img alt="Microsoft Agent Framework" src="https://img.shields.io/badge/Microsoft_Agent_Framework-AI_agent-2563eb">
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-tek_müşteri_fasadı-9333ea">
+  <img alt="Microsoft Agent Framework" src="https://img.shields.io/badge/Microsoft_Agent_Framework-AI_worker-2563eb">
+  <img alt="pgvector" src="https://img.shields.io/badge/pgvector-semantik_arama-16a34a">
 </p>
 
-## Overview
+## Genel Bakış
 
-This is a full **microservices e-commerce backend** where every service is an isolated **bounded context** with its own database, and cross-context communication happens only through **integration events**, the **Model Context Protocol (MCP)**, and — where a step needs an immediate yes/no or a hand-off between contexts — sanctioned **typed gRPC** (stock reservation) and **broker command/reply** (the checkout saga). Around the core sit two AI agent applications, both on the **Microsoft Agent Framework**:
+Her servisin kendi veritabanına sahip, izole bir **bounded context** olduğu tam bir **mikroservis e-ticaret backend'i**. Context'ler arası iletişim yalnızca **integration event**, **Model Context Protocol (MCP)** ve — bir adımın anlık evet/hayır ya da context'ler arası devir gerektirdiği yerde — sanksiyonlu **tipli gRPC** (stok rezervi), **broker command/reply** (checkout sağası) ve **servisten-servise (S2S) çağrı** (Order → Payment hosted ödeme linki) üzerindendir.
 
-- **ChatAgent** — an AI shopping assistant that acts as an **MCP client**: it browses the catalog, manages a basket, and reviews a user's orders and payments by calling each service's MCP tools with that user's token. Via the **Agent2Agent (A2A)** protocol it delegates installment quotes to a **remote payment agent living in a separate solution**, passing only the cart total and the default card's non-sensitive **BIN** — never the PAN, CVV, or token.
-- **Reviews Moderation Agent** — a **stateless broker worker** that moderates product reviews with an LLM (structured JSON, temperature 0, no MCP). It consumes a `ReviewModerationRequested` event, classifies the text, and replies with `ReviewModerated` — the Reviews context itself holds zero agent-framework code, keeping the moderation model behind an event boundary.
+Bu proje **agent-only / BYO-agent** duruşundadır: mağaza **ne görsel ekran ne de kendi sohbet agent'ını** host eder. Müşteri **kendi AI istemcisiyle** (Claude Desktop vb.) tek MCP fasadına bağlanır; işlemler alt bounded context'lerin MCP tool'larına, çağıran kullanıcının token'ıyla proxy'lenir. İki AI agent worker'ı çekirdeğin çevresinde durur, ikisi de **Microsoft Agent Framework** üzerinde:
 
-The catalog is **first-party**: the store owns its inventory, so product entry is plain product CRUD (an earlier multi-supplier ingestion pipeline was intentionally dismantled). New products flow `Catalog → Stock` (initial on-hand) and `Catalog → Storefront` (read-model) over integration events.
+- **Reviews Moderation Agent** — ürün yorumlarını LLM ile moderasyon eden **durumsuz broker worker'ı** (structured JSON, sıcaklık 0, MCP yok). `ReviewModerationRequested` event'ini tüketir, metni sınıflar, `ReviewModerated` ile yanıtlar — Reviews context'i sıfır agent-framework kodu taşır, moderasyon modeli bir olay sınırının ardında kalır.
+- **Notification Agent** — fiyat alarmı e-postası yazan **durumsuz worker** (DB yok). `PriceAlarmTriggered`'ı tüketir, tek LLM çağrısıyla maili yazar ve **Mail.Mcp**'nin `send_mail` tool'unu çağırır, `NotificationSent` yayınlar.
 
-It's a portfolio / learning project built to demonstrate how far you can push **DDD, CQRS, and event-driven design** in real .NET code — and how a modern LLM agent plugs into that architecture cleanly, without leaking business logic into the agent layer.
+Katalog **first-party**'dir: mağaza envanterin sahibidir, ürün girişi düz ürün-CRUD'dur (eski çok-tedarikçili besleme hattı bilinçli olarak söküldü). Yeni ürünler `Catalog → Stock` (ilk stok) ve `Catalog → Storefront` (read-model) yönünde integration event akar.
 
-## What this project demonstrates
+DDD, CQRS ve olay-güdümlü tasarımın gerçek .NET kodunda ne kadar ileri taşınabileceğini — ve modern bir LLM agent'ının bu mimariye iş mantığını agent katmanına sızdırmadan nasıl temiz eklendiğini — göstermek için kurulmuş bir portföy / öğrenme projesidir.
 
-- **Bounded-context isolation** — ten database-owning bounded contexts, each with its own PostgreSQL database and Marten schema, plus a gateway, two agent workers, and a web UI. No shared domain model; the same concept (e.g. *Product*) is modeled differently in each context — a rich aggregate in Catalog, a plain basket-item entity in Basket, a read-model row in Storefront.
-- **Rich aggregates & enforced invariants** — business rules live inside aggregates (private collections, behavior methods), not in handlers. Illegal states are unrepresentable.
-- **Vertical Slice + CQRS** — code is organized by feature, not by technical layer. Writes and reads are separate slices; no repositories — handlers use Marten's `IDocumentSession` directly.
-- **Result pattern over exceptions** — expected failures (not-found, validation, rule violations) flow through typed `Result` objects; exceptions are reserved for the truly unexpected.
-- **Scope-based authorization** — identity issued by OpenIddict + ASP.NET Identity; services authorize on OAuth **scopes** (no roles), enforced on HTTP endpoints *and* on Wolverine message handlers.
-- **Agent-only storefront** — the customer-facing web screens (home/storefront, product list & detail, category/author/publisher indexes, basket, checkout, account) were **intentionally removed (066)**: the store root (`/`) *is* the shopping assistant, and every customer action (search, basket, order, address, review, price alarm) runs through the ChatAgent's MCP tools. The WebApp keeps only **admin** (product editing + merchant onboarding), **login/OIDC**, the **chat** surface, and its BFF proxy — anonymous storefront browsing and SEO are deliberately traded away for an agent-first posture. The storefront read model and hybrid search below still exist; they are now surfaced **through the agent**, not a web page.
-- **Push-only read model** — the `storefront` service maintains a product-centric composite view (catalog + stock + review summary) fed purely by integration events on a **single sequential queue** — no outbound calls, no backfill. A fat `ProductChangedEvent` carries name, description, authors + publisher, category ids+names, price, so one read renders a full card with stock badges. The view filters by dynamic **category & author** (AND-combinable; facet options derive from the same view, so empty categories never appear) — consumed by the agent's `search_storefront_products` tool (plus an anonymous REST twin).
-- **Variant families** — the storefront groups existing products sharing a `familyCode` into one card plus a derived-axis selector (no combinatorial generation) — the feed field flows through the same push-only view.
-- **Hybrid product search (filters + semantic, via chat)** — the storefront exposes a single `search_storefront_products` MCP tool (plus an anonymous REST twin): optional author-OR / price-range / min-stock filters combined with a natural-language `searchText`. Embeddings (`text-embedding-3-small`) are produced on `ProductChangedEvent` only when the search text's hash actually changed, stored as a side document in **pgvector**-enabled `storefrontDb`, and queried with a raw cosine-distance SQL join — filters stay hard, ranking is semantic, and an embedding outage never blocks the view write or filter-only search. No `searchText` → Marten LINQ over sellable rows with a pure, unit-testable filter core (deterministic `Name ASC`); with `searchText` → hand-written SQL, because top-K + similarity-threshold must run *in the database*. The query vector travels as a **text parameter** with a server-side `::vector(1536)` cast (immune to Npgsql's pg_type cache race), every user value is a bound parameter, and an `INNER JOIN` on the embedding side-table makes "no embedding → not ranked" structural rather than conditional.
-- **Verified-purchase reviews with model-behind-a-boundary moderation** — the `reviews` context accepts a 1–5★ review only from a buyer who actually purchased the product; eligibility is projected locally from an `OrderCompleted` integration event (a `PurchasedProduct` read model), not a synchronous call. AI moderation runs **out-of-band** in a separate broker worker (`ReviewModerationRequested → LLM → ReviewModerated`); a rating summary event flows on to Storefront.
-- **Saved cards & addresses with PCI-safe tokenization** — a `customer` bounded context holds each user's **Wallet** (saved cards) and **AddressBook**, two aggregates keyed by user id with a "≤1 default" invariant. Raw PAN/CVV are **never persisted, logged, evented, or exposed** — `AddCard` passes them to a tokenizer and stores only a token + brand + last4 + BIN + expiry. MCP exposes **read-only** tools (`list_cards` / `list_addresses`) — there is deliberately no add-card tool. In chat checkout the user **selects** a saved address and card, defaulting to the marked-default of each (card add/remove stays out of the store — a PSP/ACP concern).
-- **Cross-agent delegation over A2A (installment quotes)** — ChatAgent is also an **Agent2Agent client**: for installment options it resolves the cart total (`get_basket`) and the default card's **BIN** (`get_default_card_bin`), then delegates to a **remote payment agent** in a *separate* solution. It discovers the agent from its `/.well-known/agent-card.json`, verifies the advertised `installment_quote` skill, and wraps it as a callable tool (`AsAIFunction`). The boundary is **PCI-clean** (only amount + non-sensitive BIN cross the wire) and **fail-open** (unconfigured/unreachable → the tool just isn't added, everything else keeps working).
-- **Durable checkout orchestration (broker-only saga)** — checkout is a **standalone `Checkout.Orchestrator` service** running a Wolverine durable saga (state in Marten, keyed by `CheckoutId`); every step is an async RabbitMQ **command/reply**, so each context stays isolated behind its own queue. The sequence is `CreateOrder → CommitStock (per item) → Charge → Confirm → ClearBasket`. A **pivot rule** splits the timeline at **Charge** (single-phase capture, the last reversible line): everything *before* is compensatable (LIFO stock revert + order cancel — no money has moved), everything *after* is forward-only. A scheduled `CheckoutTimedOut` **watchdog** compensates a run that stalls before the pivot. The same durable-scheduling primitive retires cron: basket-reservation expiry is a Wolverine **`ScheduleAsync`** message that fires `ReservationExpired`, not a polling sweep.
-- **AI agent as a first-class client** — each service exposes its Wolverine commands/queries as MCP tools; ChatAgent consumes them per-user. MCP tools are thin wrappers — zero business-logic duplication.
-- **Declarative, cross-cutting caching** — read queries are cached with a single `[Cached(...)]` attribute via an `IMessageBus` decorator over HybridCache (L1 in-memory + optional Redis L2). Handlers stay untouched.
-- **Product analytics** — the web UI ships a key-gated **PostHog** browser snippet (pageviews, autocapture, session replay) — a write-only client key from user-secrets; absent key → snippet simply isn't emitted.
-- **One-command orchestration** — .NET Aspire spins up every service, gateway, Postgres, RabbitMQ, and Redis with service discovery and connection-string injection.
-- **Spec-driven development** — non-trivial features go through a GitHub spec-kit flow (spec → plan → tasks → implement) governed by a project constitution.
+## Bu proje neyi gösteriyor
 
-## Architecture
+- **Bounded-context izolasyonu** — kendi PostgreSQL veritabanı + Marten şeması olan on bir DB-sahibi bounded context, artı YARP gateway, tek müşteri MCP fasadı ve iki agent worker'ı. Paylaşılan domain modeli yok; aynı kavram (*Ürün*) her context'te farklı modellenir — Catalog'da zengin aggregate, Basket'te düz sepet-kalemi, Storefront'ta read-model satırı.
+- **Zengin aggregate'ler ve zorunlu invariant'lar** — iş kuralları handler'da değil aggregate'in içinde yaşar (private koleksiyon, davranış metotları). Geçersiz durumlar temsil edilemez.
+- **Vertical Slice + CQRS** — kod teknik katmana değil feature'a göre örgütlenir. Yazma/okuma ayrı slice'lar; repository yok — handler doğrudan Marten `IDocumentSession` kullanır.
+- **Exception yerine Result pattern** — beklenen hatalar (bulunamadı, doğrulama, kural ihlali) tipli `Result` nesneleriyle akar; exception yalnız gerçekten beklenmeyene ayrılır.
+- **Scope-tabanlı yetkilendirme** — kimlik OpenIddict + ASP.NET Identity ile verilir; servisler OAuth **scope**'larına göre yetkilendirir (rol downstream'e sızmaz), hem HTTP uçlarında hem Wolverine mesaj handler'larında.
+- **Agent-only müşteri yüzeyi (tek MCP fasadı, 073)** — tüm müşteri ekranları ve mağazanın kendi ChatAgent'ı **bilinçli söküldü**. Müşteri kendi AI istemcisiyle **mcp-gateway** fasadına bağlanır: tek `/mcp` (müşteri) + tek `/mcp-admin` (yönetim), tek login. Tool'lar alt BC `/mcp`'lerinden LAZY toplanır, çağrı sahibine kullanıcı token'ıyla proxy'lenir.
+- **Dış agent MCP OAuth (061)** — kullanıcının kendi AI agent'ı MCP uçlarına **OAuth 2.1** ile bağlanır: RFC 7591 **DCR** (istemci kendini kaydeder), RFC 9728 **PRM** keşfi, tek **consent** sayfası (Explicit), refresh token ile ekransız süreklilik, revocation. `basket/order/customer/payment` MCP korumalı; `storefront/catalog/stock` anonim gezinme için açık kalır.
+- **MCP'de admin yüzeyi (070)** — `catalog/stock/customer` ikinci korumalı `/mcp-admin` ucu açar (anonim keşif seti değişmez; tool seti oturum açılışında açık allowlist ile budanır). Her admin yazma BC'sinde salt-append `AdminActionLog` izi.
+- **Push-only read model + asistan sorgu yüzeyi** — `storefront` servisi katalog + stok + yorum özetini birleştiren ürün-merkezli görünümü **tek sıralı kuyruk**ta tüketilen integration event'lerle kurar (dışa çağrı/backfill yok). Müşteri okuma yüzeyi tek tool: `query_storefront` (069) — salt-okur `storefront_sellable` view + `AgentSqlGuard` bekçisi + kısıtlı DB rolü + `{{EMBED}}` semantik yerleştirme + `AgentQueryLog` izi.
+- **Semantik arama (pgvector)** — `text-embedding-3-small` embedding'leri yalnız arama metninin hash'i değiştiğinde `ProductChangedEvent`'te üretilir, `storefrontDb`'de yan doküman olarak saklanır, ham kosinüs-mesafe SQL join ile sorgulanır. Embedding kesintisi view yazımını ya da filtre-only aramayı bloklamaz.
+- **Satın-alma şartlı yorum + sınır-ardı moderasyon** — `reviews` context'i yalnız ürünü gerçekten satın alan kullanıcıdan 1–5★ yorum kabul eder; hak, `OrderCompleted` event'inden yerel projeksiyonla belirlenir (senkron çağrı değil). AI moderasyon ayrı broker worker'da çalışır; puan özeti Storefront'a akar.
+- **Hosted-CF ödeme (077)** — kart alanı sistemden geçmez. Payment BC bir **hosted ödeme linki** üretir (PG hosted sayfası), müşteri orada öder, PG **HMAC-imzalı callback** ile döner → `PaymentSucceeded`/`PaymentFailed` fanout. Terk-timer (`ScheduleAsync`) callback gelmezse Expire eder; `TxRef` unique olduğu için idempotent.
+- **Dayanıklı checkout orkestrasyonu (broker-only saga)** — checkout, kendi `Checkout.Orchestrator` servisinde Wolverine dayanıklı sağası olarak çalışır (durum Marten'de, `CheckoutId` anahtarlı). 077'de ödeme öncedendir → saga yalnız `CommitStock → Confirm → ClearBasket` sürer (Charge adımı söküldü). `CommittingStock`'ta stok başarısızsa LIFO telafi + takılan koşu için watchdog.
+- **Fiyat alarmı + bildirim** — `library` context'i kullanıcı-ürün ilgi kayıtlarını ve yaşayan fiyat alarmı aboneliklerini tutar; `ProductChangedEvent.OldPrice` tetiğiyle alarm başına `PriceAlarmTriggered` yayınlar; Notification Agent maili üretir.
+- **Bildirimsel, kesişen caching** — okuma sorguları tek `[Cached(...)]` attribute'uyla, HybridCache üzerine `IMessageBus` decorator'ıyla önbelleklenir (L1 bellek-içi + opsiyonel Redis L2). Handler'lar dokunulmadan kalır.
+- **Tek komutla orkestrasyon** — .NET Aspire her servisi, gateway'i, Postgres, RabbitMQ ve Redis'i service discovery + connection-string enjeksiyonuyla ayağa kaldırır.
+- **Spec-driven development** — önemsiz olmayan feature'lar GitHub spec-kit akışıyla (spec → plan → tasks → implement), proje anayasasının yönetiminde geliştirilir.
+
+## Mimari
 
 ```mermaid
 flowchart TB
-    subgraph Client
-        Web["WebApp (Razor Pages: admin + login + agent chat root)"]
+    subgraph Client["Müşteri (mağaza dışı)"]
+        AIClient["Kendi AI istemcisi<br/>(Claude Desktop vb.)"]
     end
 
-    Web -->|HTTP| GW["Gateway (YARP)"]
-    Web -->|chat proxy| Agent["ChatAgent<br/>(Microsoft Agent Framework)"]
-    Web -.->|analytics| PostHog["PostHog (browser snippet)"]
+    AIClient -->|"OAuth 2.1 login + consent"| IdP["Identity.Server<br/>(OpenIddict OIDC/OAuth + ASP.NET Identity)"]
+    AIClient -->|"MCP (/mcp müşteri, /mcp-admin yönetim)"| Facade["mcp-gateway<br/>(tek müşteri MCP fasadı, DB'siz proxy)"]
 
-    Agent -->|MCP tools, per-user token| GW
+    Facade -->|"ad→BC token-forward, kullanıcı token'ı"| GW["Gateway (YARP)"]
 
     GW --> Catalog["catalog-api"]
     GW --> Basket["basket-api"]
@@ -70,227 +70,204 @@ flowchart TB
     GW --> Storefront["storefront-api"]
     GW --> Customer["customer-api"]
     GW --> Reviews["reviews-api"]
-    GW --> Checkout["checkout-orchestrator"]
+    GW --> Library["library-api"]
+    GW -.->|JWT bearer / scope| IdP
 
-    IdP["Identity.Server (OpenIddict OIDC/OAuth + ASP.NET Identity)"]
-    GW -.->|JWT bearer / scopes| IdP
-    Agent -.->|user token| IdP
+    Order -->|"S2S: hosted ödeme linki iste"| Payment
+    Payment -->|"hosted link"| PG["Dış PG hosted ödeme sayfası"]
+    PG -->|"HMAC-imzalı callback"| Payment
 
-    RemotePay["Remote PaymentAgent<br/>(separate solution,<br/>A2A server)"]
-    Agent -->|A2A: installment_quote<br/>amount + card BIN only| RemotePay
-
-    Catalog & Basket & Order & Stock & Payment & Storefront & Customer & Reviews -->|integration events| MQ["RabbitMQ (fanout exchanges + command queues)"]
-    MQ -->|single sequential queue| Storefront
-    MQ -->|command / reply| Checkout
-    Checkout -->|CreateOrder / Confirm / Cancel<br/>CommitStock / Charge / ClearBasket| MQ
+    Catalog & Basket & Order & Stock & Payment & Storefront & Customer & Reviews & Library -->|integration events| MQ["RabbitMQ (fanout exchange + command kuyrukları)"]
+    Payment -->|"PaymentSucceeded / PaymentFailed"| MQ
+    MQ -->|"PaymentSucceeded→StartCheckout / PaymentFailed→Cancel"| Order
+    MQ -->|tek sıralı kuyruk| Storefront
+    MQ -->|command / reply| Checkout["checkout-orchestrator"]
+    Checkout -->|"CommitStock / Confirm / ClearBasket"| MQ
 
     Reviews -->|ReviewModerationRequested| MQ
-    MQ -->|LLM moderate| ReviewsMod["reviews-moderation-agent<br/>(stateless broker worker)"]
+    MQ -->|LLM moderate| ReviewsMod["reviews-moderation-agent<br/>(durumsuz broker worker)"]
     ReviewsMod -->|ReviewModerated| MQ
 
+    Library -->|PriceAlarmTriggered| MQ
+    MQ -->|LLM compose| Notif["notification-agent<br/>(durumsuz worker)"]
+    Notif -->|"send_mail"| MailMcp["mail-mcp<br/>(standalone MCP server)"]
+    MailMcp -->|SMTP| Mailpit["Mailpit"]
+
     Basket -->|gRPC reserve| Stock
-    Order -->|"gRPC basket items (chat order)"| Basket
+    Order -->|"gRPC sepet kalemleri"| Basket
 
     Catalog --> DB1[("catalogDb")]
     Basket --> DB2[("basketDb")]
     Order --> DB3[("orderDb")]
     Stock --> DB4[("stockDb")]
     Payment --> DB5[("paymentDb")]
-    Storefront --> DB6[("storefrontDb")]
+    Storefront --> DB6[("storefrontDb + pgvector")]
     Customer --> DB7[("customerDb")]
     Reviews --> DB8[("reviewsDb")]
     Checkout --> DB9[("checkoutDb")]
+    Library --> DB10[("libraryDb")]
+    IdP --> DB11[("identityDb")]
 
     Storefront -.->|L2 cache| Redis[("Redis")]
 ```
 
-Each service is a self-contained bounded context. Synchronous read/write traffic goes **client → YARP gateway → service**, secured by JWT bearer tokens with OAuth scopes issued by Identity.Server. State changes are published as **integration events** over RabbitMQ fanout exchanges; the `storefront` read model is built entirely by consuming those events on a **single sequential queue** (structurally eliminating concurrent writes to the same composite row). The **ChatAgent** reaches the services' MCP endpoints through the gateway, injecting the calling user's token at invocation time so the agent acts *as that user*.
+Her servis kendi kendine yeten bir bounded context'tir. Senkron okuma/yazma trafiği **YARP gateway → servis** üzerinden gider; Identity.Server'ın verdiği OAuth scope'lu JWT bearer token'larla korunur. Durum değişiklikleri RabbitMQ fanout exchange'lerinde **integration event** olarak yayınlanır; `storefront` read modeli tamamen bu event'leri **tek sıralı kuyruk**ta tüketerek kurulur (aynı birleşik satıra eşzamanlı yazımı yapısal olarak eler).
 
-Two cross-context channels are sanctioned beyond events. **Stock reservation** runs over a typed **gRPC** contract (`Shared/Protos`): Basket calls Stock synchronously at add-to-cart (fail-closed — no reservation, no add), on-hand stock is authoritative in Stock itself, and a reservation is only turned into a decrement when the checkout saga commits it. **Checkout** runs as a **broker command/reply saga** hosted in its own `Checkout.Orchestrator` service: the web endpoint (or the chat order path) publishes `StartCheckout`, and the orchestrator drives Order, Stock, Payment, and Basket through their command queues (stock commit, charge, confirm, basket clear), each replying to a single correlation-keyed reply queue.
+Müşteri hiçbir mağaza ekranı açmaz: **kendi AI istemcisiyle** `mcp-gateway` fasadına bağlanır. Fasad, alt BC `/mcp` uçlarındaki tool'ları LAZY toplar (SDK `WithListToolsHandler`/`WithCallToolHandler`), tool adına göre sahip BC'ye çağrıyı **kullanıcı token'ıyla** proxy'ler (`PerUserMcpTool` server ikizi) — agent *o kullanıcı olarak* davranır.
 
-## Tech Stack
+Olaylar dışında iki senkron kanal sanksiyonludur. **Stok rezervi** tipli **gRPC** kontratı (`Shared/Protos`) üzerindedir: Basket sepete-eklemede Stock'u senkron çağırır (fail-closed). **Order → Payment hosted ödeme linki** ise **servisten-servise** çağrıdır (kart alanı LLM'e/mesaja sızmaz). **Checkout** kendi `Checkout.Orchestrator` servisinde **broker command/reply** sağası olarak çalışır.
 
-| Area | Technology |
+## Ödeme + sipariş akışı (077, hosted-CF)
+
+Müşteri hiçbir ekrana dokunmadan, sohbetten uçtan uca ödeyip sipariş verir — ama kart verisi asla LLM'e teslim edilmez:
+
+1. **Ödeme başlat** — müşteri (AI istemcisi → mcp-gateway) `start_payment`'ı tetikler (Order.Api agent slice'ı). Order sepeti (Basket gRPC, sunucu-yetkili) + adresi okur, **Pending** bir sipariş yaratır ve Payment'tan **S2S** ile hosted ödeme linki ister.
+2. **Hosted ödeme** — Payment bir `PaymentIntent` yaratır (kart alanı yok), PG hosted linkini (`PgHostedPaymentClient`, `MerchantKey` S2S) üretir; müşteri PG'nin hosted sayfasında öder.
+3. **Callback** — PG, ayrı `CallbackSecret` ile **HMAC-imzalı** callback döner; Payment doğrular → `PaymentSucceeded` veya `PaymentFailed` yayınlar. `TxRef` unique olduğu için idempotent; callback gelmezse terk-timer (`ScheduleAsync`) Expire eder.
+4. **Saga tetiği** — Order `PaymentSucceeded`'ı tüketir → `StartCheckout` yayınlar (`CheckoutId = OrderId`) / `PaymentFailed` → siparişi Cancel eder.
+5. **Checkout sağası** — `Checkout.Orchestrator` `CommitStock (kalem başına) → Confirm → ClearBasket` sürer (ödeme önceden olduğu için Charge adımı yok). Stok başarısızsa LIFO telafi + watchdog.
+6. **Tamamlanma** — Order `Confirm`'de `OrderCompleted` fanout eder (Reviews yorum-hakkı + Storefront `UserPurchase`).
+
+Neden ödeme hosted + S2S: `paymentId` başarı kanıtı değildir; halüsine bir "başarılı" bedava sipariş demektir. O yüzden ödeme dış PG'nin hosted sayfasında olur, doğrulama HMAC callback ile **sunucu tarafında**dır; LLM yalnız akışı başlatır. Kart ekleme/çıkarma sohbette **reddedilir** (güvenlik) — kart mağazanın işi değil (PSP sorumluluğu).
+
+## Teknoloji Yığını
+
+| Alan | Teknoloji |
 |------|-----------|
-| Runtime | .NET 10, C# (nullable + implicit usings) |
-| Orchestration | .NET Aspire (AppHost + ServiceDefaults) |
-| Persistence | Marten (PostgreSQL as document / event store) |
-| In-process bus & messaging | Wolverine (CQRS bus + RabbitMQ integration messaging + durable sagas) |
-| Messaging transport | RabbitMQ (fanout exchanges + command/reply queues) |
-| Caching | HybridCache (L1 in-memory + optional Redis L2), AOP decorator |
-| Identity & AuthZ | OpenIddict + ASP.NET Identity (OIDC/OAuth, scope-based) |
-| API Gateway | YARP (with Aspire service discovery) |
-| Sync RPC | gRPC (stock reservation, basket items/clear — shared proto contracts) |
-| AI Agents | Microsoft Agent Framework + Microsoft.Extensions.AI (OpenAI), MCP |
-| Cross-agent protocol | Agent2Agent (A2A) — `Microsoft.Agents.AI.A2A` client to a remote payment agent |
-| UI & analytics | ASP.NET Core Razor Pages + PostHog browser analytics |
-| DI | Scrutor (convention-based auto-registration) |
-| Testing | xUnit + Shouldly (pure domain unit tests) |
+| Çalışma zamanı | .NET 10, C# (nullable + implicit usings) |
+| Orkestrasyon | .NET Aspire (AppHost + ServiceDefaults) |
+| Kalıcılık | Marten (PostgreSQL document / event store) |
+| Bus & messaging | Wolverine (CQRS bus + RabbitMQ messaging + dayanıklı saga) |
+| Messaging transport | RabbitMQ (fanout exchange + command/reply kuyrukları) |
+| Caching | HybridCache (L1 bellek + opsiyonel Redis L2), AOP decorator |
+| Kimlik & yetki | OpenIddict + ASP.NET Identity (OIDC/OAuth, scope-tabanlı) + RFC 7591 DCR |
+| API Gateway | YARP (Aspire service discovery ile) |
+| Müşteri yüzeyi | Tek MCP fasadı (`mcp-gateway`) — dış AI istemcisi tüketir |
+| Senkron RPC | gRPC (stok rezervi, sepet kalemleri — paylaşılan proto kontratları) |
+| AI agent'lar | Microsoft Agent Framework + Microsoft.Extensions.AI (OpenAI), MCP |
+| Semantik arama | pgvector (`text-embedding-3-small`) |
+| DI | Scrutor (konvansiyon-tabanlı otomatik kayıt) |
+| Test | xUnit + Shouldly (saf domain birim testleri) |
 
-## Services
+## Servisler
 
-| Project | Responsibility |
+| Proje | Sorumluluk |
 |---------|----------------|
-| `catalog-api` | Rich `Product` + `Category` + `Author` + `Publisher` + tags + specification attributes (book metadata: multi-author, single publisher). First-party product write path |
-| `basket-api` | User baskets and items; synchronous gRPC stock reservation (fail-closed) |
-| `order-api` | Order aggregate + lifecycle; broker-driven `Create/Confirm/Cancel` from the checkout orchestrator; chat order path (charge → `StartCheckout`); `OrderCompleted` on confirm |
-| `stock-api` | `ProductStock` (on-hand); initial stock from `ProductLinked`; gRPC reservation server |
-| `payment-api` | Payment (mock, single-phase charge; amount only — no card fields) |
-| `storefront-api` | Push-only composite read model (catalog + stock + review summary); facets, variant families, hybrid filter+semantic search |
-| `customer-api` | Wallet (tokenized cards — no PAN/CVV; stores non-sensitive BIN) + AddressBook + `MerchantInformation` (gateway key) |
-| `reviews-api` | Verified-purchase reviews (1–5★); purchase proof via `OrderCompleted` event; AI moderation delegated to a separate worker; rating summary event to Storefront |
-| `checkout-orchestrator` | Standalone broker-only checkout saga (`checkoutDb`): `CreateOrder → CommitStock → Charge → Confirm → ClearBasket`, pivot = Charge, LIFO compensation + watchdog |
-| `gateway` | YARP reverse proxy / single entry point |
-| `identity-server` | OpenIddict + ASP.NET Identity — OIDC/OAuth authority + RBAC (roles map to scopes) |
-| `chat-agent` | AI shopping assistant — MCP client over the gateway + A2A client to the remote payment agent |
-| `reviews-moderation-agent` | Stateless broker worker — `ReviewModerationRequested → LLM (structured JSON) → ReviewModerated`; no database, no MCP |
-| `ecommerce-web` | Agent-only Razor Pages UI — root (`/`) is the shopping assistant chat; keeps admin (product editing + onboarding) + login/OIDC + chat proxy BFF + PostHog. Customer browsing/basket/checkout/account screens removed (066) |
+| `catalog-api` | Zengin `Product` + `Category` + `Author` + `Publisher` + tag + spesifikasyon (kitap künyesi: çok-yazar, tek yayınevi); first-party ürün yazımı + admin düzenleme + fiyat geçmişi; korumalı `/mcp-admin` |
+| `basket-api` | Kalıcı sepet + kalem; anonim sahiplik; stok tutmaz; yüzey MCP-only + checkout gRPC |
+| `order-api` | Sipariş aggregate + yaşam döngüsü; `start_payment` (sepet+adres oku, Pending sipariş, Payment S2S hosted link); `PaymentSucceeded→StartCheckout` / `PaymentFailed→Cancel`; Confirm'de `OrderCompleted` fanout |
+| `stock-api` | `ProductStock` (OnHand); ilk stok `ProductLinked`'ten; checkout düşümü broker'dan; gRPC rezerv sunucusu; korumalı `/mcp-admin` |
+| `payment-api` | Hosted-CF ödeme (077): `PaymentIntent` (kart alanı yok); PG hosted link + HMAC callback → `PaymentSucceeded`/`PaymentFailed`; terk-timer; `TxRef` unique idempotent |
+| `storefront-api` | Push-only birleşik read model (katalog + stok + yorum özeti); tek asistan tool `query_storefront` (`AgentSqlGuard` + kısıtlı DB rolü + pgvector semantik + `AgentQueryLog`) |
+| `customer-api` | Wallet (tokenize kart, PAN yok; kart YAZMA yüzeyi yok — salt okuma + payment-context) + AddressBook + `MerchantInformation`; korumalı `/mcp-admin` (merchant kimlik + PG onboarding) |
+| `reviews-api` | Satın-alma şartlı yorum (1–5★); hak `OrderCompleted` event'inden; AI moderasyon ayrı worker'a; puan özeti Storefront'a |
+| `library-api` | Kullanıcı-ürün ilgi kayıtları + yaşayan fiyat alarmı aboneliği (email snapshot) + `NotificationRecord`; `ProductChangedEvent.OldPrice` tetiği → `PriceAlarmTriggered` |
+| `checkout-orchestrator` | Standalone broker-only checkout sağası (`checkoutDb`): `CommitStock → Confirm → ClearBasket`; LIFO telafi + watchdog (ödeme öncedendir) |
+| `gateway` | YARP reverse proxy / tek giriş (MCP + PRM rotaları) |
+| `identity-server` | OpenIddict + ASP.NET Identity — OIDC/OAuth authority + RBAC (rol = scope demeti) + RFC 7591 DCR + consent + revocation |
+| `mcp-gateway` | Tek müşteri MCP fasadı (DB'siz proxy); alt BC `/mcp`'lerini LAZY toplar, ad→BC token-forward proxy; tek `/mcp` (müşteri) + `/mcp-admin` (yönetim), tek login |
+| `reviews-moderation-agent` | Durumsuz broker worker — `ReviewModerationRequested → LLM (structured JSON) → ReviewModerated`; DB yok, MCP yok |
+| `notification-agent` | Durumsuz worker — `PriceAlarmTriggered → LLM compose → Mail.Mcp send_mail → NotificationSent`; DB yok |
+| `mail-mcp` | İlk standalone MCP server; tek tool `send_mail` (MailKit → Mailpit); yalnız Notification Agent tüketir |
 
-Shared foundations live under `src/others`: `Common` (domain building blocks, results, caching), `Shared` (integration-event contracts + gRPC protos), and `Identity.Server`.
+Paylaşılan temeller `src/others` altında: `Common` (domain yapı taşları, result, caching), `Shared` (integration-event kontratları + gRPC protolar) ve `Identity.Server`.
 
-## Key Design Decisions
+## Öne Çıkan Tasarım Kararları
 
-- **A microservice = a bounded context.** The boundary is physical and hard: separate database, separate schema, separate domain model. Services never share a database or leak one context's model into another.
-- **Aggregates own their invariants.** New rules go on the aggregate method, never in a handler. Collections are private and exposed read-only; mutation only flows through behavior methods.
-- **Result over exceptions.** All handlers, aggregate methods, and endpoints return a `Result`; endpoints translate `IsSuccess` into `Ok`/`BadRequest`.
-- **Caching is a decorator, not middleware.** Wolverine's `Before/After` hooks can't return a value on short-circuit, so caching is a transparent `IMessageBus` decorator (Scrutor `Decorate`) — endpoints and handlers stay unaware.
-- **The agent adds no business logic.** MCP tools re-invoke the same Wolverine command/query via `IMessageBus`; they only add an LLM-friendly name and description.
-- **A2A is a consumed contract, not a merge.** The remote payment agent lives in its own solution with its own database; this system *consumes* it over A2A the way it consumes integration events, MCP, and gRPC — a deliberate contract, never a shared model or DB.
-- **The saga is a service, not a god-object.** Checkout orchestration owns a process across four contexts, so it lives in its **own** BC (`Checkout.Orchestrator`) and talks only over broker command/reply — never another service's database. A saga's process owner is a bounded context, not a shared orchestration layer.
-- **Pivot over two-phase payment.** Payment is a single-phase `Charge` placed as the saga's last reversible step, so everything before it is compensatable (stock revert + order cancel) and nothing after needs a void/refund — the pivot line replaces authorize/capture/void machinery entirely.
-- **Sync RPC only where a yes/no must be immediate.** Stock reservation (basket/order → stock) is the sanctioned synchronous channel: a typed gRPC contract, scope-protected, fail-closed. DB isolation still holds — callers hit Stock's API, never its database.
-- **Idempotency over transactions across services.** Cross-context writes can't share a transaction. The checkout saga converges instead: deterministic `CheckoutId`/`PaymentId` keys, per-step idempotency keys, at-least-once delivery, and business failures routed to compensation rather than retried forever.
-- **Eventual-consistency flows use events, not gRPC.** A review written *after* purchase doesn't need an instant answer, so purchase proof is an `OrderCompleted` projection — gRPC is reserved strictly for instant-consistency (stock).
-- **The moderation model sits behind an event boundary.** Reviews holds no agent-framework code; moderation is a separate broker worker, so the LLM dependency never leaks into the review-writing context.
-- **No roles leak downstream — scopes only.** Identity issues roles (a role is a bundle of scopes); services authorize purely on scopes. Reads (stock, storefront) are anonymous; tokens matter on the shopping write path.
-- **Agent-first, screens second.** Once every customer operation had MCP parity, the customer-facing screens were removed and the store root became the shopping assistant (066). The web layer keeps only what an agent can't be: admin editing, the login/OIDC dance, and the chat-to-agent proxy. The WebApp requests only identity + management scopes — customer shopping scopes are gone, since the browser no longer performs those calls.
+- **Bir mikroservis = bir bounded context.** Sınır fiziksel ve sert: ayrı veritabanı, ayrı şema, ayrı domain modeli. Servisler DB paylaşmaz, bir context'in modelini diğerine sızdırmaz.
+- **Aggregate'ler invariant'larının sahibidir.** Yeni kural handler'a değil aggregate metoduna gider. Koleksiyonlar private, salt-okunur açılır; mutasyon yalnız davranış metotlarından akar.
+- **Exception yerine Result.** Tüm handler, aggregate metodu ve endpoint bir `Result` döner; endpoint `IsSuccess`'i `Ok`/`BadRequest`'e çevirir.
+- **Agent-only müşteri yüzeyi, tek fasad.** Her müşteri işlemi MCP paritesine ulaşınca ekranlar ve mağazanın kendi agent'ı söküldü; mağaza artık BYO-agent. Müşteri kendi AI istemcisiyle tek `mcp-gateway` fasadına bağlanır, tek login yeterlidir.
+- **MCP yalnız agent tüketir.** Agent olmayan kod imperatif `CallToolAsync` süremez → REST/gRPC/S2S. MCP tool'ları ince sarmalayıcıdır: aynı Wolverine command/query'yi çağırır, yalnız LLM-dostu ad + açıklama ekler; sıfır iş-mantığı tekrarı.
+- **Saga bir servistir, bir god-object değil.** Checkout orkestrasyonu dört context'e yayılan bir süreç sahibidir, o yüzden **kendi BC'sinde** yaşar ve yalnız broker command/reply konuşur — asla başka servisin veritabanı.
+- **İki-fazlı ödeme yerine hosted-CF.** Ödeme dış PG'nin hosted sayfasında, checkout'tan **önce** olur; başarı HMAC callback ile doğrulanır. Saga içinde authorize/capture/void makinesi yoktur — ödeme saga dışıdır, saga yalnız stok+onay sürer.
+- **Servisler arası anlık evet/hayır gereken yerde senkron RPC.** Stok rezervi (basket/order → stock) sanksiyonlu senkron kanaldır: tipli gRPC, scope-korumalı, fail-closed. DB izolasyonu korunur — çağıran Stock'un API'sine erişir, veritabanına değil.
+- **Servisler arası transaction yerine idempotency.** Context'ler arası yazımlar transaction paylaşamaz; saga bunun yerine yakınsar: deterministik anahtarlar (`CheckoutId`/`TxRef`), en-az-bir-kez teslim, iş hataları sonsuz retry yerine telafiye yönlendirilir.
+- **Eventual-consistency akışları event kullanır, gRPC değil.** Satın-alma sonrası yazılan yorum anlık yanıt gerektirmez, o yüzden hak `OrderCompleted` projeksiyonudur — gRPC yalnız anlık-tutarlılığa (stok) ayrılmıştır.
+- **Moderasyon modeli bir olay sınırının ardında.** Reviews sıfır agent-framework kodu taşır; moderasyon ayrı broker worker'dır, LLM bağımlılığı yorum-yazma context'ine sızmaz.
+- **Rol downstream'e sızmaz — yalnız scope.** Identity rol verir (rol = scope demeti); servisler saf scope'a göre yetkilendirir. Okumalar (stok, storefront) anonim; token alışveriş yazma yolunda önemlidir.
 
-## Getting Started
+## Başlangıç
 
-### Prerequisites
+### Ön koşullar
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
-- Docker (Aspire provisions PostgreSQL, RabbitMQ, and Redis as containers)
+- Docker (Aspire; PostgreSQL, RabbitMQ, Redis ve Mailpit'i container olarak sağlar)
 
-### Run the whole system
+### Tüm sistemi çalıştır
 
-Always start the distributed system through the **Aspire AppHost** — services discover each other, their databases, and RabbitMQ via Aspire service discovery. Running a single API standalone will fail to resolve its dependencies.
+Dağıtık sistemi her zaman **Aspire AppHost** üzerinden başlat — servisler birbirini, veritabanlarını ve RabbitMQ'yu Aspire service discovery ile bulur. Tek bir API'yi bağımsız çalıştırmak bağımlılıklarını çözemez.
 
 ```bash
-# From the repo root
+# Repo kökünden
 dotnet run --project src/aspire/AppHost/AppHost.csproj
 ```
 
-This brings up every service, the YARP gateway, Identity.Server, the Razor Pages UI, both agents, plus PostgreSQL, RabbitMQ (with the management plugin), and Redis. The **Aspire dashboard** opens with a live view of every resource, its logs, and its endpoints.
+Bu; her servisi, YARP gateway'i, Identity.Server'ı, mcp-gateway fasadını ve agent worker'larını, artı PostgreSQL, RabbitMQ (management eklentisiyle), Redis ve Mailpit'i ayağa kaldırır. **Aspire dashboard** her kaynağın canlı görünümü, logları ve uçlarıyla açılır.
 
-> Identity.Server must run over **HTTPS** (its `SameSite=None; Secure` cookies loop forever on plain HTTP).
+> Identity.Server **HTTPS** üzerinde çalışmalıdır (`SameSite=None; Secure` çerezleri düz HTTP'de sonsuz döner).
 
-The OpenAI-backed services (**ChatAgent** and the **Reviews Moderation Agent**) fail fast at startup without credentials in user-secrets:
+OpenAI kullanan servisler (**Reviews Moderation Agent**, **Notification Agent**, ve embedding için **Storefront**) kimlik bilgisi olmadan açılışta fail-fast eder:
 
 ```bash
-dotnet user-secrets set "OpenAI:ApiKey" "<key>"   --project src/agents/ChatAgent/ChatAgent.csproj
-dotnet user-secrets set "OpenAI:ApiKey" "<key>"   --project src/agents/Reviews.Moderation/Reviews.Moderation.csproj
+dotnet user-secrets set "OpenAI:ApiKey" "<key>" --project src/agents/Reviews.Moderation/Reviews.Moderation.csproj
 dotnet user-secrets set "OpenAI:Model"  "gpt-4o-mini" --project src/agents/Reviews.Moderation/Reviews.Moderation.csproj
+dotnet user-secrets set "OpenAI:ApiKey" "<key>" --project src/agents/NotificationAgent/NotificationAgent.csproj
+dotnet user-secrets set "OpenAI:ApiKey" "<key>" --project src/services/storefront/Storefront.Api/Storefront.Api.csproj
 ```
 
-Optional — enable PostHog product analytics in the web UI (absent key → snippet not emitted):
+### Kendi AI istemcini bağla
+
+Müşteri yüzeyi bir MCP fasadıdır. Kendi MCP istemcin (Claude Desktop vb.) fasadın `/mcp` ucuna bağlanır; ilk bağlantıda tarayıcıda bir kez OAuth login + consent yapılır (RFC 7591 DCR ile istemci kendini kaydeder), sonrası refresh token'la ekransız sürer.
+
+### Derle & test et
 
 ```bash
-dotnet user-secrets set "PostHog:ApiKey" "<phc_...>" --project src/ui/WebApp/WebApp.csproj
-```
-
-### Build & test
-
-```bash
-# Build the whole solution
+# Tüm çözümü derle
 dotnet build
 
-# Run all tests
+# Tüm testleri çalıştır
 dotnet test
 
-# Run a single test project
+# Tek bir test projesi
 dotnet test tests/Catalog.Api.Tests/Catalog.Api.Tests.csproj
 ```
 
-## Project Structure
+## Proje Yapısı
 
 ```
 src/
-  aspire/        AppHost (orchestration) + ServiceDefaults
-  services/      basket, catalog, checkout, customer, gateway, order,
-                 payment, reviews, stock, storefront
-  others/        Common, Shared (contracts + protos), Identity.Server
-  agents/        ChatAgent (MCP client, LLM) + Reviews.Moderation (broker worker, LLM)
-  ui/            WebApp (Razor Pages)
-tests/           Per-service domain unit tests (xUnit + Shouldly)
-.specify/        Spec-driven development setup (spec-kit)
-specs/           Feature specs / plans / tasks
+  aspire/        AppHost (orkestrasyon) + ServiceDefaults
+  services/      basket, catalog, checkout, customer, gateway, library,
+                 order, payment, reviews, stock, storefront
+  others/        Common, Shared (kontratlar + protolar), Identity.Server
+  agents/        Mcp.Gateway (müşteri MCP fasadı), Mail.Mcp (send_mail),
+                 NotificationAgent (fiyat alarmı), Reviews.Moderation (moderasyon)
+tests/           Servis başına domain birim testleri (xUnit + Shouldly)
+.specify/        Spec-driven development kurulumu (spec-kit)
+specs/           Feature spec / plan / task'ları
 ```
 
-A single service follows a **Vertical Slice** layout — code grouped by domain feature, not technical layer:
+Tek bir servis **Vertical Slice** düzeni izler — kod teknik katmana değil domain feature'ına göre gruplanır:
 
 ```
 Domains/<Aggregate>/
-  <Aggregate>.cs                  # rich aggregate root (factory + behavior methods)
-  <Aggregate>EndpointExtension.cs # Minimal API endpoint mapping
-  <Aggregate>McpTools.cs          # MCP tool wrappers for this aggregate
+  <Aggregate>.cs                  # zengin aggregate root (fabrika + davranış metotları)
+  <Aggregate>EndpointExtension.cs # Minimal API endpoint map'i
+  <Aggregate>McpTools.cs          # bu aggregate için MCP tool sarmalayıcıları
   Features/
-    Commands/                     # write slices  (IDocumentSession, [Transactional])
-    Queries/                      # read slices   (read-only)
-    Agents/                       # agent-facing slices (exposed via MCP)
+    Commands/                     # yazma slice'ları  (IDocumentSession, [Transactional])
+    Queries/                      # okuma slice'ları   (salt-okur)
+    Agents/                       # agent'a açık slice'lar (MCP expose eder)
 ```
 
-Each bounded context also carries a `FLOW.md` — a domain-process document (EventStorming altitude) describing the business steps, invariants, and boundary of that context, guarded by `scripts/check-flow-links.sh`.
+Her bounded context ayrıca bir `FLOW.md` taşır — o context'in iş adımlarını, invariant'larını ve sınırını EventStorming irtifasında anlatan domain-süreç belgesi, `scripts/check-flow-links.sh` ile guard'lı.
 
-## DropShop payment-gateway integration (032/033)
+## Notlar
 
-This storefront registers itself as a merchant with the external **DropShop** payment gateway
-(a separate solution, consumed as a contract — never a shared DB/model) and then uses the
-gateway's **card vault** for PCI-safe card storage:
-
-- **Admin onboarding via chat (032)** — an admin-only Razor page (`Pages/Admin/Onboarding`) talks
-  to the ChatAgent **`admin` persona** through the BFF SSE proxy (`/chat/admin/stream`, role-gated).
-  The persona wraps the gateway calls (`submit_registration` / `registration_status`) as a
-  WebApp-hosted onboarding MCP surface. Gateway calls run with the machine identity
-  (`ecommerce-onboarding` client_credentials) — the admin's user token never leaves this system.
-- **MerchantKey handling (033)** — after gateway-side approval, the admin pastes
-  `{merchantId, merchantKey}` into the Onboarding page, persisted in **Customer.Api**
-  (`MerchantInformation` aggregate). The key is the gateway OAuth `client_secret` and only ever
-  goes to the gateway's `connect/token`.
-- **Card vault client (017 consumer)** — Customer.Api's Wallet tokenizer calls the gateway's
-  vault (`merchants/{merchantId}/vault/cards`, scope `cards.write`, merchant-scoped token): raw PAN
-  goes straight to the gateway, only `card_…` token + brand + last4 + BIN are kept locally.
-
-## Chat payment + order completion (038/039/049)
-
-A shopper can pay and place an order **end-to-end from chat**, never touching a screen — but payment
-trust is never handed to the LLM. Two complementary paths:
-
-- **Installment quote (038, A2A)** — "list my installments" goes ChatAgent → **A2A** → the gateway's
-  remote `Payment.Agent`. Read-only; the LLM shows returned options verbatim. The buyer/vault-token
-  come from Customer.Api and are passed **verbatim** into the A2A request.
-- **Order completion (039 + 049, server orchestration)** — on user confirmation the LLM only picks the
-  `place_order` tool and passes `cardId?` + `installment`; **everything else is server-side**. The tool
-  (Order.Api) reads the cart (Basket gRPC, server-authoritative), the payment context (Customer REST),
-  derives a **correlation-key** (HMAC of userId+cart+installment — ownership + idempotency), charges
-  PaymentGateway over **structural REST** (Principle I: non-agent code cannot drive A2A/MCP), creates the
-  order, then hands off to the **Checkout.Orchestrator** via `StartCheckout` in `AlreadyCaptured` mode
-  (the saga skips its own charge step and runs commit → confirm → clear).
-
-Why the charge is structural, not LLM-A2A: `paymentId` is not proof of success, and a hallucinated
-"success" would mean a free order. So the charge + verify are **server-to-server**; the LLM only
-triggers. An ambiguous charge is recovered by a durable `PaymentAttempt` (re-derive the same
-correlation-key and retrieve from the gateway — never a double charge). Card add/remove is **refused
-in chat** (security); only card *selection* is allowed and the PAN never reaches the LLM.
-
-The gateway side (idempotent structural charge + retrieve, X-Api-Key auth) lives in the separate
-**PaymentGateway** repo and is consumed here as a contract via `PaymentGatewayClient`.
-
-## Notes
-
-- **Central Package Management** is enabled — package versions live in `Directory.Packages.props`, not individual `.csproj` files.
-- Non-trivial features are built with a **spec-kit** flow (`/speckit-*`), governed by a project constitution under `.specify/memory/`. Artifact depth scales with feature size.
+- **Central Package Management** açık — paket sürümleri tek tek `.csproj`'larda değil `Directory.Packages.props`'ta yaşar.
+- Önemsiz olmayan feature'lar **spec-kit** akışıyla (`/speckit-*`), `.specify/memory/` altındaki proje anayasasının yönetiminde geliştirilir. Artefakt derinliği feature boyutuna göre ölçeklenir.
 
 ---
 
-*Built as a hands-on exploration of Domain-Driven microservices and AI agents on the .NET stack.*
+*Domain-Driven mikroservisler ve .NET yığınında AI agent'larının pratik bir keşfi olarak inşa edildi.*

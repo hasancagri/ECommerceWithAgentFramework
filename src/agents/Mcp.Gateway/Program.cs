@@ -12,7 +12,8 @@ string[] customerScopes =
 [
     AuthorizationScopes.BasketRead, AuthorizationScopes.BasketWrite,
     AuthorizationScopes.OrderRead, AuthorizationScopes.OrderWrite,
-    AuthorizationScopes.CustomerRead, AuthorizationScopes.PaymentRead, AuthorizationScopes.StorefrontRead
+    AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite,
+    AuthorizationScopes.PaymentRead, AuthorizationScopes.StorefrontRead
 ];
 string[] adminScopes =
 [
