@@ -9,7 +9,7 @@ yalnız scope görür, rolü asla görmez.
 
 ## Süreç
 
-1. **Kullanıcı kayıt olur.** WebApp `prompt=create` gönderir →           `(AuthorizeEndpoint`
+1. **Kullanıcı kayıt olur.** OIDC istemcisi `prompt=create` gönderir →   `(AuthorizeEndpoint`
    kayıt sayfasına yönlenir; create prompt returnUrl'den temizlenir.     ` → Create.Index)`
 2. **Yeni kullanıcı otomatik `customer` rolü alır** (sunucu atar,        `(RoleAssignmentService`
    seçilemez); ardından doğrudan login (aktivasyon-mail yok).            ` .CustomerRole)`
