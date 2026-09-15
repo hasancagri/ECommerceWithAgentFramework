@@ -6,6 +6,9 @@ public static class TokenEndpoint
     public static void MapTokenEndpoint(this WebApplication app) =>
         app.MapPost("/connect/token", HandleAsync);
 
+    // FLOW.md Süreç 7-9 — arka kanal (kullanıcı ekranı yok): code→token takası (7; aud
+    // scope'lardan üretilir), refresh'te GÜNCEL rol demetiyle yeniden süzme (8; rol düştüyse
+    // yetki daralır), m2m'de sub=client id + rol yok (9).
     private static async Task<IResult> HandleAsync(
         HttpContext context,
         UserManager<ApplicationUser> userManager,
@@ -41,8 +44,21 @@ public static class TokenEndpoint
         if (request.IsAuthorizationCodeGrantType() || request.IsRefreshTokenGrantType())
         {
             var result = await context.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-            var principal = result.Principal
-                ?? throw new InvalidOperationException("Saklı principal çözülemedi.");
+
+            // Süresi geçmiş/iptal edilmiş code veya refresh token: OpenIddict authentication'ı
+            // Principal ÜRETMEDEN başarısız döner. Kontrolsüz dereference önce 500 fırlatıyordu;
+            // istemci (mcp-remote) invalid_grant bekler → tam re-authorization'a bu şekilde düşer.
+            if (!result.Succeeded || result.Principal is not { } principal)
+            {
+                return Results.Forbid(
+                    new AuthenticationProperties(new Dictionary<string, string?>
+                    {
+                        [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
+                        [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
+                            "Token süresi geçmiş veya iptal edilmiş.",
+                    }),
+                    [OpenIddictServerAspNetCoreDefaults.AuthenticationScheme]);
+            }
 
             // Kullanıcı hâlâ giriş yapabiliyor mu (silinmiş/kilitli değil).
             var user = await userManager.FindByIdAsync(principal.GetClaim(Claims.Subject)!);
