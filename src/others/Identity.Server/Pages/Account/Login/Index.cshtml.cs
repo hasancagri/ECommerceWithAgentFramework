@@ -15,8 +15,11 @@ public class Index : PageModel
 
     public Index(SignInManager<ApplicationUser> signInManager) => _signInManager = signInManager;
 
+    // FLOW.md Süreç 3 girişi — authorize Challenge'ının indiği ekran; returnUrl = authorize devamı.
     public void OnGet(string? returnUrl) => Input = new InputModel { ReturnUrl = returnUrl };
 
+    // FLOW.md Süreç 3 — parola YALNIZ burada girilir (agent asla görmez; OAuth delegasyonunun
+    // amacı bu). Başarıda cookie kurulur, authorize'a dönülür → akış Süreç 4'ten sürer.
     public async Task<IActionResult> OnPost()
     {
         // "Cancel" → giriş yapmadan mağazaya dön.

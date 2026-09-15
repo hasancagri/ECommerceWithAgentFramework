@@ -20,6 +20,8 @@ public class Index(
     public string ClientName { get; private set; } = "";
     public IReadOnlyList<string> Scopes { get; private set; } = [];
 
+    // 061 Explicit (DCR) istemci yan yolu — FLOW ana sürecinde yok; seed istemciler (Implicit)
+    // bu ekranı GÖRMEZ. Ekrana ham talep değil, kesişilmiş (granted) scope listesi yazılır.
     public async Task<IActionResult> OnGet(string? returnUrl)
     {
         if (!TryParseAuthorizeReturnUrl(returnUrl, out var clientId, out var requestedScopes))
@@ -36,6 +38,8 @@ public class Index(
         return Page();
     }
 
+    // Onayla → kalıcı authorization yazılır (aynı scope'larla sonraki login'lerde ekran atlanır);
+    // Reddet → consent=denied ile authorize'a dönüş → istemciye standart access_denied.
     public async Task<IActionResult> OnPost()
     {
         if (!TryParseAuthorizeReturnUrl(ReturnUrl, out var clientId, out var requestedScopes))

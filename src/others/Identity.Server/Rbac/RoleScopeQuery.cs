@@ -8,6 +8,8 @@ public sealed class RoleScopeQuery(
     RoleManager<IdentityRole> roleManager,
     ApplicationDbContext db)
 {
+    // FLOW.md Süreç 5 — rolün scope demetine AÇILDIĞI yer. Customer'ın admin-istemciyle
+    // girme denemesi burada söner: demette yönetim scope'u yok → kesişim yalnız kimlik scope'ları bırakır.
     public async Task<ISet<string>> GetUserScopeBundleAsync(ApplicationUser user, CancellationToken ct = default)
     {
         var roleNames = await userManager.GetRolesAsync(user);

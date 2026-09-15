@@ -20,8 +20,11 @@ public class Index : PageModel
         _signInManager = signInManager;
     }
 
+    // FLOW.md Süreç 1 girişi — authorize'ın prompt=create yönlendirmesinin indiği ekran.
     public void OnGet(string? returnUrl) => Input = new InputModel { ReturnUrl = returnUrl };
 
+    // FLOW.md Süreç 1-2 — kullanıcı doğar, sunucu customer rolünü atar (2; seçilemez),
+    // doğrudan login olup temizlenmiş returnUrl ile authorize'a dönülür (create döngüsü yok).
     public async Task<IActionResult> OnPost()
     {
         if (Input.Button != "create")

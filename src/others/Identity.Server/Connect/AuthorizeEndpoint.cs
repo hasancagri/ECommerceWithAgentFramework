@@ -8,6 +8,9 @@ public static class AuthorizeEndpoint
     public static void MapAuthorizeEndpoint(this WebApplication app) =>
         app.MapMethods("/connect/authorize", ["GET", "POST"], HandleAsync);
 
+    // FLOW.md Süreç 1+4-6 — agent'ın tarayıcı açtırdığı İLK durak. Cookie yok → login'e
+    // Challenge (Süreç 3'e gidiş); cookie var → kimlik claim'leri (4), rol→demet (5),
+    // kesişim (6); Explicit (DCR) istemcide consent dalı. Parola bu uca HİÇ uğramaz.
     private static async Task<IResult> HandleAsync(
         HttpContext context,
         UserManager<ApplicationUser> userManager,
