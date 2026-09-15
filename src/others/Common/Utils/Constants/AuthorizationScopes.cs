@@ -42,6 +42,10 @@ public static class AuthorizationScopes
     public const string LibraryRead = "library.read";
     public const string LibraryWrite = "library.write";
 
+    // identity: API anahtari (UserKey) issue/revoke yuzeyi — Identity.Server kendi Bearer
+    // policy'siyle dogrular (audience'siz; m2m apikeys.admin istemcisi tasir).
+    public const string ApiKeysManage = "apikeys.manage";
+
     // identity (030 RBAC): IdP rol/scope/kullanici yonetim yuzeyi. Downstream servis zorlamaz;
     // Identity.Server ic yuzeyini + WebApp header link gorunurlugunu belirler.
     public const string IdentityRolesManage = "identity.roles.manage";

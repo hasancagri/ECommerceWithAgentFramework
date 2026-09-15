@@ -32,7 +32,7 @@ public static class ApiKeyEndpoints
             var (entity, rawKey) = await service.IssueAsync(body.UserId, body.Name, ct);
             return Results.Created($"/api/keys/{entity.Id}",
                 new IssueResponse(entity.Id, rawKey, entity.UserId, entity.Name, entity.CreatedAt));
-        }).RequireAuthorization("apikeys.manage");
+        }).RequireAuthorization(AuthorizationScopes.ApiKeysManage);
 
         // Revoke (admin) — idempotent, apikeys.manage scope zorunlu
         group.MapPost("/{id:guid}/revoke", async (
@@ -40,7 +40,7 @@ public static class ApiKeyEndpoints
         {
             var found = await service.RevokeAsync(id, ct);
             return found ? Results.NoContent() : Results.NotFound();
-        }).RequireAuthorization("apikeys.manage");
+        }).RequireAuthorization(AuthorizationScopes.ApiKeysManage);
     }
 
     private static bool IsInternalCallAuthorized(HttpContext http, Identity.Server.Options.ApiKeyAuth apiKeyAuth)

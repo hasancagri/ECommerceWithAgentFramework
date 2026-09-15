@@ -122,11 +122,11 @@ builder.Services.AddAuthentication()
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("apikeys.manage", policy =>
+    options.AddPolicy(AuthorizationScopes.ApiKeysManage, policy =>
     {
         policy.AddAuthenticationSchemes("Bearer");
         policy.RequireAuthenticatedUser();
-        policy.RequireClaim("scope", "apikeys.manage");
+        policy.RequireClaim("scope", AuthorizationScopes.ApiKeysManage);
     });
 
     // 030 RBAC: IdP admin UI guard'ı — Identity cookie principal'ında admin rolü (D3).

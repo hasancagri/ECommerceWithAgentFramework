@@ -7,21 +7,22 @@ public static class ExternalAgentDefaults
     // Alışveriş yaşam döngüsü: arama→sepet→sipariş→takip + profil/ödeme okuma.
     public static readonly string[] ApiScopes =
     [
-        "storefront.read",
-        "basket.read", "basket.write",
-        "order.read", "order.write",
+        AuthorizationScopes.StorefrontRead,
+        AuthorizationScopes.BasketRead, AuthorizationScopes.BasketWrite,
+        AuthorizationScopes.OrderRead, AuthorizationScopes.OrderWrite,
         // 062: customer.write dış agent'a adres yazma (ekle/sil/varsayılan) için açıldı.
         // UYARI: kart-yazma MCP tool'u bu scope ile AÇILMAMALI (kart mağazanın işi değil — ACP/PSP).
-        "customer.read", "customer.write",
-        "payment.read",
+        AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite,
+        AuthorizationScopes.PaymentRead,
         // 064: reviews.write — dış agent yorum gönderme + yorum-hakkı kontrolü (get_reviews login yeter).
-        "reviews.write",
+        AuthorizationScopes.ReviewsWrite,
         // 065: library fiyat alarmı — durum okuma + kurma/kaldırma.
-        "library.read", "library.write",
+        AuthorizationScopes.LibraryRead, AuthorizationScopes.LibraryWrite,
     ];
 
     // Kimlik scope'ları (offline_access = sessiz yenileme, SC-003).
-    public static readonly string[] IdentityScopes = ["openid", "profile", "email", "offline_access"];
+    public static readonly string[] IdentityScopes =
+        [Scopes.OpenId, Scopes.Profile, Scopes.Email, Scopes.OfflineAccess];
 
     public static readonly string[] AllScopes = [.. IdentityScopes, .. ApiScopes];
 

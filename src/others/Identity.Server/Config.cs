@@ -8,13 +8,8 @@ public static class Config
     public static readonly string[] UserClaims = ["role", "email", "name"];
 
     // Identity scope'ları (openid/profile/email + role taşıyıcı "roles").
-    public static readonly string[] IdentityScopes = ["openid", "profile", "email", "roles", "offline_access"];
-
-    // apikeys.manage: Identity.Server kendi Bearer policy'siyle doğrular (audience'sız).
-    public const string ApiKeysManageScope = "apikeys.manage";
-
-    // 030 RBAC: rol/scope/kullanıcı yönetim yüzeyi scope'u (audience'sız; IdP iç yüzeyi + WebApp link).
-    public const string IdentityRolesManageScope = "identity.roles.manage";
+    public static readonly string[] IdentityScopes =
+        [Scopes.OpenId, Scopes.Profile, Scopes.Email, Scopes.Roles, Scopes.OfflineAccess];
 
     // 070: seed'li dış-agent YÖNETİM istemcisi (Claude Desktop admin bağlantısı). DCR yüzeyinin
     // tamamen DIŞINDA — ExternalAgentDefaults/DcrRequestValidator değişmez; loopback redirect
@@ -30,67 +25,49 @@ public static class Config
     public static readonly IReadOnlyDictionary<string, string> ScopeResources =
         new Dictionary<string, string>
         {
-            ["catalog.write"] = "catalog.api",
-            ["basket.read"] = "basket.api",
-            ["basket.write"] = "basket.api",
-            ["order.read"] = "order.api",
-            ["order.write"] = "order.api",
-            ["payment.read"] = "payment.api",
-            ["payment.write"] = "payment.api",
-            ["stock.write"] = "stock.api",
-            ["storefront.read"] = "storefront.api",
-            ["customer.read"] = "customer.api",
-            ["customer.write"] = "customer.api",
+            [AuthorizationScopes.CatalogWrite] = "catalog.api",
+            [AuthorizationScopes.BasketRead] = "basket.api",
+            [AuthorizationScopes.BasketWrite] = "basket.api",
+            [AuthorizationScopes.OrderRead] = "order.api",
+            [AuthorizationScopes.OrderWrite] = "order.api",
+            [AuthorizationScopes.PaymentRead] = "payment.api",
+            [AuthorizationScopes.PaymentWrite] = "payment.api",
+            [AuthorizationScopes.StockWrite] = "stock.api",
+            [AuthorizationScopes.StorefrontRead] = "storefront.api",
+            [AuthorizationScopes.CustomerRead] = "customer.api",
+            [AuthorizationScopes.CustomerWrite] = "customer.api",
             // DropShop vault merchant kimliği yönetimi — audience customer.api; admin demetinde (AllApiScopes),
             // customer'da YOK. AllApiScopes bu key'i otomatik alır → admin role'a düşer.
-            ["merchant.credentials.write"] = "customer.api",
+            [AuthorizationScopes.MerchantCredentialsWrite] = "customer.api",
             // 044: yorum yazma (Order purchase-check gRPC ucu da aynı scope'u ister — R4).
-            ["reviews.write"] = "reviews.api",
+            [AuthorizationScopes.ReviewsWrite] = "reviews.api",
             // 060: fiyat alarmı (Library BC) — durum okuma + kurma/kaldırma.
-            ["library.read"] = "library.api",
-            ["library.write"] = "library.api",
+            [AuthorizationScopes.LibraryRead] = "library.api",
+            [AuthorizationScopes.LibraryWrite] = "library.api",
             // 053: gezinme sinyali ingest + profil okuma — audience reco.trainer (Python beyin; 048
             // personalization.api emekli). WebApp (BFF) m2m istemcisi (webapp-signals) client_credentials
             // ile talep eder; customer/admin kullanıcı token'ına binmez.
-            ["personalization.ingest"] = "reco.trainer",
-            ["personalization.read"] = "reco.trainer",
+            [AuthorizationScopes.PersonalizationIngest] = "reco.trainer",
+            [AuthorizationScopes.PersonalizationRead] = "reco.trainer",
         };
 
-    // WebApp BFF'nin talep ettiği 12 servis scope'u (apikeys.manage HARİÇ; bugünkü Duende paritesi).
-    public static readonly string[] BffServiceScopes =
-    [
-        "catalog.write",
-        "basket.read", "basket.write",
-        "order.read", "order.write",
-        "payment.read", "payment.write",
-        "stock.write",
-        "storefront.read",
-        "customer.read", "customer.write",
-        // Admin kullanıcı token'ı bunu taşısın diye BFF ister; yalnız admin role demeti verir (customer'da yok).
-        "merchant.credentials.write",
-        // 044: yorum yazma (form + submit; Order purchase-check gRPC'si de bunu ister).
-        "reviews.write",
-        // 060: fiyat alarmı düğmesi (durum + kur/kaldır).
-        "library.read", "library.write",
-    ];
-
-    // Tüm API scope'ları (12 servis scope'u + apikeys.manage + identity.roles.manage) — seed edilir.
+    // Tüm API scope'ları (servis scope'ları + apikeys.manage + identity.roles.manage) — seed edilir.
     // 030: KnownScopes registry bu listeyi tek kaynak olarak kullanır (atanabilir scope kümesi).
     public static IEnumerable<string> AllApiScopes =>
-        ScopeResources.Keys.Append(ApiKeysManageScope).Append(IdentityRolesManageScope);
+        ScopeResources.Keys.Append(AuthorizationScopes.ApiKeysManage).Append(AuthorizationScopes.IdentityRolesManage);
 
     // 030 RBAC seed rol demetleri (KnownScopes ⊇ bunlar). Admin ⊇ customer + yönetim/yazma.
     // customer: müşteri akışı (katalog yazma / stok mutlak yazma / api-key / rol yönetimi HARİÇ).
     public static readonly string[] CustomerRoleScopes =
     [
-        "basket.read", "basket.write",
-        "order.read", "order.write",
-        "payment.read", "payment.write",
-        "storefront.read",
-        "customer.read", "customer.write",
-        "reviews.write",
+        AuthorizationScopes.BasketRead, AuthorizationScopes.BasketWrite,
+        AuthorizationScopes.OrderRead, AuthorizationScopes.OrderWrite,
+        AuthorizationScopes.PaymentRead, AuthorizationScopes.PaymentWrite,
+        AuthorizationScopes.StorefrontRead,
+        AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite,
+        AuthorizationScopes.ReviewsWrite,
         // 060: fiyat alarmı müşteri akışının parçası.
-        "library.read", "library.write",
+        AuthorizationScopes.LibraryRead, AuthorizationScopes.LibraryWrite,
     ];
 
     // admin: tüm atanabilir scope'lar (customer + catalog.write + stock.write + apikeys.manage + identity.roles.manage).
@@ -114,7 +91,7 @@ public static class Config
             ClientSecret = "apikeys-admin-secret",
             DisplayName = "API Key admin (m2m)",
             AllowClientCredentials = true,
-            Scopes = [ApiKeysManageScope],
+            Scopes = [AuthorizationScopes.ApiKeysManage],
         },
         // 028: checkout saga m2m — arka planda koşar (kullanıcı bearer'ı taşınamaz).
         new ClientSeed
@@ -125,7 +102,11 @@ public static class Config
             AllowClientCredentials = true,
             // 028/056: basket.write; 039: basket.read (kalem okuma) + customer.read (adres/odeme baglami);
             // 077: payment.write (hosted-CF start_payment → Payment.Api link isteği S2S).
-            Scopes = ["basket.write", "basket.read", "customer.read", "payment.write"],
+            Scopes =
+            [
+                AuthorizationScopes.BasketWrite, AuthorizationScopes.BasketRead,
+                AuthorizationScopes.CustomerRead, AuthorizationScopes.PaymentWrite,
+            ],
         },
         // 077: Payment.Api m2m — hosted-CF link isteği/callback arka planda Customer merchant-key okur.
         new ClientSeed
@@ -134,7 +115,7 @@ public static class Config
             ClientSecret = "payment-s2s-secret",
             DisplayName = "Payment S2S (m2m)",
             AllowClientCredentials = true,
-            Scopes = ["customer.read"],
+            Scopes = [AuthorizationScopes.CustomerRead],
         },
         // 048: WebApp davranış-sinyali gönderimi m2m — anonim gezinme user token taşımaz,
         // WebApp client_credentials ile personalization.ingest talep eder (BFF telemetri iletici).
@@ -145,7 +126,7 @@ public static class Config
             DisplayName = "WebApp behavior signals (m2m)",
             AllowClientCredentials = true,
             // 053: ingest (sinyal yaz) + read (zevk profili oku) — ikisi de reco.trainer audience.
-            Scopes = ["personalization.ingest", "personalization.read"],
+            Scopes = [AuthorizationScopes.PersonalizationIngest, AuthorizationScopes.PersonalizationRead],
         },
         // 070: dış-agent YÖNETİM istemcisi — public+PKCE, code+refresh; consent Implicit (mağaza
         // sahibinin kendi aracı). Scope TAVANI yönetim demeti; gerçek yetki = tavan ∩ kullanıcı ROL
@@ -167,8 +148,9 @@ public static class Config
             ],
             Scopes =
             [
-                "openid", "profile",
-                "storefront.read", "catalog.write", "stock.write", "merchant.credentials.write",
+                Scopes.OpenId, Scopes.Profile,
+                AuthorizationScopes.StorefrontRead, AuthorizationScopes.CatalogWrite,
+                AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
             ],
         },
         // 073: tek müşteri MCP fasadı — dış müşteri agent kimliği (public+PKCE, Explicit consent). Tek
@@ -189,9 +171,11 @@ public static class Config
             ],
             Scopes =
             [
-                "openid", "profile",
-                "basket.read", "basket.write", "order.read", "order.write",
-                "customer.read", "customer.write", "payment.read", "storefront.read",
+                Scopes.OpenId, Scopes.Profile,
+                AuthorizationScopes.BasketRead, AuthorizationScopes.BasketWrite,
+                AuthorizationScopes.OrderRead, AuthorizationScopes.OrderWrite,
+                AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite,
+                AuthorizationScopes.PaymentRead, AuthorizationScopes.StorefrontRead,
             ],
         },
         // 073: fasad keşif (ListTools) makine kimliği — client_credentials, salt audience üretimi
@@ -204,8 +188,10 @@ public static class Config
             AllowClientCredentials = true,
             Scopes =
             [
-                "basket.read", "order.read", "customer.read", "payment.read",
-                "catalog.write", "stock.write", "merchant.credentials.write",
+                AuthorizationScopes.BasketRead, AuthorizationScopes.OrderRead,
+                AuthorizationScopes.CustomerRead, AuthorizationScopes.PaymentRead,
+                AuthorizationScopes.CatalogWrite, AuthorizationScopes.StockWrite,
+                AuthorizationScopes.MerchantCredentialsWrite,
             ],
         },
         // WebApp (Razor Pages BFF) SÖKÜLDÜ (2026-09-11) — UI kaldırıldı, agent-only. ecommerce.bff
