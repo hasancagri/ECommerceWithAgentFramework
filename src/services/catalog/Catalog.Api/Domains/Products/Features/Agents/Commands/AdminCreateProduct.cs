@@ -5,6 +5,11 @@ namespace Catalog.Api.Domains.Products.Features.Agents.Commands;
 // Çakışma: aynı Gtin varsa Error (çoğaltma yok — agent admin_update_product'a yönlendirir). Yeni ürün
 // DRAFT doğar (eski REST auto-publish'ten farklı): yayın ayrı adım (admin_set_published). Draft olduğu için
 // ProductChangedEvent YAYILMAZ (AdminUpdateProduct deseni). Fiyat>0 ise geçmişin ilk satırı.
+// BUGFIX: ProductAdded ImportBook emsaliyle AYNI ANDA yayılır (InitialStock=0) — Stock'un BarcodeLink+
+// OnHand satırı yalnız bu event'ten doğar (StockEventHandlers.Handle(ProductAdded)); event olmadan admin
+// stok set/adjust edemez VE checkout CommitStock RECORD_NOT_FOUND ile kalıcı reddeder. ISBN çakışma guard'ı
+// (üstte) tek-seferlik create'i garanti ettiği için tekrar tetiklenip mevcut stoğu InitialStock=0'a EZME
+// riski yok.
 public static class AdminCreateProduct
 {
     [RequiredScope(AuthorizationScopes.AdminCatalogWrite)]
@@ -35,6 +40,7 @@ public static class AdminCreateProduct
         public async Task<FeatureObjectResultModel<AdminCreateProductResponse>> Handle(
             AdminCreateProductCommand cmd,
             IDocumentSession session,
+            IMessageBus bus,
             CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(cmd.Name))
@@ -134,6 +140,10 @@ public static class AdminCreateProduct
             // 058 FR-013: fiyat>0 ise geçmişin ilk satırı (OldPrice=null); fiyatsız taslak satır düşürmez.
             if (price.Amount > 0)
                 session.Store(ProductPriceChange.Create(product.Id, oldPrice: null, price.Amount, DateTime.UtcNow));
+
+            // Stock BarcodeLink+OnHand satırını bu event'ten kurar (InitialStock=0 — admin ayrıca
+            // admin_set_stock/admin_adjust_stock ile gerçek adedi girer; ImportBook emsali).
+            await bus.PublishAsync(new IntegrationEvents.ProductAdded(cmd.Isbn, product.Id, InitialStock: 0));
 
             return FeatureObjectResultModel<AdminCreateProductResponse>.Ok(new AdminCreateProductResponse
             {

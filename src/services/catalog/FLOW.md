@@ -17,7 +17,8 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 > **074 notu (MCP-only + elle giriş):** Domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle
 > MCP (`/mcp` keşif + `/mcp-admin` yönetim). Doktrin kayması: import-only değil — admin `create_product`
 > (`AdminCreateProduct`) ile elle künye girilir (TASLAK doğar; ISBN=Gtin çakışması reddedilir;
-> yayın ayrı `admin_set_published`). Düzenleme = `AdminUpdateProduct` (058 ekran ikizi).
+> yayın ayrı `admin_set_published`). Düzenleme = `AdminUpdateProduct` (058 ekran ikizi). `AdminCreateProduct`
+> `ProductAdded`'i taslak anında yayınlar (InitialStock=0) — Stock bağı yayına kadar beklemez.
 
 ## Süreç
 
@@ -44,8 +45,12 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
    kategori = primary; yazarlar (Id+ad çifti) + yayınevi + özellikler
    ADLA taşınır (fat event; tüketici lookup yapmaz). Yalnız YAYINDAKİ
    ürün yayar; yayından kaldırma `IsDeleted:true` ile gizletir (058).
-9. **Yalnız YAYINLANAN üründe Stock'a bağ kurulur.** Barkod→ürün         `(ProductAdded)`
-   eşlemesi + ilk OnHand yazılır (taslak = event yok).
+9. **Stock'a bağ ürün DOĞARKEN kurulur.** Barkod→ürün eşlemesi + ilk      `(ProductAdded)`
+   OnHand yazılır — import'ta yayınlanan kitapla aynı anda (InitialStock=100), elle
+   `create_product` girişinde taslak doğar anda (InitialStock=0; admin sonra
+   `admin_set_stock`/`admin_adjust_stock` ile gerçek adedi girer). BUGFIX: elle giriş
+   önceden bu event'i hiç yayınlamıyordu — taslak yayına alınsa bile Stock'ta satır
+   yoktu, checkout CommitStock RECORD_NOT_FOUND ile kalıcı reddediyordu.
 
 10. **Keşif envanteri agent'a sunulur.** Yayındaki ürünlerde fiilen     `(ListCategories,`
    geçen kategori (üst-kategori ağacıyla), yazar ve yayınevi            ` ListAuthors,`
@@ -58,7 +63,7 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 - **Yayın kapısı = fiyat>0 (051).** Fiyatsız ürün yayınlanamaz (satılamaz kart); taslak kalır, event yayılmaz.
 - **Fiyat geçmişi append-only (058).** Her gerçek fiyat değişimi (ve ilk fiyat) fiyatla aynı transaction'da satıra döner; satır silinmez/değişmez `(ProductPriceChange)`.
 - **Silme yok (016 sürer).** Ürün silinmez; `IsDeleted:true` yalnız yayından-kaldırmanın vitrin-gizleme bayrağıdır (058) — kayıt Catalog'da yaşamaya devam eder.
-- **Dış dünyaya iki yol = event.** Storefront'a `ProductChangedEvent` (her değişim), Stock'a `ProductAdded` (yayınlanan).
+- **Dış dünyaya iki yol = event.** Storefront'a `ProductChangedEvent` (her değişim, yalnız yayındaki), Stock'a `ProductAdded` (ürün doğduğunda, taslak dahil — tek-seferlik, ISBN çakışma guard'ı tekrar tetiklenmeyi engeller).
 
 ## Sınır (bu BC'nin dokunmadığı)
 
