@@ -30,7 +30,8 @@ public static class Config
     public static readonly IReadOnlyDictionary<string, string> ScopeResources =
         new Dictionary<string, string>
         {
-            [AuthorizationScopes.CatalogWrite] = "catalog.api",
+            [AuthorizationScopes.AdminCatalogRead] = "catalog.api",
+            [AuthorizationScopes.AdminCatalogWrite] = "catalog.api",
             [AuthorizationScopes.BasketRead] = "basket.api",
             [AuthorizationScopes.BasketWrite] = "basket.api",
             [AuthorizationScopes.OrderRead] = "order.api",
@@ -134,8 +135,9 @@ public static class Config
             Scopes =
             [
                 Scopes.OpenId, Scopes.Profile,
-                AuthorizationScopes.StorefrontRead, AuthorizationScopes.CatalogWrite,
-                AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
+                AuthorizationScopes.StorefrontRead, AuthorizationScopes.AdminCatalogRead,
+                AuthorizationScopes.AdminCatalogWrite, AuthorizationScopes.StockWrite,
+                AuthorizationScopes.MerchantCredentialsWrite,
             ],
         },
         // 073: tek müşteri MCP fasadı — dış müşteri agent kimliği (public+PKCE, Explicit consent). Tek
@@ -171,8 +173,8 @@ public static class Config
             [
                 AuthorizationScopes.BasketRead, AuthorizationScopes.OrderRead,
                 AuthorizationScopes.CustomerRead, AuthorizationScopes.PaymentRead,
-                AuthorizationScopes.CatalogWrite, AuthorizationScopes.StockWrite,
-                AuthorizationScopes.MerchantCredentialsWrite,
+                AuthorizationScopes.AdminCatalogRead,
+                AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
             ],
         },
         // WebApp (Razor Pages BFF) SÖKÜLDÜ (2026-09-11) — UI kaldırıldı, agent-only. ecommerce.bff

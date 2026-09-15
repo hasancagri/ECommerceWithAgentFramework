@@ -16,9 +16,6 @@ builder.Services.AddMarten(opts =>
 
         // barkod ↔ ProductId eşlemesi (Catalog ProductAdded yazar).
         opts.Schema.For<BarcodeLink>();
-
-        // 070: admin yazma tool'larının salt-append denetim izi (FR-009).
-        opts.Schema.For<AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();

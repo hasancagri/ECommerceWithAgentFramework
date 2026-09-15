@@ -33,6 +33,7 @@
 
     <ItemGroup>
       <Folder Include="Domains\Products\Features\" />
+      <Folder Include="Domains\Products\Features\Agents\Queries\" />
     </ItemGroup>
 
     <ItemGroup>

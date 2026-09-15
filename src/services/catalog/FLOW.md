@@ -16,13 +16,13 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 
 > **074 notu (MCP-only + elle giriş):** Domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle
 > MCP (`/mcp` keşif + `/mcp-admin` yönetim). Doktrin kayması: import-only değil — admin `create_product`
-> (`AdminCreateProductForAgent`) ile elle künye girilir (TASLAK doğar; ISBN=Gtin çakışması reddedilir;
-> yayın ayrı `admin_set_published`). Düzenleme = `AdminUpdateProductForAgent` (058 ekran ikizi).
+> (`AdminCreateProduct`) ile elle künye girilir (TASLAK doğar; ISBN=Gtin çakışması reddedilir;
+> yayın ayrı `admin_set_published`). Düzenleme = `AdminUpdateProduct` (058 ekran ikizi).
 
 ## Süreç
 
-1. **Ürün komutla oluşturulur/güncellenir** (051 import, admin           `(ImportBook, AdminCreateProductForAgent,`
-   `create_product` elle giriş, veya `update_product` düzenleme;         ` AdminUpdateProductForAgent, Product.Create, Product.Rename)`
+1. **Ürün komutla oluşturulur/güncellenir** (051 import, admin           `(ImportBook, AdminCreateProduct,`
+   `create_product` elle giriş, veya `update_product` düzenleme;         ` AdminUpdateProduct, Product.Create, Product.Rename)`
    ISBN/ad/fiyat girdi). ISBN=Gtin ile bulun-veya-kur (idempotent).
 1a. **Fiyat her gerçek değişimde geçmişe yazılır (058).** İlk fiyat      `(Product.SetPrice,`
    ilk satırdır; aynı fiyatla kayıt satır düşürmez (append-only).       ` ProductPriceChange)`
@@ -37,7 +37,7 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
    ad/açıklamadan türetilir.                                            ` Product.SetSeo)`
 6. **Özellikler registry'den Id'ye çözülüp TAM yazılır.**              `(Product.SetSpecifications)`
    Bilinmeyen ad opsiyoneldir — yok sayılır, satır spec'siz ilerler.
-7. **Yayın anahtarı admin'dedir (058) — kapı fiyat>0.** Fiyatsız         `(AdminSetPublishedForAgent,`
+7. **Yayın anahtarı admin'dedir (058) — kapı fiyat>0.** Fiyatsız         `(AdminSetPublished,`
    yayına alma reddedilir; yayından kaldırma vitrini gizler (silmez).   ` Product.Publish, Product.Unpublish)`
    Düzenleme yayın durumunu DEĞİŞTİRMEZ (koruma).
 8. **Değişim Storefront'a KANONİK yayınlanır.** Fiyat decimal,          `(ProductChangedEvent)`
@@ -47,9 +47,9 @@ ve değişimi Storefront'a bildirir. Ürünler **first-party**: mağaza sahibi e
 9. **Yalnız YAYINLANAN üründe Stock'a bağ kurulur.** Barkod→ürün         `(ProductAdded)`
    eşlemesi + ilk OnHand yazılır (taslak = event yok).
 
-10. **Keşif envanteri agent'a sunulur.** Yayındaki ürünlerde fiilen     `(ListCategoriesForAgent,`
-   geçen kategori (üst-kategori ağacıyla), yazar ve yayınevi            ` ListAuthorsForAgent,`
-   listeleri; yayında olmayanın verisi sızmaz.                          ` ListPublishersForAgent)`
+10. **Keşif envanteri agent'a sunulur.** Yayındaki ürünlerde fiilen     `(ListCategories,`
+   geçen kategori (üst-kategori ağacıyla), yazar ve yayınevi            ` ListAuthors,`
+   listeleri; yayında olmayanın verisi sızmaz.                          ` ListPublishers)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 

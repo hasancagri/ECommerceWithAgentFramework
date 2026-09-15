@@ -63,12 +63,25 @@ Her rol için: anayasa İLKE = "ne"; buradaki satır = "nasıl uygulanır" (koda
 Domains/<Aggregate>/
   <Aggregate>.cs                  # zengin aggregate root (private setter, factory + davranış)
   <Aggregate>EndpointExtension.cs # feature endpoint'lerini gruplar + map'ler
-  <Aggregate>McpTools.cs          # bu aggregate için MCP tool sarmalayıcıları
   Features/
     Commands/<Name>.cs            # yazma slice'ları
     Queries/<Name>.cs             # okuma slice'ları
-    Agents/<Name>ForAgent.cs      # agent'a açık slice (klasör ÇOĞUL; MCP expose eder)
+    Agents/                       # agent'a açık slice'lar (klasör ÇOĞUL; MCP expose eder)
+      Commands/<Name>.cs          # yazma agent slice'ı
+      Queries/<Name>.cs           # okuma agent slice'ı
 ```
+
+- **MCP tool sarmalayıcısı slice'ıyla AYNI dosyada yaşar** (dosya sonunda, `[McpServerToolType]`),
+  ayrı `<Aggregate>McpTools.cs` YOK. Gerekçe: "bir feature = bir dosya" ilkesi transport katmanına da
+  uzanır; ayrıca tool kaydı `WithToolsFromAssembly()` ile assembly-geneli taranır, dosya konumu bağımsız.
+  Aggregate'in TÜM MCP yüzeyini görmek gerekirse `grep -rl McpServerToolType Domains/<Aggregate>/`.
+- **`Agents/Commands` + `Agents/Queries` alt klasörü, cache-invalidation kararını KLASÖRDEN okunur
+  yapar** (`Commands/*` → `[InvalidatesCache]` adayı, `Queries/*` → `[Cached]` adayı) — dosya açmadan,
+  yalnız konuma bakarak. `Agents/Commands|Queries`, üst-seviye `Features/Commands|Queries`'ten AYRI
+  (Bilinçli tekrar: agent slice o klasörlerle kod paylaşmaz, yalnız isim benzerliği).
+- **Sınıf adı ÇIPLAK feature adıdır, suffix YOK** (`ForAgent`/`Command`/`Query` eklenmez) — konum zaten
+  bunu söylüyor (`Agents/Commands/AdminAssignProductTag.cs` → `AdminAssignProductTag`). Suffix, klasör
+  ayrımı yokken (eski flat `Agents/<Name>ForAgent.cs`) telafi ediyordu; ayrım varken tekrar gereksiz.
 
 - **Bir feature = bir static class**: `record` command/query + `Response` + `Handler` (düz sınıf,
   `Handle` metodu) + endpoint-extension. Command mı query mi ayır, doğru klasöre koy.

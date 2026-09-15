@@ -15,7 +15,7 @@ public static class GetStockMcpTool
 
 // 070: ADMIN tool'ları — YALNIZ korumalı /mcp-admin ucunda yayınlanır (Program.cs oturum filtresi);
 // anonim /mcp get_stock DEĞİŞMEZ. Kullanıcı token'dan; scope katmanı handler'da
-// [RequiredScope(StockWrite)]. Yazma TEK ürün işler (FR-010) + AdminActionLog izi bırakır.
+// [RequiredScope(StockWrite)]. Yazma TEK ürün işler (FR-010).
 
 [McpServerToolType]
 public static class AdminListAllStockMcpTool

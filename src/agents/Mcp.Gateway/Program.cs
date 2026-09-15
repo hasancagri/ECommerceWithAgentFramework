@@ -17,7 +17,8 @@ string[] customerScopes =
 ];
 string[] adminScopes =
 [
-    AuthorizationScopes.CatalogWrite, AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite
+    AuthorizationScopes.AdminCatalogRead, AuthorizationScopes.AdminCatalogWrite,
+    AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
 ];
 
 var builder = WebApplication.CreateBuilder(args);

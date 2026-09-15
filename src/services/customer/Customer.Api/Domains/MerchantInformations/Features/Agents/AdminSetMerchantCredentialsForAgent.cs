@@ -1,7 +1,7 @@
 namespace Customer.Api.Domains.MerchantInformations.Features.Agents;
 
 // 070 US3: merchant kimlik upsert (agent yüzeyi) — SetMerchantInformation İKİZİ (bilinçli tekrar).
-// Yanıtta/izde MerchantKey düz metin ASLA yok (iz Summary: "credentials rotated"). İz: AdminActionLog.
+// Yanıtta MerchantKey düz metin ASLA yok.
 public static class AdminSetMerchantCredentialsForAgent
 {
     [RequiredScope(AuthorizationScopes.MerchantCredentialsWrite)]
@@ -29,16 +29,10 @@ public static class AdminSetMerchantCredentialsForAgent
                 var updated = existing.UpdateKey(cmd.MerchantKey);
                 if (!updated.IsSuccess)
                 {
-                    session.Store(AdminAudit.AdminActionLog.Rejected(
-                        cmd.UserId, CustomerAdminTools.SetMerchantCredentials, cmd.MerchantId.ToString(),
-                        "credentials update rejected"));
                     return FeatureObjectResultModel<AdminSetMerchantCredentialsResponse>.Error(updated.Messages);
                 }
 
                 session.Update(existing);
-                session.Store(AdminAudit.AdminActionLog.Executed(
-                    cmd.UserId, CustomerAdminTools.SetMerchantCredentials, existing.MerchantId.ToString(),
-                    "credentials rotated"));
                 return FeatureObjectResultModel<AdminSetMerchantCredentialsResponse>.Ok(
                     new AdminSetMerchantCredentialsResponse { Configured = true, MerchantId = existing.MerchantId });
             }
@@ -46,19 +40,12 @@ public static class AdminSetMerchantCredentialsForAgent
             var created = MerchantInformation.Create(cmd.MerchantId, cmd.MerchantKey);
             if (!created.IsSuccess)
             {
-                session.Store(AdminAudit.AdminActionLog.Rejected(
-                    cmd.UserId, CustomerAdminTools.SetMerchantCredentials, cmd.MerchantId.ToString(),
-                    "credentials create rejected"));
                 return FeatureObjectResultModel<AdminSetMerchantCredentialsResponse>.Error(created.Messages);
             }
 
             if (existing is not null)
                 session.Delete(existing);
             session.Store(created.Data!);
-
-            session.Store(AdminAudit.AdminActionLog.Executed(
-                cmd.UserId, CustomerAdminTools.SetMerchantCredentials, created.Data!.MerchantId.ToString(),
-                "credentials set"));
 
             return FeatureObjectResultModel<AdminSetMerchantCredentialsResponse>.Ok(
                 new AdminSetMerchantCredentialsResponse { Configured = true, MerchantId = created.Data!.MerchantId });

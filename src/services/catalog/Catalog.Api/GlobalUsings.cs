@@ -27,16 +27,17 @@ global using Common;
 global using Microsoft.AspNetCore.Mvc;
 global using Wolverine.Attributes;
 global using System.ComponentModel;
-global using Catalog.Api.Domains.Products.Features.Commands;
+global using Catalog.Api.Process;
 global using PagedList.Core;
 global using ModelContextProtocol.Server;
 global using Catalog.Api.Domains.Products.Features.Agents;
+global using Catalog.Api.Domains.Products.Features.Agents.Commands;
 global using Common.Dependencies;
 global using Catalog.Api.Domains.Products.ValueObjects;
 global using Catalog.Api.Domains.ProductTags;
 global using Marten.Linq.MatchesSql;
 global using Catalog.Api.Domains.Products.Entities;// 067: agent list slice'ları cache aspect'i kullanır.
 global using Common.Utils.Caching;
-// --- 070: admin MCP yüzeyi (kullanıcı token'dan + iz dokümanı) ---
+// --- 070: admin MCP yüzeyi (kullanıcı token'dan) ---
 global using Common.Auths;
-global using Catalog.Api.AdminAudit;
+global using Catalog.Api.Common;

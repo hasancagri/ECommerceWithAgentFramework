@@ -2,8 +2,10 @@ namespace Common.Utils.Constants;
 
 public static class AuthorizationScopes
 {
-    // catalog.api (okuma anonim — read scope'u yok)
-    public const string CatalogWrite = "catalog.write";
+    // catalog.api — müşteri okuma anonim (scope'suz). Admin yüzeyi (/mcp-admin) ikiye ayrılır:
+    // okuma tool'ları AdminCatalogRead, yazma tool'ları AdminCatalogWrite ister.
+    public const string AdminCatalogRead = "catalog.read";
+    public const string AdminCatalogWrite = "catalog.write";
 
     // basket.api
     public const string BasketRead = "basket.read";

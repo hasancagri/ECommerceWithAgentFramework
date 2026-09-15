@@ -2,7 +2,7 @@ namespace Customer.Api.Domains.MerchantInformations.Features.Agents;
 
 // 070 US3/FR-016: DropShop onboarding BAŞVURUSU sarmalayıcısı — admin tek MCP bağlantısından
 // başvurur; PG Merchant.Api MCP'sine makine kimliği SUNUCU içinde taşınır (MerchantOnboardingClient,
-// anayasa sapması orada belgeli). PG erişilemezse dostane hata (teknik detay sızmaz). İz: AdminActionLog.
+// anayasa sapması orada belgeli). PG erişilemezse dostane hata (teknik detay sızmaz).
 // ChatAgent admin persona'sının onboarding yolu DOKUNULMADI (071'e dek paralel yaşar).
 public static class AdminSubmitOnboardingForAgent
 {
@@ -58,19 +58,10 @@ public static class AdminSubmitOnboardingForAgent
 
             if (raw is null)
             {
-                session.Store(AdminAudit.AdminActionLog.Rejected(
-                    cmd.UserId, CustomerAdminTools.SubmitOnboarding, "-", "gateway unreachable"));
                 return Unavailable();
             }
 
             var parsed = OnboardingResultParser.Parse(raw);
-            session.Store(parsed.IsSuccess
-                ? AdminAudit.AdminActionLog.Executed(
-                    cmd.UserId, CustomerAdminTools.SubmitOnboarding, "-",
-                    $"submitted ({cmd.Email}) → {parsed.Status ?? "Pending"}")
-                : AdminAudit.AdminActionLog.Rejected(
-                    cmd.UserId, CustomerAdminTools.SubmitOnboarding, "-",
-                    $"gateway rejected ({parsed.ErrorSummary})"));
 
             if (!parsed.IsSuccess)
                 return FeatureObjectResultModel<AdminSubmitOnboardingResponse>.Error(new MessageItem

@@ -50,19 +50,32 @@ public sealed class BookImportHostedService(
 
         var published = 0;
         var draft = 0;
+        var failed = 0;
         foreach (var b in books)
         {
-            var result = await bus.InvokeAsync<FeatureObjectResultModel<ImportBook.ImportBookResponse>>(
-                new ImportBook.ImportBookCommand(
-                    b.Isbn, b.Title, b.Authors, b.Publisher, b.PriceTry, b.ImageUrl, b.CategoryMid, b.CategoryLeaf, b.Description),
-                cancellationToken);
+            FeatureObjectResultModel<ImportBook.ImportBookResponse> result;
+            try
+            {
+                result = await bus.InvokeAsync<FeatureObjectResultModel<ImportBook.ImportBookResponse>>(
+                    new ImportBook.ImportBookCommand(
+                        b.Isbn, b.Title, b.Authors, b.Publisher, b.PriceTry, b.ImageUrl, b.CategoryMid, b.CategoryLeaf, b.Description),
+                    cancellationToken);
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Satır-başı izolasyon: bir kitabın patlaması (constraint/null-ref vb.) tüm import'u
+                // durdurmasın — handler zaten [Transactional] (rollback güvenli), bu satırı atlayıp devam et.
+                logger.LogError(ex, "Kitap import atlandı: {Isbn} işlenirken hata", b.Isbn);
+                failed++;
+                continue;
+            }
 
             if (result.IsSuccess && result.Data!.Published) published++;
             else draft++;
         }
 
-        logger.LogInformation("Kitap import tamam: {Total} kitap ({Published} yayında, {Draft} taslak/fiyatsız)",
-            books.Count, published, draft);
+        logger.LogInformation("Kitap import tamam: {Total} kitap ({Published} yayında, {Draft} taslak/fiyatsız, {Failed} atlandı)",
+            books.Count, published, draft, failed);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

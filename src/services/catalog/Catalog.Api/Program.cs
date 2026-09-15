@@ -36,9 +36,6 @@ builder.Services.AddMarten(opts =>
         // 043: özellik registry'si — NormalizedName teklik anahtarı (seed get-or-create güvencesi).
         opts.Schema.For<Catalog.Api.Domains.SpecificationAttributes.SpecificationAttribute>()
             .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
-
-        // 070: admin yazma tool'larının salt-append denetim izi (FR-009).
-        opts.Schema.For<AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -87,9 +84,16 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
+// Admin yüzeyi (/mcp-admin) ikiye ayrılır: okuma AdminCatalogRead, yazma AdminCatalogWrite.
+string[] catalogAdminScopes =
+[
+    AuthorizationScopes.AdminCatalogRead,
+    AuthorizationScopes.AdminCatalogWrite,
+];
+
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
-    AuthorizationScopes.CatalogWrite);
+    catalogAdminScopes);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
@@ -138,8 +142,7 @@ builder.Services
     .WithToolsFromAssembly();
 
 // 070: /mcp-admin RFC 9728 keşfi (401 challenge + metadata) — admin scope'uyla; anonim /mcp etkilenmez.
-builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "catalog",
-    AuthorizationScopes.CatalogWrite);
+builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "catalog", catalogAdminScopes);
 
 
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
@@ -160,7 +163,7 @@ app.UseAuthorization();
 app.MapMcp("/mcp");
 
 // 070: korumalı yönetim ucu — kimliksiz istek 401 + resource_metadata challenge (OAuth zinciri
-// buradan başlar); scope katmanı handler'larda ([RequiredScope(CatalogWrite)]).
+// buradan başlar); scope katmanı handler'larda, tool-bazlı ([RequiredScope(ProductCreate)] vb.).
 app.MapMcp("/mcp-admin").RequireAuthorization();
 app.MapMcpResourceMetadata();
 

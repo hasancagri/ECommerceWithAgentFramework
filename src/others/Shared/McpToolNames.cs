@@ -80,7 +80,7 @@ public static class LibraryTools
 }
 
 // 070: admin yönetim tool'ları — her BC'nin KORUMALI /mcp-admin ucunda yayınlanır
-// (anonim /mcp keşif setine GİRMEZ). Yazma tool'ları tek-kayıt işler + AdminActionLog izi bırakır.
+// (anonim /mcp keşif setine GİRMEZ). Yazma tool'ları tek-kayıt işler.
 
 public static class CatalogAdminTools
 {

@@ -11,7 +11,8 @@ public static class KnownScopes
     private static readonly IReadOnlyDictionary<string, string> Descriptions =
         new Dictionary<string, string>
         {
-            [AuthorizationScopes.CatalogWrite] = "Katalog yazma (ürün/marka/kategori)",
+            [AuthorizationScopes.AdminCatalogRead] = "Katalog okuma (admin; taslak dahil)",
+            [AuthorizationScopes.AdminCatalogWrite] = "Katalog yazma (ürün/marka/kategori)",
             [AuthorizationScopes.BasketRead] = "Sepet okuma",
             [AuthorizationScopes.BasketWrite] = "Sepet yazma",
             [AuthorizationScopes.OrderRead] = "Sipariş okuma",

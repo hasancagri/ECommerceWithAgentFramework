@@ -14,9 +14,6 @@ builder.Services.AddMarten(opts =>
         opts.Schema.For<Customer.Api.Domains.AddressBooks.AddressBook>().Index(x => x.UserId);
         // Merchant kimliği (tekil kayıt) — merchant onboarding/admin.
         opts.Schema.For<Customer.Api.Domains.MerchantInformations.MerchantInformation>();
-
-        // 070: admin yazma tool'larının salt-append denetim izi (FR-009).
-        opts.Schema.For<Customer.Api.AdminAudit.AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();

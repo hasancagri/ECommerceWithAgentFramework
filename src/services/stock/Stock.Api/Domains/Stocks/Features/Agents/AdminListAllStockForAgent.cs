@@ -1,8 +1,8 @@
 namespace Stock.Api.Domains.Stocks.Features.Agents;
 
 // 074: admin stok genel görünüm (agent yüzeyi) — GetAllStock query İKİZİ (bilinçli tekrar; agent
-// slice Commands/Queries'e IMessageBus ile bile gitmez). Salt-okuma: scope attribute YOK,
-// AdminActionLog YOK. Sayfalama opsiyonel; verilmezse tüm kayıtlar döner.
+// slice Commands/Queries'e IMessageBus ile bile gitmez). Salt-okuma: scope attribute YOK.
+// Sayfalama opsiyonel; verilmezse tüm kayıtlar döner.
 public static class AdminListAllStockForAgent
 {
     public record AdminListAllStockQuery(int? Page, int? PageSize);

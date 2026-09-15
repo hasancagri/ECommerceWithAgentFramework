@@ -1,8 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Mcp.Gateway.Aggregation;
-using Mcp.Gateway.Routing;
-
 namespace Mcp.Gateway.Auth;
 
 /// <summary>
