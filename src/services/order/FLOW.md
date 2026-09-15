@@ -9,7 +9,7 @@ başarılı callback'i (Payment fanout) siparişi checkout'a sokar. Stok/telafi/
 
 ## Süreç
 
-1. **Kullanıcı ödeme başlatır.** Sepet (gRPC, sunucu-otoritesi) +       `(StartPaymentForAgent →`
+1. **Kullanıcı ödeme başlatır.** Sepet (gRPC, sunucu-otoritesi) +       `(StartPayment →`
    varsayılan adres okunur; sipariş Pending doğar; Payment'tan           ` Order.Create; PaymentIntentClient)`
    hosted link istenir + kullanıcıya döner. Re-use: canlı link varsa
    yeni sipariş yok. Boş sepet → dostça mesaj (sipariş yok).
@@ -21,7 +21,7 @@ başarılı callback'i (Payment fanout) siparişi checkout'a sokar. Stok/telafi/
 4. **Checkout orkestratörü siparişi onaylar/iptal eder.** Order          `(OrderEventHandlers →`
    `Confirm/Cancel`'ı tüketir; Confirm pivotunda `OrderCompleted`         ` OrderConfirmed/OrderCompleted)`
    fanout'u yayılır (Reviews/Storefront). Idempotent.
-5. **Kullanıcı siparişlerini okur.** Kişi kendi geçmişini listeler.     `(GetOrdersForAgent)`
+5. **Kullanıcı siparişlerini okur.** Kişi kendi geçmişini listeler.     `(GetOrders)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 

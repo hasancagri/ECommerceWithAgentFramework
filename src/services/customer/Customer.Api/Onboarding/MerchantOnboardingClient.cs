@@ -1,7 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
-using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol;
-
 namespace Customer.Api.Onboarding;
 
 // ═══ ANAYASA SAPMASI (v1.8.1 "MCP'yi yalnız agent tüketir") — GEREKÇELİ, plan Complexity Tracking ═══

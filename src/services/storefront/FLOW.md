@@ -25,7 +25,7 @@ REST okuma yüzeyi (liste/facet/aile/harf dizini/feed) söküldü — okuma yolu
 7. **Satır her kaynak için upsert'lenir.** Herhangi bir kaynak          `(StorefrontView.Create)`
    satırı doğurabilir; her kaynak YALNIZ kendi alanını yazar.
 8. **Asistan sorusu TEK sorgu kapısından yanıtlanır.** Asistanın        `(AgentSqlGuard`
-   kurduğu salt-okur sorgu önce bekçiden geçer (yazma/yüzey-dışı         ` → QueryStorefrontForAgent`
+   kurduğu salt-okur sorgu önce bekçiden geçer (yazma/yüzey-dışı         ` → QueryStorefront`
    istek ÇALIŞMADAN reddedilir), anlamsal metin sistemce temsile         ` → AgentQueryLog)`
    çevrilir, sorgu yalnız satılabilir yüzeyde koşar ve ret dahil
    her çağrı iz bırakır. Temalı arama + benzerlik de bu kapıdandır;

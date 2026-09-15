@@ -21,8 +21,8 @@ Kart alanı HİÇ taşımaz; PAN store'a girmez.
 5. **Sonuç girişimi terminal'e taşır (idempotent).** Başarı →          `(HandlePaymentCallback`
    Succeeded + `PaymentSucceeded`; başarısız/terk → Failed/Expired      ` → PaymentIntent.MarkSucceeded/MarkFailed;`
    + `PaymentFailed`. Aynı transaction'da yayın (durable outbox).       ` → PaymentSucceeded/PaymentFailed)`
-6. **Kullanıcı ödemelerini okur.** Kişi kendi girişimlerini            `(GetAllPaymentsByUserIdForAgent)`
-   listeler; agent için MCP tool'u aynı slice'ı sarar.                  `(GetMyPaymentsMcpTool)`
+6. **Kullanıcı ödemelerini okur.** Kişi kendi girişimlerini            `(GetAllPaymentsByUserId)`
+   listeler; agent için MCP tool'u aynı slice'ı sarar.                  `(GetAllPaymentsByUserIdMcpTool)`
 
 ## Domain kuralları (süreci yöneten değişmezler)
 

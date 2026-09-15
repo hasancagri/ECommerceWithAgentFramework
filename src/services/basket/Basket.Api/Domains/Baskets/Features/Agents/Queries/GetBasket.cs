@@ -1,7 +1,5 @@
-namespace Basket.Api.Domains.Baskets.Features.Queries;
+namespace Basket.Api.Domains.Baskets.Features.Agents.Queries;
 
-// REST ucu söküldü (müşteri yüzeyi MCP-only); slice'ı yalnız checkout gRPC'si tüketir
-// (BasketItemsGrpcService). Chat yolu ayrı ikizden gider (Features.Agents.Queries.GetBasket).
 public static class GetBasket
 {
     public record GetBasketQuery(Guid UserId);
@@ -26,13 +24,9 @@ public static class GetBasket
         public string Name { get; set; } = default!;
         public string? ImageUrl { get; set; }
         public decimal Price { get; set; }
-
-        // 012: adet.
+        // Birim fiyat + adet + kalem toplamı (LLM sepeti adetiyle sunabilsin — fasad verbatim taşır).
         public int Quantity { get; set; }
-
-        // 021 (FR-007) / 056: satirin ust siniri sabit 5 (stok bileseni yok; stok gercegi checkout'ta).
-        // UI + butonunu bu deger'e ulasinca devre disi birakir.
-        public int MaxQuantity { get; set; }
+        public decimal LineTotal { get; set; }
 
         public static GetBasketItemResponse From(BasketItem item) => new()
         {
@@ -41,7 +35,7 @@ public static class GetBasket
             ImageUrl = item.ImageUrl,
             Price = item.Price,
             Quantity = item.Quantity,
-            MaxQuantity = Basket.MaxItemQuantity
+            LineTotal = item.Price * item.Quantity
         };
     }
 
@@ -60,5 +54,22 @@ public static class GetBasket
 
             return FeatureObjectResultModel<GetBasketResponse>.Ok(GetBasketResponse.From(basket));
         }
+    }
+}
+
+[McpServerToolType]
+public static class GetBasketMcpTool
+{
+    [McpServerTool(Name = Shared.BasketTools.GetBasket)]
+    [Description("Giris yapmis kullanicinin sepetini (urunler, toplam fiyat) doner.")]
+    public static Task<FeatureObjectResultModel<GetBasket.GetBasketResponse>> GetBasketAsync(
+        IMessageBus bus,
+        IHttpContextAccessor http,
+        ICurrentUser currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.Load(http.HttpContext!.User).Id;
+        return bus.InvokeAsync<FeatureObjectResultModel<GetBasket.GetBasketResponse>>(
+            new GetBasket.GetBasketQuery(userId), ct);
     }
 }

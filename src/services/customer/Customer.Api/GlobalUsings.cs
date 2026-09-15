@@ -38,3 +38,7 @@ global using Customer.Api.Extensions;
 global using System.Text.Json;
 // --- 070: admin MCP yüzeyi (tool adı sabitleri + iz) ---
 global using Shared;
+
+global using Microsoft.Extensions.Logging.Abstractions;
+global using ModelContextProtocol.Client;
+global using ModelContextProtocol.Protocol;
