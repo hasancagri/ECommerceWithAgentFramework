@@ -95,12 +95,13 @@ builder.Services.AddSingleton<IdentityOption>(sp => sp.GetRequiredService<IOptio
 // 077: Customer merchant-key S2S makine token'ı (customer.read) + PG hosted-payment istemcisi.
 builder.Services.AddTransient<PaymentTokenHandler>();
 
-var customerHttpAddress = builder.Configuration["services:customer-api:https:0"]
+var customerGrpcAddress = builder.Configuration["services:customer-api:https:0"]
     ?? builder.Configuration["services:customer-api:http:0"]
     ?? "https://customer-api";
 builder.Services
-    .AddHttpClient<MerchantKeyClient>(c => c.BaseAddress = new Uri(customerHttpAddress.TrimEnd('/') + "/"))
+    .AddGrpcClient<MerchantKeyService.MerchantKeyServiceClient>(o => o.Address = new Uri(customerGrpcAddress))
     .AddHttpMessageHandler<PaymentTokenHandler>();
+builder.Services.AddScoped<MerchantKeyClient>();
 
 // PG (dış DropShop) hosted-payment — X-Api-Key per-request (statik header YOK); tam URL istemcide (PgBaseUrl).
 builder.Services.AddHttpClient<PgHostedPaymentClient>();
@@ -135,8 +136,10 @@ app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-// 077: hosted-CF S2S (intents/live, payment.write) + PG callback (HMAC, scope yok) uçları.
+// 077: PG callback (HMAC, scope yok) ucu.
 app.AddPaymentIntentEndpoints(apiVersionSet);
+// 077: hosted-CF S2S — Order.Api canlı-intent + link isteği (payment.write). REST'ten gRPC'ye taşındı.
+app.MapGrpcService<PaymentIntentGrpcService>().RequireAuthorization(AuthorizationScopes.PaymentWrite);
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();

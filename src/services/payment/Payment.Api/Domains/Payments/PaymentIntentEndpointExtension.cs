@@ -2,46 +2,17 @@ using Payment.Api.Domains.Payments.Features.Commands;
 
 namespace Payment.Api.Domains.Payments;
 
-// 077: hosted-CF S2S + callback uçları. intents/live = Order.Api internal (payment.write); callback =
-// PG dış webhook (scope YOK → HMAC imza; US3). REST yalnız S2S/webhook — müşteri yüzü Order.Api start_payment.
+// 077: PG dış webhook ucu. intents/live + intents S2S (Order.Api) gRPC'ye taşındı (bkz.
+// Grpc/PaymentIntentGrpcService.cs) — İlke I genişletmesi: dış webhook/PSP callback'i istisna, REST kalır.
 public static class PaymentIntentEndpointExtension
 {
-    public sealed record CreateIntentRequest(Guid OrderId, Guid UserId, string BasketRef, decimal Amount, string TxRef);
     public sealed record CallbackRequest(string TxRef, string? PgPaymentRef, string Status, string? ReasonCode);
-    public sealed record LiveIntentReply(Guid PaymentIntentId, Guid OrderId, string HostedUrl);
 
     public static void AddPaymentIntentEndpoints(this WebApplication app, ApiVersionSet apiVersionSet)
     {
         var group = app.MapGroup("api/v{version:apiVersion}/internal/payments")
             .WithTags("PaymentIntentInternal")
             .WithApiVersionSet(apiVersionSet);
-
-        // Order.Api → link iste (senkron). CallbackUrl store'un kendi callback ucu (mutlak, request'ten türer).
-        group.MapPost("/intents", async (
-            CreateIntentRequest req, HttpRequest http, IMessageBus bus, CancellationToken ct) =>
-        {
-            var callbackUrl = $"{http.Scheme}://{http.Host}/api/v1/internal/payments/callback";
-            var result = await bus.InvokeAsync<FeatureObjectResultModel<CreatePaymentIntent.CreatePaymentIntentResponse>>(
-                new CreatePaymentIntent.CreatePaymentIntentCommand(
-                    req.OrderId, req.UserId, req.BasketRef, req.Amount, req.TxRef, callbackUrl), ct);
-
-            return result.IsSuccess ? Results.Ok(result.Data) : Results.BadRequest(result);
-        }).RequireAuthorization(AuthorizationScopes.PaymentWrite);
-
-        // Re-use sorgusu: aynı kullanıcı+sepet için canlı Pending intent (order oluşturmadan önce kontrol).
-        group.MapGet("/intents/live", async (
-            Guid userId, string basketRef, IQuerySession session, PaymentOptions options, CancellationToken ct) =>
-        {
-            var candidates = await session.Query<PaymentIntent>()
-                .Where(p => p.UserId == userId && p.BasketRef == basketRef
-                            && p.Status == PaymentIntentStatus.Pending)
-                .ToListAsync(ct);
-            var live = candidates.FirstOrDefault(p => p.IsLive(options.IntentTimeoutSeconds, DateTime.UtcNow));
-
-            return live is null
-                ? Results.NotFound()
-                : Results.Ok(new LiveIntentReply(live.Id, live.OrderId, live.HostedUrl));
-        }).RequireAuthorization(AuthorizationScopes.PaymentWrite);
 
         // PG → ödeme sonucu callback (HMAC imzalı; scope YOK). Geçersiz/eksik imza → 401, handler çağrılmaz.
         group.MapPost("/callback", async (
