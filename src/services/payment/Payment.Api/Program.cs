@@ -114,6 +114,7 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("payment");
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddGrpc();
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()

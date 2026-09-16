@@ -80,6 +80,7 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("customer");
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddGrpc();
 // 070: TEK MCP server, İKİ korumalı uç — /mcp (müşteri tool seti, 061) + /mcp-admin (merchant
 // yönetimi). Oturum başına TAZE options; tool seti isteğin yoluna göre budanır: admin tool'lar
 // YALNIZ /mcp-admin'de, müşteri tool'ları YALNIZ /mcp'de görünür (müşteri DCR istemcileri admin
