@@ -173,7 +173,7 @@ public static class Config
             [
                 AuthorizationScopes.BasketRead, AuthorizationScopes.OrderRead,
                 AuthorizationScopes.CustomerRead, AuthorizationScopes.PaymentRead,
-                AuthorizationScopes.AdminCatalogRead,
+                AuthorizationScopes.AdminCatalogWrite,
                 AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
             ],
         },
