@@ -1,18 +1,15 @@
-<!-- Sync Impact Report — v1.10.0 → v1.11.0 (2026-08-25, MINOR)
-     Modified: İlke I — orkestre saga adım/telafi kanalı genişletildi. Sürecin sahibi saga, hedefli
-     adım/telafi komutlarını tipli senkron RPC (gRPC/HTTP) YA DA hedefli asenkron broker komut/yanıtı
-     (korelasyon kimliği + idempotency anahtarı; fanout DEĞİL) ile yürütebilir. (b) temporal decoupling /
-     at-least-once dayanıklılık gerektiğinde ya da saga ayrı orchestration servisinde host edildiğinde
-     seçilir. Her iki biçim de bilinçli sözleşmeyle (Shared/Protos ya da Shared/*Messages) yapılır,
-     DB izolasyonunu bozmaz.
-     Gerekçe: 049-checkout-orchestrator — checkout saga'sı ayrı Checkout.Orchestrator servisine taşındı;
-     broker-only komut/yanıt öğrenme + temporal decoupling hedefi. gRPC'ye ek meşru kanal, gRPC'yi
-     kaldırmaz (028 gRPC örneği geçerli kalır). Backward-compatible → MINOR.
-     Added/Removed principles: yok (İlke I genişledi; diğerleri bozulmadı).
-     Templates: plan/spec/tasks ✅ değişiklik gerekmez (Constitution Check anayasadan türetilir).
-     Runtime docs: conventions.md ⚠ pending (servisler-arası desenler — "Sanksiyonlu gRPC" yanına
-     broker saga-komut biçimi eklenecek); CLAUDE.md ⚠ pending (BC haritası + checkout satırı 049 ile);
-     specs/049 plan.md ⚠ pending (İlke I "gerekçeli sapma" → "uyumlu" olarak güncellenecek). -->
+<!-- Sync Impact Report — v1.11.0 → v1.11.1 (2026-09-18, PATCH)
+     Modified: İlke V — açıklayıcı istisna eklendi: süreli + tek-kullanımlık capability-link.
+     Scope-korumalı bir yüzeyin (örn. MCP admin tool'u) ürettiği, sunucu-durumlu (DB'de geri
+     çekilebilir), kısa süreli ve TEK kullanımlık token-link; insan-tarayıcı akışı gerektiren DAR
+     hosted ekranları koruyabilir. Scope zorlaması link-ÜRETİM anında uygulanmış sayılır (yetki
+     devri modeli). Koşullar: tek amaçlı yüzey, gizli değer ekrandan OKUNAMAZ (yazma-only),
+     token URL dışında taşınmaz. İlke ihlali değil açıklayıcı istisna → PATCH (v1.7.1 IdP-cookie
+     istisnası emsali).
+     Gerekçe: 078-hosted-onboarding-form — MerchantKey LLM sohbetine giremez; store'da web-login
+     yüzeyi yok (066 söküm) ve geri eklenmeyecek; tek teslim yolu insan gözü + hosted ekran.
+     Templates: plan/spec/tasks ✅ değişiklik gerekmez.
+     Runtime docs: CLAUDE.md ⚠ pending (078 Polish T019 günceller). -->
 
 # ECommerceWithAgentFramework Constitution
 
@@ -150,6 +147,12 @@ servisi (PDP) açılmaz.
 - Kimlik doğrulama şeması JWT bearer ile sınırlı değildir: dış entegrasyonlar için
   JWT-olmayan custom authentication şemaları (ör. opak UserKey) meşrudur — koşul,
   zorlamanın scope olmasıdır.
+- **İstisna — süreli tek-kullanımlık capability-link (v1.11.1):** Scope-korumalı bir yüzeyin
+  ürettiği, sunucu-durumlu (DB'de geri çekilebilir), kısa süreli ve TEK kullanımlık token-link,
+  insan-tarayıcı akışı gerektiren DAR (tek amaçlı) hosted ekranı koruyabilir; scope zorlaması
+  link-üretim anında uygulanmış sayılır (yetki devri). Koşullar: gizli değer ekrandan okunamaz
+  (yazma-only), token URL dışında taşınmaz, yüzey tek amaçlıdır. Örnek: 078 credential giriş
+  ekranı (linki `merchant.credentials.write` scope'lu tool üretir).
 - Anonim gezinme meşrudur: kimlik istemeyen okuma yüzeyleri (vitrin vb.) login'siz
   erişilebilir kalır; login yalnız kullanıcıya bağlı işlemler için istenir.
 - `Identity.Server` HTTPS üzerinden çalışmak zorundadır; tüm servislerin `Authority`
@@ -276,7 +279,7 @@ Kalite kapıları:
 - Değişiklikler (amendment) commit mesajında ve versiyon artışıyla belgelenir:
   ilke ekleme/kaldırma MAJOR, yeni ilke/bölüm ekleme MINOR, açıklama/düzeltme PATCH.
 
-**Version**: 1.11.0 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-08-25
+**Version**: 1.11.1 | **Ratified**: 2026-07-12 | **Last Amended**: 2026-09-18
 
 <!-- v1.11.0 (2026-08-25, MINOR): İlke I orkestre saga adım/telafi kanalı genişletildi — sürecin
      sahibi saga, hedefli komutları tipli senkron RPC (gRPC/HTTP) YA DA hedefli asenkron broker
