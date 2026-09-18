@@ -18,7 +18,7 @@ PG hazır olana dek bekler.
 
 ## Phase 1: Setup
 
-- [ ] T001 `DropShopOnboardingOption`'ı REST'e çevir (`McpUrl` → `ApiBaseUrl`) —
+- [X] T001 `DropShopOnboardingOption`'ı REST'e çevir (`McpUrl` → `ApiBaseUrl`) —
   `src/services/customer/Customer.Api/Onboarding/DropShopOnboardingOption.cs`; YENİ
   `CredentialEntryOptions` POCO'su (`PublicBaseUrl` = Customer.Api'nin dışarıdan erişilir adresi +
   `LinkLifetime` varsayılan 60 dk) — `src/services/customer/Customer.Api/Options/CredentialEntryOptions.cs`;
@@ -28,7 +28,7 @@ PG hazır olana dek bekler.
 
 ## Phase 2: Foundational (Blocking)
 
-- [ ] T002 `PgOnboardingClient` tipli REST istemcisi (D3): `CreateSessionAsync(email)`,
+- [X] T002 `PgOnboardingClient` tipli REST istemcisi (D3): `CreateSessionAsync(email)`,
   `GetStatusAsync(email)`, `ValidateCredentialsAsync(merchantId, merchantKey)`; ulaşım hatasında null
   (dostane hata deseni) — `src/services/customer/Customer.Api/Onboarding/PgOnboardingClient.cs`;
   kayıt `AddHttpClient<PgOnboardingClient>().AddHttpMessageHandler<OnboardingGatewayTokenHandler>()`
@@ -42,11 +42,11 @@ PG hazır olana dek bekler.
 
 **Independent Test**: quickstart S1 — linkten form doldurulur, PG'de Pending doğar, transkriptte PII yok.
 
-- [ ] T003 [US1] `AdminStartOnboarding` agent slice + MCP tool: e-posta alır,
+- [X] T003 [US1] `AdminStartOnboarding` agent slice + MCP tool: e-posta alır,
   `PgOnboardingClient.CreateSessionAsync` çağırır; `formUrl` + durum mesajı döner; Pending-varken
   formUrl=null mesajı; `[RequiredScope(MerchantCredentialsWrite)]` —
   `src/services/customer/Customer.Api/Domains/MerchantInformations/Features/Agents/Commands/AdminStartOnboarding.cs`
-- [ ] T004 [US1] Tool adını kaydet (D7 tuzağı): `Shared.CustomerAdminTools`'a `StartOnboarding` sabiti
+- [X] T004 [US1] Tool adını kaydet (D7 tuzağı): `Shared.CustomerAdminTools`'a `StartOnboarding` sabiti
   (`src/others/Shared/McpToolNames.cs`) + `customerAdminToolNames` allowlist'ine ekle
   (`src/services/customer/Customer.Api/Program.cs`).
 - [ ] T005 [US1] Canlı doğrulama S1 (quickstart.md) — PG kontrat implementasyonu hazır olunca.
@@ -69,31 +69,31 @@ PG hazır olana dek bekler.
 **Independent Test**: quickstart S3 — link tek kullanımlık; yanlış key anında hata; ödeme akışı yeni
 key ile çalışır; izde key yok.
 
-- [ ] T007 [P] [US3] Domain testleri ÖNCE (İLKE VI, red): `CredentialEntrySession.Create/Consume/IsUsable`
+- [X] T007 [P] [US3] Domain testleri ÖNCE (İLKE VI, red): `CredentialEntrySession.Create/Consume/IsUsable`
   (süre dolumu, çift tüketim, mutlu yol) + `MerchantInformation` credential-set davranışının
   `CredentialsVerified` bayrağı — `tests/Customer.Api.Tests/CredentialEntrySessionTests.cs`
-- [ ] T008 [US3] `CredentialEntrySession` aggregate (green; data-model.md şeması: 256-bit URL-safe
+- [X] T008 [US3] `CredentialEntrySession` aggregate (green; data-model.md şeması: 256-bit URL-safe
   Token, ExpiresAt, ConsumedAt, ResultDomain dönen Consume) —
   `src/services/customer/Customer.Api/Domains/MerchantInformations/CredentialEntrySession.cs`
-- [ ] T009 [US3] `MerchantInformation`'a `CredentialsVerified` alanı + credential-set davranış
+- [X] T009 [US3] `MerchantInformation`'a `CredentialsVerified` alanı + credential-set davranış
   güncellemesi (green) —
   `src/services/customer/Customer.Api/Domains/MerchantInformations/MerchantInformation.cs`
-- [ ] T010 [US3] `AdminRequestCredentialEntryLink` agent slice + MCP tool: session dokümanı yazar,
+- [X] T010 [US3] `AdminRequestCredentialEntryLink` agent slice + MCP tool: session dokümanı yazar,
   `{CredentialEntryOptions.PublicBaseUrl}/merchant-credentials/{token}` linki döner (HttpContext base
   KULLANILMAZ — MCP çağrısı mcp-gateway proxy'sinden gelir, istek base'i Aspire iç adresidir,
   tarayıcıda çözülmez),
   `AdminActionLog: credential_entry_link_created` (token loglanmaz, oturum Id loglanır);
   `[RequiredScope(MerchantCredentialsWrite)]` —
   `src/services/customer/Customer.Api/Domains/MerchantInformations/Features/Agents/Commands/AdminRequestCredentialEntryLink.cs`
-- [ ] T011 [US3] Tool adı kaydı (D7): `CustomerAdminTools.RequestCredentialEntryLink` sabiti +
+- [X] T011 [US3] Tool adı kaydı (D7): `CustomerAdminTools.RequestCredentialEntryLink` sabiti +
   `customerAdminToolNames` allowlist — `src/others/Shared/McpToolNames.cs`,
   `src/services/customer/Customer.Api/Program.cs`
-- [ ] T012 [US3] `SubmitMerchantCredentials` command slice: token'lı session yükle → `Consume` →
+- [X] T012 [US3] `SubmitMerchantCredentials` command slice: token'lı session yükle → `Consume` →
   `PgOnboardingClient.ValidateCredentialsAsync` (geçersiz=ret; PG-yok=`CredentialsVerified:false` ile
   kaydet) → `MerchantInformation` güncelle → `AdminActionLog: merchant_credentials_submitted`
   (key YAZILMAZ) —
   `src/services/customer/Customer.Api/Domains/MerchantInformations/Features/Commands/SubmitMerchantCredentials.cs`
-- [ ] T013 [US3] `CredentialEntryEndpointExtension`: `GET /merchant-credentials/{token}` (gömülü HTML
+- [X] T013 [US3] `CredentialEntryEndpointExtension`: `GET /merchant-credentials/{token}` (gömülü HTML
   form, yazma-only, usable-değilse nötr 404) + `POST /merchant-credentials/{token}` (form-post →
   IMessageBus → sonuç sayfası); anonim (token=yetki, SAPMA-1) + Program.cs map —
   `src/services/customer/Customer.Api/CredentialEntryEndpointExtension.cs`
@@ -120,7 +120,7 @@ key ile çalışır; izde key yok.
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T018 [P] Customer `FLOW.md` güncelle (İLKE VII, aynı PR): onboarding süreci yeni adımlarla
+- [X] T018 [P] Customer `FLOW.md` güncelle (İLKE VII, aynı PR): onboarding süreci yeni adımlarla
   (link üret → PG formu → approve-mail → teslim linki → store ekranı → doğrula-kaydet); eski chat-PII
   adımları sil — `src/services/customer/FLOW.md`; `scripts/check-flow-links.sh` yeşil.
 - [ ] T019 [P] `CLAUDE.md` customer BC satırı + 070 sapma notu güncelle (imperatif MCP sapması

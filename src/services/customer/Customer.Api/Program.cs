@@ -14,6 +14,11 @@ builder.Services.AddMarten(opts =>
         opts.Schema.For<Customer.Api.Domains.AddressBooks.AddressBook>().Index(x => x.UserId);
         // Merchant kimliği (tekil kayıt) — merchant onboarding/admin.
         opts.Schema.For<Customer.Api.Domains.MerchantInformations.MerchantInformation>();
+        // 078: tek kullanımlık credential-giriş ekran oturumu — token'la yüklenir.
+        opts.Schema.For<Customer.Api.Domains.MerchantInformations.CredentialEntrySession>()
+            .Index(x => x.Token);
+        // 078 FR-007: admin yazma işlemlerinin salt-append denetim izi (key/token asla yazılmaz).
+        opts.Schema.For<Customer.Api.AdminAudit.AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -24,6 +29,11 @@ builder.Host.UseWolverine(opts =>
     // debug oturumlarinin hayalet-node StopRemoteAgent timeout gurultusunu kokten onler.
     if (builder.Environment.IsDevelopment())
         opts.Durability.Mode = DurabilityMode.Solo;
+
+    // 078: onboarding handler'ları typed HttpClient (PgOnboardingClient, AddHttpClient<T> = opaque
+    // lambda transient) inject eder; Wolverine inline codegen bunları service-location ister.
+    // Varsayılan NotAllowed → 500. Payment/Order.Api ile aynı politika.
+    opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
 
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
@@ -72,6 +82,15 @@ builder.Services.AddHttpClient(Customer.Api.Onboarding.MerchantOnboardingClient.
     });
 #pragma warning restore EXTEXP0001
 
+// 078 D3: PG onboarding S2S REST istemcisi — aynı makine kimliği handler'ı REST client'a takılır
+// (imperatif MCP sapmasının yerine tipli sözleşme; kontrat specs/078/contracts/pg-onboarding-rest.md).
+builder.Services.AddHttpClient<Customer.Api.Onboarding.PgOnboardingClient>()
+    .AddHttpMessageHandler<Customer.Api.Onboarding.OnboardingGatewayTokenHandler>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
+
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
     builder.AddRedisDistributedCache("redis");
@@ -89,6 +108,8 @@ string[] customerAdminToolNames =
 [
     Shared.CustomerAdminTools.GetMerchantStatus, Shared.CustomerAdminTools.SetMerchantCredentials,
     Shared.CustomerAdminTools.SubmitOnboarding, Shared.CustomerAdminTools.OnboardingStatus,
+    // 078: hosted onboarding + credential-giriş ekran linki (allowlist tuzağı — eklemeyen tool'u kaybeder).
+    Shared.CustomerAdminTools.StartOnboarding, Shared.CustomerAdminTools.RequestCredentialEntryLink,
 ];
 builder.Services
     .AddMcpServer()
@@ -130,6 +151,9 @@ app.MapGrpcService<Customer.Api.Grpc.AddressGrpcService>()
 // 077: Payment.Api PG hosted-payment X-Api-Key kaynağı S2S çeker (customer.read). REST'ten gRPC'ye taşındı.
 app.MapGrpcService<Customer.Api.Grpc.MerchantKeyGrpcService>()
     .RequireAuthorization(AuthorizationScopes.CustomerRead);
+
+// 078: hosted credential-giriş ekranı — ANONİM (token = yetki; İlke V v1.11.1 capability-link istisnası).
+app.MapCredentialEntryEndpoints();
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
 app.MapMcp("/mcp").RequireAuthorization();

@@ -21,8 +21,11 @@ public class MerchantInformation : AggregateRoot
     /// <summary>Kayıt durumu (dev: Active).</summary>
     public string Status { get; private set; } = "Active";
 
-    /// <summary>Yeni merchant kimliği oluşturur; merchantId + key zorunlu.</summary>
-    public static ResultDomain<MerchantInformation> Create(Guid merchantId, string merchantKey)
+    /// <summary>078 FR-013: ikili kayıt anında PG'ye doğrulandıysa true; PG erişilemezken kayıtta false ("doğrulanamadı").</summary>
+    public bool CredentialsVerified { get; private set; }
+
+    /// <summary>Yeni merchant kimliği oluşturur; merchantId + key zorunlu. Verified = kayıt anı PG doğrulaması sonucu.</summary>
+    public static ResultDomain<MerchantInformation> Create(Guid merchantId, string merchantKey, bool credentialsVerified = false)
     {
         var messages = new List<MessageItem>();
 
@@ -39,12 +42,13 @@ public class MerchantInformation : AggregateRoot
         {
             MerchantId = merchantId,
             MerchantKey = merchantKey.Trim(),
-            Status = "Active"
+            Status = "Active",
+            CredentialsVerified = credentialsVerified
         });
     }
 
-    /// <summary>MerchantKey'i günceller (rotate / yeniden set); boş RET.</summary>
-    public ResultDomain UpdateKey(string merchantKey)
+    /// <summary>MerchantKey'i günceller (rotate / yeniden set); boş RET. Verified = kayıt anı PG doğrulaması sonucu.</summary>
+    public ResultDomain UpdateKey(string merchantKey, bool credentialsVerified = false)
     {
         if (string.IsNullOrWhiteSpace(merchantKey))
         {
@@ -56,6 +60,7 @@ public class MerchantInformation : AggregateRoot
         }
 
         MerchantKey = merchantKey.Trim();
+        CredentialsVerified = credentialsVerified;
         UpdatedTime = DateTime.UtcNow;
         return ResultDomain.Ok();
     }

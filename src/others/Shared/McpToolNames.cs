@@ -121,6 +121,10 @@ public static class CustomerAdminTools
     // FR-016: DropShop onboarding sarmalayıcıları — makine kimliği sunucu içinde taşınır.
     public const string SubmitOnboarding = "admin_submit_onboarding";
     public const string OnboardingStatus = "admin_onboarding_status";
+    // 078: PII'siz hosted onboarding — form oturumu açar, yalnız link döner.
+    public const string StartOnboarding = "admin_start_onboarding";
+    // 078: credential-giriş ekranına süreli + tek kullanımlık link üretir (key sohbete girmez).
+    public const string RequestCredentialEntryLink = "admin_request_credential_entry_link";
 }
 
 // 061: korumalı MCP'lerdeki ortak oturum-kapatma tool'u (basket/order/payment/customer).
