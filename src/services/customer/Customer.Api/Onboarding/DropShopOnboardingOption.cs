@@ -17,7 +17,4 @@ public class DropShopOnboardingOption
     public string TokenEndpoint => $"{IdentityAddress.TrimEnd('/')}/connect/token";
 
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiBaseUrl);
-
-    // 078 GEÇİCİ: eski imperatif MCP istemcisi (MerchantOnboardingClient) US4 sökümüne dek derlensin.
-    public string McpUrl => $"{ApiBaseUrl.TrimEnd('/')}/mcp";
 }

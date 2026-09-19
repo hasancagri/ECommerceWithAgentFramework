@@ -108,11 +108,11 @@ key ile çalışır; izde key yok.
 
 **Independent Test**: quickstart S4 — tool listesi + status yanıtı denetimi.
 
-- [ ] T015 [US4] `AdminOnboardingStatus`'u yeniden şekillendir: `PgOnboardingClient.GetStatusAsync`'e
+- [X] T015 [US4] `AdminOnboardingStatus`'u yeniden şekillendir: `PgOnboardingClient.GetStatusAsync`'e
   geç; yanıttan `MerchantId`/`MerchantKey` alanlarını çıkar; Approved mesajı mail+ekran yoluna
   yönlendirir —
   `src/services/customer/Customer.Api/Domains/MerchantInformations/Features/Agents/Queries/AdminOnboardingStatus.cs`
-- [ ] T016 [US4] Söküm: `AdminSubmitOnboarding.cs` + `AdminSetMerchantCredentials.cs` +
+- [X] T016 [US4] Söküm: `AdminSubmitOnboarding.cs` + `AdminSetMerchantCredentials.cs` +
   `Onboarding/MerchantOnboardingClient.cs` + `OnboardingResultParser` sil; `CustomerAdminTools`'tan
   eski sabitler + `customerAdminToolNames`'ten eski adlar düşür; T001 geçici `McpUrl` türevi kalksın —
   ilgili dosyalar + `src/others/Shared/McpToolNames.cs` + `src/services/customer/Customer.Api/Program.cs`
@@ -123,7 +123,7 @@ key ile çalışır; izde key yok.
 - [X] T018 [P] Customer `FLOW.md` güncelle (İLKE VII, aynı PR): onboarding süreci yeni adımlarla
   (link üret → PG formu → approve-mail → teslim linki → store ekranı → doğrula-kaydet); eski chat-PII
   adımları sil — `src/services/customer/FLOW.md`; `scripts/check-flow-links.sh` yeşil.
-- [ ] T019 [P] `CLAUDE.md` customer BC satırı + 070 sapma notu güncelle (imperatif MCP sapması
+- [X] T019 [P] `CLAUDE.md` customer BC satırı + 070 sapma notu güncelle (imperatif MCP sapması
   SÖKÜLDÜ; hosted credential ekranı SAPMA-2 olarak not) — `CLAUDE.md`.
 - [ ] T020 Tam doğrulama: `dotnet build` + `dotnet test` (bağımlı TEST projeleri dahil — rename
   tuzağı) + quickstart S5 (PG kapalı dostane hata) + sandbox MerchantKey rotate hatırlatması.

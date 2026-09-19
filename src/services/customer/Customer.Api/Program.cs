@@ -69,21 +69,9 @@ builder.Services.AddAllDependencies();
 // DropShop onboarding config (section "DropShopOnboarding"). (076: DropShopVault/kart config söküldü.)
 builder.Services.AddOptionsExt();
 
-// 070 FR-016: DropShop onboarding sarmalayıcısı — PG Merchant.Api MCP'sine makine kimliği
-// (client_credentials) forward eden named-client (MCP uzun-ömürlü SSE → resilience muaf).
+// 078 D3: PG onboarding S2S REST istemcisi — makine kimliği (client_credentials) handler'ıyla
+// (070'in imperatif MCP sapması US4'te SÖKÜLDÜ; kontrat specs/078/contracts/pg-onboarding-rest.md).
 builder.Services.AddTransient<Customer.Api.Onboarding.OnboardingGatewayTokenHandler>();
-#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers experimental; MCP SSE icin gerekli
-builder.Services.AddHttpClient(Customer.Api.Onboarding.MerchantOnboardingClient.HttpClientName)
-    .RemoveAllResilienceHandlers()
-    .AddHttpMessageHandler<Customer.Api.Onboarding.OnboardingGatewayTokenHandler>()
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-    });
-#pragma warning restore EXTEXP0001
-
-// 078 D3: PG onboarding S2S REST istemcisi — aynı makine kimliği handler'ı REST client'a takılır
-// (imperatif MCP sapmasının yerine tipli sözleşme; kontrat specs/078/contracts/pg-onboarding-rest.md).
 builder.Services.AddHttpClient<Customer.Api.Onboarding.PgOnboardingClient>()
     .AddHttpMessageHandler<Customer.Api.Onboarding.OnboardingGatewayTokenHandler>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -106,8 +94,7 @@ builder.Services.AddGrpc();
 // şemasını görmez — R1).
 string[] customerAdminToolNames =
 [
-    Shared.CustomerAdminTools.GetMerchantStatus, Shared.CustomerAdminTools.SetMerchantCredentials,
-    Shared.CustomerAdminTools.SubmitOnboarding, Shared.CustomerAdminTools.OnboardingStatus,
+    Shared.CustomerAdminTools.GetMerchantStatus, Shared.CustomerAdminTools.OnboardingStatus,
     // 078: hosted onboarding + credential-giriş ekran linki (allowlist tuzağı — eklemeyen tool'u kaybeder).
     Shared.CustomerAdminTools.StartOnboarding, Shared.CustomerAdminTools.RequestCredentialEntryLink,
 ];
