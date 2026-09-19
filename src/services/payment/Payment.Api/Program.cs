@@ -57,6 +57,8 @@ builder.Host.UseWolverine(opts =>
         typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Handler/Consumer son eki taşımayan süreç sınıfı taramada keşfedilmez → açık kayıt şart.
+    opts.Discovery.IncludeType(typeof(Payment.Api.Process.PaymentIntentExpiry));
 });
 
 builder.Services.AddApiVersioning(options =>
