@@ -106,6 +106,10 @@ Domains/<Aggregate>/
   birden fazla BC'den event geliyorsa kaynak başına ayrı dosya (tek `<Service>EventHandlers.cs`'te
   karışık kaynak deseni EMEKLİ); dosya adından "bu nereden geliyor" cevaplanır, içerik açmaya gerek kalmaz.
   `Process/` bu kuralın dışı (kaynak başka BC/worker değil, BC'nin KENDİ dayanıklı süreci).
+- **Wolverine keşfi ad-son-eki bazlıdır: `*Handler`/`*Consumer` ile bitmeyen handler sınıfı taramayla
+  BULUNMAZ** (çoğul `*Consumers` ve `Process/` sınıfları dahil) → `Program.cs`'e
+  `opts.Discovery.IncludeType(typeof(X))` ZORUNLU. Unutulursa mesaj sessizce yutulur — hata da
+  dead-letter da yok. Rename'de bu kayıt da güncellenir; yeni handler açarken ilk kontrol bu satır.
 - **Tek çağıranı sanksiyonlu S2S araç (gRPC vb.) olan Features slice'ı Domains dışına çıkar, o aracın
   SINIFI İÇİNE gömülür.** "Kullanıcı mı tetikledi" testi burada da geçerli — REST/MCP/agent hiç
   çağırmıyorsa (yalnız gRPC servisi tüketiyorsa) o slice sahte bir "niyet yüzeyi" değildir, indirekt

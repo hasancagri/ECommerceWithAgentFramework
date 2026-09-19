@@ -46,3 +46,6 @@ global using ModelContextProtocol.Protocol;
 // --- 074: BC-arası S2S gRPC (performans, İlke I genişletildi) ---
 global using Grpc.Core;
 global using Shared.Grpc.Customer;
+
+// --- 078: hosted credential-giriş ekranı ---
+global using Customer.Api;

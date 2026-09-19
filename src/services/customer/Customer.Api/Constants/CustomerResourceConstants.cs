@@ -10,4 +10,7 @@ public static class CustomerResourceConstants
 
     // 070: DropShop onboarding sarmalayıcısı — PG erişilemez/yanıt çözülemez ("şu an yapılamıyor").
     public static readonly string MERCHANT_ONBOARDING_UNAVAILABLE = "MERCHANT_ONBOARDING_UNAVAILABLE";
+
+    // 078 FR-013: ekrandan girilen MerchantId+Key ikilisi PG doğrulamasından geçemedi.
+    public static readonly string MERCHANT_CREDENTIALS_INVALID = "MERCHANT_CREDENTIALS_INVALID";
 }

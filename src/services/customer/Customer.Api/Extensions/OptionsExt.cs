@@ -15,6 +15,13 @@ public static class OptionsExt
         services.AddSingleton<Customer.Api.Onboarding.DropShopOnboardingOption>(sp =>
             sp.GetRequiredService<IOptions<Customer.Api.Onboarding.DropShopOnboardingOption>>().Value);
 
+        // 078: hosted credential-giriş ekranı (link tabanı + ömür) — section "CredentialEntryOptions".
+        services.AddOptions<Customer.Api.Options.CredentialEntryOptions>()
+            .BindConfiguration(nameof(Customer.Api.Options.CredentialEntryOptions))
+            .ValidateDataAnnotations().ValidateOnStart();
+        services.AddSingleton<Customer.Api.Options.CredentialEntryOptions>(sp =>
+            sp.GetRequiredService<IOptions<Customer.Api.Options.CredentialEntryOptions>>().Value);
+
         return services;
     }
 }
