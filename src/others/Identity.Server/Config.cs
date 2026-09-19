@@ -159,6 +159,9 @@ public static class Config
                 AuthorizationScopes.OrderRead, AuthorizationScopes.OrderWrite,
                 AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite,
                 AuthorizationScopes.PaymentRead, AuthorizationScopes.StorefrontRead,
+                // Unutulan kablolama (2026-09-19): reviews+library fasada eklendi; rol demetinde zaten vardı.
+                AuthorizationScopes.ReviewsWrite,
+                AuthorizationScopes.LibraryRead, AuthorizationScopes.LibraryWrite,
             ],
         },
         // 073: fasad keşif (ListTools) makine kimliği — client_credentials, salt audience üretimi

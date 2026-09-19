@@ -203,6 +203,9 @@ var mcpGateway = builder.AddProject<Projects.Mcp_Gateway>("mcp-gateway")
     .WithReference(customerApi)
     .WithReference(paymentApi)
     .WithReference(stockApi)
+    // Unutulan kablolama (2026-09-19): reviews+library tool'ları fasada ancak referansla çözülür.
+    .WithReference(reviewsApi)
+    .WithReference(libraryApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
