@@ -45,13 +45,8 @@ public static class SubmitMerchantCredentials
             // FR-013: kayıt anında PG doğrulaması. false=geçersiz ikili; null=PG erişilemedi.
             var valid = await gateway.ValidateCredentialsAsync(merchantId, merchantKey, ct);
             if (valid is false)
-            {
-                session.Store(AdminAudit.AdminActionLog.Rejected(
-                    entrySession.RequestedByUserId, "merchant_credentials_submitted",
-                    merchantId.ToString(), "invalid credentials (PG validation failed)"));
                 return FeatureObjectResultModel<SubmitMerchantCredentialsResponse>.Error(new MessageItem
                 { Code = CustomerResourceConstants.MERCHANT_CREDENTIALS_INVALID });
-            }
 
             var verified = valid is true;
 
@@ -78,10 +73,6 @@ public static class SubmitMerchantCredentials
                     session.Delete(existing);
                 session.Store(created.Data!);
             }
-
-            session.Store(AdminAudit.AdminActionLog.Executed(
-                entrySession.RequestedByUserId, "merchant_credentials_submitted",
-                merchantId.ToString(), verified ? "credentials submitted (verified)" : "credentials submitted (UNVERIFIED - PG unreachable)"));
 
             return FeatureObjectResultModel<SubmitMerchantCredentialsResponse>.Ok(
                 new SubmitMerchantCredentialsResponse { Verified = verified, MerchantId = merchantId });

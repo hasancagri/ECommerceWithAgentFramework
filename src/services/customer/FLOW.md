@@ -22,7 +22,7 @@ yapısal S2S REST (merchant-key). **Kart-saklama (Wallet/cüzdan) 076'da SÖKÜL
    MerchantId+Key'i ekrana elle girer.
 5. **Kayıt anında PG doğrulaması + tek-kullanım tüketimi.** Geçersiz `(SubmitMerchantCredentials → `
    ikili RET (oturum yaşar); PG erişilemezse "doğrulanamadı"         ` CredentialEntrySession.Consume)`
-   işaretiyle saklanır; başarı oturumu öldürür, iz yazılır (key izde YOK).
+   işaretiyle saklanır; başarı oturumu öldürür.
 6. **Merchant kimliği kaydı ödeme akışını besler.**                  `(MerchantInformation)`
    Yapısal S2S merchant-key ucu (Payment.Api gRPC ile çeker, 077).
 
@@ -32,8 +32,8 @@ yapısal S2S REST (merchant-key). **Kart-saklama (Wallet/cüzdan) 076'da SÖKÜL
 - **Kullanıcı başına tek defter.** `UserId` ile keyli; ilk yazımda tembel oluşturulur.
 - **Ekran oturumu tek kullanımlık + süreli.** `CredentialEntrySession.Consume` çift tüketimi ve
   süresi geçmişi reddeder; GET tüketmez (vazgeçmek linki öldürmez, süre öldürür).
-- **PII/MerchantKey sohbete ve ize girmez (078).** Denetim izi (`AdminActionLog`) oturum Id + özet
-  yazar; token ve key ASLA yazılmaz.
+- **PII/MerchantKey sohbete girmez (078).** Key yalnız ekran POST'unda taşınır, hiçbir log/yanıta
+  yazılmaz. (078'in denetim izi kullanıcı kararıyla söküldü, 2026-09-19.)
 - **İzole BC, event yok.** Ne yayınlar ne tüketir; kanal REST/MCP (+ PG'ye S2S REST).
 - **Kart-saklama YOK (076).** Cüzdan/tokenize/vault söküldü; ödeme yöntemi hosted-CF (077).
 
