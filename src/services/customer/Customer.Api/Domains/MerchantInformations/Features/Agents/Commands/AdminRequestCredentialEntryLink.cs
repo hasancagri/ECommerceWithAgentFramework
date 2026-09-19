@@ -33,10 +33,6 @@ public static class AdminRequestCredentialEntryLink
             var entrySession = created.Data!;
             session.Store(entrySession);
 
-            session.Store(AdminAudit.AdminActionLog.Executed(
-                cmd.UserId, "credential_entry_link_created", entrySession.Id.ToString(),
-                $"Credential entry link created (expires {entrySession.ExpiresAt:O})"));
-
             return Task.FromResult(FeatureObjectResultModel<AdminRequestCredentialEntryLinkResponse>.Ok(
                 new AdminRequestCredentialEntryLinkResponse
                 {

@@ -17,8 +17,6 @@ builder.Services.AddMarten(opts =>
         // 078: tek kullanımlık credential-giriş ekran oturumu — token'la yüklenir.
         opts.Schema.For<Customer.Api.Domains.MerchantInformations.CredentialEntrySession>()
             .Index(x => x.Token);
-        // 078 FR-007: admin yazma işlemlerinin salt-append denetim izi (key/token asla yazılmaz).
-        opts.Schema.For<Customer.Api.AdminAudit.AdminActionLog>();
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();

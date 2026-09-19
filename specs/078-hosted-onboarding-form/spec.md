@@ -168,7 +168,8 @@ sorgusunun yalnız durum + mesaj (+ret nedeni) döndürdüğü doğrulanır.
 - **FR-006**: Ekrandan girilen MerchantId + MerchantKey store'da mevcut merchant-bilgisi kaydına
   işlenir; mevcut ödeme akışları (MerchantKey S2S) davranış değiştirmeden yeni değerlerle çalışır.
 - **FR-007**: Credential kaydı AdminActionLog'a iz yazar; MerchantKey hiçbir izde/logda/sohbet
-  yanıtında yer almaz.
+  yanıtında yer almaz. — SAPMA (2026-09-19, kullanıcı kararı): iz mekanizması (AdminActionLog)
+  canlı PASS sonrası SÖKÜLDÜ; "key hiçbir yerde yer almaz" yarısı yürürlükte kalır.
 - **FR-008**: `admin_onboarding_status` MerchantKey döndürmeyi bırakır; Approved yanıtı kullanıcıyı
   mail + store ekranı yoluna yönlendirir.
 - **FR-009**: Eski PII'li `admin_submit_onboarding` alanları ve `admin_set_merchant_credentials`
