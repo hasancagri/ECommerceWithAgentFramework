@@ -116,7 +116,7 @@ key ile çalışır; izde key yok.
   `Onboarding/MerchantOnboardingClient.cs` + `OnboardingResultParser` sil; `CustomerAdminTools`'tan
   eski sabitler + `customerAdminToolNames`'ten eski adlar düşür; T001 geçici `McpUrl` türevi kalksın —
   ilgili dosyalar + `src/others/Shared/McpToolNames.cs` + `src/services/customer/Customer.Api/Program.cs`
-- [ ] T017 [US4] Canlı doğrulama S4 (quickstart.md).
+- [X] T017 [US4] Canlı doğrulama S4 (quickstart.md). — KAPANIŞ: kullanıcı kararıyla canlı tur atlandı; kod-denetimi + allowlist/sabit sökümü kanıt sayıldı (2026-09-19).
 
 ## Phase 7: Polish & Cross-Cutting
 
@@ -125,7 +125,7 @@ key ile çalışır; izde key yok.
   adımları sil — `src/services/customer/FLOW.md`; `scripts/check-flow-links.sh` yeşil.
 - [X] T019 [P] `CLAUDE.md` customer BC satırı + 070 sapma notu güncelle (imperatif MCP sapması
   SÖKÜLDÜ; hosted credential ekranı SAPMA-2 olarak not) — `CLAUDE.md`.
-- [ ] T020 Tam doğrulama: `dotnet build` + `dotnet test` (bağımlı TEST projeleri dahil — rename
+- [X] T020 Tam doğrulama: (build+test+guard yeşil; S5 canlı PASS; sandbox key rotate KULLANICIDA bekler) `dotnet build` + `dotnet test` (bağımlı TEST projeleri dahil — rename
   tuzağı) + quickstart S5 (PG kapalı dostane hata) + sandbox MerchantKey rotate hatırlatması.
 
 ## Dependencies & Execution Order
