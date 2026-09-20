@@ -49,7 +49,7 @@ PG hazır olana dek bekler.
 - [X] T004 [US1] Tool adını kaydet (D7 tuzağı): `Shared.CustomerAdminTools`'a `StartOnboarding` sabiti
   (`src/others/Shared/McpToolNames.cs`) + `customerAdminToolNames` allowlist'ine ekle
   (`src/services/customer/Customer.Api/Program.cs`).
-- [ ] T005 [US1] Canlı doğrulama S1 (quickstart.md) — PG kontrat implementasyonu hazır olunca.
+- [X] T005 [US1] Canlı doğrulama S1 (quickstart.md). — PASS (2026-09-20): PII'siz başvuru, sohbete yalnız hosted form linki; transkriptte PII yok.
 
 **Checkpoint**: US1 tek başına gösterilebilir (PG hazırsa).
 
@@ -59,8 +59,9 @@ PG hazır olana dek bekler.
 
 **Independent Test**: quickstart S2 — Mailpit'te mail, ilk açılışta ikili, ikincide yok.
 
-- [ ] T006 [US2] PG repo çalışması kontrata göre yapılır (bu repo'da kod YOK); kabul doğrulaması
+- [X] T006 [US2] PG repo çalışması kontrata göre yapılır (bu repo'da kod YOK); kabul doğrulaması
   S2 quickstart senaryosuyla — referans `specs/078-hosted-onboarding-form/contracts/pg-onboarding-rest.md`.
+  PASS (2026-09-20): approve → teslim, ilk açılışta MerchantId+Key görünür (tek gösterim).
 
 ## Phase 5: User Story 3 — Store ekranından credential girişi (P1)
 
@@ -97,8 +98,9 @@ key ile çalışır; izde key yok.
   form, yazma-only, usable-değilse nötr 404) + `POST /merchant-credentials/{token}` (form-post →
   IMessageBus → sonuç sayfası); anonim (token=yetki, SAPMA-1) + Program.cs map —
   `src/services/customer/Customer.Api/CredentialEntryEndpointExtension.cs`
-- [ ] T014 [US3] Canlı doğrulama S3 (quickstart.md) — negatifler dahil (yanlış key / ikinci kullanım /
-  süre) + ödeme akışı smoke.
+- [X] T014 [US3] Canlı doğrulama S3 (quickstart.md) — negatifler dahil (yanlış key / ikinci kullanım /
+  süre) + ödeme akışı smoke. PASS (2026-09-20): store ekranından kayıt+doğrulama; SC-004 sepet→ödeme→
+  order Confirmed + sepet boş; 080 reissue reveal URL çalıştı.
 
 **Checkpoint**: Yeni akış uçtan uca canlı — söküm serbest.
 
@@ -125,7 +127,8 @@ key ile çalışır; izde key yok.
   adımları sil — `src/services/customer/FLOW.md`; `scripts/check-flow-links.sh` yeşil.
 - [X] T019 [P] `CLAUDE.md` customer BC satırı + 070 sapma notu güncelle (imperatif MCP sapması
   SÖKÜLDÜ; hosted credential ekranı SAPMA-2 olarak not) — `CLAUDE.md`.
-- [X] T020 Tam doğrulama: (build+test+guard yeşil; S5 canlı PASS; sandbox key rotate KULLANICIDA bekler) `dotnet build` + `dotnet test` (bağımlı TEST projeleri dahil — rename
+- [X] T020 Tam doğrulama: (build+test+guard yeşil; S5 canlı PASS; MerchantKey rotate BİTTİ 2026-09-20 —
+  080 reissue ile döndü; iyzico hesap key rotate kullanıcı kararıyla atlandı, PG user-secrets işi) `dotnet build` + `dotnet test` (bağımlı TEST projeleri dahil — rename
   tuzağı) + quickstart S5 (PG kapalı dostane hata) + sandbox MerchantKey rotate hatırlatması.
 
 ## Dependencies & Execution Order

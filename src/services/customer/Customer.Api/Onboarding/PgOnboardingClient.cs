@@ -23,6 +23,18 @@ public sealed class PgOnboardingClient(
     private sealed record CreateSessionRequest(string Email);
     private sealed record ValidateRequest(Guid MerchantId, string MerchantKey);
     private sealed record ValidateReply(bool Valid);
+    private sealed record ReissueRequest(Guid MerchantId, string? Reason);
+
+    // PG 046 kontrat yanıtı: yeni key GÖVDEDE gelmez — yalnız tek gösterimlik reveal URL + expiry.
+    public sealed record ReissueResult(string RevealUrl, DateTimeOffset ExpiresAt);
+
+    // PG 046 — POST /api/v1/onboarding/reissue: merchant kaybettiği/sızdığından şüphelendiği key
+    // yerine taze key alır; eski key PG'de her temsilde anında ölür. null = PG erişilemedi.
+    public Task<ReissueResult?> ReissueAsync(Guid merchantId, string? reason, CancellationToken ct) =>
+        SendAsync<ReissueResult>(
+            () => new HttpRequestMessage(HttpMethod.Post, Url("/api/v1/onboarding/reissue"))
+            { Content = JsonContent.Create(new ReissueRequest(merchantId, reason)) },
+            "onboarding reissue", ct);
 
     // Kontrat #1 — POST /api/v1/onboarding/sessions: PG'de hosted form oturumu açar.
     public Task<OnboardingSession?> CreateSessionAsync(string email, CancellationToken ct) =>

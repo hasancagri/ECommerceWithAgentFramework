@@ -124,6 +124,8 @@ public static class CustomerAdminTools
     public const string StartOnboarding = "admin_start_onboarding";
     // 078: credential-giriş ekranına süreli + tek kullanımlık link üretir (key sohbete girmez).
     public const string RequestCredentialEntryLink = "admin_request_credential_entry_link";
+    // 080: PG'de merchant key yenileme tetikler; yanıt yalnız tek gösterimlik reveal URL (key sohbete girmez).
+    public const string ReissueMerchantKey = "admin_reissue_merchant_key";
 }
 
 // 061: korumalı MCP'lerdeki ortak oturum-kapatma tool'u (basket/order/payment/customer).

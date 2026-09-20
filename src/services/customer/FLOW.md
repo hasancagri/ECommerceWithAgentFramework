@@ -25,6 +25,10 @@ yapısal S2S REST (merchant-key). **Kart-saklama (Wallet/cüzdan) 076'da SÖKÜL
    işaretiyle saklanır; başarı oturumu öldürür.
 6. **Merchant kimliği kaydı ödeme akışını besler.**                  `(MerchantInformation)`
    Yapısal S2S merchant-key ucu (Payment.Api gRPC ile çeker, 077).
+7. **Key kaybolursa/sızarsa yenilenir (080).** Admin agent kayıtlı   `(PgOnboardingClient)`
+   MerchantId ile PG'de reissue tetikler; yanıt YALNIZ reveal URL.
+   Merchant yeni key'i reveal'dan bir kez okur, adım 4-5 yoluyla
+   store'a girer (UpdateKey, PG doğrulamalı). Eski key PG'de anında ölü.
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
