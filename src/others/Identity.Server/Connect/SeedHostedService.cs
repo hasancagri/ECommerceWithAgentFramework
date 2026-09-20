@@ -53,15 +53,18 @@ public sealed class SeedHostedService(IServiceProvider provider) : IHostedServic
             if (!await roleManager.RoleExistsAsync(roleName))
                 await roleManager.CreateAsync(new IdentityRole(roleName));
 
-        // Rol→scope map — yalnız o rol için hiç satır yoksa doldur.
+        // Rol→scope map — eksik bundle scope'larını EKLE (additive merge, silme yok).
+        // Eski "hiç satır yoksa doldur" guard'ı, bundle'a sonradan eklenen scope'u mevcut DB'ye
+        // uygulamıyordu (reset gerekiyordu → 062/077 customer.write drift'i). Additive merge self-heal
+        // eder; admin'in elle eklediği scope'lar korunur (yalnız ekleme, hiçbir satır silinmez).
         foreach (var (roleName, bundle) in Config.RoleScopeSeed)
         {
             var role = await roleManager.FindByNameAsync(roleName);
             if (role is null) continue;
 
-            if (await db.RoleScopes.AnyAsync(rs => rs.RoleId == role.Id, ct)) continue;
-
-            foreach (var s in bundle.Distinct())
+            var existing = await db.RoleScopes.Where(rs => rs.RoleId == role.Id)
+                .Select(rs => rs.Scope).ToListAsync(ct);
+            foreach (var s in bundle.Distinct().Except(existing))
                 db.RoleScopes.Add(new RoleScope { Id = Guid.NewGuid(), RoleId = role.Id, Scope = s });
         }
         await db.SaveChangesAsync(ct);
