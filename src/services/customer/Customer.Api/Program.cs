@@ -95,6 +95,8 @@ string[] customerAdminToolNames =
     Shared.CustomerAdminTools.GetMerchantStatus, Shared.CustomerAdminTools.OnboardingStatus,
     // 078: hosted onboarding + credential-giriş ekran linki (allowlist tuzağı — eklemeyen tool'u kaybeder).
     Shared.CustomerAdminTools.StartOnboarding, Shared.CustomerAdminTools.RequestCredentialEntryLink,
+    // 080: merchant key yenileme tetiği (yanıt yalnız reveal URL).
+    Shared.CustomerAdminTools.ReissueMerchantKey,
 ];
 builder.Services
     .AddMcpServer()
