@@ -8,16 +8,18 @@
 
 **Input**: Yeni Discount.Api BC — admin-güdümlü kampanya indirimi. Admin metinle "şu kategoriye/yazara/
 yayınevine/kitaba, şu tarihe kadar, %şu indirim" der; sistem süzgeci kitap setine çözer, her kitaba
-indirim işler. **Kitap başına EN FAZLA 1 indirim** (varsa atla). İndirim vitrine itilir, listede inline
+indirim işler. **Kitap başına EN FAZLA 1 ETKİN indirim** (son-gelen-kazanır: varsa üzerine yazılır). İndirim vitrine itilir, listede inline
 görünür; checkout doğrular. Kupon bu sürümde YOK. Katalog import'undan bağımsız.
 
 ## Clarifications
 
 ### Session 2026-09-21
 
-- **Kitap başına en fazla 1 indirim** (temel değişmez). Overlap/en-iyi-kazanır motoru YOK — çakışma
-  politikası: kitabın indirimi zaten varsa yeni uygulama o kaydı **atlar** (ilk-AKTİF-olan-kazanır —
-  ProductDiscount yalnız aktifleşmede yazılır, Scheduled kampanya slot tutmaz).
+- **Kitap başına en fazla 1 ETKİN indirim** (temel değişmez). Overlap/en-iyi-kazanır motoru YOK — çakışma
+  politikası **son-gelen-kazanır**: yeni kampanya kitabın mevcut indirimini **ezer** (üzerine yazar; atlama
+  YOK). Kayıt ait olduğu kampanyayla (CampaignId) yaşar; sonradan başka kampanya ezerse eski kampanyanın
+  bitişi bu kaydı temizlemez. ProductDiscount yalnız aktifleşmede yazılır (Scheduled kampanya slot tutmaz).
+  (Rev 2026-09-21: eski "varsa atla / ilk-gelen-kazanır" kararı İPTAL — kullanıcı kararı.)
 - Admin indirimi bir **süzgeçle** açar: kategori · yazar · yayınevi · tek-kitap. Süzgeç **uygulama anında**
   somut kitap listesine çözülür (**snapshot** — sonradan eklenen kitap otomatik girmez; canlı boyut değil).
 - İndirim değeri = **yüzde** (sabit tutar ertelendi). İndirim NEREDE: yüzde **vitrine event'le itilir**
@@ -38,21 +40,21 @@ görünür; checkout doğrular. Kupon bu sürümde YOK. Katalog import'undan ba�
 ### User Story 1 - Admin süzgeçle indirim açar, kitaplar listede indirimli görünür (Priority: P1)
 
 Admin `/mcp-admin`'den "Roman kategorisine 30 Eylül'e kadar %20 indirim" (ya da yazar/yayınevi/tek-kitap)
-der. Sistem süzgeci kitap setine çözer, her kitaba indirim işler (zaten indirimli olanı atlar). MCP yanıtı
-kısa özet döner (kaç kitap indirimli, kaç atlandı). Müşteri "roman kitaplarını getir" deyince dönen kitaplar
+der. Sistem süzgeci kitap setine çözer, her kitaba indirim işler (önceki indirimi varsa üzerine yazar). MCP
+yanıtı kısa özet döner (kaç kitap indirimli). Müşteri "roman kitaplarını getir" deyince dönen kitaplar
 indirimli fiyatı + bitiş tarihini satır içinde taşır.
 
 **Why this priority**: Feature'ın görünür değeri; indirim açılamaz + müşteriye görünmezse ürün yok.
 
 **Independent Test**: Kategori süzgeciyle kampanya aç → `query_storefront` ile o kategoriyi listele →
-kitaplar indirimli fiyat + `discount_ends_at` taşır; kampanyasız/atlanan kitap liste fiyatını taşır.
+kitaplar indirimli fiyat + `discount_ends_at` taşır; kampanyasız kitap liste fiyatını taşır.
 
 **Acceptance Scenarios**:
 
 1. **Given** Roman'da 3 yayınlı kitap (indirimsiz), **When** admin kategoriye %20 açar, **Then** üçü de
    `discount_pct=20`, `effective_price = liste × 0.8`, `discount_ends_at` dolu döner.
 2. **Given** Roman'daki bir kitapta zaten aktif indirim var, **When** admin kategoriye %20 açar, **Then**
-   o kitap ATLANIR (mevcut indirimi korunur), diğerleri %20 alır; özet "1 atlandı" der.
+   o kitabın indirimi %20 ile EZİLİR (son-gelen-kazanır), diğerleri de %20 alır; hepsi kapsamda.
 3. **Given** tek-kitap süzgeci, **When** admin "şu kitaba %15" der, **Then** yalnız o kitap %15 indirimli.
 4. **Given** aktif indirim, **When** müşteri o kitapla checkout yapar, **Then** ödenecek tutar Discount.Api
    gRPC'den gelen yüzdeye göredir (vitrin snapshot değil, canlı doğrulama).
@@ -97,8 +99,8 @@ döner; kimse elle tetiklemez.
   özet "0 kitap" der (red DEĞİL — L93'teki eksik-scopeRef reddinden ayrı).
 - Kampanyalı kitabın liste fiyatı değişirse: vitrin etkin fiyatı yeni listeden kendiliğinden hesaplar.
 - Kampanya iptal edilirse: o kampanyanın kitaplarının indirimi temizlenir (push).
-- Aynı kitap iki kampanya süzgecine de girse (ör. hem "Roman" hem "şu yazar"): İLK uygulanan kazanır,
-  ikincisi o kitabı atlar (kitap başına tek indirim).
+- Aynı kitap iki kampanya süzgecine de girse (ör. hem "Roman" hem "şu yazar"): SON uygulanan kazanır,
+  kitabın kaydı en son kampanyanın yüzdesiyle ezilir (kitap başına tek etkin indirim).
 
 ## Requirements *(mandatory)*
 
@@ -107,10 +109,9 @@ döner; kimse elle tetiklemez.
 - **FR-001**: Sistem admin'e `/mcp-admin`'den indirim kampanyası açmayı sağlamalı: süzgeç (kategori ·
   yazar · yayınevi · tek-kitap) + yüzde + başlangıç + opsiyonel bitiş.
 - **FR-002**: Sistem süzgeci **aktifleşme anında** (startsAt≤now ise create, aksi halde start-fire)
-  somut kitap setine çözmeli (snapshot) ve her kitaba `ProductDiscount` işlemeli; **kitabın indirimi zaten
-  varsa ATLAMALI** (kitap başına tek indirim). Gelecek tarihli (Scheduled) kampanya aktifleşene dek
-  `ProductDiscount` YAZMAZ — slot rezerve etmez; "ilk-gelen-kazanır" = **ilk-AKTİF-olan-kazanır**
-  (create sırası değil). Çözüm/store/skip/push tek atomik aktifleşme adımıdır.
+  somut kitap setine çözmeli (snapshot) ve her kitaba `ProductDiscount` **yazmalı — varsa ÜZERİNE yazar**
+  (son-gelen-kazanır; atlama YOK). Gelecek tarihli (Scheduled) kampanya aktifleşene dek `ProductDiscount`
+  YAZMAZ — slot rezerve etmez. Çözüm/store/push tek atomik aktifleşme adımıdır.
 - **FR-003**: Sistem kitap başına indirim yüzdesini + pencereyi vitrin read-model'ine **itmeli**; vitrin
   etkin fiyatı kendi liste fiyatından hesaplayıp `query_storefront`'ta inline döndürmeli.
 - **FR-004**: Sistem kampanya başlangıç + bitişini **per-kampanya dayanıklı scheduled message** ile
@@ -139,7 +140,7 @@ döner; kimse elle tetiklemez.
   yüzde, başlangıç, opsiyonel bitiş, durum. Pencereyi + hangi süzgeçle açıldığını taşır (denetim/iptal).
   Invariant: yüzde 1-99, bitiş > başlangıç.
 - **ProductDiscount**: kitap başına indirim kaydı. `{productId (PK), campaignId, percentage, startsAt,
-  endsAt}`. PK teklik = kitapta tek indirim; "varsa atla" bunu zorlar. Discount.Api **fiyat tutmaz**.
+  endsAt}`. PK teklik = kitapta tek etkin indirim; yeni kampanya kaydı **ezer** (son-gelen-kazanır). Discount.Api **fiyat tutmaz**.
 - **ProductCatalogRef** (destek read-model): Catalog event'inden `{productId, categoryId, authorIds,
   publisherId, published}` — süzgeci kitap setine çözmek için (fiyat/isim tutmaz).
 
@@ -147,11 +148,11 @@ döner; kimse elle tetiklemez.
 
 ### Measurable Outcomes
 
-- **SC-001**: Admin bir kategori kampanyasını tek komutla açar; kapsamdaki (atlanmayan) tüm kitaplar 5 sn
+- **SC-001**: Admin bir kategori kampanyasını tek komutla açar; kapsamdaki tüm kitaplar 5 sn
   içinde vitrinde indirimli görünür.
 - **SC-002**: Kampanya bitişinden sonra o kampanyanın hiçbir kitabı indirimli fiyat göstermez (elle müdahale yok).
-- **SC-003**: Hiçbir kitapta aynı anda birden çok indirim olmaz; ikinci aktifleşme zaten-indirimli kitabı atlar
-  (Scheduled kampanya aktif olana dek slot tutmadığından çakışma yalnız aktifler arasında değerlendirilir).
+- **SC-003**: Hiçbir kitapta aynı anda birden çok ETKİN indirim olmaz; yeni kampanya kitabın indirimini ezer
+  (son-gelen-kazanır → her kitap için tek yüzde vitrinde/checkout'ta).
 - **SC-004**: Checkout'ta ödenen tutar kitabın aktif indirim yüzdesiyle %100 eşleşir (vitrin-checkout sapması yok).
 
 ## Assumptions

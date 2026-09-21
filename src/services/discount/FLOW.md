@@ -14,8 +14,8 @@ iter ve süre dolunca temizler. **Fiyat TUTMAZ** — yalnız yüzde otoritesi; e
 2. **Admin süzgeçle kampanya açar.** Ad + süzgeç + yüzde + pencere;          `(CreateCampaign`
    invariant'lar (yüzde 1-99, bitiş>başlangıç) doğrulanır.                   ` → Campaign.Create)`
 3. **Aktifleşmede süzgeç kitaba çözülür + uygulanır.** startsAt≤now ise      `(CampaignSelectionResolver.Resolve;`
-   hemen, gelecekse start-fire'da; zaten indirimli kitap ATLANIR             ` CampaignApplication.ActivateAsync`
-   (kitap başına tek indirim), yenilere indirim yazılıp itilir.             ` → ProductDiscount.Partition → ProductDiscountChanged)`
+   hemen, gelecekse start-fire'da; her kitaba indirim yazılır (önceki        ` CampaignApplication.ActivateAsync`
+   varsa ÜZERİNE — son-gelen-kazanır) ve itilir.                            ` → ProductDiscount.Create → ProductDiscountChanged)`
 4. **Süre dayanıklı zamanlanır.** Başlangıç/bitiş per-kampanya              `(CampaignActivated / CampaignEnded`
    scheduled message; fire guard'lı idempotent (bayat mesaj no-op).         ` → CampaignScheduleHandler)`
 5. **Bitiş/İptal kitapları temizler.** Kampanyanın kitaplarının indirimi     `(CampaignApplication.ClearAsync;`
@@ -25,7 +25,8 @@ iter ve süre dolunca temizler. **Fiyat TUTMAZ** — yalnız yüzde otoritesi; e
 
 ## Domain kuralları (süreci yöneten değişmezler)
 
-- **Kitap başına TEK indirim.** `ProductDiscount` PK=ProductId; zaten indirimli kitap atlanır (ilk-AKTİF-kazanır).
+- **Kitap başına TEK ETKİN indirim.** `ProductDiscount` PK=ProductId; yeni kampanya kitabın kaydını EZER
+  (son-gelen-kazanır, atlama yok). Bitiş/iptal yalnız satırın hâlâ AİT olduğu kampanyada (CampaignId) temizler.
 - **Snapshot süzgeç.** Süzgeç aktifleşme anında kitap setine çözülür; sonradan eklenen kitap otomatik girmez.
 - **Fiyat tutulmaz.** Yalnız yüzde + pencere; etkin fiyatı tüketici (vitrin/checkout) kendi liste fiyatından hesaplar.
 - **Süre = ödeme anı geçerliliği.** Sepette grace yok; `Campaign.IsEffectiveAt` / `ProductDiscount.IsActiveAt` pencereye bakar.

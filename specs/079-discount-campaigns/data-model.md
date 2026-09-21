@@ -27,12 +27,12 @@ BC = `discountDb` (Marten document store). Bir aggregate (`Campaign`) + iki read
 Not: **Edit yok** (v1) — süzgeç snapshot + kitap-başı-tek-indirim modelinde düzenleme karmaşık (hangi
 kitaplar yeniden çözülür?); iptal-edip-yeniden-aç yeter. Gerekirse G6.1.
 
-**En-iyi-kazanır helper YOK** — kitap başına tek indirim olduğu için çözülecek çakışma yok.
+**En-iyi-kazanır helper YOK** — çakışma son-gelen-kazanır ile çözülür (yeni kampanya ezer), hesap gerekmez.
 
 ## Read-Model: ProductDiscount (materyalize, kitap başına)
 
-Kampanya uygulanınca her kitap için bir kayıt. **PK = ProductId → kitapta tek indirim** ("varsa atla"
-bunu zorlar: insert-if-not-exists).
+Kampanya uygulanınca her kitap için bir kayıt. **PK = ProductId → kitapta tek ETKİN indirim** (yeni kampanya
+kaydı EZER: son-gelen-kazanır, Marten upsert overwrite).
 
 | Alan | Tip | Not |
 |---|---|---|
@@ -43,8 +43,8 @@ bunu zorlar: insert-if-not-exists).
 | EndsAt | DateTime? | kampanyadan kopyalanır (view-guard + expiry için) |
 
 - **Uygula (yalnız aktifleşmede)**: startsAt≤now ise create'te, gelecek tarihli ise start-fire'da; süzgeç kitap
-  setine çözülür → her kitap için `ProductDiscount` **yoksa Store** (varsa atla). Scheduled kampanya aktif
-  olana dek YAZMAZ (slot tutmaz; ilk-AKTİF-kazanır).
+  setine çözülür → her kitap için `ProductDiscount` **Store** (varsa üzerine yazar; son-gelen-kazanır).
+  Scheduled kampanya aktif olana dek YAZMAZ (slot tutmaz).
 - **Expiry/İptal**: `campaignId`'ye ait `ProductDiscount`'lar silinir → her biri için `ProductDiscountChanged(pct:0)` it.
 - **Checkout gRPC**: `productIds`'e karşı aktif (pencere içi) `ProductDiscount` yüzdeleri döner.
 
@@ -81,7 +81,7 @@ Admin ──MCP create_campaign(süzgeç,%,end)──▶ Campaign.Create → Sch
      └─ gelecek     → Scheduled (ProductDiscount YAZMA, slot tutma)
 start fire / create-aktif ──▶ AKTİFLEŞTİR:
      → süzgeç → kitap seti (ProductCatalogRef; tek-kitapta doğrudan)
-     → her kitap: ProductDiscount yoksa Store (varsa atla; ilk-AKTİF-kazanır)
+     → her kitap: ProductDiscount Store (varsa üzerine yaz; son-gelen-kazanır)
      → ProductDiscountChanged(pct) it → Storefront ApplyDiscount
 end fire ──▶ campaignId kitaplarının ProductDiscount'unu sil ──▶ ProductDiscountChanged(pct:0) ──▶ Storefront temizle
 Order checkout ──gRPC GetProductDiscounts(productIds)──▶ aktif ProductDiscount yüzdeleri

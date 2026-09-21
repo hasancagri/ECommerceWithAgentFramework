@@ -3,9 +3,9 @@ using Discount.Api.Process;
 namespace Discount.Api.Domains.Campaigns.Features.Agents.Commands;
 
 // 079 US1/US2: admin süzgeçle kampanya açar. Campaign.Create → (aktifse) süzgeci kitap setine çöz +
-// her kitaba ProductDiscount YOKSA ekle (varsa atla) + ProductDiscountChanged push; gelecek tarihli ise
-// ProductDiscount YAZMA (Scheduled, slot tutmaz — ilk-AKTİF-kazanır). Her iki halde start/end scheduled
-// message kurulur (durable süre yönetimi). Yanıt kısa özet {applied, skipped, scheduled}.
+// her kitaba ProductDiscount YAZ (varsa üzerine yaz — son-gelen-kazanır) + ProductDiscountChanged push;
+// gelecek tarihli ise ProductDiscount YAZMA (Scheduled). Her iki halde start/end scheduled message kurulur
+// (durable süre yönetimi). Yanıt kısa özet {applied, scheduled}.
 public static class CreateCampaign
 {
     [RequiredScope(AuthorizationScopes.AdminDiscountWrite)]
@@ -45,7 +45,7 @@ public static class CreateCampaign
                 response.Applied = applied;
                 response.Skipped = skipped;
                 response.Scheduled = false;
-                response.Message = $"Kampanya aktif: {applied} kitap indirimli, {skipped} atlandı (zaten indirimli).";
+                response.Message = $"Kampanya aktif: {applied} kitap indirimli (son-gelen-kazanır; varsa üzerine yazıldı).";
             }
             else
             {
@@ -69,8 +69,8 @@ public static class CreateCampaignMcpTool
 {
     [McpServerTool(Name = Shared.DiscountAdminTools.CreateCampaign)]
     [Description("Admin: süzgeçle (kategori/yazar/yayınevi/tek-kitap) yüzde indirim kampanyası açar. " +
-        "Süzgeç uygulama anında kitap setine çözülür; zaten indirimli kitap atlanır (kitap başına tek indirim). " +
-        "startsAt boş = şimdi. Yanıt kısa özet döner (kaç kitap indirimli/atlandı).")]
+        "Süzgeç uygulama anında kitap setine çözülür; kitabın önceki indirimi varsa ÜZERİNE yazılır " +
+        "(son-gelen-kazanır). startsAt boş = şimdi. Yanıt kısa özet döner (kaç kitap indirimli).")]
     public static async Task<FeatureObjectResultModel<CreateCampaign.CreateCampaignResponse>> CreateCampaignAsync(
         [Description("Kampanya adı (admin etiketi)")] string name,
         [Description("Süzgeç tipi: category | author | publisher | product")] string scopeType,
