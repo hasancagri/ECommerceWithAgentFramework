@@ -50,6 +50,10 @@ public static class Config
             // 060: fiyat alarmı (Library BC) — durum okuma + kurma/kaldırma.
             [AuthorizationScopes.LibraryRead] = "library.api",
             [AuthorizationScopes.LibraryWrite] = "library.api",
+            // 079: kampanya indirimi (Discount BC). discount.read = checkout gRPC S2S (order-saga makine
+            // token); discount.admin.write = /mcp-admin kampanya yönetimi (admin demetinde, AllApiScopes).
+            [AuthorizationScopes.DiscountRead] = "discount.api",
+            [AuthorizationScopes.AdminDiscountWrite] = "discount.api",
         };
 
     // Tüm API scope'ları (servis scope'ları + apikeys.manage + identity.roles.manage) — seed edilir.
@@ -107,6 +111,8 @@ public static class Config
             [
                 AuthorizationScopes.BasketWrite, AuthorizationScopes.BasketRead,
                 AuthorizationScopes.CustomerRead, AuthorizationScopes.PaymentWrite,
+                // 079: checkout aktif indirim doğrulama (Order→Discount gRPC S2S).
+                AuthorizationScopes.DiscountRead,
             ],
         },
         // 077: Payment.Api m2m — hosted-CF link isteği/callback arka planda Customer merchant-key okur.
@@ -138,6 +144,8 @@ public static class Config
                 AuthorizationScopes.StorefrontRead, AuthorizationScopes.AdminCatalogRead,
                 AuthorizationScopes.AdminCatalogWrite, AuthorizationScopes.StockWrite,
                 AuthorizationScopes.MerchantCredentialsWrite,
+                // 079: admin kampanya indirimi (/mcp-admin).
+                AuthorizationScopes.AdminDiscountWrite,
             ],
         },
         // 073: tek müşteri MCP fasadı — dış müşteri agent kimliği (public+PKCE, Explicit consent). Tek
@@ -178,6 +186,8 @@ public static class Config
                 AuthorizationScopes.CustomerRead, AuthorizationScopes.PaymentRead,
                 AuthorizationScopes.AdminCatalogWrite,
                 AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
+                // 079: discount /mcp-admin kampanya tool'larının fasadca keşfi.
+                AuthorizationScopes.AdminDiscountWrite,
             ],
         },
         // WebApp (Razor Pages BFF) SÖKÜLDÜ (2026-09-11) — UI kaldırıldı, agent-only. ecommerce.bff

@@ -106,6 +106,16 @@ public static class CatalogAdminTools
     public const string ListSpecificationAttributes = "admin_list_specification_attributes";
 }
 
+// 079: Discount.Api /mcp-admin kampanya yönetimi (scope discount.admin.write). Yeni tool eklerken
+// Program.cs discountAdminToolNames allowlist'ine de EKLE (070/074 deseni). Müşteri /mcp yüzeyi YOK —
+// indirim müşteriye vitrinde query_storefront'tan görünür.
+public static class DiscountAdminTools
+{
+    public const string CreateCampaign = "admin_create_campaign";
+    public const string CancelCampaign = "admin_cancel_campaign";
+    public const string ListCampaigns = "admin_list_campaigns";
+}
+
 public static class StockAdminTools
 {
     public const string SetStock = "admin_set_stock";

@@ -10,7 +10,7 @@ repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
 
 schema_file="src/services/storefront/Storefront.Api/AgentSql/StorefrontSellableSchema.cs"
-prompt_file="src/services/storefront/Storefront.Api/Domains/StorefrontView/StorefrontMcpTools.cs"
+prompt_file="src/services/storefront/Storefront.Api/Domains/StorefrontView/Features/Agents/Queries/QueryStorefront.cs"
 
 for f in "$schema_file" "$prompt_file"; do
     if [ ! -f "$f" ]; then

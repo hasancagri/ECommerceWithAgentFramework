@@ -22,6 +22,9 @@ public static class RabbitMqConstants
 
             // 060: Library fiyat değişimini dinler (alarm tetiği); binding'i tüketici kurar (007).
             public const string Library = "library.events";
+
+            // 079: Discount ürün↔kategori/yazar/yayınevi izdüşümünü (ProductCatalogRef) besler; binding tüketici kurar.
+            public const string Discount = "discount.events";
         }
     }
 
@@ -136,6 +139,18 @@ public static class RabbitMqConstants
         public static class Queues
         {
             public const string Order = "order.payment-failed";
+        }
+    }
+
+    // 079: Discount yayınlar (kitap başına indirim penceresi / temizlik), Storefront tüketir.
+    // Storefront TEK kuyruk deseni: mevcut storefront.events kuyruğuna bağlanır (Sequential).
+    public static class ProductDiscountChanged
+    {
+        public const string Exchange = "discount.product-discount-changed";
+
+        public static class Queues
+        {
+            public const string Storefront = StorefrontEvents.Queue;
         }
     }
 

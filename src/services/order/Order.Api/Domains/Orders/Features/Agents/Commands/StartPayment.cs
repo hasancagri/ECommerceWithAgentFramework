@@ -30,7 +30,8 @@ public static class StartPayment
         IDocumentSession session,
         BasketItemsClientProxy basket,
         AddressClient addresses,
-        PaymentIntentClient payments)
+        PaymentIntentClient payments,
+        DiscountClient discounts)
     {
         public async Task<FeatureObjectResultModel<StartPaymentResponse>> Handle(
             StartPaymentCommand cmd, CancellationToken ct)
@@ -51,7 +52,15 @@ public static class StartPayment
                 });
 
             var basketRef = BasketItemsClientProxy.ComputeBasketRef(snapshot.Items);
-            var amount = snapshot.TotalPrice;
+
+            // 079: aktif indirim yüzdeleri (canlı; grace yok). Fail-closed → indirim yok = liste fiyatı.
+            // Ödenecek tutar vitrin snapshot'ına DEĞİL bu canlı cevaba dayanır (SC-004).
+            var discountMap = await discounts.GetActiveAsync(snapshot.Items.Select(i => i.ProductId), ct);
+            decimal DiscountedUnit(OrderDtos.OrderItemDto i) =>
+                discountMap.TryGetValue(i.ProductId, out var pct) && pct is > 0 and < 100
+                    ? Math.Round(i.UnitPrice * (1 - pct / 100m), 2)
+                    : i.UnitPrice;
+            var amount = snapshot.Items.Sum(i => DiscountedUnit(i) * i.Quantity);
 
             // 2) Re-use: aynı kullanıcı+sepet için canlı intent varsa order oluşturmadan mevcut linki dön.
             var live = await payments.GetLiveAsync(cmd.UserId, basketRef, ct);
@@ -80,7 +89,7 @@ public static class StartPayment
                 Guid.NewGuid());
             foreach (var item in snapshot.Items)
             {
-                var add = order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Quantity);
+                var add = order.AddOrderItem(item.ProductId, item.ProductName, DiscountedUnit(item), item.Quantity);
                 if (!add.IsSuccess)
                     return FeatureObjectResultModel<StartPaymentResponse>.Ok(new StartPaymentResponse
                     {

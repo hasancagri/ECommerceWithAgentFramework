@@ -150,6 +150,15 @@ builder.Services
     .AddHttpMessageHandler<SagaTokenHandler>();
 builder.Services.AddScoped<AddressClient>();
 
+// 079: Discount.Api checkout gRPC istemcisi — start_payment aktif indirim yüzdesini canlı sorar (discount.read).
+var discountGrpcAddress = builder.Configuration["services:discount-api:https:0"]
+    ?? builder.Configuration["services:discount-api:http:0"]
+    ?? "https://discount-api";
+builder.Services
+    .AddGrpcClient<DiscountQuery.DiscountQueryClient>(o => o.Address = new Uri(discountGrpcAddress))
+    .AddHttpMessageHandler<SagaTokenHandler>();
+builder.Services.AddScoped<DiscountClient>();
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()

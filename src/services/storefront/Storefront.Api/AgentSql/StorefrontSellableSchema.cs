@@ -31,6 +31,28 @@ public static class StorefrontSellableSchema
         new("family_code", "text", "v.data->>'FamilyCode'", "Varyant ailesi kodu (NULL = ailesiz)"),
         new("image_url", "text", "v.data->>'ImageUrl'", "Kapak görseli URL"),
         new("added_at", "timestamptz", "v.mt_last_modified", "YAKLAŞIK ekleniş (kayıt güncellenme zamanı)"),
+        // 079: indirim (Discount push). view-guard: yalnız now pencere içindeyse indirim görünür — fire
+        // gecikse/kalksa liste fiyatına döner (yapısal yedek). Discount fiyat tutmaz → effective_price
+        // liste fiyatından hesaplanır (liste değişince otomatik doğru).
+        new("discount_pct", "integer",
+            "case when (v.data->>'DiscountPct') is not null " +
+            "and now() >= (v.data->>'DiscountStartsAt')::timestamptz " +
+            "and ((v.data->>'DiscountEndsAt') is null or now() < (v.data->>'DiscountEndsAt')::timestamptz) " +
+            "then (v.data->>'DiscountPct')::integer end",
+            "Aktif indirim yüzdesi (NULL = indirim yok / pencere dışı)"),
+        new("discount_ends_at", "timestamptz",
+            "case when (v.data->>'DiscountPct') is not null " +
+            "and now() >= (v.data->>'DiscountStartsAt')::timestamptz " +
+            "and ((v.data->>'DiscountEndsAt') is null or now() < (v.data->>'DiscountEndsAt')::timestamptz) " +
+            "then (v.data->>'DiscountEndsAt')::timestamptz end",
+            "Aktif indirim bitişi (NULL = indirim yok / süresiz)"),
+        new("effective_price", "numeric",
+            "case when (v.data->>'DiscountPct') is not null " +
+            "and now() >= (v.data->>'DiscountStartsAt')::timestamptz " +
+            "and ((v.data->>'DiscountEndsAt') is null or now() < (v.data->>'DiscountEndsAt')::timestamptz) " +
+            "then round((v.data->>'Price')::numeric * (1 - (v.data->>'DiscountPct')::numeric / 100), 2) " +
+            "else (v.data->>'Price')::numeric end",
+            "Ödenecek etkin fiyat (indirim aktifse indirimli, değilse liste fiyatı)"),
         // vector(1536) ŞART (::vector değil): HNSW ifade-indeksi tiplendirilmiş ifadeyle eşleşir;
         // tipsiz cast'te 20k jsonb detoast + parse her sorguda tekrar eder (canlı ölçüm: 9sn → 35ms).
         new("embedding", "vector(1536)", "(e.data->>'Vector')::vector(1536)",

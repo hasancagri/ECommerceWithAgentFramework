@@ -63,6 +63,14 @@ builder.Host.UseWolverine(opts =>
         e.BindQueue(RabbitMqConstants.OrderCompleted.Queues.Storefront);
     });
 
+    // 079: ProductDiscountChanged → StorefrontView.ApplyDiscount. Binding'i TUKETICI kurar (007);
+    // aynı tek-kuyruk deseni (5. exchange → storefront.events, Sequential).
+    rabbit.DeclareExchange(RabbitMqConstants.ProductDiscountChanged.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.ProductDiscountChanged.Queues.Storefront);
+    });
+
     // TEK kuyruk (storefront.events): üç exchange de buraya bağlı; Sequential işleme sayesinde
     // aynı view satırına eşzamanlı yazım olmaz — ConcurrencyException kaynağında çözülür.
     opts.ListenToRabbitQueue(RabbitMqConstants.StorefrontEvents.Queue).Sequential();
@@ -81,6 +89,7 @@ builder.Host.UseWolverine(opts =>
     opts.Discovery.IncludeType(typeof(Storefront.Api.ReviewsConsumers));
     opts.Discovery.IncludeType(typeof(Storefront.Api.StockConsumers));
     opts.Discovery.IncludeType(typeof(Storefront.Api.OrderConsumers));
+    opts.Discovery.IncludeType(typeof(Storefront.Api.DiscountConsumers));
 });
 
 builder.Services.AddApiVersioning(options =>

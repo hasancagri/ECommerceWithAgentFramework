@@ -97,4 +97,14 @@ public static class IntegrationEvents
     // (durable outbox); tüketici Order (binding kurar — soğuk-açılış dersi). Additive: eski tüketici yok.
     public record PaymentSucceeded(Guid OrderId, Guid UserId, Guid PaymentIntentId, string TxRef, decimal Amount);
     public record PaymentFailed(Guid OrderId, Guid PaymentIntentId, string TxRef, string ReasonCode);
+
+    // 079: Discount → Storefront (fanout). Bir kitabın tek indiriminin penceresini iter; indirim
+    // kaldırılınca (bitiş/iptal) temizlik için DiscountPct=0 + null pencere gönderilir. Yayıncı Discount.Api
+    // exchange deklare eder; binding'i TÜKETİCİ (Storefront) kurar (007 soğuk-açılış dersi). Discount.Api
+    // FİYAT TUTMAZ — yalnız yüzde; etkin fiyatı Storefront kendi liste fiyatından hesaplar.
+    public record ProductDiscountChanged(
+        Guid ProductId,
+        int DiscountPct,      // 0 = indirim yok (temizle); 1-99 = kitabın aktif/gelecek indirimi
+        DateTime? StartsAt,   // pencere başlangıcı (null = temizlik)
+        DateTime? EndsAt);    // pencere bitişi (null = süresiz ya da temizlik)
 }

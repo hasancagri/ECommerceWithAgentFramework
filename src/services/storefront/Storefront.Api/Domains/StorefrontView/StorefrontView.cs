@@ -47,6 +47,13 @@ public class StorefrontView
     // Ayri surec (BackgroundService vb.) sahiplenir; ingestion ASLA yazmaz. Default false.
     public bool IsAvailableForSale { get; private set; }
 
+    // 079: Discount kaynağı (push) — kitabın tek indiriminin yüzdesi + penceresi. null = indirim yok.
+    // Etkin fiyat BURADA saklanmaz; sorgu-zamanı view-guard (now pencere içinde mi) + liste fiyatından
+    // hesaplanır (StorefrontSellableSchema). Discount.Api fiyat tutmadığından liste değişimi otomatik doğru.
+    public int? DiscountPct { get; private set; }
+    public DateTime? DiscountStartsAt { get; private set; }
+    public DateTime? DiscountEndsAt { get; private set; }
+
     public static StorefrontView Create(Guid productId) =>
         new() { ProductId = productId };
 
@@ -79,6 +86,23 @@ public class StorefrontView
     {
         RatingAverage = count == 0 ? null : average;
         RatingCount = count;
+    }
+
+    // 079: Discount push'u uygular. pct<=0 = temizlik (bitiş/iptal) → alanlar null (indirim kalkar);
+    // 1-99 = kitabın indirimi + penceresi. Etkin fiyat sorgu-zamanı view-guard'la hesaplanır (burada değil).
+    public void ApplyDiscount(int pct, DateTime? startsAt, DateTime? endsAt)
+    {
+        if (pct <= 0)
+        {
+            DiscountPct = null;
+            DiscountStartsAt = null;
+            DiscountEndsAt = null;
+            return;
+        }
+
+        DiscountPct = pct;
+        DiscountStartsAt = startsAt;
+        DiscountEndsAt = endsAt;
     }
 
     /// <summary>
