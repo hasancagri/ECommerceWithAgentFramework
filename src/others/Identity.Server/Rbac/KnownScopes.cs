@@ -26,6 +26,8 @@ public static class KnownScopes
             [AuthorizationScopes.ReviewsWrite] = "Ürün yorumu yazma",
             [AuthorizationScopes.LibraryRead] = "Kitaplık (fiyat alarmı) okuma",
             [AuthorizationScopes.LibraryWrite] = "Kitaplık (fiyat alarmı) yazma",
+            [AuthorizationScopes.DiscountRead] = "İndirim okuma (checkout S2S)",
+            [AuthorizationScopes.AdminDiscountWrite] = "Kampanya indirimi yönetimi (admin)",
             [AuthorizationScopes.ApiKeysManage] = "API anahtarı yönetimi",
             [AuthorizationScopes.IdentityRolesManage] = "Rol/scope/kullanıcı yönetimi",
         };

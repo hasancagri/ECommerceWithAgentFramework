@@ -19,6 +19,9 @@ string[] adminScopes =
 [
     AuthorizationScopes.AdminCatalogRead, AuthorizationScopes.AdminCatalogWrite,
     AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
+    // 079: kampanya indirimi /mcp-admin — PRM'de ilan edilmezse mcp-remote scope'u istemez,
+    // token discount.api audience taşımaz, discount-api /mcp-admin 401 verir.
+    AuthorizationScopes.AdminDiscountWrite,
 ];
 
 var builder = WebApplication.CreateBuilder(args);

@@ -24,21 +24,23 @@ public static class ListCategories
     {
         var byId = allCategories.ToDictionary(c => c.Id);
 
-        return publishedProducts
-            .SelectMany(p => p.Categories.Select(a => a.CategoryId).Distinct())
-            .GroupBy(id => id)
-            .Where(g => byId.ContainsKey(g.Key))
-            .Select(g => new CategoryItem
-            {
-                CategoryId = g.Key,
-                Name = byId[g.Key].Name,
-                ParentCategory = byId[g.Key].ParentCategoryId is { } pid && byId.TryGetValue(pid, out var parent)
-                    ? parent.Name
-                    : null,
-                ProductCount = g.Count()
-            })
-            .OrderBy(x => x.Name)
-            .ToList();
+        return
+        [
+            .. publishedProducts
+                .SelectMany(p => p.Categories.Select(a => a.CategoryId).Distinct())
+                .GroupBy(id => id)
+                .Where(g => byId.ContainsKey(g.Key))
+                .Select(g => new CategoryItem
+                {
+                    CategoryId = g.Key,
+                    Name = byId[g.Key].Name,
+                    ParentCategory = byId[g.Key].ParentCategoryId is { } pid && byId.TryGetValue(pid, out var parent)
+                        ? parent.Name
+                        : null,
+                    ProductCount = g.Count()
+                })
+                .OrderBy(x => x.Name)
+        ];
     }
 
     public class ListCategoriesQueryHandler

@@ -216,6 +216,9 @@ public static class QueryStorefrontMcpTool
         "stock int (NULL=bilinmiyor), rating_average numeric (NULL=hic puan yok), rating_count int, " +
         "specs jsonb ([{Attribute,Option}] ozellik ciftleri), family_code text (varyant ailesi; " +
         "NULL=ailesiz), image_url text (kapak), added_at timestamptz (YAKLASIK eklenis), " +
+        "discount_pct int (aktif indirim yuzdesi; NULL=indirim yok/pencere disi), " +
+        "discount_ends_at timestamptz (aktif indirim bitisi; NULL=indirim yok), " +
+        "effective_price numeric (odenecek etkin fiyat: indirim aktifse indirimli, degilse price ile ayni), " +
         "embedding vector (anlamsal temsil; yanita donmez, yalniz <=> mesafesinde kullan). " +
         "KURALLAR: tek SELECT/WITH; baska iliski/yazma YASAK; sonuc 50 satirla sinirlanir. ";
 

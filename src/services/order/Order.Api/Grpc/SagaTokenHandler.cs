@@ -38,7 +38,8 @@ public sealed class SagaTokenHandler(IdentityOption identity, Order.Api.Options.
                     ["client_id"] = sagaAuth.ClientId,
                     ["client_secret"] = sagaAuth.ClientSecret,
                     ["scope"] = $"{AuthorizationScopes.BasketRead} " +
-                                $"{AuthorizationScopes.CustomerRead} {AuthorizationScopes.PaymentWrite}"
+                                $"{AuthorizationScopes.CustomerRead} {AuthorizationScopes.PaymentWrite} " +
+                                $"{AuthorizationScopes.DiscountRead}"
                 }), ct);
             response.EnsureSuccessStatusCode();
 

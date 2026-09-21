@@ -29,6 +29,11 @@ public static class AuthorizationScopes
     // storefront.api
     public const string StorefrontRead = "storefront.read";
 
+    // discount.api (079): kampanya indirimi. Checkout gRPC S2S okuma (Order makine token) +
+    // admin /mcp-admin kampanya yönetimi (external-admin-agent). Müşteri yüzeyi indirimi vitrinde görür.
+    public const string DiscountRead = "discount.read";
+    public const string AdminDiscountWrite = "discount.admin.write";
+
     // customer.api (022): kayitli kart (Wallet) + adres defteri (AddressBook)
     public const string CustomerRead = "customer.read";
     public const string CustomerWrite = "customer.write";

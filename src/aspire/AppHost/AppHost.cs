@@ -26,6 +26,7 @@ var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
 var customerDb = postgres.AddDatabase("customerDb");
 var checkoutDb = postgres.AddDatabase("checkoutDb");
+var discountDb = postgres.AddDatabase("discountDb");
 
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
@@ -166,6 +167,24 @@ var libraryApi = builder.AddProject<Projects.Library_Api>("library-api")
     .WaitFor(rabbit)
     .WaitFor(identityServer);
 
+// 079: Discount BC — admin kampanya indirimi. Catalog product.changed'i tüketir (ProductCatalogRef),
+// ProductDiscountChanged'i Storefront'a iter (tüketici binding'i önce kalksın → WaitFor storefront), checkout
+// gRPC ile Order'a aktif yüzde döner. Kendi discountDb'si.
+var discountApi = builder.AddProject<Projects.Discount_Api>("discount-api")
+    .WithHttpHealthCheck("/health")
+    .WithReference(discountDb)
+    .WithReference(rabbit)
+    .WithReference(identityServer)
+    .WaitFor(discountDb)
+    .WaitFor(rabbit)
+    .WaitFor(identityServer)
+    // Storefront discount exchange kuyruğunu bağlasın (007 soğuk-açılış dersi) — yayından önce ayakta.
+    .WaitFor(storefrontApi);
+
+// 079: Order.Api → Discount.Api checkout gRPC (start_payment aktif yüzde doğrulama, discount.read).
+// discountApi orderApi'den SONRA tanımlı → referans burada (paymentApi emsali).
+orderApi.WithReference(discountApi).WaitFor(discountApi);
+
 // 060: Mailpit — dev posta kutusu (ham container; SMTP 1025 + web UI 8025).
 var mailpit = builder.AddContainer("mailpit", "axllent/mailpit")
     .WithHttpEndpoint(targetPort: 8025, name: "http")
@@ -206,6 +225,8 @@ var mcpGateway = builder.AddProject<Projects.Mcp_Gateway>("mcp-gateway")
     // Unutulan kablolama (2026-09-19): reviews+library tool'ları fasada ancak referansla çözülür.
     .WithReference(reviewsApi)
     .WithReference(libraryApi)
+    // 079: discount /mcp-admin kampanya tool'ları fasadın /mcp-admin ucunda toplanır (service discovery).
+    .WithReference(discountApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
