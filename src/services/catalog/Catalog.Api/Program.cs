@@ -125,6 +125,7 @@ string[] catalogAdminToolNames =
     Shared.CatalogAdminTools.CreateProductTag, Shared.CatalogAdminTools.RenameProductTag,
     Shared.CatalogAdminTools.ListProductTags, Shared.CatalogAdminTools.CreateSpecificationAttribute,
     Shared.CatalogAdminTools.AddSpecificationAttributeOption, Shared.CatalogAdminTools.ListSpecificationAttributes,
+    Shared.CatalogAdminTools.RepublishProducts,
 ];
 builder.Services
     .AddMcpServer()

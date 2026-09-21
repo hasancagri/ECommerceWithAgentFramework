@@ -104,6 +104,8 @@ public static class CatalogAdminTools
     public const string CreateSpecificationAttribute = "admin_create_specification_attribute";
     public const string AddSpecificationAttributeOption = "admin_add_specification_attribute_option";
     public const string ListSpecificationAttributes = "admin_list_specification_attributes";
+    // 079 backfill: yayındaki tüm ürünler için ProductChangedEvent'i yeniden yayınla (yeni downstream doldur).
+    public const string RepublishProducts = "admin_republish_products";
 }
 
 // 079: Discount.Api /mcp-admin kampanya yönetimi (scope discount.admin.write). Yeni tool eklerken
