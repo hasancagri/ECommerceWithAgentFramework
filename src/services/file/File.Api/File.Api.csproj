@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!-- Namespace kökü FileApi: "File.Api" namespace'i System.IO.File (BCL) ile çakışır
+             (LocalDiskFileStore/migration System.IO.File kullanır). RootNamespace çakışmayı keser. -->
+        <RootNamespace>FileApi</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Scrutor" />
+        <PackageReference Include="ClosedXML" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\others\Common\Common.csproj" />
+        <ProjectReference Include="..\..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
+    </ItemGroup>
+
+</Project>
