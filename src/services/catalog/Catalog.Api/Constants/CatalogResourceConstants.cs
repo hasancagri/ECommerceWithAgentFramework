@@ -39,4 +39,10 @@ public static class CatalogResourceConstants
     public static readonly string SPEC_ALREADY_EXISTS = "CATALOG_SPEC_ALREADY_EXISTS";
     public static readonly string SPEC_NOT_FOUND = "CATALOG_SPEC_NOT_FOUND";
     public static readonly string SPEC_DUPLICATE_ATTRIBUTE = "CATALOG_SPEC_DUPLICATE_ATTRIBUTE";
+
+    // 083: Excel import — capability token + staging satır durum guard'ları.
+    public static readonly string IMPORT_LINK_LIFETIME_INVALID = "CATALOG_IMPORT_LINK_LIFETIME_INVALID";
+    public static readonly string IMPORT_SESSION_NOT_USABLE = "CATALOG_IMPORT_SESSION_NOT_USABLE";
+    public static readonly string IMPORT_ISBN_REQUIRED = "CATALOG_IMPORT_ISBN_REQUIRED";
+    public static readonly string IMPORT_ROW_ALREADY_TERMINAL = "CATALOG_IMPORT_ROW_ALREADY_TERMINAL";
 }

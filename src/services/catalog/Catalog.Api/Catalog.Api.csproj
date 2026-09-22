@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ClosedXML" />
         <PackageReference Include="Grpc.AspNetCore" />
         <PackageReference Include="Marten" />
         <PackageReference Include="Marten.Newtonsoft" />
@@ -34,11 +35,6 @@
     <ItemGroup>
       <Folder Include="Domains\Products\Features\" />
       <Folder Include="Domains\Products\Features\Agents\Queries\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <!-- 051: İş1 çıktısı süzülmüş kitap verisi; açılış seeder'ı çalışma dizininden okur. -->
-      <Content Update="Seeding\Data\books.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

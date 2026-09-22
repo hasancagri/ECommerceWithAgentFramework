@@ -48,6 +48,21 @@ public static class RabbitMqConstants
         public static class Queues
         {
             public const string Stock = "stock.product-added";
+
+            // 083: File.Api aynı fanout exchange'e kendi kuyruğunu bağlar (kapak çözümü); binding tüketici kurar.
+            public const string File = "file.product-added";
+        }
+    }
+
+    // 083: File.Api yayınlar (kapak R2'de hazır + registry upsert sonrası), Catalog tüketir (kendi kuyruğunu
+    // bağlar — 007 soğuk-açılış dersi) → Product.SetImage → ProductChangedEvent → Storefront.
+    public static class CoverIngested
+    {
+        public const string Exchange = "file.cover-ingested";
+
+        public static class Queues
+        {
+            public const string Catalog = "catalog.cover-ingested";
         }
     }
 

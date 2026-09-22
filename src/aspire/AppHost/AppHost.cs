@@ -238,6 +238,7 @@ var coverRootPath = Path.Combine(home, "dev", "catalog-data", "cover-store");
 var coverSourceXlsx = Path.Combine(home, "dev", "catalog-data", "catalog-import.xlsx");
 var fileApi = builder.AddProject<Projects.File_Api>("file-api")
     .WithReference(fileDb).WaitFor(fileDb)   // 082: kayıt defteri (Marten fileDb)
+    .WithReference(rabbit).WaitFor(rabbit)   // 083: kapak akışı (ProductAdded tüket → CoverIngested yay)
     .WithHttpHealthCheck("/health")
     .WithEnvironment("CoverStore__RootPath", coverRootPath)
     .WithEnvironment("CoverMigration__Enabled", "true")

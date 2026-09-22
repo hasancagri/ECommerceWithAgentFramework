@@ -21,6 +21,8 @@
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="WolverineFx.Marten" />
         <PackageReference Include="WolverineFx.RuntimeCompilation" />
+        <!-- 083: kapak akışı BC-arası async event → RabbitMQ transport (bugüne dek in-proc only). -->
+        <PackageReference Include="WolverineFx.RabbitMQ" />
     </ItemGroup>
 
     <ItemGroup>
