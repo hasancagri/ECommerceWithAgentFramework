@@ -7,11 +7,13 @@
         <!-- Namespace kökü FileApi: "File.Api" namespace'i System.IO.File (BCL) ile çakışır
              (LocalDiskFileStore/migration System.IO.File kullanır). RootNamespace çakışmayı keser. -->
         <RootNamespace>FileApi</RootNamespace>
+        <UserSecretsId>file-api-r2-secrets</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Scrutor" />
         <PackageReference Include="ClosedXML" />
+        <PackageReference Include="AWSSDK.S3" />
     </ItemGroup>
 
     <ItemGroup>

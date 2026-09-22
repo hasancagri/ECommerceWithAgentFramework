@@ -2,7 +2,9 @@ namespace FileApi.Storage;
 
 // Yerel disk depolama: {RootPath}/covers/{isbn} + {isbn}.ct sidecar (content-type).
 // Sidecar S3 object-metadata semantiğini aynalar → backend swap kolay. CoverKey guard'lı.
-public sealed class LocalDiskFileStore : IFileStore, ISingletonDependency
+// Backend seçimine göre Program'da elle kaydedilir (marker YOK — S3FileStore ile aynı IFileStore
+// arayüzünü paylaşır, ikisini birden marker'la kaydetmek belirsizlik yaratır).
+public sealed class LocalDiskFileStore : IFileStore
 {
     private const string DefaultContentType = "application/octet-stream";
     private readonly string _coversDir;
