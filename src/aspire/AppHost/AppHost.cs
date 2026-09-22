@@ -230,6 +230,18 @@ var mcpGateway = builder.AddProject<Projects.Mcp_Gateway>("mcp-gateway")
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
+// 081: File.Api — DB'siz kapak deposu (Mail.Mcp emsali). Kalıcı host diskine yazar (reset'e dayanıklı).
+// RootPath = kalıcı host dizini; migration kaynağı = repo-dışı catalog-import.xlsx. Env Options ile enjekte.
+var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+var coverRootPath = Path.Combine(home, "dev", "catalog-data", "cover-store");
+var coverSourceXlsx = Path.Combine(home, "dev", "catalog-data", "catalog-import.xlsx");
+var fileApi = builder.AddProject<Projects.File_Api>("file-api")
+    .WithHttpHealthCheck("/health")
+    .WithEnvironment("CoverStore__RootPath", coverRootPath)
+    .WithEnvironment("CoverMigration__Enabled", "true")
+    .WithEnvironment("CoverMigration__SourceXlsxPath", coverSourceXlsx)
+    .WithEnvironment("CoverMigration__DownloadTimeoutSeconds", "30");
+
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)
     .WithReference(basketApi)
@@ -243,6 +255,8 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(libraryApi)
     // 073: tek müşteri MCP fasadı (/mcp + /mcp-admin) gateway üzerinden.
     .WithReference(mcpGateway)
+    // 081: kapak görseli servis (anonim /files/**) gateway üzerinden.
+    .WithReference(fileApi)
     .WithReference(identityServer)
     .WaitFor(identityServer);
 
