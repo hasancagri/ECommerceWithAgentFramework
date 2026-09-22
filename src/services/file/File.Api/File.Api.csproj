@@ -14,11 +14,25 @@
         <PackageReference Include="Scrutor" />
         <PackageReference Include="ClosedXML" />
         <PackageReference Include="AWSSDK.S3" />
+        <!-- 082: DB'siz proxy → Marten fileDb'li BC (kayıt defteri). Wolverine.Marten =
+             IntegrateWithWolverine + [Transactional] (in-proc IMessageBus; broker YOK). -->
+        <PackageReference Include="Marten" />
+        <PackageReference Include="Marten.Newtonsoft" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="WolverineFx.Marten" />
+        <PackageReference Include="WolverineFx.RuntimeCompilation" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\others\Common\Common.csproj" />
+        <!-- 082: SchemaConstants.FileSchemaName (Marten şema adı). -->
+        <ProjectReference Include="..\..\..\others\Shared\Shared.csproj" />
         <ProjectReference Include="..\..\..\aspire\ServiceDefaults\ServiceDefaults.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- İLKE VII: FLOW.md BC kökünde; .csproj bir alt → Solution Explorer'da linked-file göster. -->
+        <None Include="FLOW.md" Link="FLOW.md" />
     </ItemGroup>
 
 </Project>

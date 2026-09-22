@@ -1,4 +1,6 @@
 using Amazon.S3;
+using FileApi.Domains.FileAsset;
+using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -21,9 +23,45 @@ builder.Services.AddOptions<R2Options>()
 builder.Services.AddSingleton<R2Options>(sp =>
     sp.GetRequiredService<IOptions<R2Options>>().Value);
 
+// 082: URL resolver yapılandırması (StorageType → public base).
+builder.Services.AddOptions<StorageBaseUrlsOptions>()
+    .BindConfiguration(StorageBaseUrlsOptions.SectionName);
+builder.Services.AddSingleton<StorageBaseUrlsOptions>(sp =>
+    sp.GetRequiredService<IOptions<StorageBaseUrlsOptions>>().Value);
+
 builder.Services.AddAllDependencies();
 // XlsxCoverSource somut tipiyle enjekte edilir (arayüzsüz stateless helper) → elle kayıt.
 builder.Services.AddSingleton<XlsxCoverSource>();
+// 082: resolver concrete tiple inject edilir (Scrutor AsImplementedInterfaces concrete kaydetmez).
+builder.Services.AddSingleton<CoverUrlResolver>();
+
+// 082: Marten fileDb — FileAsset kayıt defteri. ImageName UNIQUE index (invariant 3). Newtonsoft
+// (non-public setter + ctor, proje standardı). Wolverine in-proc IMessageBus (broker YOK).
+var fileDb = builder.Configuration.GetConnectionString("fileDb")!;
+builder.Services.AddMarten(opts =>
+    {
+        opts.DatabaseSchemaName = SchemaConstants.FileSchemaName;
+        opts.Connection(fileDb);
+        opts.UseNewtonsoftForSerialization(
+            nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
+            configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
+
+        opts.Schema.For<FileAsset>()
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.ImageName)
+            .Index(x => x.ImageName);
+    })
+    .IntegrateWithWolverine()
+    .ApplyAllDatabaseChangesOnStartup();
+
+builder.Host.UseWolverine(opts =>
+{
+    // Dev: tek düğüm (Solo) — repo konvansiyonu (hayalet-node gürültüsünü önler).
+    if (builder.Environment.IsDevelopment())
+        opts.Durability.Mode = DurabilityMode.Solo;
+
+    opts.Policies.UseDurableLocalQueues();
+    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+});
 
 // R2 S3 client — yalnız S3FileStore çözülünce inşa edilir (lazy). Endpoint AccountId'den,
 // credential user-secrets'ten. AuthenticationRegion="auto" (R2 gereği).
@@ -57,8 +95,11 @@ builder.Services.AddHttpClient();
 builder.Services.AddHostedService<CoverMigrationHostedService>();
 // Yerel disk → R2 kopyalama. Her zaman kayıtlı; SyncLocalToR2=false / Backend!=R2 ise erken döner.
 builder.Services.AddHostedService<R2SyncHostedService>();
+// 082 US4: R2 kapaklarını kayıt defterine idempotent al. RegistryBackfill:Enabled=false / Backend!=R2 → erken döner.
+builder.Services.AddHostedService<RegistryBackfillHostedService>();
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
-app.MapCoverEndpoints();   // GET /files/v1/covers/{isbn} (anonim)
+app.MapCoverEndpoints();        // GET /files/v1/covers/{isbn} (anonim serve)
+app.MapFileAssetEndpoints();    // /internal/files (register/resolve/locations — S2S)
 await app.RunAsync();

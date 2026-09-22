@@ -27,6 +27,7 @@ var storefrontDb = postgres.AddDatabase("storefrontDb");
 var customerDb = postgres.AddDatabase("customerDb");
 var checkoutDb = postgres.AddDatabase("checkoutDb");
 var discountDb = postgres.AddDatabase("discountDb");
+var fileDb = postgres.AddDatabase("fileDb");
 
 
 var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
@@ -236,11 +237,20 @@ var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 var coverRootPath = Path.Combine(home, "dev", "catalog-data", "cover-store");
 var coverSourceXlsx = Path.Combine(home, "dev", "catalog-data", "catalog-import.xlsx");
 var fileApi = builder.AddProject<Projects.File_Api>("file-api")
+    .WithReference(fileDb).WaitFor(fileDb)   // 082: kayıt defteri (Marten fileDb)
     .WithHttpHealthCheck("/health")
     .WithEnvironment("CoverStore__RootPath", coverRootPath)
     .WithEnvironment("CoverMigration__Enabled", "true")
     .WithEnvironment("CoverMigration__SourceXlsxPath", coverSourceXlsx)
-    .WithEnvironment("CoverMigration__DownloadTimeoutSeconds", "30");
+    .WithEnvironment("CoverMigration__DownloadTimeoutSeconds", "30")
+    // 082: R2 backend (credential user-secrets'te; AccountId/Bucket non-secret). Serve+backfill R2'den.
+    .WithEnvironment("CoverStore__Backend", "R2")
+    .WithEnvironment("R2__AccountId", "92f68fb7048d6312c566a6c28e08dcdb")
+    .WithEnvironment("R2__BucketName", "ecommercebucket")
+    // 082: URL resolver — tercih edilen depo R2; public base (r2.dev) resolve URL'i için.
+    .WithEnvironment("StorageBaseUrls__DefaultStorageType", "R2")
+    // 082 US4: mevcut R2 kapakları kayıt defterine idempotent al (bir-kez; re-run yinelemez).
+    .WithEnvironment("CoverMigration__RegistryBackfill__Enabled", "true");
 
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithReference(catalogApi)

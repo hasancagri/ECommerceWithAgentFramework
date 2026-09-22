@@ -19,10 +19,10 @@ upsert, en-az-bir-konum, ImageName değişmezlik) + `CoverUrlResolver`. Endpoint
 
 ## Phase 1: Setup
 
-- [ ] T001 Marten paketleri → `File.Api.csproj` (`Marten` + `Marten.Newtonsoft`; sürümsüz, CPM props'ta zaten var)
-- [ ] T002 AppHost: `fileDb = postgres.AddDatabase("fileDb")` + `file-api`.WithReference(fileDb).WaitFor(fileDb)
+- [X] T001 Marten paketleri → `File.Api.csproj` (`Marten` + `Marten.Newtonsoft`; sürümsüz, CPM props'ta zaten var)
+- [X] T002 AppHost: `fileDb = postgres.AddDatabase("fileDb")` + `file-api`.WithReference(fileDb).WaitFor(fileDb)
   (`src/aspire/AppHost/AppHost.cs`)
-- [ ] T003 [P] `Options/StorageBaseUrlsOptions.cs` — StorageType→public base URL map (URL resolver için;
+- [X] T003 [P] `Options/StorageBaseUrlsOptions.cs` — StorageType→public base URL map (URL resolver için;
   BindConfiguration + ValidateOnStart) (`File.Api/Options/`)
 
 ---
@@ -31,18 +31,18 @@ upsert, en-az-bir-konum, ImageName değişmezlik) + `CoverUrlResolver`. Endpoint
 
 **⚠️ Bu faz bitmeden hikaye işi başlamaz.**
 
-- [ ] T004 [P] TEST `FileAsset` invariant'ları (`tests/File.Api.Tests/FileAssetTests.cs`): Create en-az-bir-konum
+- [X] T004 [P] TEST `FileAsset` invariant'ları (`tests/File.Api.Tests/FileAssetTests.cs`): Create en-az-bir-konum
   şart (invariant 2); AddOrReplaceLocation aynı StorageType → path upsert (ikinci satır yok, invariant 1) +
   farklı StorageType → ekler; RemoveLocation son konumu reddeder; ImageName değişmez/boş-güvensiz reddi
-- [ ] T005 [P] TEST `CoverUrlResolver` (`tests/File.Api.Tests/CoverUrlResolverTests.cs`): (StorageType, path)+
+- [X] T005 [P] TEST `CoverUrlResolver` (`tests/File.Api.Tests/CoverUrlResolverTests.cs`): (StorageType, path)+
   config-base → doğru URL; bilinmeyen StorageType / eksik base → guard
-- [ ] T006 `Domains/FileAsset/FileAsset.cs` — aggregate root (ImageName tekil/değişmez, ContentType, SizeBytes,
+- [X] T006 `Domains/FileAsset/FileAsset.cs` — aggregate root (ImageName tekil/değişmez, ContentType, SizeBytes,
   CreatedAt; private `_locations`; `Create`/`AddOrReplaceLocation`/`RemoveLocation`/`PreferredLocation`,
   `ResultDomain`) + `StorageType` enum + `FileStorageLocation` entity (aynı dosyada) — T004'ü geçirir
-- [ ] T007 `UrlResolution/CoverUrlResolver.cs` — saf resolver (StorageType+base → URL) — T005'i geçirir
-- [ ] T008 Marten kaydı `Program.cs`: `AddMarten(fileDb) + ApplyAllDatabaseChangesOnStartup`; `FileAsset`
+- [X] T007 `UrlResolution/CoverUrlResolver.cs` — saf resolver (StorageType+base → URL) — T005'i geçirir
+- [X] T008 Marten kaydı `Program.cs`: `AddMarten(fileDb) + ApplyAllDatabaseChangesOnStartup`; `FileAsset`
   dokümanı + **ImageName unique index**; Newtonsoft (non-public setter+ctor)
-- [ ] T009 [P] `FLOW.md` (File.Api kökü) — domain süreci (kaydet→konum ekle→çöz) + `.csproj` linked-file
+- [X] T009 [P] `FLOW.md` (File.Api kökü) — domain süreci (kaydet→konum ekle→çöz) + `.csproj` linked-file
   (`<None Include="FLOW.md">`); `scripts/check-flow-links.sh` anchor'ları geçsin (İLKE VII)
 
 ---
@@ -52,11 +52,11 @@ upsert, en-az-bir-konum, ImageName değişmezlik) + `CoverUrlResolver`. Endpoint
 **Bağımsız test**: kayıt oluştur (imageName+ilk konum) → ikinci StorageType ekle → Locations 2; aynı StorageType
 tekrar → yeni satır yok; konumsuz create → red.
 
-- [ ] T010 [US1] `Domains/FileAsset/Features/Commands/RegisterFile.cs` — fiziki yaz (`IFileStore`, backend
+- [X] T010 [US1] `Domains/FileAsset/Features/Commands/RegisterFile.cs` — fiziki yaz (`IFileStore`, backend
   R2) → `FileAsset` upsert (var: AddOrReplaceLocation / yok: Create) → `IDocumentSession`; `Feature*ResultModel`
-- [ ] T011 [US1] `Domains/FileAsset/FileAssetEndpointExtension.cs` + `POST /internal/files` (S2S) — RegisterFile
+- [X] T011 [US1] `Domains/FileAsset/FileAssetEndpointExtension.cs` + `POST /internal/files` (S2S) — RegisterFile
   çağır, `{imageName, url}` dön (senkron); geçersiz imageName → 400
-- [ ] T012 [US1] `Program.cs`: endpoint map + DI (RegisterFile handler, CoverUrlResolver, StorageBaseUrls)
+- [X] T012 [US1] `Program.cs`: endpoint map + DI (RegisterFile handler, CoverUrlResolver, StorageBaseUrls)
 
 **Checkpoint**: US1 tek başına — dosya yazılır + kayıt defterine düşer + çoklu-konum invariant'ları çalışır.
 
@@ -66,9 +66,9 @@ tekrar → yeni satır yok; konumsuz create → red.
 
 **Bağımsız test**: N imageName → tek DB sorgusu URL döner, dış-depo çağrısı yok; kayıtsız → null/exists=false.
 
-- [ ] T013 [US2] `Domains/FileAsset/Features/Queries/ResolveUrls.cs` — batch imageNames → `WHERE ImageName IN`
+- [X] T013 [US2] `Domains/FileAsset/Features/Queries/ResolveUrls.cs` — batch imageNames → `WHERE ImageName IN`
   tek sorgu (`IQuerySession`); her biri için PreferredLocation + CoverUrlResolver → URL; kayıtsız → null
-- [ ] T014 [US2] `POST /internal/files/resolve` (S2S) endpoint — ResolveUrls çağır, `{results:[{imageName,url,
+- [X] T014 [US2] `POST /internal/files/resolve` (S2S) endpoint — ResolveUrls çağır, `{results:[{imageName,url,
   exists}]}` dön (`FileAssetEndpointExtension.cs`)
 
 **Checkpoint**: US1+US2 = kayıt + lokal çözümleme (0 dış çağrı, batch).
@@ -79,9 +79,9 @@ tekrar → yeni satır yok; konumsuz create → red.
 
 **Bağımsız test**: ikinci provider konumu ekle + tercih değiştir → resolve yeni provider URL'i; ImageName sabit.
 
-- [ ] T015 [US3] Tercih önceliği: `PreferredLocation` config öncelik sırasını (StorageBaseUrls/ayrı priority)
+- [X] T015 [US3] Tercih önceliği: `PreferredLocation` config öncelik sırasını (StorageBaseUrls/ayrı priority)
   kullansın; ResolveUrls buna göre URL üretsin (`FileAsset.cs` + resolver) — redundancy görünürlüğü
-- [ ] T016 [US3] `GET /internal/files/{imageName}/locations` (S2S, opsiyonel) — bir dosyanın konumlarını dön
+- [X] T016 [US3] `GET /internal/files/{imageName}/locations` (S2S, opsiyonel) — bir dosyanın konumlarını dön
   (redundancy görünürlüğü, FR-010) (`FileAssetEndpointExtension.cs`)
 
 ---
@@ -90,20 +90,20 @@ tekrar → yeni satır yok; konumsuz create → red.
 
 **Bağımsız test**: backfill çalışır → her ISBN için `FileAsset{Location={R2,isbn}}`; re-run yinelemez.
 
-- [ ] T017 [US4] `Migration/RegistryBackfillHostedService.cs` — config-gated (`CoverMigration:RegistryBackfill:
+- [X] T017 [US4] `Migration/RegistryBackfillHostedService.cs` — config-gated (`CoverMigration:RegistryBackfill:
   Enabled`); kaynak R2 (`ecommercebucket`) ve/veya yerel `cover-store/covers` tara → her ISBN için RegisterFile/
   upsert (idempotent); özet log `{yazıldı, atlandı}` (`File.Api/Migration/`)
-- [ ] T018 [US4] `Program.cs`: `AddHostedService<RegistryBackfillHostedService>()` (yalnız Enabled) + config env
+- [X] T018 [US4] `Program.cs`: `AddHostedService<RegistryBackfillHostedService>()` (yalnız Enabled) + config env
   AppHost'ta (`RegistryBackfill:Enabled`)
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T019 [P] `dotnet build` + `dotnet test tests/File.Api.Tests` yeşil (FileAsset + resolver + mevcut CoverKey/
+- [X] T019 [P] `dotnet build` + `dotnet test tests/File.Api.Tests` yeşil (FileAsset + resolver + mevcut CoverKey/
   MigrationDecision)
-- [ ] T020 [P] quickstart Senaryo 1-4 canlı doğrulama (Aspire AppHost; register + resolve + provider + backfill)
-- [ ] T021 [P] CLAUDE.md BC haritası: File.Api satırını güncelle (DB'siz → `fileDb`'li; kayıt defteri + resolve;
+- [X] T020 [P] quickstart Senaryo 1-4 canlı doğrulama (Aspire AppHost; register + resolve + provider + backfill)
+- [X] T021 [P] CLAUDE.md BC haritası: File.Api satırını güncelle (DB'siz → `fileDb`'li; kayıt defteri + resolve;
   081 "DB'siz" notu emekli) + `scripts/check-flow-links.sh` yeşil
 
 ---
