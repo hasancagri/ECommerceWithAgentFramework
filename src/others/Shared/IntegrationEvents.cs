@@ -45,6 +45,11 @@ public static class IntegrationEvents
         Guid ProductId,
         int InitialStock);
 
+    // 083: File.Api → Catalog. Kapak R2'de hazır + registry upsert sonrası yayılır. Url = r2.dev public
+    // (CoverUrlResolver çıktısı; r2.dev base Catalog'a sızmaz — İLKE I). Catalog FileConsumers tüketir →
+    // Product.SetImage → ProductChangedEvent. Kapak yoksa event YOK (ürün placeholder ImageUrl'süz kalır).
+    public record CoverIngested(string Isbn, string Url);
+
     // 044: Reviews → Storefront. Visible yorumlardan MUTLAK özet (delta değil) — geç/yeniden teslim
     // son-yazan-kazanır ile güvenli. Count=0 ⇒ tüketici özeti temizler (rozet çizilmez).
     public record ReviewSummaryChanged(Guid ProductId, decimal Average, int Count);

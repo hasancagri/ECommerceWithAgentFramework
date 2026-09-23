@@ -15,6 +15,10 @@ depolarda (R2/Local/…) yaşıyor izler; URL'i dış-depoya gitmeden, provider-
    çağrı yok, batch tek sorgu. Kayıtsız ImageName → boş (hata değil).
 4. **Sil (konum)** — bir depodan çekilirse o konum çıkarılır; son konumsa reddedilir
    (`FileAsset.RemoveLocation` — konumsuz dosya olmaz).
+5. **Kapak köprüsü (083)** — Catalog `ProductAdded` (yeni ürün, ISBN) tüketilir (`CatalogConsumers`):
+   R2'de kapak varsa URL doğrudan çözülür; yoksa yerel staging'den (`{RootPath}/covers/{isbn}`) okunup
+   R2'ye yazılır + kayıt defterine düşer (adım 1). Kapak bulunursa `CoverIngested(isbn,url)` yayılır
+   (Catalog `SetImage`'e köprü); bulunmazsa event yok — ürün placeholder'da kalır (import bloklanmaz).
 
 ## Domain kuralları
 
@@ -27,6 +31,5 @@ depolarda (R2/Local/…) yaşıyor izler; URL'i dış-depoya gitmeden, provider-
 
 - **Byte tutmaz** — fiziki bitler `IFileStore` backend'inde (R2); kayıt defteri yalnız ImageName + konum +
   metadata.
-- **Tüketici (Catalog) wiring yok** — resolve kontratı + endpoint hazır; Product.ImageUrl rewrite sonraki
-  feature.
-- Event yaymaz/tüketmez (izole BC); kanal = internal S2S REST.
+- **Katalog künyesi tutmaz** — kapak-özel kalır (xlsx satırı/ürün alanları sızmaz); tek girdi = ISBN + bit.
+- Kanallar: internal S2S REST (register/resolve/serve) + broker (083: `ProductAdded` tüket, `CoverIngested` yay).

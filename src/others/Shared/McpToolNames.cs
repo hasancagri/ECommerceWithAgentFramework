@@ -106,6 +106,10 @@ public static class CatalogAdminTools
     public const string ListSpecificationAttributes = "admin_list_specification_attributes";
     // 079 backfill: yayındaki tüm ürünler için ProductChangedEvent'i yeniden yayınla (yeni downstream doldur).
     public const string RepublishProducts = "admin_republish_products";
+    // 083: Excel katalog import — token-linkli yükleme başlat, import taslaklarını toplu yayınla, durum raporu.
+    public const string ImportCatalog = "admin_import_catalog";
+    public const string PublishImported = "admin_publish_imported";
+    public const string GetImportStatus = "admin_get_import_status";
 }
 
 // 079: Discount.Api /mcp-admin kampanya yönetimi (scope discount.admin.write). Yeni tool eklerken

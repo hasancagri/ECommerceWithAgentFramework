@@ -36,6 +36,17 @@ builder.Services.AddMarten(opts =>
         // 043: özellik registry'si — NormalizedName teklik anahtarı (seed get-or-create güvencesi).
         opts.Schema.For<Catalog.Api.Domains.SpecificationAttributes.SpecificationAttribute>()
             .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
+
+        // 083: Excel import staging + capability token. Token teklik anahtarı (link=yetki); ImportRow
+        // ISBN idempotency + Status processor sorgusu (WHERE Status=Pending) için lookup index'i.
+        // DocumentAlias ZORUNLU: tip adı büyük I ile başlıyor, tr-TR makinede varsayılan alias
+        // lowercase'i noktasız ı üretir → computed-index delta her boot bozulur (42P07). ascii alias baypas.
+        opts.Schema.For<Catalog.Api.Import.ImportSession>()
+            .DocumentAlias("importsession")
+            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.Token);
+        opts.Schema.For<Catalog.Api.Import.ImportRow>()
+            .DocumentAlias("importrow")
+            .Index(x => x.Isbn).Index(x => x.Status);
     })
     .IntegrateWithWolverine()
     .ApplyAllDatabaseChangesOnStartup();
@@ -69,11 +80,22 @@ builder.Host.UseWolverine(opts =>
     opts.PublishMessage<Shared.IntegrationEvents.ProductAdded>()
         .ToRabbitExchange(RabbitMqConstants.ProductAdded.Exchange);
 
+    // 083 T022: File.Api'nin CoverIngested'ini tüket (Catalog'un İLK consumer'ı). Binding'i tüketici
+    // kurar (007 dersi); FileConsumers.Handle → Product.SetImage → ProductChangedEvent.
+    rabbit.DeclareExchange(RabbitMqConstants.CoverIngested.Exchange, e =>
+    {
+        e.ExchangeType = ExchangeType.Fanout;
+        e.BindQueue(RabbitMqConstants.CoverIngested.Queues.Catalog);
+    });
+    opts.ListenToRabbitQueue(RabbitMqConstants.CoverIngested.Queues.Catalog);
+
     opts.Policies.UseDurableLocalQueues();
     opts.Policies.AddMiddleware(
         typeof(ScopeAuthorizationMiddleware),
         chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
     opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
+    // Wolverine keşfi çoğul *Consumers sınıfını taramaz → açıkça ekle (ZORUNLU; yoksa mesaj yutulur).
+    opts.Discovery.IncludeType(typeof(Catalog.Api.FileConsumers));
 });
 
 builder.Services.AddApiVersioning(options =>
@@ -97,9 +119,17 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
-// 051: kitap toplu import seeder'ı — books.json'dan idempotent yazar; taksonomi/marka kitap verisinden
-// get-or-create edilir (eski elektronik-demo taksonomi + spec seed'leri söküldü).
-builder.Services.AddHostedService<Catalog.Api.Seeding.BookImportHostedService>();
+// 083 D6/T010: Excel yükleme ekranı config'i (link tabanı + ömür) — section "ImportOptions".
+// Tüketici düz T enjekte eder (078 emsali; IOptions<T> değil).
+builder.Services.AddOptions<Catalog.Api.Options.ImportOptions>()
+    .BindConfiguration(nameof(Catalog.Api.Options.ImportOptions))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<Catalog.Api.Options.ImportOptions>(sp =>
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Catalog.Api.Options.ImportOptions>>().Value);
+
+// 083 T013/FR-002+FR-004: bekleyen staging satırlarını arka planda ürüne çeviren dayanıklı süreç
+// (Process/ deseni). 051 books.json seeder'ı söküldü (FR-011) — Excel import tek katalog giriş yolu.
+builder.Services.AddHostedService<Catalog.Api.Import.ImportProcessor>();
 
 // L2 (paylaşımlı) önbellek katmanı — Redis IDistributedCache; opsiyonel (yoksa HybridCache yalnız L1).
 if (builder.Configuration.GetConnectionString("redis") is not null)
@@ -126,6 +156,9 @@ string[] catalogAdminToolNames =
     Shared.CatalogAdminTools.ListProductTags, Shared.CatalogAdminTools.CreateSpecificationAttribute,
     Shared.CatalogAdminTools.AddSpecificationAttributeOption, Shared.CatalogAdminTools.ListSpecificationAttributes,
     Shared.CatalogAdminTools.RepublishProducts,
+    // 083: Excel katalog import — hepsi YALNIZ /mcp-admin (allowlist tuzağı — eklemeyen tool'u kaybeder).
+    Shared.CatalogAdminTools.ImportCatalog, Shared.CatalogAdminTools.PublishImported,
+    Shared.CatalogAdminTools.GetImportStatus,
 ];
 builder.Services
     .AddMcpServer()
@@ -159,7 +192,11 @@ app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
 // 074: domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle MCP (/mcp + /mcp-admin).
-// Ürün girişi ImportBook (051, endpoint'siz seeder) + admin_create_product (MCP). REST endpoint YOK.
+// Ürün girişi = Excel import (083) + admin_create_product (MCP). Kalan REST = MCP-infra + import ekranı.
+
+// 083 US1/FR-001: hosted xlsx yükleme ekranı — ANONİM (token = yetki; İLKE V v1.11.1 capability-link
+// istisnası). MapMcp'DEN ÖNCE map'lenir; auth token URL'inde taşınır (078 emsali).
+app.MapImportUploadEndpoints();
 
 app.MapMcp("/mcp");
 
