@@ -23,6 +23,7 @@ public static class PublishImported
     // Yayın kapısı (saf, test-first): import taslağı yalnız yayınlanmamış + fiyatlıysa yayınlanır.
     public static bool IsPublishable(Product product) => !product.Published && product.Price.Amount > 0;
 
+    [Transactional]
     public class PublishImportedCommandHandler(IDocumentSession session, IMessageBus bus)
     {
         public async Task<FeatureObjectResultModel<PublishImportedResponse>> Handle(
