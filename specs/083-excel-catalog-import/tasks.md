@@ -65,7 +65,7 @@ Endpoint/processor/consumer canlı-doğrulama (quickstart). Yollar mutlak repo k
 
 - [X] T026 `scripts/check-flow-links.sh` çalıştır — FLOW.md kenar-anchor'ları (ImportProcessor, ImportRow, CatalogConsumers) kodda var.
 - [X] T027 `dotnet build` + `dotnet test tests/Catalog.Api.Tests/...` yeşil (domain-TDD + bağımlı test projeleri de build — rename tuzağı).
-- [ ] T028 quickstart.md E2E canlı doğrulama (Aspire): US1 idempotency + çökme-güvenli, US2 kapak düşer, US3 toplu yayın, edge (bozuk xlsx/expired link/eksik ISBN).
+- [X] T028 quickstart.md E2E canlı doğrulama (Aspire): US1 import/idempotency/çökme-güvenli ✅, US2 kapak (13.464 düştü) ✅, US3 toplu yayın (19.711 published + Storefront yansıması) ✅, edge 1-4 ✅. 3 bug bulundu+fixlendi: tr-TR ı boot (bfc966c), kapak resolver StorageBaseUrls:Bases:R2 config (bfc966c), publish [Transactional] eksik (5a24008). KALAN borç (T028 dışı): ~6.247 fix-öncesi tüketilen ürün kapaksız → republish/reconcile.
 - [X] T029 CLAUDE.md BC haritası: catalog satırına Excel import + File.Api satırına RabbitMQ+CoverIngested kablosu; 082 memory KALAN=Product.ImageUrl wiring kapandı notu.
 
 ## Bağımlılıklar & Sıra
