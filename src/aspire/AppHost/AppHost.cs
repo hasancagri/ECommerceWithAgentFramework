@@ -250,6 +250,9 @@ var fileApi = builder.AddProject<Projects.File_Api>("file-api")
     .WithEnvironment("R2__BucketName", "ecommercebucket")
     // 082: URL resolver — tercih edilen depo R2; public base (r2.dev) resolve URL'i için.
     .WithEnvironment("StorageBaseUrls__DefaultStorageType", "R2")
+    // 083: r2.dev public base (non-secret) — CoverUrlResolver bunu okur. Eksikti → Resolve() null →
+    // CoverIngested hiç yayılmıyordu (Product.ImageUrl boş kalıyordu). Public URL, repo'ya güvenli.
+    .WithEnvironment("StorageBaseUrls__Bases__R2", "https://pub-5232b4cfb5174c27bcea9dcdd6c4fec5.r2.dev")
     // 082 US4: mevcut R2 kapakları kayıt defterine idempotent al (bir-kez; re-run yinelemez).
     .WithEnvironment("CoverMigration__RegistryBackfill__Enabled", "true");
 

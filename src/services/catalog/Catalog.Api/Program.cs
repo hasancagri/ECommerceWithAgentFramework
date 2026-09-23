@@ -39,9 +39,13 @@ builder.Services.AddMarten(opts =>
 
         // 083: Excel import staging + capability token. Token teklik anahtarı (link=yetki); ImportRow
         // ISBN idempotency + Status processor sorgusu (WHERE Status=Pending) için lookup index'i.
+        // DocumentAlias ZORUNLU: tip adı büyük I ile başlıyor, tr-TR makinede varsayılan alias
+        // lowercase'i noktasız ı üretir → computed-index delta her boot bozulur (42P07). ascii alias baypas.
         opts.Schema.For<Catalog.Api.Import.ImportSession>()
+            .DocumentAlias("importsession")
             .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.Token);
         opts.Schema.For<Catalog.Api.Import.ImportRow>()
+            .DocumentAlias("importrow")
             .Index(x => x.Isbn).Index(x => x.Status);
     })
     .IntegrateWithWolverine()
