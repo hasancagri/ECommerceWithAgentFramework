@@ -19,7 +19,8 @@
       <ProjectReference Include="..\..\services\payment\Payment.Api\Payment.Api.csproj" />
       <ProjectReference Include="..\..\services\storefront\Storefront.Api\Storefront.Api.csproj" />
       <ProjectReference Include="..\..\services\gateway\Gateway\Gateway.csproj" />
-      <ProjectReference Include="..\..\others\Identity.Server\Identity.Server.csproj" />
+      <!-- 084: Identity.Server AgentPlatform repo'suna taşındı (platform IdP). ECommerce artık relying
+           party — IdP'ye dış-servis (issuer URL, IdentityOption.Address) olarak bakar, proje-ref YOK. -->
       <ProjectReference Include="..\..\agents\Mail.Mcp\Mail.Mcp.csproj" />
       <ProjectReference Include="..\..\agents\NotificationAgent\NotificationAgent.csproj" />
       <ProjectReference Include="..\..\agents\Reviews.Moderation\Reviews.Moderation.csproj" />
