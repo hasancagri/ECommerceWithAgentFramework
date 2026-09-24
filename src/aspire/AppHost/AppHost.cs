@@ -22,17 +22,15 @@ var basketDb = postgres.AddDatabase("basketDb");
 var orderDb = postgres.AddDatabase("orderDb");
 var paymentDb = postgres.AddDatabase("paymentDb");
 var stockDb = postgres.AddDatabase("stockDb");
-var identityDb = postgres.AddDatabase("identityDb");
 var storefrontDb = postgres.AddDatabase("storefrontDb");
 var customerDb = postgres.AddDatabase("customerDb");
 var checkoutDb = postgres.AddDatabase("checkoutDb");
 var discountDb = postgres.AddDatabase("discountDb");
 var fileDb = postgres.AddDatabase("fileDb");
 
-
-var identityServer = builder.AddProject<Projects.Identity_Server>("identity-server")
-    .WithReference(identityDb)
-    .WaitFor(identityDb);
+// 084: identity-server AgentPlatform repo'suna taşındı (ayrı Aspire AppHost). ECommerce servisleri
+// IdP'yi IdentityOption.Address (sabit issuer URL, https://localhost:5001) ile bulur — proje-ref/
+// service-discovery değil. identityDb de AgentPlatform'da; buradaki identityDb kaydı söküldü.
 
 var catalogApi = builder.AddProject<Projects.Catalog_Api>("catalog-api")
     .WithHttpHealthCheck("/health")
@@ -82,11 +80,9 @@ var storefrontApi = builder.AddProject<Projects.Storefront_Api>("storefront-api"
     .WithHttpHealthCheck("/health")
     .WithReference(storefrontDb)
     .WithReference(rabbit)
-    .WithReference(identityServer)
     .WithReference(redis)
     .WaitFor(storefrontDb)
     .WaitFor(rabbit)
-    .WaitFor(identityServer)
     .WaitFor(redis);
 
 var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
@@ -103,10 +99,8 @@ var paymentApi = builder.AddProject<Projects.Payment_Api>("payment-api")
 var customerApi = builder.AddProject<Projects.Customer_Api>("customer-api")
     .WithHttpHealthCheck("/health")
     .WithReference(customerDb)
-    .WithReference(identityServer)
     .WithReference(redis)
     .WaitFor(customerDb)
-    .WaitFor(identityServer)
     .WaitFor(redis);
 
 // 039: chat siparis tamamlama — Order.Api odeme baglamini (buyer+vaultToken+adres) Customer'dan
@@ -129,7 +123,6 @@ orderApi.WithReference(paymentApi).WaitFor(paymentApi);
 var checkoutOrchestrator = builder.AddProject<Projects.Checkout_Orchestrator>("checkout-orchestrator")
     .WithReference(checkoutDb)
     .WithReference(rabbit)
-    .WithReference(identityServer)
     .WaitFor(checkoutDb)
     .WaitFor(rabbit)
     .WaitFor(orderApi)
@@ -163,10 +156,8 @@ var libraryDb = postgres.AddDatabase("libraryDb");
 var libraryApi = builder.AddProject<Projects.Library_Api>("library-api")
     .WithReference(libraryDb)
     .WithReference(rabbit)
-    .WithReference(identityServer)
     .WaitFor(libraryDb)
-    .WaitFor(rabbit)
-    .WaitFor(identityServer);
+    .WaitFor(rabbit);
 
 // 079: Discount BC — admin kampanya indirimi. Catalog product.changed'i tüketir (ProductCatalogRef),
 // ProductDiscountChanged'i Storefront'a iter (tüketici binding'i önce kalksın → WaitFor storefront), checkout
@@ -175,10 +166,8 @@ var discountApi = builder.AddProject<Projects.Discount_Api>("discount-api")
     .WithHttpHealthCheck("/health")
     .WithReference(discountDb)
     .WithReference(rabbit)
-    .WithReference(identityServer)
     .WaitFor(discountDb)
     .WaitFor(rabbit)
-    .WaitFor(identityServer)
     // Storefront discount exchange kuyruğunu bağlasın (007 soğuk-açılış dersi) — yayından önce ayakta.
     .WaitFor(storefrontApi);
 
@@ -227,9 +216,7 @@ var mcpGateway = builder.AddProject<Projects.Mcp_Gateway>("mcp-gateway")
     .WithReference(reviewsApi)
     .WithReference(libraryApi)
     // 079: discount /mcp-admin kampanya tool'ları fasadın /mcp-admin ucunda toplanır (service discovery).
-    .WithReference(discountApi)
-    .WithReference(identityServer)
-    .WaitFor(identityServer);
+    .WithReference(discountApi);
 
 // 081: File.Api — DB'siz kapak deposu (Mail.Mcp emsali). Kalıcı host diskine yazar (reset'e dayanıklı).
 // RootPath = kalıcı host dizini; migration kaynağı = repo-dışı catalog-import.xlsx. Env Options ile enjekte.
@@ -270,9 +257,7 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     // 073: tek müşteri MCP fasadı (/mcp + /mcp-admin) gateway üzerinden.
     .WithReference(mcpGateway)
     // 081: kapak görseli servis (anonim /files/**) gateway üzerinden.
-    .WithReference(fileApi)
-    .WithReference(identityServer)
-    .WaitFor(identityServer);
+    .WithReference(fileApi);
 
 // WebApp (UI) + ChatAgent SÖKÜLDÜ (2026-09-11) — agent-only/BYO-agent yönü: müşteri kendi AI istemcisiyle
 // MCP fasadına (mcp-gateway) bağlanır; mağaza kendi ekranını/agent'ını host etmez. Admin de /mcp-admin'de.

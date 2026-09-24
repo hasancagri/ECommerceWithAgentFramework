@@ -20,5 +20,8 @@
         <PackageReference Include="Scrutor" />
         <PackageReference Include="StackExchange.Redis" />
         <PackageReference Include="WolverineFx" />
+        <!-- 084: nötr auth kablosu (IdentityOption + AddAuthenticationAndAuthorizationExtension) buradan
+             ayrıldı → Platform.Auth paketi. Namespace Common.* korunur → tüketicilerde using değişmez. -->
+        <PackageReference Include="Platform.Auth" />
     </ItemGroup>
 </Project>

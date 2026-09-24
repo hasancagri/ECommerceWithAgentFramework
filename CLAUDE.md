@@ -57,7 +57,7 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 | `reviews` | reviewsDb | Satın-alma şartlı yorum; AI moderasyon AYRI worker'da (broker); özet event → Storefront | `specs/044-product-reviews` |
 | `library` | libraryDb | Kullanıcı-ürün ilgi kayıtları; ilk dilim fiyat alarmı (yaşayan abonelik, email snapshot) + `NotificationRecord` izi; `ProductChangedEvent.OldPrice` tetiği → alarm başına `PriceAlarmTriggered` | `specs/060-price-alarm-mail` |
 | `gateway` | — | YARP reverse proxy; tek giriş | — |
-| `identity-server` | identityDb | OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC; dış agent için RFC 7591 DCR (`/connect/register`) + tek consent sayfası (Explicit) + revocation (061) | `specs/029-openiddict-migration` |
+| `identity-server` | identityDb | **084: ECommerce'ten ÇIKTI — `AgentPlatform` repo'sunda platform IdP** (uygulama-nötr; ECommerce "app #1" olarak `AppRegistry` config'inde kayıtlı relying party). OpenIddict + ASP.NET Identity; OIDC/OAuth + RBAC; DCR + tek consent + revocation (061). Nötr auth kablosu (`IdentityOption`+`AddAuthenticationAndAuthorizationExtension`) = `Platform.Auth` NuGet paketi (yerel feed, namespace Common.* korunur). ECommerce IdP'ye dış-servis (issuer URL `IdentityOption.Address`) olarak bakar; AppHost proje-ref YOK | `../AgentPlatform` · `specs/084-platform-idp` |
 | `reviews-moderation-agent` | — | Reviews moderasyonu (DB'siz worker); `ReviewModerationRequested`→LLM→`ReviewModerated` | `specs/046-reviews-moderation-agent` |
 | `notification-agent` | — | Fiyat alarmı maili (DB'siz worker); `PriceAlarmTriggered`→LLM compose→Mail.Mcp `send_mail`→`NotificationSent` | `specs/060-price-alarm-mail` |
 | `mail-mcp` | — | İlk standalone MCP server; tek tool `send_mail` (MailKit→Mailpit); yalnız NotificationAgent tüketir, ChatAgent'a KAYITLI DEĞİL | `specs/060-price-alarm-mail` |
@@ -129,4 +129,5 @@ feature'lar o feature'ın kendi spec'inde. Servisler `src/services/*`; destek `s
 - **`IConfiguration`'dan doğrudan okuma** (Options pattern istisnaları hariç).
 - **MCP'yi agent-dışı koddan** imperatif çağırma.
 - **Yeni saga için ayrı orchestration servisi** açma (god-service) — saga sürecin sahibi BC'de host edilir.
+- **Kimlik makamını ECommerce'e geri gömme (084):** `identity-server` `AgentPlatform` repo'sunda platform IdP; ECommerce relying party. ECommerce AppHost'a IdP proje-ref'i EKLEME, scope/client/rol'ü koda gömme (yenisi `AgentPlatform` `AppRegistry` config'ine). Nötr auth kablosu `Platform.Auth` paketinde — Common'a geri taşıma.
 - **Çözüme (`.slnx`) dahil olmayan klasörlere dokunma** (staging/deneme kodu) — kapsam dışı.
