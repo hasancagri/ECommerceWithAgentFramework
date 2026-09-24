@@ -20,6 +20,7 @@ global using Wolverine.RabbitMQ;
 global using Checkout.Orchestrator.Options;
 global using Checkout.Orchestrator.Constants;
 global using Checkout.Orchestrator.Dependencies;
+global using Checkout.Orchestrator.Extensions;
 
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---
 global using static Shared.CheckoutMessages;

@@ -33,3 +33,4 @@ global using Common.Dependencies;
 // --- 070: admin MCP yüzeyi ---
 global using Common.Utils.Authorization;
 global using Common.Auths;
+global using Stock.Api.Extensions;

@@ -41,3 +41,4 @@ global using Common.Utils.Caching;
 // --- 070: admin MCP yüzeyi (kullanıcı token'dan) ---
 global using Common.Auths;
 global using Catalog.Api.Common;
+global using Catalog.Api.Extensions;

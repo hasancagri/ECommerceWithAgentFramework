@@ -30,3 +30,4 @@ global using Discount.Api.Constants;
 global using Discount.Api.Domains.Campaigns;
 global using Discount.Api.Domains.ProductDiscounts;
 global using Discount.Api.Domains.ProductCatalogRefs;
+global using Discount.Api.Extensions;

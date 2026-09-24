@@ -1,81 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
-builder.AddOpenApiDocumentation();
 builder.AddServiceDefaults();
 
-var reviewsDb = builder.Configuration.GetConnectionString("reviewsDb")!;
-builder.Services.AddMarten(opts =>
-    {
-        opts.DatabaseSchemaName = SchemaConstants.ReviewsSchemaName;
-        opts.Connection(reviewsDb);
-        opts.UseNewtonsoftForSerialization(
-            nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
-            configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
+// Kalıcılık (Marten + şema/index + Wolverine entegrasyonu) → Extensions/MartenExtensions.cs.
+builder.AddReviewsMarten();
 
-        // R9: tek-yorum kilidinin son sozu — uygulama kontrolu + unique index (cift savunma).
-        opts.Schema.For<Review>()
-            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.UserId, x => x.ProductId)
-            .Index(x => x.ProductId);
-
-        // 049: satın-alma kanıtı read-model (Id = "{userId:N}:{productId:N}"; eligibility PK lookup).
-        opts.Schema.For<PurchasedProduct>();
-    })
-    .IntegrateWithWolverine()
-    .ApplyAllDatabaseChangesOnStartup();
-
-builder.Host.UseWolverine(opts =>
-{
-    // Dev: tek dugum (Solo) — repo konvansiyonu (hayalet-node gurultusunu onler).
-    if (builder.Environment.IsDevelopment())
-        opts.Durability.Mode = DurabilityMode.Solo;
-
-    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
-        .AutoProvision();
-
-    // Yayinci yalniz exchange'i deklare eder; kuyruk + binding TUKETICIDE (007 dersi).
-    rabbit.DeclareExchange(RabbitMqConstants.ReviewSummaryChanged.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-    });
-
-    opts.PublishMessage<Shared.IntegrationEvents.ReviewSummaryChanged>()
-        .ToRabbitExchange(RabbitMqConstants.ReviewSummaryChanged.Exchange);
-
-    // 046: moderasyon istegi ayri worker'a (RabbitMQ). Yayinci yalniz exchange deklare eder;
-    // [Transactional] SubmitReview + transactional outbox → broker down olsa submit reviewsDb'ye
-    // commit olur, mesaj outbox'ta bekler (fail-open, submit broker'a senkron baglanmaz).
-    rabbit.DeclareExchange(RabbitMqConstants.ReviewModerationRequested.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-    });
-    opts.PublishMessage<Shared.IntegrationEvents.ReviewModerationRequested>()
-        .ToRabbitExchange(RabbitMqConstants.ReviewModerationRequested.Exchange);
-
-    // 046: worker'in karari — tuketici kendi kuyrugunu deklare edilen exchange'e baglar (007) + dinler.
-    rabbit.DeclareExchange(RabbitMqConstants.ReviewModerated.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ReviewModerated.Queues.Reviews);
-    });
-    opts.ListenToRabbitQueue(RabbitMqConstants.ReviewModerated.Queues.Reviews);
-
-    // 049: Order 'OrderCompleted' tüketilir → satın-alma kanıtı read-model. Tüketici kendi kuyruğunu
-    // deklare edilen exchange'e bağlar (007) + dinler. Durable → Reviews kapalıyken kaybolmaz.
-    rabbit.DeclareExchange(RabbitMqConstants.OrderCompleted.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.OrderCompleted.Queues.Reviews);
-    });
-    opts.ListenToRabbitQueue(RabbitMqConstants.OrderCompleted.Queues.Reviews);
-
-    opts.Policies.UseDurableLocalQueues();
-    opts.Policies.AddMiddleware(
-        typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
-        chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
-    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // *Consumers Wolverine isim-konvansiyonunca keşfedilMEZ — elle dahil et (Stock/Catalog emsali).
-    opts.Discovery.IncludeType(typeof(Reviews.Api.ModerationAgentConsumers));
-    opts.Discovery.IncludeType(typeof(Reviews.Api.OrderConsumers));
-});
+// Mesajlaşma (Wolverine + RabbitMQ topoloji + handler keşfi) → Extensions/MessagingExtensions.cs.
+builder.AddReviewsMessaging();
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -101,7 +31,6 @@ builder.Services
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
-app.MapScalarDocumentation();
 
 app.UseAuthentication();
 app.UseAuthorization();

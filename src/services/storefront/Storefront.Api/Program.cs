@@ -1,96 +1,15 @@
 var builder = WebApplication.CreateBuilder(args);
-builder.AddOpenApiDocumentation();
 builder.AddServiceDefaults();
 
+// Kalıcılık (Marten + pgvector + şema/index + Wolverine entegrasyonu) → Extensions/MartenExtensions.cs.
+builder.AddStorefrontMarten();
+
+// Mesajlaşma (Wolverine + RabbitMQ topoloji + handler keşfi) → Extensions/MessagingExtensions.cs.
+// SIRA: AddCachingAspect'ten ÖNCE (cache aspect IMessageBus'ı sarar).
+builder.AddStorefrontMessaging();
+
+// 069 R1/R2: kısıtlı rol conn-string'i aşağıda gerekir; conn-string burada da yerelde okunur.
 var storefrontDb = builder.Configuration.GetConnectionString("storefrontDb")!;
-builder.Services.AddMarten(opts =>
-    {
-        opts.DatabaseSchemaName = SchemaConstants.StorefrontSchemaName;
-        opts.Connection(storefrontDb);
-        opts.UseNewtonsoftForSerialization(
-            nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
-            configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
-
-        // 067: pgvector extension'ı şemaya ekler + Npgsql vector type handler kaydeder. Embedding JSONB
-        // içinde float[] yaşar; kNN sorgusu (data->>'DescriptionEmbedding')::vector cast'iyle koşar.
-        // VectorOn/HNSW bilinçli YOK (research R7): 20k satırda exact scan ms mertebesi, index'e gerek yok.
-        opts.UsePgVector();
-
-        // Rich aggregate degil (invariant tasimaz); ProductId, Marten Id'si. Tek composite satir.
-        // Optimistic concurrency: farkli kaynaklarin ayni satira eszamanli yazmasinda lost-update
-        // olmaz — cakisan handler ConcurrencyException alir, Wolverine retry'da taze yukleyip uygular.
-        opts.Schema.For<StorefrontView>().Identity(x => x.ProductId).UseOptimisticConcurrency(true);
-
-        // 054: kullanıcı satın-alma birikimi (kişisel feed sinyali). PK = "{userId:N}:{productId:N}"
-        // (idempotent upsert); feed sorgusunun tek erişim yolu UserId — index onun için.
-        opts.Schema.For<Storefront.Api.Domains.UserPurchase.UserPurchase>().Index(x => x.UserId);
-
-        // 067: anlamsal temsil AYRI dokümanda (view satırı şişmez; tam-satır okuma yolları etkilenmez).
-        // Optimistic concurrency bilinçli YOK: handler/backfill yarışında son yazan kazanır (aynı metnin
-        // temsili — içerik eşdeğer). Görünürlük StorefrontView satılabilirlik filtresinde (FR-007).
-        opts.Schema.For<Storefront.Api.Domains.StorefrontView.ProductDescriptionEmbedding>()
-            .Identity(x => x.ProductId);
-
-        // 069: sorgu izi (ret dahil her query_storefront çağrısı bir satır; FR-006/SC-005).
-        opts.Schema.For<Storefront.Api.AgentSql.AgentQueryLog>();
-    })
-    .IntegrateWithWolverine()
-    .ApplyAllDatabaseChangesOnStartup();
-
-builder.Host.UseWolverine(opts =>
-{
-    // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali; kirli kapanan
-    // debug oturumlarinin hayalet-node StopRemoteAgent timeout gurultusunu kokten onler.
-    if (builder.Environment.IsDevelopment())
-        opts.Durability.Mode = DurabilityMode.Solo;
-
-    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
-        .AutoProvision();
-
-    // 044: ReviewSummaryChanged binding'ini TUKETICI kurar (041 dersi); yayinci yalniz exchange
-    // deklare eder. Ayni storefront.events kuyruguna baglanir (Sequential — satir yarisi yok).
-    rabbit.DeclareExchange(RabbitMqConstants.ReviewSummaryChanged.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ReviewSummaryChanged.Queues.Storefront);
-    });
-
-    // 054: OrderCompleted → UserPurchase birikimi (kişisel feed sinyali). Binding'i TUKETICI kurar;
-    // ayni tek-kuyruk deseni (4. exchange → storefront.events).
-    rabbit.DeclareExchange(RabbitMqConstants.OrderCompleted.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.OrderCompleted.Queues.Storefront);
-    });
-
-    // 079: ProductDiscountChanged → StorefrontView.ApplyDiscount. Binding'i TUKETICI kurar (007);
-    // aynı tek-kuyruk deseni (5. exchange → storefront.events, Sequential).
-    rabbit.DeclareExchange(RabbitMqConstants.ProductDiscountChanged.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ProductDiscountChanged.Queues.Storefront);
-    });
-
-    // TEK kuyruk (storefront.events): üç exchange de buraya bağlı; Sequential işleme sayesinde
-    // aynı view satırına eşzamanlı yazım olmaz — ConcurrencyException kaynağında çözülür.
-    opts.ListenToRabbitQueue(RabbitMqConstants.StorefrontEvents.Queue).Sequential();
-
-    // Composite satirda kaynaklar-arasi eszamanli yazim cakismasi (optimistic concurrency) → retry.
-    opts.OnException<JasperFx.ConcurrencyException>().RetryTimes(5);
-    opts.Policies.UseDurableLocalQueues();
-    // Handler-level yetki: middleware SADECE [RequiredScope] tasiyan komut/sorgulara weave edilir.
-    // REST + MCP ortak yetki noktasi.
-    opts.Policies.AddMiddleware(
-        typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
-        chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
-    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Konvansiyonel keşif bu sınıfları atlıyor (nedeni araştırılacak); açık kayıt garantili yol.
-    opts.Discovery.IncludeType(typeof(Storefront.Api.CatalogConsumers));
-    opts.Discovery.IncludeType(typeof(Storefront.Api.ReviewsConsumers));
-    opts.Discovery.IncludeType(typeof(Storefront.Api.StockConsumers));
-    opts.Discovery.IncludeType(typeof(Storefront.Api.OrderConsumers));
-    opts.Discovery.IncludeType(typeof(Storefront.Api.DiscountConsumers));
-});
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -169,7 +88,6 @@ builder.Services.AddApiKeyAuthentication(builder.Configuration);
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
-app.MapScalarDocumentation();
 
 app.UseAuthentication();
 app.UseApiKeyAuthentication();

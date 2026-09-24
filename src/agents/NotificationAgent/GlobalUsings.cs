@@ -12,3 +12,5 @@ global using OpenAI;
 
 // --- hoisted (2+ dosyada tekrar; using consolidation) ---
 global using System.ComponentModel.DataAnnotations;
+
+global using NotificationAgent.Extensions;

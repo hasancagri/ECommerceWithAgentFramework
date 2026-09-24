@@ -3,63 +3,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddOpenApiDocumentation();
 
-var paymentDb = builder.Configuration.GetConnectionString("paymentDb")!;
-builder.Services.AddMarten(opts =>
-    {
-        opts.DatabaseSchemaName = SchemaConstants.PaymentSchemaName;
-        opts.Connection(paymentDb);
-        opts.UseNewtonsoftForSerialization(
-            nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
-            configure: s =>
-            {
-                s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
-            });
+// Marten kalıcılık kurulumu → Extensions/MartenExtensions.cs
+builder.AddPaymentMarten();
 
-        // 077: hosted-CF PaymentIntent (mock Payment aggregate söküldü). TxRef unique = idempotency temeli
-        // (çift callback tek sonuç); UserId index = get_my_payments + canlı-intent re-use sorgusu.
-        // Sabit alias ŞART: PaymentIntent tablo adı tr-TR ToLower'da 'mt_doc_paymentıntent' (dotless ı)
-        // olur; Marten'in computed-index delta eşleşmesi TABLO adındaki ı'da bozulur → var olan index'i
-        // görmez → her boot recreate → 42P07. (order/basket ı'yı yalnız index ADINDA taşır, tablo adında
-        // değil → idempotent.) Alias ı'yı tümden kaldırır: mt_doc_payment_intent.
-        opts.Schema.For<Payment.Api.Domains.Payments.PaymentIntent>()
-            .DocumentAlias("payment_intent")
-            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.TxRef)
-            .Index(x => x.UserId);
-    })
-    .IntegrateWithWolverine()
-    .ApplyAllDatabaseChangesOnStartup();
-
-builder.Host.UseWolverine(opts =>
-{
-    // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali; kirli kapanan
-    // debug oturumlarinin hayalet-node StopRemoteAgent timeout gurultusunu kokten onler.
-    if (builder.Environment.IsDevelopment())
-        opts.Durability.Mode = DurabilityMode.Solo;
-
-    // CreatePaymentIntent handler'ı typed HttpClient (MerchantKeyClient/PgHostedPaymentClient,
-    // AddHttpClient<T> = opaque lambda transient) inject eder; Wolverine inline codegen bunları
-    // service-location ister. Varsayılan NotAllowed → 500. Order.Api ile aynı politika.
-    opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
-
-    // 077: checkout Charge broker yolu SÖKÜLDÜ (PaymentCommandsQueue listen + PaymentCharged publish).
-    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!).AutoProvision();
-
-    // 077: hosted-CF sonucu fanout → Order tüketir (binding'i tüketici kurar). Yayıncı yalnız exchange declare.
-    rabbit.DeclareExchange(Shared.RabbitMqConstants.PaymentSucceeded.Exchange, e => e.ExchangeType = ExchangeType.Fanout);
-    rabbit.DeclareExchange(Shared.RabbitMqConstants.PaymentFailed.Exchange, e => e.ExchangeType = ExchangeType.Fanout);
-    opts.PublishMessage<Shared.IntegrationEvents.PaymentSucceeded>()
-        .ToRabbitExchange(Shared.RabbitMqConstants.PaymentSucceeded.Exchange);
-    opts.PublishMessage<Shared.IntegrationEvents.PaymentFailed>()
-        .ToRabbitExchange(Shared.RabbitMqConstants.PaymentFailed.Exchange);
-
-    opts.Policies.UseDurableLocalQueues();
-    opts.Policies.AddMiddleware(
-        typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
-        chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
-    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Handler/Consumer son eki taşımayan süreç sınıfı taramada keşfedilmez → açık kayıt şart.
-    opts.Discovery.IncludeType(typeof(Payment.Api.Process.PaymentIntentExpiry));
-});
+// Wolverine mesajlaşma kurulumu → Extensions/MessagingExtensions.cs (AddCachingAspect'ten ÖNCE)
+builder.AddPaymentMessaging();
 
 builder.Services.AddApiVersioning(options =>
 {

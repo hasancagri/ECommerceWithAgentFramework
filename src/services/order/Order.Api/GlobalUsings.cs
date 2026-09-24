@@ -41,3 +41,4 @@ global using System.Security.Cryptography;
 global using System.Text;
 global using Order.Api.Grpc;
 global using System.Net.Http.Json;
+global using Order.Api.Extensions;
