@@ -7,22 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-// 073: fasad yüzey scope demetleri (challenge + PRM'de ilan; gerçek yetki downstream'de + kullanıcı rolünde).
-string[] customerScopes =
-[
-    AuthorizationScopes.BasketRead, AuthorizationScopes.BasketWrite,
-    AuthorizationScopes.OrderRead, AuthorizationScopes.OrderWrite,
-    AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite,
-    AuthorizationScopes.PaymentRead, AuthorizationScopes.StorefrontRead
-];
-string[] adminScopes =
-[
-    AuthorizationScopes.AdminCatalogRead, AuthorizationScopes.AdminCatalogWrite,
-    AuthorizationScopes.StockWrite, AuthorizationScopes.MerchantCredentialsWrite,
-    // 079: kampanya indirimi /mcp-admin — PRM'de ilan edilmezse mcp-remote scope'u istemez,
-    // token discount.api audience taşımaz, discount-api /mcp-admin 401 verir.
-    AuthorizationScopes.AdminDiscountWrite,
-];
+// 073/079: fasad yüzey scope demetleri = Mcp.Gateway.FacadeScopes.Customer / .Admin.
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -62,7 +47,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
                 var slug = isAdmin ? "mcp-admin" : "mcp";
-                var scopes = isAdmin ? adminScopes : customerScopes;
+                var scopes = isAdmin ? Mcp.Gateway.FacadeScopes.Admin : Mcp.Gateway.FacadeScopes.Customer;
                 var metadataUrl = $"{ExternalBase(ctx.Request)}/.well-known/oauth-protected-resource/{slug}";
                 ctx.Response.Headers.WWWAuthenticate =
                     $"Bearer resource_metadata=\"{metadataUrl}\", scope=\"{string.Join(' ', scopes)}\"";
@@ -109,9 +94,9 @@ app.MapMcp("/mcp-admin").RequireAuthorization();
 
 // Fasad PRM (RFC 9728): resource = fasad ucu; authorization_servers = OpenIddict issuer (trailing slash).
 app.MapGet("/.well-known/oauth-protected-resource/mcp",
-    (HttpContext http) => Results.Json(Prm(http, "mcp", customerScopes))).AllowAnonymous();
+    (HttpContext http) => Results.Json(Prm(http, "mcp", Mcp.Gateway.FacadeScopes.Customer))).AllowAnonymous();
 app.MapGet("/.well-known/oauth-protected-resource/mcp-admin",
-    (HttpContext http) => Results.Json(Prm(http, "mcp-admin", adminScopes))).AllowAnonymous();
+    (HttpContext http) => Results.Json(Prm(http, "mcp-admin", Mcp.Gateway.FacadeScopes.Admin))).AllowAnonymous();
 
 await app.RunAsync();
 return;

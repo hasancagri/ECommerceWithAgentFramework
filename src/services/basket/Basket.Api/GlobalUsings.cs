@@ -28,3 +28,4 @@ global using ModelContextProtocol.Server;
 global using Common.Results;
 global using Common.Dependencies;
 global using Shared.Grpc.Basket;
+global using Basket.Api.Extensions;

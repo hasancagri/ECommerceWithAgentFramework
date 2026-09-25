@@ -39,3 +39,4 @@ global using Microsoft.Extensions.AI;
 global using Microsoft.Extensions.Options;
 global using Storefront.Api.Options;
 global using System.ComponentModel.DataAnnotations;
+global using Storefront.Api.Extensions;

@@ -5,6 +5,7 @@ global using Common.Results;
 global using FileApi.Constants;
 global using FileApi.Dependencies;
 global using FileApi.Domains.FileAsset;
+global using File.Api.Extensions;
 global using FileApi.Endpoints;
 global using FileApi.Migration;
 global using FileApi.Options;

@@ -2,43 +2,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddOpenApiDocumentation();
 
-var customerDb = builder.Configuration.GetConnectionString("customerDb")!;
-builder.Services.AddMarten(opts =>
-    {
-        opts.DatabaseSchemaName = SchemaConstants.CustomerSchemaName;
-        opts.Connection(customerDb);
-        opts.UseNewtonsoftForSerialization(
-            nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
-            configure: s => s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor);
-        // 076: Wallet (kart-saklama) SÖKÜLDÜ; Customer BC = AddressBook + MerchantInformation.
-        opts.Schema.For<Customer.Api.Domains.AddressBooks.AddressBook>().Index(x => x.UserId);
-        // Merchant kimliği (tekil kayıt) — merchant onboarding/admin.
-        opts.Schema.For<Customer.Api.Domains.MerchantInformations.MerchantInformation>();
-        // 078: tek kullanımlık credential-giriş ekran oturumu — token'la yüklenir.
-        opts.Schema.For<Customer.Api.Domains.MerchantInformations.CredentialEntrySession>()
-            .Index(x => x.Token);
-    })
-    .IntegrateWithWolverine()
-    .ApplyAllDatabaseChangesOnStartup();
-
-builder.Host.UseWolverine(opts =>
-{
-    // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali; kirli kapanan
-    // debug oturumlarinin hayalet-node StopRemoteAgent timeout gurultusunu kokten onler.
-    if (builder.Environment.IsDevelopment())
-        opts.Durability.Mode = DurabilityMode.Solo;
-
-    // 078: onboarding handler'ları typed HttpClient (PgOnboardingClient, AddHttpClient<T> = opaque
-    // lambda transient) inject eder; Wolverine inline codegen bunları service-location ister.
-    // Varsayılan NotAllowed → 500. Payment/Order.Api ile aynı politika.
-    opts.ServiceLocationPolicy = JasperFx.CodeGeneration.Model.ServiceLocationPolicy.AllowedButWarn;
-
-    opts.Policies.UseDurableLocalQueues();
-    opts.Policies.AddMiddleware(
-        typeof(Common.Utils.Authorization.ScopeAuthorizationMiddleware),
-        chain => chain.MessageType.GetCustomAttribute<Common.Utils.Authorization.RequiredScopeAttribute>() is not null);
-    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-});
+// Marten + Wolverine kurulumu Extensions/'a taşındı (Program.cs orkestrasyon dışı; catalog aynası).
+builder.AddCustomerMarten();
+builder.AddCustomerMessaging();
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -90,14 +56,6 @@ builder.Services.AddGrpc();
 // yönetimi). Oturum başına TAZE options; tool seti isteğin yoluna göre budanır: admin tool'lar
 // YALNIZ /mcp-admin'de, müşteri tool'ları YALNIZ /mcp'de görünür (müşteri DCR istemcileri admin
 // şemasını görmez — R1).
-string[] customerAdminToolNames =
-[
-    Shared.CustomerAdminTools.GetMerchantStatus, Shared.CustomerAdminTools.OnboardingStatus,
-    // 078: hosted onboarding + credential-giriş ekran linki (allowlist tuzağı — eklemeyen tool'u kaybeder).
-    Shared.CustomerAdminTools.StartOnboarding, Shared.CustomerAdminTools.RequestCredentialEntryLink,
-    // 080: merchant key yenileme tetiği (yanıt yalnız reveal URL).
-    Shared.CustomerAdminTools.ReissueMerchantKey,
-];
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
@@ -107,7 +65,7 @@ builder.Services
         if (tools is null)
             return Task.CompletedTask;
         foreach (var tool in tools
-                     .Where(t => customerAdminToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+                     .Where(t => Customer.Api.Mcp.CustomerAdminSurface.ToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
             tools.Remove(tool);
         return Task.CompletedTask;
     })

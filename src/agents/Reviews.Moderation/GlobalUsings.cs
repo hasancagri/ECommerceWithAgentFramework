@@ -5,3 +5,5 @@ global using Shared;
 global using Wolverine;
 global using Wolverine.ErrorHandling;
 global using Wolverine.RabbitMQ;
+
+global using Reviews.Moderation.Extensions;

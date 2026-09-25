@@ -146,6 +146,9 @@ Domains/<Aggregate>/
 - **`Domains/` yalnız domain:** teknik sabit (resource kodu) `<Service>/Constants/`'e, `Domains/`'e değil.
 - **DI = Scrutor otomatik:** `ITransientDependency`/`IScopedDependency`/`ISingletonDependency` marker'ı
   implemente et; `AddAllDependencies()` kaydeder. `Program.cs`'te elle kayıt yapma.
+- **`Program.cs` = orkestrasyon.** Inline veri/politika (allowlist, scope/tool dizisi, sabit liste)
+  Program.cs'te DURMAZ → kendi adlı static holder dosyasına (`<Konu>/<Ad>.cs`); tuzak/uyarı yorumu
+  veriyle birlikte gider. Program.cs yalnız "ne kuruluyor" okunur kalsın.
 - **Agent tipleri Singleton** — framework başlangıçta yakalar; per-user davranış = token'ı çağrı anında enjekte.
 - **Config = Options pattern (tip'li).** `IConfiguration`'dan DOĞRUDAN okuma YASAK (`config["A:B"]`,
   `GetValue<T>`, `Get<T>()` dahil). Her section → `Options/` POCO'su; tüketici düz `T` enjekte eder (`IOptions<T>` değil).

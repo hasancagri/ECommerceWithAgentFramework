@@ -1,102 +1,12 @@
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
-builder.AddOpenApiDocumentation();
 
-var catalogDb = builder.Configuration.GetConnectionString("catalogDb")!;
-builder.Services.AddMarten(opts =>
-    {
-        opts.DatabaseSchemaName = SchemaConstants.CatalogSchemaName;
-        opts.Connection(catalogDb);
-        opts.UseNewtonsoftForSerialization(
-            nonPublicMembersStorage: NonPublicMembersStorage.NonPublicSetters,
-            configure: s =>
-            {
-                s.ConstructorHandling = Newtonsoft.Json.ConstructorHandling.AllowNonPublicDefaultConstructor;
-            });
-        
-        // Gtin (barkod) ürün lookup/teklik anahtarıdır — lookup index'i.
-        // 045: FamilyCode agent okumaları için ucuz lookup index'i (gruplama Storefront'ta).
-        opts.Schema.For<Product>().Index(x => x.Gtin).Index(x => x.FamilyCode);
+// Kalıcılık (Marten + şema/index + Wolverine entegrasyonu) → Extensions/MartenExtensions.cs.
+builder.AddCatalogMarten();
 
-        // 040 K9: ProductTag yeni aggregate — dış yüzeyi yok, şemada yaşar (besleyen akış 041+).
-        opts.Schema.For<ProductTag>();
-
-        // 058: fiyat geçmişi append-only kaydı — ürün bazlı okuma için lookup index'i.
-        opts.Schema.For<ProductPriceChange>().Index(x => x.ProductId);
-
-        // 016: NormalizedName teklik anahtarıdır (R4) — computed unique index son güvence.
-        // Legacy Brand migrasyonu YOK (kullanıcı kararı): DB sıfırlanarak başlatılır, katalog feed'den dolar.
-        opts.Schema.For<Category>().UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
-        // 052: Brand→Author rename + yeni Publisher — ikisi de NormalizedName teklik anahtarı (get-or-create güvencesi).
-        opts.Schema.For<Catalog.Api.Domains.Authors.Author>()
-            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
-        opts.Schema.For<Catalog.Api.Domains.Publishers.Publisher>()
-            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
-
-        // 043: özellik registry'si — NormalizedName teklik anahtarı (seed get-or-create güvencesi).
-        opts.Schema.For<Catalog.Api.Domains.SpecificationAttributes.SpecificationAttribute>()
-            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.NormalizedName);
-
-        // 083: Excel import staging + capability token. Token teklik anahtarı (link=yetki); ImportRow
-        // ISBN idempotency + Status processor sorgusu (WHERE Status=Pending) için lookup index'i.
-        // DocumentAlias ZORUNLU: tip adı büyük I ile başlıyor, tr-TR makinede varsayılan alias
-        // lowercase'i noktasız ı üretir → computed-index delta her boot bozulur (42P07). ascii alias baypas.
-        opts.Schema.For<Catalog.Api.Import.ImportSession>()
-            .DocumentAlias("importsession")
-            .UniqueIndex(Marten.Schema.UniqueIndexType.Computed, x => x.Token);
-        opts.Schema.For<Catalog.Api.Import.ImportRow>()
-            .DocumentAlias("importrow")
-            .Index(x => x.Isbn).Index(x => x.Status);
-    })
-    .IntegrateWithWolverine()
-    .ApplyAllDatabaseChangesOnStartup();
-
-
-builder.Host.UseWolverine(opts =>
-{
-    // Dev: tek dugum (Solo) - leader election/node-agent koordinasyonu kapali; kirli kapanan
-    // debug oturumlarinin hayalet-node StopRemoteAgent timeout gurultusunu kokten onler.
-    if (builder.Environment.IsDevelopment())
-        opts.Durability.Mode = DurabilityMode.Solo;
-
-    var rabbit = opts.UseRabbitMq(builder.Configuration.GetConnectionString("rabbitmq")!)
-        .AutoProvision();
-
-    rabbit.DeclareExchange(RabbitMqConstants.ProductChanged.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.ProductChanged.Queues.Storefront);
-    });
-
-    opts.PublishMessage<Shared.IntegrationEvents.ProductChangedEvent>()
-        .ToRabbitExchange(RabbitMqConstants.ProductChanged.Exchange);
-
-    // 050/051: yayınlanan üründe barkod↔ProductId eşlemesi Stock'a duyurulur (yayıncı yalnız exchange deklare eder).
-    // İlk yayıncı = kitap import (051); feed 050'de söküldü.
-    rabbit.DeclareExchange(RabbitMqConstants.ProductAdded.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-    });
-    opts.PublishMessage<Shared.IntegrationEvents.ProductAdded>()
-        .ToRabbitExchange(RabbitMqConstants.ProductAdded.Exchange);
-
-    // 083 T022: File.Api'nin CoverIngested'ini tüket (Catalog'un İLK consumer'ı). Binding'i tüketici
-    // kurar (007 dersi); FileConsumers.Handle → Product.SetImage → ProductChangedEvent.
-    rabbit.DeclareExchange(RabbitMqConstants.CoverIngested.Exchange, e =>
-    {
-        e.ExchangeType = ExchangeType.Fanout;
-        e.BindQueue(RabbitMqConstants.CoverIngested.Queues.Catalog);
-    });
-    opts.ListenToRabbitQueue(RabbitMqConstants.CoverIngested.Queues.Catalog);
-
-    opts.Policies.UseDurableLocalQueues();
-    opts.Policies.AddMiddleware(
-        typeof(ScopeAuthorizationMiddleware),
-        chain => chain.MessageType.GetCustomAttribute<RequiredScopeAttribute>() is not null);
-    opts.Discovery.IncludeAssembly(Assembly.GetExecutingAssembly());
-    // Wolverine keşfi çoğul *Consumers sınıfını taramaz → açıkça ekle (ZORUNLU; yoksa mesaj yutulur).
-    opts.Discovery.IncludeType(typeof(Catalog.Api.FileConsumers));
-});
+// Mesajlaşma (Wolverine + RabbitMQ topoloji + handler keşfi) → Extensions/MessagingExtensions.cs.
+// SIRA: AddCachingAspect'ten ÖNCE (cache aspect IMessageBus'ı sarar).
+builder.AddCatalogMessaging();
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -106,16 +16,10 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-// Admin yüzeyi (/mcp-admin) ikiye ayrılır: okuma AdminCatalogRead, yazma AdminCatalogWrite.
-string[] catalogAdminScopes =
-[
-    AuthorizationScopes.AdminCatalogRead,
-    AuthorizationScopes.AdminCatalogWrite,
-];
-
+// Admin yüzeyi (/mcp-admin) scope demeti = Catalog.Api.Mcp.CatalogAdminSurface.Scopes (okuma + yazma).
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
-    catalogAdminScopes);
+    Catalog.Api.Mcp.CatalogAdminSurface.Scopes);
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddAllDependencies();
 
@@ -141,25 +45,7 @@ builder.Services.AddCachingAspect("catalog");
 builder.Services.AddHttpContextAccessor();
 // 070: TEK MCP server, İKİ uç — anonim /mcp (keşif) + korumalı /mcp-admin (yönetim). Oturum
 // başına TAZE options (SDK, ConfigureSessionOptions verilince IOptionsFactory'den yeni kurar);
-// tool seti isteğin yoluna göre budanır: admin tool'lar YALNIZ /mcp-admin'de görünür.
-string[] catalogAdminToolNames =
-[
-    Shared.CatalogAdminTools.ListProducts, Shared.CatalogAdminTools.GetProduct,
-    Shared.CatalogAdminTools.UpdateProduct, Shared.CatalogAdminTools.SetPublished,
-    Shared.CatalogAdminTools.GetPriceHistory,
-    // 074: parite tool'ları (REST admin söküldü) — hepsi YALNIZ /mcp-admin'de.
-    Shared.CatalogAdminTools.CreateProduct, Shared.CatalogAdminTools.SetProductDimensions,
-    Shared.CatalogAdminTools.SetProductSeo, Shared.CatalogAdminTools.AssignProductTag,
-    Shared.CatalogAdminTools.RemoveProductTag, Shared.CatalogAdminTools.CreateCategory,
-    Shared.CatalogAdminTools.UpdateCategory, Shared.CatalogAdminTools.CreateAuthor,
-    Shared.CatalogAdminTools.CreateProductTag, Shared.CatalogAdminTools.RenameProductTag,
-    Shared.CatalogAdminTools.ListProductTags, Shared.CatalogAdminTools.CreateSpecificationAttribute,
-    Shared.CatalogAdminTools.AddSpecificationAttributeOption, Shared.CatalogAdminTools.ListSpecificationAttributes,
-    Shared.CatalogAdminTools.RepublishProducts,
-    // 083: Excel katalog import — hepsi YALNIZ /mcp-admin (allowlist tuzağı — eklemeyen tool'u kaybeder).
-    Shared.CatalogAdminTools.ImportCatalog, Shared.CatalogAdminTools.PublishImported,
-    Shared.CatalogAdminTools.GetImportStatus,
-];
+// tool seti isteğin yoluna göre budanır: admin tool'lar (CatalogAdminToolAllowlist) YALNIZ /mcp-admin'de.
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
@@ -169,14 +55,14 @@ builder.Services
         if (tools is null)
             return Task.CompletedTask;
         foreach (var tool in tools
-                     .Where(t => catalogAdminToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+                     .Where(t => Catalog.Api.Mcp.CatalogAdminSurface.ToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
             tools.Remove(tool);
         return Task.CompletedTask;
     })
     .WithToolsFromAssembly();
 
 // 070: /mcp-admin RFC 9728 keşfi (401 challenge + metadata) — admin scope'uyla; anonim /mcp etkilenmez.
-builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "catalog", catalogAdminScopes);
+builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "catalog", Catalog.Api.Mcp.CatalogAdminSurface.Scopes);
 
 
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
@@ -185,7 +71,6 @@ builder.Services.AddApiKeyAuthentication(builder.Configuration);
 var app = builder.Build();
 // AppHost WithHttpHealthCheck("/health") bu ucu yoklar (Development-only map).
 app.MapDefaultEndpoints();
-app.MapScalarDocumentation();
 
 app.UseAuthentication();
 app.UseApiKeyAuthentication();
