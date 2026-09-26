@@ -36,7 +36,7 @@ public static class AdminGetMerchantStatus
     }
 }
 
-// 070: ADMIN tool'ları — YALNIZ korumalı /mcp-admin ucunda yayınlanır (Program.cs oturum filtresi);
+// 070/085: ADMIN tool'ları — TEK korumalı /mcp ucunda, scope-budamalı yayınlanır (Program.cs oturum filtresi);
 // müşteri /mcp tool seti DEĞİŞMEZ (müşteri DCR istemcileri admin şemasını görmez — R1). Kullanıcı
 // token'dan; scope katmanı handler'da [RequiredScope(MerchantCredentialsWrite)].
 [McpServerToolType]

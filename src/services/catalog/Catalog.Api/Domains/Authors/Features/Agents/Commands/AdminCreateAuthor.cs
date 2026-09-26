@@ -58,7 +58,7 @@ public static class AdminCreateAuthor
     }
 }
 
-// 074: ADMIN tool — YALNIZ korumalı /mcp-admin ucunda yayınlanır (anonim /mcp keşif seti DEĞİŞMEZ).
+// 074/085: ADMIN tool — TEK /mcp ucunda, scope-budamalı yayınlanır (anonim keşif seti DEĞİŞMEZ).
 // Kullanıcı token'dan (ICurrentUser); scope katmanı handler'da [RequiredScope(AuthorCreate)].
 [McpServerToolType]
 public static class AdminCreateAuthorMcpTool

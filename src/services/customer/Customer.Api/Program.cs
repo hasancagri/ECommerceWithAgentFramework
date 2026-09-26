@@ -23,8 +23,9 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
 // 061: RFC 9728 keşif (metadata dokümanı + 401 challenge parametreleri) — dış agent OAuth zinciri.
 // 070 fix: 062 adres YAZMA tool'ları açıldığında bu liste bayat kalmıştı — scope'unu PRM'den türeten
 // istemciler (mcp-remote köprüsü) customer.write'sız token alıp add_address'te düşüyordu.
+// 085: /mcp TEK uç — PRM TAM demeti ilan eder (merchant.credentials.write dahil, contracts/mcp-surface.md).
 builder.Services.AddMcpResourceMetadata(builder.Configuration, "customer",
-    AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite);
+    AuthorizationScopes.CustomerRead, AuthorizationScopes.CustomerWrite, AuthorizationScopes.MerchantCredentialsWrite);
 // 061 logout: `logout` MCP tool'unun Identity.Server agent-logout ucuna forward client'ı.
 builder.Services.AddAgentLogoutClient(builder.Configuration);
 builder.Services.AddGlobalExceptionHandler();
@@ -52,28 +53,24 @@ builder.Services.AddCachingAspect("customer");
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddGrpc();
-// 070: TEK MCP server, İKİ korumalı uç — /mcp (müşteri tool seti, 061) + /mcp-admin (merchant
-// yönetimi). Oturum başına TAZE options; tool seti isteğin yoluna göre budanır: admin tool'lar
-// YALNIZ /mcp-admin'de, müşteri tool'ları YALNIZ /mcp'de görünür (müşteri DCR istemcileri admin
-// şemasını görmez — R1).
+// 085 R1: TEK korumalı uç /mcp — müşteri + merchant-admin tool'ları birlikte (/mcp-admin öldü). Oturum
+// başına TAZE options; tool seti isteği ATAN TOKEN'IN SCOPE'una göre budanır: merchant-admin tool'lar
+// YALNIZ merchant.credentials.write scope'lu token'da görünür (müşteri DCR istemcileri admin şemasını
+// görmez — tavan AgentPlatform'da, bkz. R3).
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
     {
-        var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
         var tools = opts.ToolCollection;
         if (tools is null)
             return Task.CompletedTask;
         foreach (var tool in tools
-                     .Where(t => Customer.Api.Mcp.CustomerAdminSurface.ToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+                     .Where(t => !McpScopePruningExtension.IsToolVisible(
+                         t.ProtocolTool.Name, Customer.Api.Mcp.CustomerAdminSurface.ToolScopeMap, ctx.User)).ToArray())
             tools.Remove(tool);
         return Task.CompletedTask;
     })
     .WithToolsFromAssembly();
-
-// 070: /mcp-admin RFC 9728 keşfi — admin scope'uyla (challenge yol-prefix'ine göre seçilir).
-builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "customer",
-    AuthorizationScopes.MerchantCredentialsWrite);
 
 var app = builder.Build();
 // AppHost WithHttpHealthCheck("/health") bu ucu yoklar (Development-only map).
@@ -101,9 +98,8 @@ app.MapGrpcService<Customer.Api.Grpc.MerchantKeyGrpcService>()
 app.MapCredentialEntryEndpoints();
 
 // 061: MCP korumalı — kimliksiz istek 401 + resource_metadata challenge alır (dış agent keşfi).
+// 085: TEK uç — merchant admin tool'lar scope-budamalı aynı ucta (scope katmanı handler'larda). /mcp-admin öldü.
 app.MapMcp("/mcp").RequireAuthorization();
-// 070: yönetim ucu — merchant admin tool'ları yalnız burada (scope katmanı handler'larda).
-app.MapMcp("/mcp-admin").RequireAuthorization();
 app.MapMcpResourceMetadata();
 
 await app.RunAsync();

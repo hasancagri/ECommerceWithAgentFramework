@@ -31,27 +31,23 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("stock");
 
 builder.Services.AddHttpContextAccessor();
-// 070: TEK MCP server, İKİ uç — anonim /mcp (get_stock) + korumalı /mcp-admin (yönetim). Oturum
-// başına TAZE options (SDK, ConfigureSessionOptions verilince IOptionsFactory'den yeni kurar);
-// tool seti isteğin yoluna göre budanır: admin tool'lar YALNIZ /mcp-admin'de görünür.
+// 085 R1: TEK uç /mcp (085 — /mcp-admin öldü). Oturum başına TAZE options (SDK, ConfigureSessionOptions
+// verilince IOptionsFactory'den yeni kurar); tool seti isteği ATAN TOKEN'IN SCOPE'una göre budanır
+// (yol-prefix değil): admin tool'lar YALNIZ ilgili scope token'da varsa görünür.
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
     {
-        var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
         var tools = opts.ToolCollection;
         if (tools is null)
             return Task.CompletedTask;
         foreach (var tool in tools
-                     .Where(t => Stock.Api.Mcp.StockAdminSurface.ToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+                     .Where(t => !McpScopePruningExtension.IsToolVisible(
+                         t.ProtocolTool.Name, Stock.Api.Mcp.StockAdminSurface.ToolScopeMap, ctx.User)).ToArray())
             tools.Remove(tool);
         return Task.CompletedTask;
     })
     .WithToolsFromAssembly();
-
-// 070: /mcp-admin RFC 9728 keşfi (401 challenge + metadata) — admin scope'uyla; anonim /mcp etkilenmez.
-builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "stock",
-    AuthorizationScopes.StockWrite);
 
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
 builder.Services.AddApiKeyAuthentication(builder.Configuration);
@@ -64,14 +60,11 @@ app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-// 074: domain iş REST yüzeyi söküldü — stok okuma/yönetim tümüyle MCP (/mcp get_stock + /mcp-admin).
+// 074: domain iş REST yüzeyi söküldü — stok okuma/yönetim tümüyle MCP (/mcp).
 // Checkout saga stok düşümü broker (CommitStock/RevertCommitStock handler'ları) — REST endpoint YOK.
 
+// 085: TEK uç — anonim (get_stock); admin tool'lar scope-budamalı görünür, scope katmanı handler'da
+// ([RequiredScope(StockWrite)], 403 son savunma). /mcp-admin öldü.
 app.MapMcp("/mcp");
-
-// 070: korumalı yönetim ucu — kimliksiz istek 401 + resource_metadata challenge (OAuth zinciri
-// buradan başlar); scope katmanı handler'larda ([RequiredScope(StockWrite)]).
-app.MapMcp("/mcp-admin").RequireAuthorization();
-app.MapMcpResourceMetadata();
 
 await app.RunAsync();

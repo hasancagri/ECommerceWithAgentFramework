@@ -84,7 +84,7 @@ public static class AdminCreateCategory
     }
 }
 
-// 074: ADMIN tool'ları — YALNIZ korumalı /mcp-admin ucunda yayınlanır (anonim /mcp keşif seti DEĞİŞMEZ).
+// 074/085: ADMIN tool'ları — TEK /mcp ucunda, scope-budamalı yayınlanır (anonim keşif seti DEĞİŞMEZ).
 // Kullanıcı token'dan (ICurrentUser); scope katmanı handler'da [RequiredScope(CategoryCreate)].
 // TUZAK: her opsiyonel parametrenin DEFAULT'u var (LLM parametre atlarsa ArgumentException olmasin).
 [McpServerToolType]

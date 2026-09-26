@@ -2,7 +2,7 @@ namespace Common.Utils.Constants;
 
 public static class AuthorizationScopes
 {
-    // catalog.api — müşteri okuma anonim (scope'suz). Admin yüzeyi (/mcp-admin) ikiye ayrılır:
+    // catalog.api — müşteri okuma anonim (scope'suz). Admin yüzeyi (085: TEK /mcp'de, scope-budamalı) ikiye ayrılır:
     // okuma tool'ları AdminCatalogRead, yazma tool'ları AdminCatalogWrite ister.
     public const string AdminCatalogRead = "catalog.read";
     public const string AdminCatalogWrite = "catalog.write";
@@ -30,7 +30,7 @@ public static class AuthorizationScopes
     public const string StorefrontRead = "storefront.read";
 
     // discount.api (079): kampanya indirimi. Checkout gRPC S2S okuma (Order makine token) +
-    // admin /mcp-admin kampanya yönetimi (external-admin-agent). Müşteri yüzeyi indirimi vitrinde görür.
+    // admin /mcp kampanya yönetimi (external-admin-agent). Müşteri yüzeyi indirimi vitrinde görür.
     public const string DiscountRead = "discount.read";
     public const string AdminDiscountWrite = "discount.admin.write";
 

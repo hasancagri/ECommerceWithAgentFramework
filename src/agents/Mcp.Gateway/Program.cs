@@ -1,13 +1,12 @@
 using Mcp.Gateway.Aggregation;
 using Mcp.Gateway.Dependencies;
-using Mcp.Gateway.Routing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-// 073/079: fasad yüzey scope demetleri = Mcp.Gateway.FacadeScopes.Customer / .Admin.
+// 085: fasad yüzey scope demeti = Mcp.Gateway.FacadeScopes.All (TEK uç, /mcp-admin öldü).
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -23,8 +22,8 @@ builder.Services.AddAllDependencies();
 
 // Fasad = proxy: gelen kullanıcı token'ının audience'ı DOWNSTREAM API'lerindir → ValidateAudience=false
 // (imza+issuer+ömür doğrulanır; scope zorlaması downstream'de, token aynen forward). Fasad PRM özel
-// (bare /mcp): RFC 9728 challenge yol-prefix'ine göre + authorization_servers OpenIddict issuer'ıyla
-// birebir (trailing slash — katı mcp-remote issuer mismatch'i önler, [[mcp-remote-issuer-slash-gotcha]]).
+// (bare /mcp): RFC 9728 challenge + authorization_servers OpenIddict issuer'ıyla birebir (trailing slash —
+// katı mcp-remote issuer mismatch'i önler, [[mcp-remote-issuer-slash-gotcha]]).
 var identityOption = builder.Configuration.GetSection(nameof(IdentityOption)).Get<IdentityOption>()!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -45,35 +44,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 ctx.HandleResponse();
                 ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
-                var slug = isAdmin ? "mcp-admin" : "mcp";
-                var scopes = isAdmin ? Mcp.Gateway.FacadeScopes.Admin : Mcp.Gateway.FacadeScopes.Customer;
-                var metadataUrl = $"{ExternalBase(ctx.Request)}/.well-known/oauth-protected-resource/{slug}";
+                var metadataUrl = $"{ExternalBase(ctx.Request)}/.well-known/oauth-protected-resource/mcp";
                 ctx.Response.Headers.WWWAuthenticate =
-                    $"Bearer resource_metadata=\"{metadataUrl}\", scope=\"{string.Join(' ', scopes)}\"";
+                    $"Bearer resource_metadata=\"{metadataUrl}\", scope=\"{string.Join(' ', Mcp.Gateway.FacadeScopes.All)}\"";
                 return Task.CompletedTask;
             }
         };
     });
 builder.Services.AddAuthorization();
 
-// Fasad = dinamik MCP server: ListTools (lazy toplama) + CallTool (ad→BC token-forward proxy).
+// Fasad = dinamik MCP server: ListTools (lazy toplama, oturum token'ıyla) + CallTool (ad→BC token-forward proxy).
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()
     .WithListToolsHandler(async (ctx, ct) =>
     {
-        var sp = ctx.Services!;
-        var surface = CurrentSurface(sp);
-        var (tools, _) = await sp.GetRequiredService<ToolCatalogCollector>().GetAsync(surface, ct);
+        var tools = await ctx.Services!.GetRequiredService<ToolCatalogCollector>().GetToolsAsync(ct);
         return new ListToolsResult { Tools = [.. tools] };
     })
     .WithCallToolHandler(async (ctx, ct) =>
-    {
-        var sp = ctx.Services!;
-        var surface = CurrentSurface(sp);
-        return await sp.GetRequiredService<ProxyToolInvoker>().InvokeAsync(surface, ctx.Params!, ct);
-    });
+        await ctx.Services!.GetRequiredService<ProxyToolInvoker>().InvokeAsync(ctx.Params!, ct));
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
@@ -81,32 +71,24 @@ app.MapDefaultEndpoints();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Step-up: anonim /mcp'de korumalı tool çağrısı + token yok → 401 + PRM (login satın almada, açılışta değil).
-app.UseMiddleware<Mcp.Gateway.Auth.McpStepUpMiddleware>();
+// TEK uç, tek login (upfront, kalıcı — kullanıcı kararı 085): bağlanınca login şart, anonim gez/step-up
+// modu yok. Müşteri + admin aynı ucta (/mcp-admin öldü).
+app.MapMcp("/mcp").RequireAuthorization();
 
-// Müşteri ucu: RequireLoginUpfront=true → bağlanınca tek login. false → ANONİM bağlan/gez (arama/katalog
-// login'siz); korumalı tool çağrısı downstream'de 401 → tool-error (satın almada login gerekir). Yönetim
-// ucu HER ZAMAN korumalı.
-var facade = app.Services.GetRequiredService<FacadeOption>();
-var customerMcp = app.MapMcp("/mcp");
-if (facade.RequireLoginUpfront) customerMcp.RequireAuthorization();
-app.MapMcp("/mcp-admin").RequireAuthorization();
-
-// Fasad PRM (RFC 9728): resource = fasad ucu; authorization_servers = OpenIddict issuer (trailing slash).
+// Fasad PRM (RFC 9728): resource = fasad ucu; scopes_supported = müşteri+admin UNION (FR-006 — tavan-üstü
+// talep IdP'de sessizce elenir, bağlantı kırılmaz; bkz. R3 + contracts/mcp-surface.md).
 app.MapGet("/.well-known/oauth-protected-resource/mcp",
-    (HttpContext http) => Results.Json(Prm(http, "mcp", Mcp.Gateway.FacadeScopes.Customer))).AllowAnonymous();
-app.MapGet("/.well-known/oauth-protected-resource/mcp-admin",
-    (HttpContext http) => Results.Json(Prm(http, "mcp-admin", Mcp.Gateway.FacadeScopes.Admin))).AllowAnonymous();
+    (HttpContext http) => Results.Json(Prm(http))).AllowAnonymous();
 
 await app.RunAsync();
 return;
 
-object Prm(HttpContext http, string slug, string[] scopes) => new
+object Prm(HttpContext http) => new
 {
-    resource = $"{ExternalBase(http.Request)}/{slug}",
+    resource = $"{ExternalBase(http.Request)}/mcp",
     authorization_servers = new[] { identityOption.Address.TrimEnd('/') + "/" },
-    scopes_supported = scopes,
-    bearer_methods_supported = new[] { "header" }
+    scopes_supported = Mcp.Gateway.FacadeScopes.All,
+    bearer_methods_supported = new[] { "header" },
 };
 
 // Dış görünür taban: gateway'in eklediği X-Forwarded-Proto/Host; yoksa isteğin kendisi.
@@ -115,11 +97,4 @@ static string ExternalBase(HttpRequest request)
     var proto = request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? request.Scheme;
     var host = request.Headers["X-Forwarded-Host"].FirstOrDefault() ?? request.Host.Value;
     return $"{proto}://{host}";
-}
-
-// İstek yolundan yüzey (müşteri/admin) — RequestContext.Services request scope'undan HttpContext.
-static string CurrentSurface(IServiceProvider sp)
-{
-    var path = sp.GetService<IHttpContextAccessor>()?.HttpContext?.Request.Path.Value ?? "/mcp";
-    return SurfaceFilter.FromPath(path);
 }

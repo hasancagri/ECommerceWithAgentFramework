@@ -38,7 +38,7 @@ public static class AdminCreateProductTag
     }
 }
 
-// 070: ADMIN tool'lari — YALNIZ korumali /mcp-admin ucunda yayinlanir (Program.cs oturum filtresi);
+// 070/085: ADMIN tool'lari — TEK /mcp ucunda, token scope'una göre budanmış yayinlanir (Program.cs oturum filtresi);
 // anonim /mcp kesif seti DEGISMEZ. Kullanici token'dan (ICurrentUser); scope katmani handler'da
 // [RequiredScope(ProductTagCreate)].
 // TUZAK: her opsiyonel parametrenin DEFAULT'u var (LLM parametre atlarsa ArgumentException olmasin).

@@ -4,9 +4,10 @@ using Microsoft.Extensions.Logging;
 namespace Mcp.Gateway.Aggregation;
 
 /// <summary>
-/// 073: CallTool proxy — adı registry'den çözer, sahibi BC'ye KULLANICI bearer'ı (+ anonim X-User-Key)
-/// taşıyarak çağırır, sonucu döndürür. Bilinmeyen tool / erişilemez BC → MCP tool-error (fasad çökmez).
-/// Kullanıcı token'ı kalıcı saklanmaz (çağrı başına HttpContext'ten okunur).
+/// 073/085: CallTool proxy — adı registry'den (m2m tam-katalog taramasından, R2) çözer, sahibi BC'ye
+/// KULLANICI bearer'ı (+ anonim X-User-Key) taşıyarak çağırır, sonucu döndürür. Bilinmeyen tool /
+/// erişilemez BC → MCP tool-error (fasad çökmez). Kullanıcı token'ı kalıcı saklanmaz (çağrı başına
+/// HttpContext'ten okunur). Listede olmayan/yetkisiz tool çağrısı BC'de reddedilir (403 son savunma).
 /// </summary>
 public sealed class ProxyToolInvoker(
     ToolCatalogCollector collector,
@@ -14,9 +15,9 @@ public sealed class ProxyToolInvoker(
     IHttpContextAccessor httpContext,
     ILogger<ProxyToolInvoker> logger) : ISingletonDependency
 {
-    public async Task<CallToolResult> InvokeAsync(string surface, CallToolRequestParams request, CancellationToken ct)
+    public async Task<CallToolResult> InvokeAsync(CallToolRequestParams request, CancellationToken ct)
     {
-        var (_, registry) = await collector.GetAsync(surface, ct);
+        var registry = await collector.GetRegistryAsync(ct);
         var owner = registry.Resolve(request.Name);
         if (owner is null)
             return Error($"Bilinmeyen tool: {request.Name}");

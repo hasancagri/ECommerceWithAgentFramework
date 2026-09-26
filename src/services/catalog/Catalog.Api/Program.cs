@@ -16,7 +16,7 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-// Admin yüzeyi (/mcp-admin) scope demeti = Catalog.Api.Mcp.CatalogAdminSurface.Scopes (okuma + yazma).
+// Admin yüzeyi (TEK /mcp'de, scope-budamalı) scope demeti = Catalog.Api.Mcp.CatalogAdminSurface.Scopes (okuma + yazma).
 builder.Services.AddAuthenticationAndAuthorizationExtension(
     builder.Configuration,
     Catalog.Api.Mcp.CatalogAdminSurface.Scopes);
@@ -43,27 +43,23 @@ if (builder.Configuration.GetConnectionString("redis") is not null)
 builder.Services.AddCachingAspect("catalog");
 
 builder.Services.AddHttpContextAccessor();
-// 070: TEK MCP server, İKİ uç — anonim /mcp (keşif) + korumalı /mcp-admin (yönetim). Oturum
-// başına TAZE options (SDK, ConfigureSessionOptions verilince IOptionsFactory'den yeni kurar);
-// tool seti isteğin yoluna göre budanır: admin tool'lar (CatalogAdminToolAllowlist) YALNIZ /mcp-admin'de.
+// 085 R1: TEK uç /mcp (/mcp-admin öldü). Oturum başına TAZE options (SDK, ConfigureSessionOptions
+// verilince IOptionsFactory'den yeni kurar); tool seti isteği ATAN TOKEN'IN SCOPE'una göre budanır
+// (yol-prefix değil): admin tool'lar (CatalogAdminSurface.ToolScopeMap) YALNIZ ilgili scope varsa görünür.
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, opts, _) =>
     {
-        var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
         var tools = opts.ToolCollection;
         if (tools is null)
             return Task.CompletedTask;
         foreach (var tool in tools
-                     .Where(t => Catalog.Api.Mcp.CatalogAdminSurface.ToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+                     .Where(t => !McpScopePruningExtension.IsToolVisible(
+                         t.ProtocolTool.Name, Catalog.Api.Mcp.CatalogAdminSurface.ToolScopeMap, ctx.User)).ToArray())
             tools.Remove(tool);
         return Task.CompletedTask;
     })
     .WithToolsFromAssembly();
-
-// 070: /mcp-admin RFC 9728 keşfi (401 challenge + metadata) — admin scope'uyla; anonim /mcp etkilenmez.
-builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "catalog", Catalog.Api.Mcp.CatalogAdminSurface.Scopes);
-
 
 // Dis tuketiciler icin opak UserKey (X-User-Key) custom auth semasi.
 builder.Services.AddApiKeyAuthentication(builder.Configuration);
@@ -76,18 +72,15 @@ app.UseAuthentication();
 app.UseApiKeyAuthentication();
 app.UseAuthorization();
 
-// 074: domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle MCP (/mcp + /mcp-admin).
+// 074: domain iş REST yüzeyi söküldü — catalog admin/okuma tümüyle MCP (/mcp).
 // Ürün girişi = Excel import (083) + admin_create_product (MCP). Kalan REST = MCP-infra + import ekranı.
 
 // 083 US1/FR-001: hosted xlsx yükleme ekranı — ANONİM (token = yetki; İLKE V v1.11.1 capability-link
 // istisnası). MapMcp'DEN ÖNCE map'lenir; auth token URL'inde taşınır (078 emsali).
 app.MapImportUploadEndpoints();
 
+// 085: TEK uç — anonim keşif + admin tool'lar scope-budamalı; scope katmanı handler'larda, tool-bazlı
+// ([RequiredScope(AdminCatalogWrite)] vb., 403 son savunma). /mcp-admin öldü.
 app.MapMcp("/mcp");
-
-// 070: korumalı yönetim ucu — kimliksiz istek 401 + resource_metadata challenge (OAuth zinciri
-// buradan başlar); scope katmanı handler'larda, tool-bazlı ([RequiredScope(ProductCreate)] vb.).
-app.MapMcp("/mcp-admin").RequireAuthorization();
-app.MapMcpResourceMetadata();
 
 await app.RunAsync();

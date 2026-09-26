@@ -45,7 +45,7 @@ public static class AdminCreateSpecificationAttribute
     }
 }
 
-// 074: özellik tanımı admin parite tool'ları — YALNIZ korumalı /mcp-admin ucunda yayınlanır
+// 074/085: özellik tanımı admin parite tool'ları — TEK /mcp ucunda, scope-budamalı yayınlanır
 // (anonim /mcp keşif seti DEĞİŞMEZ). Yazma tool'ları kullanıcı token'dan (ICurrentUser); scope
 // katmanı handler'da [RequiredScope(SpecificationAttributeCreate)].
 // TUZAK: her opsiyonel parametrenin DEFAULT'u var (LLM parametre atlarsa ArgumentException olmasin).
