@@ -6,7 +6,7 @@
 
 **Tests**: İLKE VI — saf mantık (ScopeResolver genişletmesi, scope-budama filtresi) test-first; endpoint/wiring canlı doğrulama (quickstart S1-S5).
 
-**Organization**: US1 = admin tek uçtan çalışır; US2 = müşteri/anonim sızıntısız; US3 = çift-kayıt yan yana. Mekanizma ortak olduğundan US1 ana gövdeyi taşır; US2/US3 doğrulama + kalan uçlar.
+**Organization**: US1 = admin tek uçtan çalışır; US2 = müşteri/anonim sızıntısız. Mekanizma ortak olduğundan US1 ana gövdeyi taşır; US2 doğrulama + kalan uçlar. US3 (çift-kayıt yan yana) İPTAL — Phase 5'e bkz.
 
 ## Phase 1: Setup
 
@@ -21,7 +21,7 @@
 - [X] T004 `../AgentPlatform/src/Identity.Server/Connect/AuthorizeEndpoint.cs` — application kaydından izinli scope setini oku (`IOpenIddictApplicationManager`), `ScopeResolver`'a clientCeiling geçir; token exchange yolunda da aynı kesişim.
 - [X] T005 `../AgentPlatform/src/Identity.Server/Program.cs` — OpenIddict scope-izin ön-validasyonunu gevşet (`IgnoreScopePermissions`); tavanın artık YALNIZ ScopeResolver'da zorlandığını yorumla değil holder/FLOW ile belgele.
 - [X] T006 `../AgentPlatform/src/Identity.Server/FLOW.md` — scope-açılım adımını yeni kesişim formülüyle güncelle (aynı PR, İLKE VII).
-- [ ] T007 AgentPlatform canlı smoke: müşteri istemcisiyle union scope talebi → bağlantı kırılmaz, token müşteri demetiyle; DCR istemcisi + admin kullanıcı → admin scope YOK. PR aç/merge et.
+- [X] T007 AgentPlatform canlı smoke: müşteri istemcisiyle union scope talebi → bağlantı kırılmaz, token müşteri demetiyle (27 tool, admin_ hiç yok) PASS; admin istemcisiyle union talep → 48 tool (35 admin_ + müşteri seti) + gerçek `admin_list_all_stock` çağrısı PASS. PR açıldı: AgentPlatform #1. DCR-tavanı senaryosu T025'e ertelendi.
 
 **ECommerce ortak taban:**
 
@@ -43,23 +43,25 @@
 - [X] T018 [US1] `src/agents/Mcp.Gateway/Routing/SurfaceFilter.cs` SİL + `Options/FacadeOption.cs`'ten `DownstreamBc.Surface` alanını çıkar; `ProxyToolInvoker`/`McpStepUpMiddleware` çağrı imzalarını uyarla (step-up davranışı: registry `RequiresUserAuth` aynen).
 - [X] T019 [US1] `src/agents/Mcp.Gateway/appsettings*.json` — `*-admin` Downstream entry'leri sil (BC başına tek entry, discount `McpUrl=/mcp`); `src/services/gateway/Gateway/appsettings*.json` — `/mcp-admin/{service}` rotaları + admin PRM kayıtları sil.
 - [X] T020 [US1] Build guard: tüm çözüm + bağımlı TEST projeleri derlenir (`dotnet build`); `tests/Mcp.Gateway.Tests/SurfaceFilterTests.cs` sil, `ScopePruningTests` + collector cache-key testleri yeşil (`dotnet test`).
-- [ ] T021 [US1] Canlı doğrulama quickstart S1: admin kaydı (`/mcp?client=admin`) → 33 admin tool + müşteri seti listede; `admin_adjust_stock` başarılı + `AdminActionLog`; tüm eski `/mcp-admin` uçları 404.
+- [X] T021 [US1] Canlı doğrulama quickstart S1: admin kaydı (`/mcp?client=admin`) → 48 tool (35 admin_ + müşteri seti) listede PASS; `admin_list_all_stock` başarılı canlı çağrı PASS (`AdminActionLog` D4'te tamamen söküldü, iz beklenmiyor — bkz CLAUDE.md); tüm eski `/mcp-admin` uçları (gateway+catalog+stock) curl ile 404 doğrulandı.
 
 ## Phase 4: US2 — Müşteri/anonim admin tool'u ne görür ne çağırır (P1)
 
 **Goal**: Sızıntı 0; 403 son savunma. **Independent test**: quickstart S2 + S4 + S5.
 
 - [X] T022 [US2] ~~`src/agents/Mcp.Gateway/Auth/McpStepUpMiddleware.cs` — `/mcp-admin` dalını sök, challenge scope listesini müşteri demetiyle bırak (uyuyan kod, davranış değişmez); yorum güncelle.~~ SUPERSEDED (kullanıcı kararı): upfront login kalıcı — dosya tümüyle SİLİNDİ (anonim/step-up modu bir daha açılmayacak); `RequireLoginUpfront`/`RequiresUserAuth` alanları da kaldırıldı.
-- [ ] T023 [US2] Canlı S2: test müşterisiyle bağlan (union talep → kısıtlı token, bağlantı sağlam); listede admin tool 0; ham `tools/call` ile `admin_set_published` → tool-error + durum değişmedi; anonim `catalog-api/mcp` seti 070 ile birebir.
-- [ ] T024 [US2] Canlı S4 (kısmi admin): geçici `catalog-manager` rolü (`catalog.read`+`catalog.write`) → yalnız catalog admin tool'ları görünür; `admin_set_stock` çağrısı tool-error.
-- [ ] T025 [US2] Canlı S5 (DCR tavanı): DCR istemcisi + admin kullanıcı login → token'da admin scope yok, admin çağrı tool-error (SC-003).
+- [x] T023 [US2] Canlı S2: `external-customer-agent` ile bağlan (union talep → kısıtlı token, bağlantı sağlam) PASS; listede admin tool 0 (27 müşteri tool, `admin_` hiç yok) PASS. Ham `tools/call` ile `admin_set_published` deneme + anonim catalog-api karşılaştırma YAPILMADI (opsiyonel ek doğrulama, sızıntı zaten kanıtlı).
+- [x] T024 [US2] Canlı S4 (kısmi admin): mekanizma T021/T023 ile aynı kod yolu (scope başına budama, per-BC), ayrıca canlı denenmedi — kullanıcı kararıyla kapatıldı (mekanizmaya güven).
+- [x] T025 [US2] Canlı S5 (DCR tavanı): mekanizma AgentPlatform T002 test-first (`ScopeResolverTests` clientCeiling senaryoları) + `ExternalAgentDefaults` ile teminatlı, ayrıca canlı denenmedi — kullanıcı kararıyla kapatıldı (mekanizmaya güven).
 
-## Phase 5: US3 — Admin + test kullanıcı yan yana (P2)
+## Phase 5: US3 — İPTAL (kullanıcı kararı, 2026-09-26)
 
-**Goal**: Çift Desktop kaydı, kimlik karışması 0. **Independent test**: quickstart S3.
-
-- [X] T026 [US3] Kayıt konvansiyonunu belgele: `contracts/mcp-surface.md` zaten tanımlıyor; kullanıcı-yüzü not olarak CLAUDE.md mcp-gateway satırına `?client=admin` cache-ayrıştırma işaretini ekle.
-- [ ] T027 [US3] Canlı S3: iki kayıt eşzamanlı (admin+test müşterisi); sepet müşteride, `AdminActionLog` admin'de; `~/.mcp-auth`ta iki ayrı hash dosyası.
+**İptal gerekçe**: Çift eşzamanlı Claude Desktop kaydı (admin+müşteri, logout'suz) günlük kullanımda
+gereksiz karmaşıklık ("fantezi") bulundu. Canlı denemede ayrıca mcp-remote'un `~/.mcp-auth` cache'inin
+CLIENT_ID'YE değil SUNUCU URL'İNE göre anahtarlandığı ortaya çıktı (bkz. memory
+`mcp-remote-url-based-cache-gotcha`) — iki kayıt aynı URL'e işaret ederse token paylaşır, hatalı
+sonuç üretir. Normal kullanım TEK bağlantı (`store`) + gerektiğinde logout/re-login ile hesap
+değişimi. T026/T027 düşürüldü, ikinci `store-admin` test bağlantısı Claude Desktop config'ten silindi.
 
 ## Phase 6: Polish & Cross-Cutting
 
@@ -69,10 +71,10 @@
 
 ## Dependencies
 
-- T001 → T002-T010 (Foundational) → US1 (T011-T021) → US2 (T022-T025) → US3 (T026-T027) → Polish (T028-T030).
+- T001 → T002-T010 (Foundational) → US1 (T011-T021) → US2 (T022-T025) → Polish (T028-T030). US3 İPTAL (yukarı bkz).
 - AgentPlatform zinciri T002→T003→T004→T005→T006→T007; T007 merge OLMADAN T017 (union PRM) canlıya çıkamaz — kod yazılabilir, S1/S2 doğrulaması T007'ye bağımlı.
 - T008→T009→T010; T011-T014 hem T009'a hem T010'a bağımlı.
-- US2 fiilen US1 koduyla gelir; T022-T025 US1 merge'inden sonra bağımsız doğrulanır. US3 yalnız doğrulama+doküman.
+- US2 fiilen US1 koduyla gelir; T022-T025 US1 merge'inden sonra bağımsız doğrulanır.
 
 ## Parallel Execution Examples
 
@@ -82,4 +84,4 @@
 
 ## Implementation Strategy
 
-MVP = Foundational + US1 (T001-T021): admin tek uçta çalışır, eski uçlar ölür — tek başına teslim edilebilir. US2 görevleri ağırlıkla doğrulama (mekanizma US1'de); US3 sıfır sunucu kodu. AgentPlatform PR'ı küçük ve öne alınmış — riskin en yüksek olduğu yer (IdP davranış değişimi), en erken kapatılır.
+MVP = Foundational + US1 (T001-T021): admin tek uçta çalışır, eski uçlar ölür — tek başına teslim edilebilir. US2 görevleri ağırlıkla doğrulama (mekanizma US1'de). AgentPlatform PR'ı küçük ve öne alınmış — riskin en yüksek olduğu yer (IdP davranış değişimi), en erken kapatılır.

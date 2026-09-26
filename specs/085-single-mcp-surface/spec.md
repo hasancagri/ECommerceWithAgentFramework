@@ -50,18 +50,13 @@ Müşteri rolündeki kullanıcı aynı `/mcp` ucuna bağlanır. Tool listesinde 
 
 ---
 
-### User Story 3 - Admin + test kullanıcı aynı makinede yan yana (Priority: P2)
+### User Story 3 - İPTAL (kullanıcı kararı, 2026-09-26)
 
-Geliştirici, Claude Desktop'ta iki kayıt tutar: biri admin istemcisiyle, biri müşteri istemcisiyle — ikisi de aynı `/mcp` URL'ine. Kayıtların login'leri ve token'ları birbirine karışmaz; aynı sohbette admin işi admin kimliğiyle, müşteri işi test kullanıcısıyla akar.
-
-**Why this priority**: Bugünkü çalışma konforunun korunması; kaybolursa dev/test akışı kırılır.
-
-**Independent Test**: İki kaydı farklı kullanıcılarla login'le; her kaydın kendi kimliğiyle işlem yaptığını (sepet ≠ admin) doğrula.
-
-**Acceptance Scenarios**:
-
-1. **Given** iki Desktop kaydı aynı uca farklı istemcilerle bağlı, **When** her biri ayrı kullanıcıyla login olur, **Then** token depoları ayrışır; bir kaydın işlemi ötekinin kimliğine düşmez.
-2. **Given** admin kaydı, **When** OAuth akışı başlar, **Then** istemci admin scope'larını talep edebilir (scope keşfi/challenge admin demetini gösterir).
+Aynı makinede admin + müşteri Desktop kayıtlarını logout'suz yan yana tutma ihtiyacı "fantezi"
+bulundu — günlük kullanımda gereksiz karmaşıklık. Normal akış: TEK kayıt, hesap değişimi gerektiğinde
+logout+re-login. Ayrıca canlı denemede mcp-remote'un token cache'i CLIENT_ID'ye değil SUNUCU URL'İNE
+göre anahtarlandığı bulundu (bkz. memory `mcp-remote-url-based-cache-gotcha`) — aynı URL'e iki kayıt
+token paylaşımına yol açabiliyordu. FR-007/SC-005 bu nedenle düşürüldü.
 
 ---
 
@@ -71,7 +66,6 @@ Geliştirici, Claude Desktop'ta iki kayıt tutar: biri admin istemcisiyle, biri 
 - Dış DCR istemcisi admin scope'u talep ederse: verilmez; müşteri demetiyle sınırlı token basılır (bugünkü tavan aynen).
 - Oturum açıkken rol/scope değişirse: mevcut oturum eski setiyle sürer; yeni set sonraki oturumda (token yenilenince) — kabul edilir.
 - Fasat keşfi (m2m) tek uçtan tüm tool'ları toplayabilmeli; makine token'ının scope'ları admin tool'larının keşfini kapsamalı (keşif ≠ çağrı ayrımı sürer).
-- Aynı URL'e bağlanan iki Desktop kaydının mcp-remote token-cache çakışması: kayıtlar ayrışabilir olmalı (mekanizma plan'da: URL ayırt edici işaret vs statik istemci bilgisi; PRM tekil olduğundan işaret yalnız cache anahtarını ayrıştırır, ilanı değiştirmez).
 - Müşteri istemcisi union PRM'den admin scope'larını da talep ederse: bağlantı kırılmaz; token yalnız istemci tavanı ∩ kullanıcı rolü kesişimiyle basılır (FR-006).
 
 ## Requirements *(mandatory)*
@@ -85,7 +79,7 @@ Geliştirici, Claude Desktop'ta iki kayıt tutar: biri admin istemcisiyle, biri 
 - **FR-004**: Handler'lardaki scope zorlaması (`[RequiredScope]` + endpoint koruması) aynen kalmalı; budama kaçağında çağrı reddedilir (403/tool-error son savunma).
 - **FR-005**: İki OAuth istemcisi sürmeli: müşteri istemcisi yalnız müşteri demetini, admin istemcisi admin demetini talep edebilmeli; dış DCR istemcileri admin scope'u alamamalı (tavan değişmez).
 - **FR-006**: Scope keşfi TEK PRM'den: `scopes_supported` müşteri+admin birleşimini ilan eder. İstemcinin tavanı DIŞINDAKİ scope talebi bağlantıyı kırmamalı: IdP tavan-dışını eleyip istemcinin izinli demetiyle kısıtlı token basar (reddetmez).
-- **FR-007**: Aynı makinede admin + müşteri Desktop kayıtları yan yana, kimlikleri karışmadan çalışabilmeli (token depoları ayrışır).
+- **FR-007**: İPTAL (kullanıcı kararı 2026-09-26) — bkz. User Story 3.
 - **FR-008**: Mevcut müşteri ve admin akışları (arama, sepet, sipariş; ürün/stok/merchant yönetimi + AdminActionLog izi) davranış değiştirmeden sürmeli.
 
 ## Success Criteria *(mandatory)*
@@ -96,7 +90,7 @@ Geliştirici, Claude Desktop'ta iki kayıt tutar: biri admin istemcisiyle, biri 
 - **SC-002**: Müşteri oturumlarının tool listesinde admin tool'u sayısı 0; adıyla doğrudan çağrı denemesi %100 reddedilir.
 - **SC-003**: Dış DCR istemcisinin admin scope elde etme denemesi %100 başarısız.
 - **SC-004**: Mevcut canlı akışlar (müşteri alışverişi uçtan uca + admin ürün yayınlama) regresyonsuz — davranış bugünle birebir.
-- **SC-005**: Aynı makinede iki kayıtla (admin + test müşterisi) eşzamanlı işlem, kimlik karışması 0 vakayla çalışır.
+- **SC-005**: İPTAL (kullanıcı kararı 2026-09-26) — bkz. User Story 3.
 
 ## Assumptions
 
