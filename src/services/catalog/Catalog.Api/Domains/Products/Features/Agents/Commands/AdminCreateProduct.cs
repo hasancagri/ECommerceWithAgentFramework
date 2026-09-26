@@ -156,7 +156,7 @@ public static class AdminCreateProduct
 }
 
 // 074: parite yazma tool'ları — REST admin (Create/SetDimensions/SetSeo/Tag) söküldü, MCP-only.
-// YALNIZ /mcp-admin (Program.cs allowlist). userId token'dan; scope handler'da.
+// TEK /mcp'de, scope-budamalı (085). userId token'dan; scope handler'da.
 
 [McpServerToolType]
 public static class AdminCreateProductMcpTool

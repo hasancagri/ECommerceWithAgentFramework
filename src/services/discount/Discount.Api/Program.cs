@@ -16,8 +16,8 @@ builder.Services.AddAuthenticationAndAuthorizationExtension(
     AuthorizationScopes.DiscountRead,
     AuthorizationScopes.AdminDiscountWrite);
 
-// 070: /mcp-admin RFC 9728 keşfi (401 challenge + metadata) — admin scope'uyla. Anonim /mcp YOK.
-builder.Services.AddMcpAdminResourceMetadata(builder.Configuration, "discount",
+// 085 R5: RFC 9728 keşfi (401 challenge + metadata) — /mcp slug'ında (admin scope'uyla). Anonim set YOK.
+builder.Services.AddMcpResourceMetadata(builder.Configuration, "discount",
     AuthorizationScopes.AdminDiscountWrite);
 
 builder.Services.AddOptions<IdentityOption>().BindConfiguration(nameof(IdentityOption))
@@ -29,18 +29,18 @@ builder.Services.AddAllDependencies();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddGrpc();
 
-// 070/074: tek MCP server, YALNIZ korumalı /mcp-admin ucu (kampanya = admin işi). Oturum başına taze
-// options; tool seti yol-prefix'iyle budanır — allowlist YALNIZ /mcp-admin'de görünür (yeni tool → allowlist'e EKLE).
+// 085 R5: tek MCP server, YALNIZ korumalı /mcp ucu (/mcp-admin öldü; kampanya = admin işi, anonim set
+// YOK). Oturum başına taze options; tool seti token scope'una göre budanır — scope yoksa boş liste.
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(http => http.ConfigureSessionOptions = (ctx, mcpOptions, _) =>
     {
-        var isAdmin = ctx.Request.Path.StartsWithSegments("/mcp-admin");
         var tools = mcpOptions.ToolCollection;
         if (tools is null)
             return Task.CompletedTask;
         foreach (var tool in tools
-                     .Where(t => Discount.Api.Mcp.DiscountAdminSurface.ToolNames.Contains(t.ProtocolTool.Name) != isAdmin).ToArray())
+                     .Where(t => !McpScopePruningExtension.IsToolVisible(
+                         t.ProtocolTool.Name, Discount.Api.Mcp.DiscountAdminSurface.ToolScopeMap, ctx.User)).ToArray())
             tools.Remove(tool);
         return Task.CompletedTask;
     })
@@ -55,8 +55,8 @@ app.UseAuthorization();
 // 079 US3: checkout S2S — Order.Api canlı indirim doğrulaması (discount.read).
 app.MapGrpcService<DiscountQueryGrpcService>().RequireAuthorization(AuthorizationScopes.DiscountRead);
 
-// 070: korumalı yönetim ucu — kimliksiz istek 401 + resource_metadata challenge.
-app.MapMcp("/mcp-admin").RequireAuthorization();
+// 085 R5: korumalı yönetim ucu — kimliksiz istek 401 + resource_metadata challenge. /mcp-admin öldü.
+app.MapMcp("/mcp").RequireAuthorization();
 app.MapMcpResourceMetadata();
 
 await app.RunAsync();

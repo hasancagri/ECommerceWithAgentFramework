@@ -79,7 +79,7 @@ public static class LibraryTools
     public const string RemovePriceAlarm = "remove_price_alarm";
 }
 
-// 070: admin yönetim tool'ları — her BC'nin KORUMALI /mcp-admin ucunda yayınlanır
+// 070/085: admin yönetim tool'ları — her BC'nin TEK /mcp ucunda, token scope'una göre budanmış yayınlanır
 // (anonim /mcp keşif setine GİRMEZ). Yazma tool'ları tek-kayıt işler.
 
 public static class CatalogAdminTools
@@ -112,7 +112,7 @@ public static class CatalogAdminTools
     public const string GetImportStatus = "admin_get_import_status";
 }
 
-// 079: Discount.Api /mcp-admin kampanya yönetimi (scope discount.admin.write). Yeni tool eklerken
+// 079/085: Discount.Api /mcp kampanya yönetimi (scope discount.admin.write). Yeni tool eklerken
 // Program.cs discountAdminToolNames allowlist'ine de EKLE (070/074 deseni). Müşteri /mcp yüzeyi YOK —
 // indirim müşteriye vitrinde query_storefront'tan görünür.
 public static class DiscountAdminTools
